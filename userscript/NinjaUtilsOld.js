@@ -26,13 +26,6 @@
     savedPass = "";
   }
 
-  /* Your ping is tracked in the upper right, but not accessible from any variables. */
-  App.Stats.realSetPing = App.Stats.setPing;
-  App.Stats.setPing = function (ping) {
-    App.Stats.ping = ping;
-    return App.Stats.realSetPing(ping);
-  };
-
   /* Typing sounds. */
   App.Console.consoleInput.addListener(InputField.CHANGE, () => {
     if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();

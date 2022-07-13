@@ -37,4 +37,10 @@ const testing = setInterval(() => {
 
   showFPS();
   matchStartHook();
+  /* Your ping is tracked in the upper right, but not accessible from any variables. */
+  App.Stats.realSetPing = App.Stats.setPing;
+  App.Stats.setPing = function (ping) {
+    App.Stats.ping = ping;
+    return App.Stats.realSetPing(ping);
+  };
 }, 50);

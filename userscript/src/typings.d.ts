@@ -74,6 +74,8 @@ declare var App: {
   };
   Stats: Container & {
     ping: number;
+    setPing(ping: number): void;
+    realSetPing(ping: number): void;
   };
   prototype: {
     initGameMode(data: any): any;
