@@ -1,4 +1,5 @@
 import config from "./config";
+import { initFrameDisplay } from "./fpsCounter";
 import { socialMenuHook } from "./friendSearch";
 import { hookTextureLoader } from "./texturePack";
 
@@ -10,3 +11,4 @@ if (!navigator.clipboard.readText) {
   };
 }
 socialMenuHook();
+initFrameDisplay();
