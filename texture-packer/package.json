@@ -1,6 +1,6 @@
 {
   "name": "texture-packer",
-  "version": "1.0.0",
+  "version": "0.2",
   "description": "Packs and unpacks texture files from ninja.",
   "scripts": {
     "pack": "node pack.mjs",

@@ -1,0 +1,14 @@
+{
+  "name": "ninjaioutils",
+  "version": "0.22",
+  "description": "The userscript for NinjaIOUtils.",
+  "main": "build.mjs",
+  "scripts": {
+    "start": "node ."
+  },
+  "author": "Meow",
+  "license": "ISC",
+  "dependencies": {
+    "esbuild": "^0.14.49"
+  }
+}
