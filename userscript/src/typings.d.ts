@@ -50,3 +50,12 @@ declare var SocialMenu: Container &
     })[];
     prototype: SocialMenuProto;
   };
+
+declare var APIClient: {
+  postCreateGame(): void;
+};
+
+declare var app: {
+  menu: Container & { joinButton: Container };
+  status: { updating?: boolean; message?: string };
+};

@@ -12,3 +12,22 @@ if (!navigator.clipboard.readText) {
 }
 socialMenuHook();
 initFrameDisplay();
+
+const roomDetails = window.location.hash.substring(1);
+/* Test to make sure game is fully loaded. */
+const testing = setInterval(() => {
+  try {
+    if (
+      !app ||
+      !app.menu ||
+      !app.menu.joinButton ||
+      app.status.updating !== false ||
+      !APIClient ||
+      !APIClient.postCreateGame
+    )
+      return;
+  } catch {
+    return;
+  }
+  clearInterval(testing);
+}, 50);
