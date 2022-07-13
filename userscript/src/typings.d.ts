@@ -58,4 +58,28 @@ declare var APIClient: {
 declare var app: {
   menu: Container & { joinButton: Container };
   status: { updating?: boolean; message?: string };
+  credential: {
+    accounttype: "guest" | "user";
+  };
+  matchStarted: boolean;
+  client: {
+    socket?: WebSocket;
+  };
+  stepCallback(delta: number): any;
+  _stepCallback(delta: number): any;
+};
+declare var App: {
+  Console: {
+    log(txt: string): void;
+  };
+  Stats: Container & {
+    ping: number;
+  };
+  prototype: {
+    initGameMode(data: any): any;
+    realInitGameMode(data: any): any;
+  };
+};
+declare var Game: {
+  MATCH_START: string;
 };

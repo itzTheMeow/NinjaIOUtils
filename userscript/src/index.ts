@@ -1,6 +1,7 @@
 import config from "./config";
-import { initFrameDisplay } from "./fpsCounter";
+import { showFPS } from "./fpsCounter";
 import { socialMenuHook } from "./friendSearch";
+import matchStartHook from "./matchStartHook";
 import { hookTextureLoader } from "./texturePack";
 
 hookTextureLoader();
@@ -11,7 +12,6 @@ if (!navigator.clipboard.readText) {
   };
 }
 socialMenuHook();
-initFrameDisplay();
 
 const roomDetails = window.location.hash.substring(1);
 /* Test to make sure game is fully loaded. */
@@ -30,4 +30,11 @@ const testing = setInterval(() => {
     return;
   }
   clearInterval(testing);
+
+  App.Console.log("Loading NinjaIOUtils...");
+  if (app.credential.accounttype == "guest")
+    alert("NinjaIOUtils works best when you are logged in!");
+
+  showFPS();
+  matchStartHook();
 }, 50);

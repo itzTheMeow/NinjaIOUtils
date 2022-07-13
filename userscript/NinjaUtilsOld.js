@@ -20,58 +20,11 @@
 (function () {
   "use strict";
 
-  App.Console.log("Loading NinjaIOUtils...");
-  if (app.credential.accounttype == "guest")
-    alert("NinjaIOUtils works best when you are logged in!");
-
-  /* Small funtion to test if you are in a game. */
-  const inGame = () =>
-    app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
   let savedPass = "";
   function clearSaved() {
     window.location.hash = "";
     savedPass = "";
   }
-
-  /* Show the FPS display. */
-  function initFPS() {
-    let lastUpdate = Date.now();
-    if (SETTINGS.showFPS) frameDisplay.style.display = "block";
-    function updateCounter() {
-      const now = Date.now(),
-        elapsed = now - lastUpdate;
-      if (elapsed < 500) {
-        frames++;
-      } else {
-        let fps = `${Math.round(frames / (elapsed / 1000))} FPS`;
-        if (inGame()) fps += ` - ${App.Stats.ping || 0}ms`;
-        if (frameDisplay.innerText !== fps) frameDisplay.innerText = fps;
-        frames = 0;
-        lastUpdate = now;
-        frameDisplay.style.display = "block";
-      }
-      if (!SETTINGS.showFPS) return (frameDisplay.style.display = "none");
-    }
-    app._stepCallback = app._stepCallback || app.stepCallback;
-    app.stepCallback = function (...d) {
-      updateCounter();
-      return app._stepCallback(...d);
-    };
-  }
-  initFPS();
-
-  /*
-   * Now unused hook into the MATCH_START event.
-   * Was going to make some sort of ingame menu (or commands) to show what room you are in.
-   * May finish it later, not sure.
-   */
-  App.prototype.realInitGameMode = App.prototype.initGameMode;
-  App.prototype.initGameMode = function (data) {
-    this.realInitGameMode(data);
-    this.game.on(Game.MATCH_START, function () {
-      //App.Console.log("Press / for a help menu.");
-    });
-  };
 
   /* Your ping is tracked in the upper right, but not accessible from any variables. */
   App.Stats.realSetPing = App.Stats.setPing;
