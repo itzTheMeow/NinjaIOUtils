@@ -14,6 +14,7 @@ These instructions assume windows as your operating system. If you are using lin
 - The unpacker automatically downloads the image metadata from ninja.io
 - If the URLs are incorrect, you can change it in config.json
 - You can change `replace` to `true` in config.json in order to replace existing files. (change it to false to keep files and not overwrite them)
+- Replacing files WILL overwrite them, so save your texture pack elsewhere if you don't want to have to re-edit the old files.
 - You can change `verbose` to `false` in config.json to disable the extra output from the commands.
 - This will (un)pack both game and terrain textures. (you dont have to edit or distribute both)
 
