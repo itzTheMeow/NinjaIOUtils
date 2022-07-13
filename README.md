@@ -28,4 +28,4 @@ These instructions assume windows as your operating system. If you are using lin
 - You can then edit your files in the `split_textures` and `split_terrain` folders.
 
 - To pack your files once you are done, run `pack.bat`.
-- This will take the images from the `split_textures`/`split_terrain` folders and re-pack them into `packed.png` and `terrain.png` which you can then distribute as your texture pack(s).
+- This will take the images from the `split_textures`/`split_terrain` folders and re-pack them into `textures.png` and `terrain.png` which you can then distribute as your texture pack(s).
