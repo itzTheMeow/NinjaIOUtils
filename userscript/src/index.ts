@@ -2,6 +2,7 @@ import config from "./config";
 import { showFPS } from "./fpsCounter";
 import { socialMenuHook } from "./friendSearch";
 import matchStartHook from "./matchStartHook";
+import { SETTINGS } from "./settings";
 import { hookTextureLoader } from "./texturePack";
 
 hookTextureLoader();
@@ -43,4 +44,8 @@ const testing = setInterval(() => {
     App.Stats.ping = ping;
     return App.Stats.realSetPing(ping);
   };
+  /* Typing sounds. */
+  App.Console.consoleInput.addListener(InputField.CHANGE, () => {
+    if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
+  });
 }, 50);

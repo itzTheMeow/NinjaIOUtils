@@ -71,6 +71,7 @@ declare var app: {
 declare var App: {
   Console: {
     log(txt: string): void;
+    consoleInput: InputField;
   };
   Stats: Container & {
     ping: number;
@@ -85,3 +86,4 @@ declare var App: {
 declare var Game: {
   MATCH_START: string;
 };
+declare var AudioEffects: any;

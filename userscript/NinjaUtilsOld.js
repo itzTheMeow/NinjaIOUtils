@@ -26,11 +26,6 @@
     savedPass = "";
   }
 
-  /* Typing sounds. */
-  App.Console.consoleInput.addListener(InputField.CHANGE, () => {
-    if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
-  });
-
   /* Store your game information in the URL. */
   function setHash(id, name, pass) {
     window.location.hash = pass
