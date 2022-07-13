@@ -22,7 +22,7 @@ import path from "path";
   const tx = new Canvas(textures.width, textures.height);
   const textureCanvas = tx.getContext("2d");
   textureCanvas.drawImage(textures, 0, 0);
-  fs.writeFileSync(path.join(splitDir, "_original.png"), tx.toBuffer());
+  tx.createPNGStream().pipe(fs.createWriteStream(path.join(splitDir, "_original.png")));
   Object.keys(textureJSON.frames).forEach((key) => {
     const file = path.join(splitDir, `${key}.png`);
     if (!config.replace && fs.existsSync(file))

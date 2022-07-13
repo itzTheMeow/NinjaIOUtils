@@ -33,6 +33,10 @@ import path from "path";
     })
   );
   if (fs.existsSync(packed)) fs.unlinkSync(packed);
-  fs.writeFileSync(packed, tex.toBuffer());
-  console.log(`Packed into ${packed}! Took ${Date.now() - start}ms.`);
+  tex
+    .createPNGStream()
+    .pipe(fs.createWriteStream(packed))
+    .on("close", () => {
+      console.log(`Packed into ${packed}! Took ${Date.now() - start}ms.`);
+    });
 })();
