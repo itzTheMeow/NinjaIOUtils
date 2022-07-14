@@ -1,5 +1,9 @@
 # Userscript
 
+v1.0
+
+- Rewrote utils to be typescript and on github.
+
 v0.21
 
 - adds secret beta features
