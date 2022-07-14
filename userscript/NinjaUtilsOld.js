@@ -20,52 +20,6 @@
 (function () {
   "use strict";
 
-  Client.prototype.onMessage = function (a) {
-    a = Client.decompress(a.data);
-    // console.log(a);
-    /* Hooks into the join message and gets the server name you join using. */
-    if (
-      a.type == packetTypeMap.data &&
-      a.data.type == packetTypeMap.joinedMessage &&
-      a.data.info.startsWith("You joined ")
-    ) {
-      let roomName = a.data.info.substring("You joined ".length);
-      setHash(app.client.server.id, roomName, savedPass);
-    }
-    const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
-    const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
-    if (
-      a.type == packetTypeMap.data2 &&
-      a.data.t == packetTypeMap.systemMessage &&
-      a.data.msg.startsWith("Joining ")
-    ) {
-      const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
-      this.mapID = 0;
-      if (mapName) {
-        const mapID = MapIDs[mapName];
-        if (mapID) {
-          repSuccess(mapID, mapName);
-          this.mapID = mapID;
-        } else repFail();
-      } else repFail();
-    } else if (
-      a.type == packetTypeMap.data2 &&
-      a.data.t == packetTypeMap.systemMessage &&
-      a.data.msg.startsWith("loading map: ")
-    ) {
-      const mapName = a.data.msg.substring("loading map: ".length);
-      this.mapID = 0;
-      if (mapName) {
-        const mapID = MapIDs[mapName];
-        if (mapID) {
-          repSuccess(mapID, mapName);
-          this.mapID = mapID;
-        } else repFail();
-      } else repFail();
-    }
-    this.dispatchEvent(a);
-  };
-
   /* Hook for improved fullscreen. */
   window.addEventListener("keydown", (e) => {
     if (e.key == "F11") {

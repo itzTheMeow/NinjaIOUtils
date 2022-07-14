@@ -147,6 +147,20 @@ declare var Layer: {
 declare var Protocol: {
   DISCONNECT: string;
 };
+declare var Client: {
+  decompress(data: any): {
+    type: string;
+    data: {
+      type: string;
+      t: string;
+      info: string;
+      msg: string;
+    };
+  };
+  prototype: {
+    onMessage(data: { data: any }): void;
+  };
+};
 declare var app: {
   menu: Container & {
     joinButton: Container;
@@ -175,6 +189,7 @@ declare var app: {
   client: EventDispatcher & {
     socket?: WebSocket;
     mapID: string;
+    server: { id: string };
   };
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;

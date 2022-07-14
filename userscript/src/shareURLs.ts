@@ -1,7 +1,7 @@
 import settingsTab from "./settingsTab";
 import { setHash } from "./utils";
 
-let savedPass = "";
+export let savedPass = "";
 function clearSaved() {
   window.location.hash = "";
   savedPass = "";
