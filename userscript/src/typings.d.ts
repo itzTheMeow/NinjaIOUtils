@@ -52,19 +52,36 @@ declare var InputField: {
   SUBMIT: string;
 };
 
+interface ButtonEvents {
+  BUTTON_RELEASED: string;
+  BUTTON_PRESSED: string;
+}
 interface Button extends Container {
   setTint(tint: number): void;
 }
-declare var Button: Container & {
-  new (id: string): Button;
-  BUTTON_RELEASED: string;
-};
+declare var Button: Container &
+  ButtonEvents & {
+    new (id: string): Button;
+  };
 
 interface ImgButton extends Container {}
 declare var ImgButton: Container & {
   new (): ImgButton;
   CLICK: string;
 };
+interface MemberMenuButton extends Button {
+  setActive(active: 0 | 1): void;
+}
+declare var MemberMenuButton: MemberMenuButton &
+  ButtonEvents & {
+    new (
+      text: string,
+      color: number,
+      fontSize: number,
+      sprite: string,
+      noBG: boolean
+    ): MemberMenuButton;
+  };
 
 interface SocialMenuProto {
   maskInvitationList: (scrollDist: number) => void;
@@ -105,7 +122,7 @@ declare var Layer: {
   Events: any;
 };
 declare var app: {
-  menu: Container & { joinButton: Container };
+  menu: Container & { joinButton: Container; partyButton: MemberMenuButton; container: Container };
   status: { updating?: boolean; message?: string };
   credential: {
     accounttype: "guest" | "user";
@@ -120,6 +137,7 @@ declare var app: {
   };
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
+  onResize(): void;
 };
 declare var App: {
   Console: {
@@ -132,7 +150,11 @@ declare var App: {
     realSetPing(ping: number): void;
   };
   Layer: Container & {
-    memberMenu: Container;
+    memberMenu: Container & { playButton: MemberMenuButton };
+    partyMenu: Container & { show(): void };
+    mainMenuHides: Container[];
+    features: Container[];
+    hideFeature(feature: Container): void;
   };
   prototype: {
     initGameMode(data: any): any;

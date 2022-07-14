@@ -20,42 +20,6 @@
 (function () {
   "use strict";
 
-  App.Layer.mainMenuHides.push((App.Layer.partyMenu = new PartyMenu()));
-  [
-    "loginMenu",
-    "memberBrowserMenu",
-    "clanBrowserMenu",
-    "registerMenu",
-    "upResetMenu",
-    "profileMenu",
-    "userMenu",
-    "rankingMenu",
-    "newsMenu",
-    "partnerMenu",
-    "serverListMenu",
-    "clanMenu",
-    "serverCreationMenu",
-    "renameMenu",
-    "logoutMenu",
-    "guestProfileMenu",
-  ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
-  App.Layer.features.push(App.Layer.partyMenu);
-
-  app.menu.partyButton = new MemberMenuButton("Party", Colors.yellow, 18, "head_alpha", false);
-  app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function () {
-    App.Layer.mainMenuHides.forEach(function (c) {
-      return App.Layer.hideFeature(c);
-    });
-    App.Layer.memberMenu.playButton.setActive(0);
-    App.Layer.partyMenu.show();
-    App.Layer.addChild(App.Layer.partyMenu);
-    App.Layer.emit(Layer.Events.HIDE_MENU);
-    app.onResize();
-  });
-  app.menu.partyButton.width *= 0.8;
-  app.menu.partyButton.height *= 0.8;
-  BETA && app.menu.container.addChild(app.menu.partyButton);
-
   function reposItems() {
     app.menu.partyButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 2;
     app.menu.partyButton.y = app.menu.joinButton.y;
