@@ -1,5 +1,10 @@
 # Userscript
 
+v1.1
+
+- Added texture packs.
+- Added texture pack browser.
+
 v1.0
 
 - Rewrote utils to be typescript and on github.

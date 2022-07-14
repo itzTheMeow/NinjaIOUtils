@@ -42,7 +42,26 @@ If the game is full, the script will hang and you can't join the server. (workin
 
 ### Texture Packs
 
-You can use a texture pack via the in-game texture pack browser.
+You can use a texture pack via the in-game texture pack browser. If you have created a texture pack and would like to use it, DM me on discord or follow the instructions below:
+
+#### How to Add a Texture Pack
+
+[Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder.
+
+Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png).
+
+You need to create a file for your texture pack metadata, call it `id.json`. (example AllWhite.json)
+
+Fill this out and put it in the file:
+
+```json
+{
+  "id": "your_id", // example: AllWhite
+  "name": "Texture Pack Name", // example: All White
+  "author": "My Name", // example: Meow
+  "description": "Such a cool pack!" // just describe what it does
+}
+```
 
 <!--
 **All White (no cursor)** - All White but without the crosshair. (turn off "display reticle line" in display settings) - `https://i.imgur.com/jhgir2e.png` - by Meow
@@ -88,3 +107,7 @@ These instructions assume windows as your operating system. If you are using lin
 
 - To pack your files once you are done, run `pack.bat`.
 - This will take the images from the `split_textures`/`split_terrain` folders and re-pack them into `textures.png` and `terrain.png` which you can then distribute as your texture pack(s).
+
+```
+
+```
