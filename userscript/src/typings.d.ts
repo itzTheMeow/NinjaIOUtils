@@ -52,7 +52,8 @@ declare var SocialMenu: Container &
   };
 
 declare var APIClient: {
-  postCreateGame(): void;
+  realPostCreateGame(...args: any): void;
+  postCreateGame(...args: any): void;
 };
 declare var Manager: {
   prototype: {
@@ -86,6 +87,7 @@ declare var App: {
     setPing(ping: number): void;
     realSetPing(ping: number): void;
   };
+  Layer: Container;
   prototype: {
     initGameMode(data: any): any;
     realInitGameMode(data: any): any;

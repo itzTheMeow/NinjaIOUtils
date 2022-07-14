@@ -5,6 +5,7 @@ import { socialMenuHook } from "./friendSearch";
 import matchEndHook from "./matchEndHook";
 import matchStartHook from "./matchStartHook";
 import { SETTINGS } from "./settings";
+import { initShareURLHook } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
 
 hookTextureLoader();
@@ -42,6 +43,7 @@ const testing = setInterval(() => {
   matchStartHook();
   matchEndHook();
   applySettingsHook();
+  initShareURLHook();
   /* Your ping is tracked in the upper right, but not accessible from any variables. */
   App.Stats.realSetPing = App.Stats.setPing;
   App.Stats.setPing = function (ping) {
