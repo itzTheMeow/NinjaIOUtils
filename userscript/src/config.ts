@@ -1,9 +1,6 @@
-"ENABLE THIS TO ENABLE BETA FEATURES - ONLY DO THIS IF YOU KNOW WHAT YOU ARE DOING";
-export const BETA = true;
-
 export default {
   ver: "0.22",
-  api: BETA ? "https://test.itsmeow.cat" : "https://itsmeow.cat",
+  api: "https://itsmeow.cat",
   PacketTypeMap: {
     systemMessage: "w",
     chatSend: "x",

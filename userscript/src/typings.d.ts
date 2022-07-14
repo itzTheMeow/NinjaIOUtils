@@ -192,6 +192,8 @@ declare var app: {
     mapID: string;
     server: { id: string };
   };
+  showMenu(): void;
+  _showMenu(): void;
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
   onResize(): void;

@@ -1,5 +1,6 @@
-import config, { BETA } from "./config";
+import config from "./config";
 import type { Socket } from "socket.io-client";
+import reposItems from "./repositionItems";
 
 declare function io(url: string): Socket;
 
@@ -244,45 +245,54 @@ export default function initPartyMenu() {
     }
   }
 
-  App.Layer.mainMenuHides.push((App.Layer.partyMenu = new PartyMenu()));
-  [
-    "loginMenu",
-    "memberBrowserMenu",
-    "clanBrowserMenu",
-    "registerMenu",
-    "upResetMenu",
-    "profileMenu",
-    "userMenu",
-    "rankingMenu",
-    "newsMenu",
-    "partnerMenu",
-    "serverListMenu",
-    "clanMenu",
-    "serverCreationMenu",
-    "renameMenu",
-    "logoutMenu",
-    "guestProfileMenu",
-  ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
-  App.Layer.features.push(App.Layer.partyMenu);
+  function doPartyButton() {
+    App.Layer.mainMenuHides.push((App.Layer.partyMenu = new PartyMenu()));
+    [
+      "loginMenu",
+      "memberBrowserMenu",
+      "clanBrowserMenu",
+      "registerMenu",
+      "upResetMenu",
+      "profileMenu",
+      "userMenu",
+      "rankingMenu",
+      "newsMenu",
+      "partnerMenu",
+      "serverListMenu",
+      "clanMenu",
+      "serverCreationMenu",
+      "renameMenu",
+      "logoutMenu",
+      "guestProfileMenu",
+    ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
+    App.Layer.features.push(App.Layer.partyMenu);
 
-  app.menu.partyButton = new MemberMenuButton(
-    "Party",
-    config.Colors.yellow,
-    18,
-    "head_alpha",
-    false
-  );
-  app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function () {
-    App.Layer.mainMenuHides.forEach(function (c) {
-      return App.Layer.hideFeature(c);
+    app.menu.partyButton = new MemberMenuButton(
+      "Party",
+      config.Colors.yellow,
+      18,
+      "head_alpha",
+      false
+    );
+    app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function () {
+      App.Layer.mainMenuHides.forEach(function (c) {
+        return App.Layer.hideFeature(c);
+      });
+      App.Layer.memberMenu.playButton.setActive(0);
+      App.Layer.partyMenu.show();
+      App.Layer.addChild(App.Layer.partyMenu);
+      App.Layer.emit(Layer.Events.HIDE_MENU);
+      app.onResize();
     });
-    App.Layer.memberMenu.playButton.setActive(0);
-    App.Layer.partyMenu.show();
-    App.Layer.addChild(App.Layer.partyMenu);
-    App.Layer.emit(Layer.Events.HIDE_MENU);
-    app.onResize();
-  });
-  app.menu.partyButton.width *= 0.8;
-  app.menu.partyButton.height *= 0.8;
-  BETA && app.menu.container.addChild(app.menu.partyButton);
+    app.menu.partyButton.width *= 0.8;
+    app.menu.partyButton.height *= 0.8;
+    app.menu.container.addChild(app.menu.partyButton);
+  }
+  doPartyButton();
+  app._showMenu = app.showMenu;
+  app.showMenu = function () {
+    app._showMenu();
+    doPartyButton();
+    reposItems();
+  };
 }
