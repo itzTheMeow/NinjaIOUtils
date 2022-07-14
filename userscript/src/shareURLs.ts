@@ -1,3 +1,4 @@
+import settingsTab from "./settingsTab";
 import { setHash } from "./utils";
 
 let savedPass = "";
@@ -11,6 +12,11 @@ export function initShareURLHook() {
   App.Layer.on("join_game", (name, id, pass) => {
     savedPass = pass || "";
     setHash(id, name, pass);
+  });
+  /* Upon disconnect, remove the saved server. */
+  app.client.addListener(Protocol.DISCONNECT, () => {
+    clearSaved();
+    settingsTab();
   });
 
   /* Hook into the create game function. */

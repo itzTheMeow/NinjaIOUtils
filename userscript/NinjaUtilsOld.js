@@ -65,11 +65,6 @@
     }
     this.dispatchEvent(a);
   };
-  /* Upon disconnect, remove the saved server. */
-  app.client.addListener(Protocol.DISCONNECT, function (c) {
-    clearSaved();
-    customTab();
-  });
 
   /* Hook for improved fullscreen. */
   window.addEventListener("keydown", (e) => {

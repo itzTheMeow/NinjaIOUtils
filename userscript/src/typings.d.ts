@@ -144,6 +144,9 @@ declare var Manager: {
 declare var Layer: {
   Events: any;
 };
+declare var Protocol: {
+  DISCONNECT: string;
+};
 declare var app: {
   menu: Container & {
     joinButton: Container;
@@ -169,7 +172,7 @@ declare var app: {
     username: string;
   };
   matchStarted: boolean;
-  client: {
+  client: EventDispatcher & {
     socket?: WebSocket;
     mapID: string;
   };
