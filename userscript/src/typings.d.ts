@@ -1,7 +1,7 @@
 interface EventDispatcher {
   addListener(event: string, callback: (...args: any) => any): void;
   on(event: string, callback: (...args: any) => any): void;
-  emit(event: string): void;
+  emit(event: string, ...args: any[]): void;
   _events: {
     mousedown: any[];
   };
@@ -36,7 +36,7 @@ interface Text extends Container {
       strokeThickness: number;
       lineJoin: "round";
     }>
-  ): Container & {};
+  ): Container;
 }
 declare var PIXI: {
   Text: Text;
@@ -75,6 +75,7 @@ interface ButtonEvents {
 }
 interface Button extends Container {
   setTint(tint: number): void;
+  selected: boolean;
 }
 declare var Button: Container &
   ButtonEvents & {
@@ -209,6 +210,16 @@ declare var App: {
   Layer: Container & {
     memberMenu: Container & { playButton: MemberMenuButton };
     partyMenu: Container & { show(): void; reposition(): void };
+    loadingMenu: Container & {
+      title: Container;
+      container: Container;
+      joinButton: Button;
+      cancelButton: Button;
+      cancelButton2: Button;
+      show(): void;
+      setTitle(title: string): void;
+      cancelCount: number;
+    };
     mainMenuHides: Container[];
     features: Container[];
     hideFeature(feature: Container): void;

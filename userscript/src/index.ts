@@ -9,6 +9,7 @@ import { initShareURLHook } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
 import reposItems from "./repositionItems";
 import settingsTab from "./settingsTab";
+import hookFullscreen from "./fullscreenHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -21,7 +22,6 @@ if (!navigator.clipboard.readText) {
 }
 socialMenuHook();
 
-const roomDetails = window.location.hash.substring(1);
 /* Test to make sure game is fully loaded. */
 const testing = setInterval(() => {
   try {
@@ -60,5 +60,8 @@ const testing = setInterval(() => {
   });
   settingsTab();
   App.Console.log("Successfully injected settings tab.");
+  hookFullscreen();
   reposItems();
+
+  App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
 }, 50);
