@@ -10,7 +10,7 @@ buildSync({
   outfile: scriptPath,
 });
 
-const metaString = `// ==UserScript=
+const metaString = `// ==UserScript==
 ${Object.entries(meta)
   .map(
     ([k, v]) =>
