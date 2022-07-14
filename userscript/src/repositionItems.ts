@@ -3,4 +3,3 @@ export default function reposItems() {
   app.menu.partyButton.y = app.menu.joinButton.y;
   App.Layer.partyMenu.reposition();
 }
-window.addEventListener("resize", () => reposItems());

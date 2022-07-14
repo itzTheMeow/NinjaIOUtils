@@ -60,10 +60,12 @@ const testing = setInterval(() => {
     if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
   });
   initPartyMenu();
+  App.Console.log("Successfully injected party menu button.");
   settingsTab();
   App.Console.log("Successfully injected settings tab.");
   hookFullscreen();
   reposItems();
+  window.addEventListener("resize", () => reposItems());
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
 }, 50);
