@@ -5,12 +5,13 @@ import { socialMenuHook } from "./friendSearch";
 import matchEndHook from "./matchEndHook";
 import matchStartHook from "./matchStartHook";
 import { SETTINGS } from "./settings";
-import { initShareURLHook } from "./shareURLs";
+import { initShareURLHook, tryJoinLink } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
 import reposItems from "./repositionItems";
 import settingsTab from "./settingsTab";
 import hookFullscreen from "./fullscreenHook";
 import initPartyMenu from "./partyMenu";
+import initMapIdentifier from "./mapIdentifier";
 
 config; // ensures config is at the top of the compiled file
 
@@ -65,7 +66,9 @@ const testing = setInterval(() => {
   App.Console.log("Successfully injected settings tab.");
   hookFullscreen();
   reposItems();
+  initMapIdentifier();
   window.addEventListener("resize", () => reposItems());
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
+  tryJoinLink();
 }, 50);
