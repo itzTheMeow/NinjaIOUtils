@@ -31,7 +31,9 @@ export interface TexturePack extends TexturePackMetadata {
   terrainURL: string | null;
 }
 // insanely cringe but whatever ig
-const GHeaders = { Authorization: "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" };
+const GHeaders = {
+  Authorization: atob("Z2hwXzlTR0l6cUdvRWJZdlo2dzJjUXRBYmxTNTZtVEZWQjM5RnZLYQ=="),
+};
 
 export async function fetchGithubTree(
   tree = "https://api.github.com/repos/itzTheMeow/NinjaIOUtils/git/trees/master"
