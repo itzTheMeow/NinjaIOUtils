@@ -1,6 +1,8 @@
+import applySettingsHook from "./applySettingsHook";
 import config from "./config";
 import { showFPS } from "./fpsCounter";
 import { socialMenuHook } from "./friendSearch";
+import matchEndHook from "./matchEndHook";
 import matchStartHook from "./matchStartHook";
 import { SETTINGS } from "./settings";
 import { hookTextureLoader } from "./texturePack";
@@ -38,6 +40,8 @@ const testing = setInterval(() => {
 
   showFPS();
   matchStartHook();
+  matchEndHook();
+  applySettingsHook();
   /* Your ping is tracked in the upper right, but not accessible from any variables. */
   App.Stats.realSetPing = App.Stats.setPing;
   App.Stats.setPing = function (ping) {

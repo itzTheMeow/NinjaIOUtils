@@ -54,16 +54,24 @@ declare var SocialMenu: Container &
 declare var APIClient: {
   postCreateGame(): void;
 };
-
+declare var Manager: {
+  prototype: {
+    applySettings(data: any): any;
+    _applySettings(data: any): any;
+  };
+};
 declare var app: {
   menu: Container & { joinButton: Container };
   status: { updating?: boolean; message?: string };
   credential: {
     accounttype: "guest" | "user";
+    playerid: string;
+    id: string;
   };
   matchStarted: boolean;
   client: {
     socket?: WebSocket;
+    mapID: string;
   };
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
@@ -83,7 +91,23 @@ declare var App: {
     realInitGameMode(data: any): any;
   };
 };
+interface GameEndData {
+  mode: number;
+  winner: number;
+  leaderboard: {
+    id: string[];
+    points: number[];
+    kills: number[];
+    deaths: number[];
+  };
+  countdown: number;
+  completed: number;
+}
 declare var Game: {
   MATCH_START: string;
+  prototype: {
+    endGame(data: GameEndData): any;
+    _endGame(data: GameEndData): any;
+  };
 };
 declare var AudioEffects: any;
