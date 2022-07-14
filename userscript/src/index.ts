@@ -1,5 +1,5 @@
-import applySettingsHook from "./applySettingsHook";
 import config from "./config";
+import applySettingsHook from "./applySettingsHook";
 import { showFPS } from "./fpsCounter";
 import { socialMenuHook } from "./friendSearch";
 import matchEndHook from "./matchEndHook";
@@ -7,6 +7,8 @@ import matchStartHook from "./matchStartHook";
 import { SETTINGS } from "./settings";
 import { initShareURLHook } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
+
+config; // ensures config is at the top of the compiled file
 
 hookTextureLoader();
 /* Fixes pasting in firefox. */

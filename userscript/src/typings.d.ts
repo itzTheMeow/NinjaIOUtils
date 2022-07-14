@@ -1,6 +1,7 @@
 interface EventDispatcher {
   addListener(event: string, callback: (...args: any) => any): void;
   on(event: string, callback: (...args: any) => any): void;
+  emit(event: string): void;
 }
 interface Container extends EventDispatcher {
   x: number;
@@ -8,13 +9,32 @@ interface Container extends EventDispatcher {
   width: number;
   height: number;
   parent: Container;
+  anchor: { x: number; y: number };
+  scale: { x: number; y: number };
+  visible: boolean;
+  text: string;
+  setText(txt: string): void;
   addChild(child: Container): void;
   removeChild(child: Container): void;
+  removeChildren(): void;
 }
-interface Text extends Container {}
+interface Text extends Container {
+  new (
+    text: string,
+    options: Partial<{
+      fontName: string;
+      fontSize: number;
+      lineHeight: number;
+      fill: number;
+      strokeThickness: number;
+      lineJoin: "round";
+    }>
+  ): Container & {};
+}
 declare var PIXI: {
   Text: Text;
-  Container: Container;
+  Container: Container & { new (): Container };
+  Graphics(): void;
 };
 
 interface InputField extends Container {
@@ -22,12 +42,28 @@ interface InputField extends Container {
   setDimensions(w: number, h: number): void;
   setMaxChars(max: number): void;
   setFilter(filter: string): void;
-  setText(txt: string): void;
   getText(): string;
+  markInvalid(): void;
+  setFocus(focused: boolean): void;
 }
 declare var InputField: {
   new (id: string, noBackground: boolean, fontSize: number): InputField;
   CHANGE: string;
+  SUBMIT: string;
+};
+
+interface Button extends Container {
+  setTint(tint: number): void;
+}
+declare var Button: Container & {
+  new (id: string): Button;
+  BUTTON_RELEASED: string;
+};
+
+interface ImgButton extends Container {}
+declare var ImgButton: Container & {
+  new (): ImgButton;
+  CLICK: string;
 };
 
 interface SocialMenuProto {
@@ -51,6 +87,10 @@ declare var SocialMenu: Container &
     prototype: SocialMenuProto;
   };
 
+declare interface Feature extends Container {}
+declare class Feature {
+  container: Container;
+}
 declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
@@ -61,6 +101,9 @@ declare var Manager: {
     _applySettings(data: any): any;
   };
 };
+declare var Layer: {
+  Events: any;
+};
 declare var app: {
   menu: Container & { joinButton: Container };
   status: { updating?: boolean; message?: string };
@@ -68,6 +111,7 @@ declare var app: {
     accounttype: "guest" | "user";
     playerid: string;
     id: string;
+    username: string;
   };
   matchStarted: boolean;
   client: {
@@ -87,7 +131,9 @@ declare var App: {
     setPing(ping: number): void;
     realSetPing(ping: number): void;
   };
-  Layer: Container;
+  Layer: Container & {
+    memberMenu: Container;
+  };
   prototype: {
     initGameMode(data: any): any;
     realInitGameMode(data: any): any;
