@@ -1,5 +1,9 @@
 # Userscript
 
+v1.2
+
+- fixed party button issue
+
 v1.1
 
 - Added texture packs.
