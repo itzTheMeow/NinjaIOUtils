@@ -20,7 +20,7 @@ interface Container extends EventDispatcher {
   visible: boolean;
   text: string;
   setText(txt: string): void;
-  addChild(child: Container): void;
+  addChild(child: Container): Container;
   removeChild(child: Container): void;
   removeChildren(): void;
   destroy(): void;

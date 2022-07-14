@@ -1,6 +1,7 @@
 export default {
   ver: "$$version",
   api: "https://itsmeow.cat",
+  customDelimiter: "__custom",
   PacketTypeMap: {
     systemMessage: "w",
     chatSend: "x",

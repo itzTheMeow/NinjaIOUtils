@@ -42,15 +42,9 @@ If the game is full, the script will hang and you can't join the server. (workin
 
 ### Texture Packs
 
-**TEXTURE PACKS ARE DISABLED UNTIL FURTHER NOTICE**
-Texture packs are specified via URL. This url should be imgur so there are no CORS issues.
+You can use a texture pack via the in-game texture pack browser.
 
-You can make a texture pack by modifying the [combined-min.png](https://ninja.io/assets/combined/combined-min.png) texture atlas. Upload it to imgur then copy the image link (i.imgur.com/etc.png) and paste it in the input box. Make sure you press save and if you did everything right your new textures will be loaded!
-
-List of texture packs: (these are outdated)
-
-**All White** - An all-white image. Great for a challenge. - `https://i.imgur.com/0nAJlbk.png` - by Meow
-
+<!--
 **All White (no cursor)** - All White but without the crosshair. (turn off "display reticle line" in display settings) - `https://i.imgur.com/jhgir2e.png` - by Meow
 
 **Transparent Vignette** - Makes the red vignette that shows up when you die more transparent. - `https://i.imgur.com/LzktYHO.png` - by Meow
@@ -58,8 +52,7 @@ List of texture packs: (these are outdated)
 **Invisible** - Just floating bodies and UI components. - `https://i.imgur.com/A1tUIdN.png` - by Meow
 
 **MS Paint** - Just ms paint. - `https://i.imgur.com/I2gk5no.png` - by Dark Master
-
-<sub><sup>If you want yours added here, DM me on discord.</sup></sub>
+-->
 
 ### Stat Tracker
 
