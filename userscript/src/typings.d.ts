@@ -2,7 +2,13 @@ interface EventDispatcher {
   addListener(event: string, callback: (...args: any) => any): void;
   on(event: string, callback: (...args: any) => any): void;
   emit(event: string): void;
+  _events: {
+    mousedown: any[];
+  };
 }
+declare var EventDispatcher: EventDispatcher & {
+  new (): EventDispatcher;
+};
 interface Container extends EventDispatcher {
   x: number;
   y: number;
@@ -17,6 +23,7 @@ interface Container extends EventDispatcher {
   addChild(child: Container): void;
   removeChild(child: Container): void;
   removeChildren(): void;
+  destroy(): void;
 }
 interface Text extends Container {
   new (
@@ -35,6 +42,16 @@ declare var PIXI: {
   Text: Text;
   Container: Container & { new (): Container };
   Graphics(): void;
+};
+
+declare var SettingsPanel: {
+  new (w: number, h: number): any;
+  Tabs: {
+    GRAPHICS: string;
+    CONTROLS: string;
+    SOUND: string;
+    UTIL: string;
+  };
 };
 
 interface InputField extends Container {
@@ -83,6 +100,12 @@ declare var MemberMenuButton: MemberMenuButton &
     ): MemberMenuButton;
   };
 
+interface Checkbox extends Container {}
+declare var Checkbox: Container & {
+  new (id: string, text: string, checked: boolean): Checkbox;
+  CHANGE: string;
+};
+
 interface SocialMenuProto {
   maskInvitationList: (scrollDist: number) => void;
 }
@@ -122,7 +145,22 @@ declare var Layer: {
   Events: any;
 };
 declare var app: {
-  menu: Container & { joinButton: Container; partyButton: MemberMenuButton; container: Container };
+  menu: Container & {
+    joinButton: Container;
+    partyButton: MemberMenuButton;
+    container: Container;
+    settingsPanel: Container & {
+      displayTab(tab: string): void;
+      controlsTab: Container & {
+        forceRefresh: boolean;
+      };
+      graphicsTabButtonBackground: Container;
+      controlsTabButtonBackground: Container;
+      soundTabButtonBackground: Container;
+      utilTabButtonBackground: Container;
+    };
+    resize(): void;
+  };
   status: { updating?: boolean; message?: string };
   credential: {
     accounttype: "guest" | "user";
@@ -140,6 +178,7 @@ declare var app: {
   onResize(): void;
 };
 declare var App: {
+  DevicePixelRatio: number;
   Console: {
     log(txt: string): void;
     consoleInput: InputField;

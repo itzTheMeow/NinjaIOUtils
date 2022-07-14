@@ -8,6 +8,7 @@ import { SETTINGS } from "./settings";
 import { initShareURLHook } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
 import reposItems from "./repositionItems";
+import settingsTab from "./settingsTab";
 
 config; // ensures config is at the top of the compiled file
 
@@ -57,5 +58,7 @@ const testing = setInterval(() => {
   App.Console.consoleInput.addListener(InputField.CHANGE, () => {
     if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
   });
+  settingsTab();
+  App.Console.log("Successfully injected settings tab.");
   reposItems();
 }, 50);

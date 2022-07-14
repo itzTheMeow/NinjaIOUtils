@@ -1,7 +1,7 @@
 import { SETTINGS } from "./settings";
 import { inGame } from "./utils";
 
-const frameDisplay = document.createElement("div");
+export const frameDisplay = document.createElement("div");
 Object.entries({
   padding: "0.3rem 0.4rem",
   font: "16px Arial",
