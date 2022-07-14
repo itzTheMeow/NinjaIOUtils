@@ -7,6 +7,8 @@ This contains the source code and build tools for the extension, as well as a te
 A simple script for ninja.io that adds some QOL features.
 For support DM `Meow#4567` on discord!
 
+# [DOWNLOAD THE USERSCRIPT HERE](https://greasyfork.org/en/scripts/441245-ninja-io-utils)
+
 ## How to Use
 
 Just install the script and open [ninja.io](https://ninja.io)!
@@ -45,7 +47,7 @@ Texture packs are specified via URL. This url should be imgur so there are no CO
 
 You can make a texture pack by modifying the [combined-min.png](https://ninja.io/assets/combined/combined-min.png) texture atlas. Upload it to imgur then copy the image link (i.imgur.com/etc.png) and paste it in the input box. Make sure you press save and if you did everything right your new textures will be loaded!
 
-List of texture packs:
+List of texture packs: (these are outdated)
 
 **All White** - An all-white image. Great for a challenge. - `https://i.imgur.com/0nAJlbk.png` - by Meow
 
