@@ -151,7 +151,7 @@ declare var App: {
   };
   Layer: Container & {
     memberMenu: Container & { playButton: MemberMenuButton };
-    partyMenu: Container & { show(): void };
+    partyMenu: Container & { show(): void; reposition(): void };
     mainMenuHides: Container[];
     features: Container[];
     hideFeature(feature: Container): void;

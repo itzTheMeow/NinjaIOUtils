@@ -7,6 +7,7 @@ import matchStartHook from "./matchStartHook";
 import { SETTINGS } from "./settings";
 import { initShareURLHook } from "./shareURLs";
 import { hookTextureLoader } from "./texturePack";
+import reposItems from "./repositionItems";
 
 config; // ensures config is at the top of the compiled file
 
@@ -56,4 +57,5 @@ const testing = setInterval(() => {
   App.Console.consoleInput.addListener(InputField.CHANGE, () => {
     if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
   });
+  reposItems();
 }, 50);

@@ -20,14 +20,6 @@
 (function () {
   "use strict";
 
-  function reposItems() {
-    app.menu.partyButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 2;
-    app.menu.partyButton.y = app.menu.joinButton.y;
-    App.Layer.partyMenu.reposition();
-  }
-  reposItems();
-  window.addEventListener("resize", () => reposItems());
-
   function customTab() {
     function UtilTab() {
       const tab = this;
