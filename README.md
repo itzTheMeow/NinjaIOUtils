@@ -64,12 +64,7 @@ Fill this out and put it in the file:
 ```
 
 <!--
-**All White (no cursor)** - All White but without the crosshair. (turn off "display reticle line" in display settings) - `https://i.imgur.com/jhgir2e.png` - by Meow
-
-**Transparent Vignette** - Makes the red vignette that shows up when you die more transparent. - `https://i.imgur.com/LzktYHO.png` - by Meow
-
 **Invisible** - Just floating bodies and UI components. - `https://i.imgur.com/A1tUIdN.png` - by Meow
-
 **MS Paint** - Just ms paint. - `https://i.imgur.com/I2gk5no.png` - by Dark Master
 -->
 
