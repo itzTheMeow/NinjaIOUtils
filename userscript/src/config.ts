@@ -1,5 +1,5 @@
 export default {
-  ver: "0.22",
+  ver: "$$version",
   api: "https://itsmeow.cat",
   PacketTypeMap: {
     systemMessage: "w",

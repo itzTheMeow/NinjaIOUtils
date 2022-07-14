@@ -1,6 +1,7 @@
 import fs from "fs";
 import { buildSync } from "esbuild";
 import meta from "./meta.json" assert { type: "json" };
+import ver from "./version.json" assert { type: "json" };
 
 const scriptPath = "NinjaIOUtils.js";
 console.log("Building utils...");
@@ -10,6 +11,7 @@ buildSync({
   outfile: scriptPath,
 });
 
+meta.version = ver;
 const metaString = `// ==UserScript==
 ${Object.entries(meta)
   .map(
@@ -30,7 +32,10 @@ ${Object.entries(meta)
   If you want to see the source code, view it on github:
   > https://github.com/itzTheMeow/NinjaIOUtils
 */\n\n`;
-const scriptFile = fs.readFileSync(scriptPath).toString();
+const scriptFile = fs
+  .readFileSync(scriptPath)
+  .toString()
+  .replace(/\$\$version/g, ver);
 fs.writeFileSync(scriptPath, metaString + scriptFile);
 
-console.log("Build successful!");
+console.log(`NinjaIOUtils v${ver} built successfully!`);
