@@ -1,0 +1,1142 @@
+// ==UserScript==
+// @name         Ninja.io Utils
+// @namespace    https://itsmeow.cat
+// @version      1.3
+// @description  Some small QOL improvements to ninja.io!
+// @author       Meow
+// @match        https://ninja.io/*
+// @match        https://ninja.io
+// @match        http://ninja.io/*
+// @match        http://ninja.io
+// @match        https://*.ninja.io/*
+// @match        http://*.ninja.io/*
+// @match        https://*.ninja.io
+// @match        http://*.ninja.io
+// @icon         https://www.google.com/s2/favicons?domain=ninja.io
+// @require      https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js
+// @grant        none
+// ==/UserScript==
+
+/*
+  This file was generated automatically by a build script!
+  If you want to see the source code, view it on github:
+  > https://github.com/itzTheMeow/NinjaIOUtils
+*/
+
+(() => {
+  // src/config.ts
+  var config_default = {
+    ver: "1.3",
+    api: "https://itsmeow.cat",
+    customDelimiter: "__custom",
+    PacketTypeMap: {
+      systemMessage: "w",
+      chatSend: "x",
+      findMatch: "h",
+      joinMatch: "j",
+      data: "d",
+      data2: "p",
+      joinedMessage: "i"
+    },
+    Colors: {
+      green: 8978312,
+      red: 12603201,
+      yellow: 16763904,
+      white: 13421772
+    },
+    MapIDs: {
+      Hull: 1,
+      Igloo: 2,
+      Temple: 3,
+      DragonsDen: 4,
+      dm_Arena1: 5,
+      Elysium: 6,
+      Tobruk: 7,
+      ColdFusion: 8,
+      TwinFaces: 9,
+      KodysIsland: 10,
+      Canyon: 11,
+      Hill364: 12,
+      Stasis: 13,
+      ctf_Evening: 14,
+      ArcticDusk: 15,
+      Cathedral: 16,
+      ctf_Lambda: 17,
+      Aerial: 18,
+      ctf_FacingWorlds: 19,
+      ctf_Ash: 20,
+      ctf_Naom: 21,
+      dm_Hunter: 22,
+      Tribal: 23,
+      Kiwi: 24,
+      Webb: 26,
+      dm_Sleet: 27,
+      SpaceStation: 28,
+      Sinkhole: 29,
+      LonelyIsland: 30
+    }
+  };
+
+  // src/applySettingsHook.ts
+  function applySettingsHook() {
+    Manager.prototype._applySettings = Manager.prototype.applySettings;
+    Manager.prototype.applySettings = function(s) {
+      this.isRanked = s.ranked;
+      return this._applySettings(s);
+    };
+  }
+
+  // src/settings.ts
+  var settingsKey = "ninjaioutils";
+  var packKey = "DONTEDIT_ninja_custompack";
+  var SETTINGS = {
+    ...{
+      showFPS: true,
+      texturePack: null,
+      customPack: null,
+      typewriter: false,
+      apiKey: ""
+    },
+    ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
+  };
+  var saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+  var getSavedPack = () => JSON.parse(localStorage.getItem(packKey) || '["",""]');
+  var savePackData = (tex, ter) => localStorage.setItem(packKey, JSON.stringify([tex, ter]));
+
+  // src/utils.ts
+  var inGame = () => app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
+  function setHash(id, name, pass) {
+    window.location.hash = pass ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}` : `${id}&${encodeURIComponent(name)}`;
+  }
+
+  // src/fpsCounter.ts
+  var frameDisplay = document.createElement("div");
+  Object.entries({
+    padding: "0.3rem 0.4rem",
+    font: "16px Arial",
+    display: "none",
+    position: "fixed",
+    top: "0px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderBottomLeftRadius: "6px",
+    borderBottomRightRadius: "6px",
+    pointerEvents: "none",
+    userSelect: "none"
+  }).forEach((e) => {
+    frameDisplay.style[e[0]] = e[1];
+  });
+  frameDisplay.textContent = "...";
+  document.body.appendChild(frameDisplay);
+  function showFPS() {
+    let lastUpdate = Date.now(), frames = 0;
+    if (SETTINGS.showFPS)
+      frameDisplay.style.display = "block";
+    function updateCounter() {
+      const now = Date.now(), elapsed = now - lastUpdate;
+      if (elapsed < 500) {
+        frames++;
+      } else {
+        let fps = `${Math.round(frames / (elapsed / 1e3))} FPS`;
+        if (inGame())
+          fps += ` - ${App.Stats.ping || 0}ms`;
+        if (frameDisplay.innerText !== fps)
+          frameDisplay.innerText = fps;
+        frames = 0;
+        lastUpdate = now;
+        frameDisplay.style.display = "block";
+      }
+      if (!SETTINGS.showFPS)
+        return frameDisplay.style.display = "none";
+    }
+    app._stepCallback = app._stepCallback || app.stepCallback;
+    app.stepCallback = function(d) {
+      updateCounter();
+      return app._stepCallback(d);
+    };
+  }
+
+  // src/friendSearch.ts
+  function socialMenuHook() {
+    if (window.SocialMenu) {
+      SocialMenu.prototype.maskInvitationList = function(scrollDist) {
+        const pl = "Type to search.";
+        const pad = 8;
+        if (!this.listSearch) {
+          this.listSearch = new InputField("list_search", false, SocialMenu.ItemHeight / 1.5);
+          this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
+          this.listSearch.forceLowerCase = false;
+          this.listSearch.setMaxChars(128);
+          this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.-_ ");
+          this.listSearch.x = pad;
+          this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
+          this.listSearch.setText(pl);
+          const ls = this;
+          this.listSearch.addListener(InputField.CHANGE, function(d2) {
+            d2 = d2.data.value || "";
+            if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
+              d2 = d2.substring(pl.length);
+              ls.listSearch.setText(d2);
+            }
+            ls.maskInvitationList(ls.inviteScrollRatio);
+          });
+        }
+        const searchTerm = this.listSearch.getText() || "";
+        const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
+        this.invites.forEach((i) => {
+          i.alpha = 1;
+          i.isRed = false;
+          if (!i.redReady) {
+            i.redReady = true;
+            i.on("mouseout", function() {
+              i.tint = i.isRed ? config_default.Colors.red : 12303291;
+            });
+          }
+        });
+        if (!this.listSearch.parent)
+          this.listContainer.addChild(this.listSearch);
+        const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
+        const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
+        if (this.invites.length <= itemDisplayCount) {
+          this.listContainer.y = 0;
+        } else {
+          this.invites.forEach((i) => this.listContainer.removeChild(i));
+          this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
+          for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
+            const inv = this.invites[d + displayOffset];
+            this.listContainer.addChild(inv);
+            let g;
+            if (0 === displayOffset) {
+              g = d * SocialMenu.ItemHeight + this.listContainer.y;
+              inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
+            } else {
+              displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
+            }
+          }
+          this.inviteScrollRatio = scrollDist;
+        }
+        this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height - this.listContainer.y;
+        this.invites.forEach((i) => {
+          i.tint = 12303291;
+          if (!filtered)
+            return;
+          if (filtered.includes(i)) {
+            i.tint = 12603201;
+            i.alpha = 1;
+            i.isRed = true;
+          } else {
+            i.alpha *= 0.5;
+          }
+        });
+      };
+    }
+  }
+
+  // src/matchEndHook.ts
+  function matchEndHook() {
+    Game.prototype._endGame = Game.prototype.endGame;
+    Game.prototype.endGame = function(data) {
+      if (SETTINGS.apiKey) {
+        App.Console.log("Attempting to upload match score...");
+        if (this.manager.isRanked) {
+          try {
+            const leaderIndex = data.leaderboard.id.indexOf(this.sessionId);
+            const statModel = {
+              id: app.credential.playerid,
+              map: app.client.mapID,
+              mode: this.mode,
+              kills: data.leaderboard.kills[leaderIndex],
+              deaths: data.leaderboard.deaths[leaderIndex],
+              caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
+            };
+            fetch(`${config_default.api}/ninja/submit?key=${SETTINGS.apiKey}`, {
+              method: "POST",
+              body: JSON.stringify(statModel),
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }).then((res) => res.json()).then((res) => {
+              if (res.err) {
+                App.Console.log(`Failed to upload match score! ERR_${res.err}`);
+                App.Console.log(`Error: ${res.message}`);
+              } else {
+                App.Console.log("Successfully uploaded match score!");
+              }
+            }).catch((err) => {
+              App.Console.log("Failed to upload match score! (check console for errors)");
+              console.error(err);
+            });
+          } catch (err) {
+            App.Console.log("Failed to upload match score! (check console for errors)");
+            console.error(err);
+          }
+        } else {
+          App.Console.log("Match is unranked or custom, scores not uploaded.");
+        }
+      }
+      return this._endGame(data);
+    };
+  }
+
+  // src/matchStartHook.ts
+  function matchStartHook() {
+    App.prototype.realInitGameMode = App.prototype.initGameMode;
+    App.prototype.initGameMode = function(data) {
+      this.realInitGameMode(data);
+      this.game.on(Game.MATCH_START, function() {
+      });
+    };
+  }
+
+  // src/GitHub.ts
+  var GHeaders = {
+    Authorization: atob("Z2hwXzlTR0l6cUdvRWJZdlo2dzJjUXRBYmxTNTZtVEZWQjM5RnZLYQ==")
+  };
+  async function fetchGithubTree(tree = "https://api.github.com/repos/itzTheMeow/NinjaIOUtils/git/trees/master") {
+    return await fetch(tree, {
+      headers: GHeaders
+    }).then((r) => r.json());
+  }
+  async function fetchGithubBlob(blob) {
+    return await fetch(blob, {
+      headers: GHeaders
+    }).then((r) => r.json());
+  }
+  async function getTextureImage(img) {
+    if (!img)
+      return "";
+    const file = await fetchGithubBlob(img);
+    return `data:image/png;base64,${file.content}`;
+  }
+  async function fetchTexturePacks() {
+    const packList = (await fetchGithubTree((await fetchGithubTree()).tree.find((t) => t.path == "texturepacks").url)).tree;
+    const texturePacks = await Promise.all(packList.filter((p) => p.path.endsWith(".json")).map(async (pak) => {
+      const pakid = pak.path.slice(0, pak.path.length - ".json".length);
+      const meta = JSON.parse(atob((await fetchGithubBlob(pak.url)).content));
+      const texture = packList.find((p) => p.path == `${pakid}_textures.png`);
+      const terrain = packList.find((p) => p.path == `${pakid}_terrain.png`);
+      return {
+        id: meta.id,
+        name: meta.name,
+        author: meta.author,
+        description: meta.description,
+        textureURL: texture ? texture.url : null,
+        terrainURL: terrain ? terrain.url : null
+      };
+    }));
+    return texturePacks;
+  }
+
+  // src/settingsTab.ts
+  function settingsTab() {
+    function UtilTab() {
+      const tab = this;
+      PIXI.Container.call(this);
+      EventDispatcher.call(this);
+      this.marginLeft = 40;
+      this.marginTop = 52;
+      this.off = this.marginTop + 6;
+      this.utilTitle = new PIXI.Text("NinjaIOUtils settings", {
+        fontName: "Arial",
+        fontSize: 18,
+        lineHeight: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      this.utilTitle.x = this.marginLeft - 5;
+      this.utilTitle.y = this.off;
+      this.addChild(this.utilTitle);
+      this.showFPS = new Checkbox("showFPS", "Show FPS Display", true);
+      this.showFPS.x = this.marginLeft;
+      this.showFPS.y = this.off += 34;
+      this.showFPS.on(Checkbox.CHANGE, function(b) {
+        SETTINGS.showFPS = b;
+        saveSettings();
+        if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
+          showFPS();
+      });
+      this.addChild(this.showFPS);
+      this.showFPS.setChecked(SETTINGS.showFPS);
+      this.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true);
+      this.typewriter.x = this.marginLeft;
+      this.typewriter.y = this.off += 34;
+      this.typewriter.on(Checkbox.CHANGE, function(b) {
+        SETTINGS.typewriter = b;
+        saveSettings();
+      });
+      this.addChild(this.typewriter);
+      this.typewriter.setChecked(SETTINGS.typewriter);
+      this.keyTitle = new PIXI.Text("API Key", {
+        fontName: "Arial",
+        fontSize: 16,
+        lineHeight: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      this.keyTitle.x = this.marginLeft - 5;
+      this.keyTitle.y = this.off += 36;
+      this.addChild(this.keyTitle);
+      this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the userscript page for instructions.", {
+        fontName: "Arial",
+        fontSize: 14,
+        fill: config_default.Colors.white,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      this.keyHint.x = this.marginLeft - 5;
+      this.keyHint.y = this.off += 24;
+      this.addChild(this.keyHint);
+      this.keyField = new InputField("key_field", false, 24);
+      this.keyField.setDimensions(370, 35);
+      this.keyField.forceLowerCase = false;
+      this.keyField.setMaxChars(128);
+      if (SETTINGS.apiKey)
+        this.keyField.setText(SETTINGS.apiKey);
+      this.keyField.x = this.marginLeft;
+      this.keyField.y = this.off += 24;
+      this.keyField.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+      this.keyField.addListener(InputField.CHANGE, function(d) {
+        d = d.data.value || "";
+        SETTINGS.apiKey = d;
+        saveSettings();
+      });
+      this.addChild(this.keyField);
+      this.pasteKeyButton = new Button("paste_key");
+      this.pasteKeyButton.selected = true;
+      this.pasteKeyButton.setText("Paste");
+      this.pasteKeyButton.scale.x = this.pasteKeyButton.scale.y = 0.75;
+      this.pasteKeyButton.addListener(Button.BUTTON_RELEASED, function() {
+        navigator.clipboard.readText().then(function(d) {
+          tab.keyField.setText(d);
+          SETTINGS.apiKey = d;
+          saveSettings();
+        });
+      });
+      this.pasteKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width / 4;
+      this.pasteKeyButton.y = this.off + 4;
+      this.addChild(this.pasteKeyButton);
+      this.clearKeyButton = new Button("clear_key");
+      this.clearKeyButton.selected = true;
+      this.clearKeyButton.setText("Clear");
+      this.clearKeyButton.scale.x = this.clearKeyButton.scale.y = 0.75;
+      this.clearKeyButton.addListener(Button.BUTTON_RELEASED, function() {
+        tab.keyField.setText("");
+        SETTINGS.apiKey = "";
+        saveSettings();
+      });
+      this.clearKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width + this.clearKeyButton.width / 4 + 4;
+      this.clearKeyButton.y = this.off + 4;
+      this.addChild(this.clearKeyButton);
+      this.texTitle = new PIXI.Text("Texture Pack", {
+        fontName: "Arial",
+        fontSize: 16,
+        lineHeight: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      this.texTitle.x = this.marginLeft - 5;
+      this.texTitle.y = this.off += 42;
+      this.addChild(this.texTitle);
+      this.texHint = new PIXI.Text("(make sure to click save)", {
+        fontName: "Arial",
+        fontSize: 14,
+        fill: config_default.Colors.white,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
+      this.texHint.y = this.off + 2;
+      this.addChild(this.texHint);
+      this.upButton = new Button("pak_up");
+      this.upButton.setText("Up");
+      this.upButton.scale.x = this.upButton.scale.y = 0.5;
+      this.upButton.x = this.texHint.x + this.texHint.width + 10;
+      this.upButton.y = this.off + 2;
+      this.upButton.addListener(Button.BUTTON_RELEASED, () => {
+        this.packIndex = Math.max(0, this.packIndex - 1);
+        this.runPacks();
+      });
+      this.addChild(this.upButton);
+      this.downButton = new Button("pak_down");
+      this.downButton.setText("Down");
+      this.downButton.scale.x = this.downButton.scale.y = 0.5;
+      this.downButton.x = this.upButton.x + this.upButton.width + 2;
+      this.downButton.y = this.off + 2;
+      this.downButton.addListener(Button.BUTTON_RELEASED, () => {
+        this.packIndex = Math.min(this.packList.length - 4, this.packIndex + 1);
+        this.runPacks();
+      });
+      this.addChild(this.downButton);
+      const off = this.off;
+      this.packIndex = 0;
+      !(this.runPacks = async () => {
+        this.off = off;
+        if (this.hadPacks)
+          this.hadPacks.map((p) => p.destroy());
+        this.hadPacks = [];
+        const packs = this.packList || (this.packList = await fetchTexturePacks());
+        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + 4).forEach((pak) => {
+          const hasPack = SETTINGS.texturePack == pak.id;
+          const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
+            fontName: "Arial",
+            fontSize: 16,
+            fill: config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          });
+          packName.x = this.marginLeft;
+          packName.y = this.off += 28;
+          this.hadPacks.push(this.addChild(packName));
+          const flags = [];
+          if (pak.textureURL)
+            flags.push("textures");
+          if (pak.terrainURL)
+            flags.push("terrain");
+          const packDescription = new PIXI.Text(`${pak.description || "No Description."} (${flags.join(", ")})`, {
+            fontName: "Arial",
+            fontSize: 14,
+            fill: config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          });
+          packDescription.x = this.marginLeft;
+          packDescription.y = this.off += packName.height + 2;
+          this.hadPacks.push(this.addChild(packDescription));
+          const packButton = new Button(`pack_btn_${pak.id}`);
+          packButton.x = packName.x + packName.width + 12;
+          packButton.y = this.off - packName.height;
+          packButton.setText(hasPack ? "Remove" : "Use");
+          packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
+          packButton.scale.x = packButton.scale.y = 0.5;
+          packButton.addListener(Button.BUTTON_RELEASED, async () => {
+            if (hasPack) {
+              SETTINGS.texturePack = null;
+              savePackData("", "");
+            } else {
+              SETTINGS.texturePack = pak.id;
+              savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
+            }
+            app.menu.settingsPanel.controlsTab.forceRefresh = true;
+            saveSettings();
+            this.runPacks();
+          });
+          this.hadPacks.push(this.addChild(packButton));
+        });
+      })();
+    }
+    UtilTab.prototype = Object.create(PIXI.Container.prototype);
+    UtilTab.prototype.constructor = UtilTab;
+    EventDispatcher.call(UtilTab.prototype);
+    function SettingsPanelNew(w, h) {
+      let pan = new SettingsPanel(w, h);
+      pan.utilTab = new UtilTab();
+      pan.utilTabButton = new PIXI.Text("NinjaIOUtils", {
+        fontName: "Arial",
+        fontSize: 18,
+        lineHeight: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      pan.utilTabButton.resolution = 1.5 * App.DevicePixelRatio;
+      pan.utilTabButton.anchor.x = pan.utilTabButton.anchor.y = 0.5;
+      pan.utilTabButton.x = 358;
+      pan.utilTabButton.y = 28;
+      pan.addChild(pan.utilTabButton);
+      pan.utilTabButtonBackground = new PIXI.Graphics();
+      pan.utilTabButtonBackground.beginFill(16777215, 0.1);
+      pan.utilTabButtonBackground.drawRoundedRect(0, 0, 112, 30, 2);
+      pan.utilTabButtonBackground.endFill();
+      pan.utilTabButtonBackground.x = 302;
+      pan.utilTabButtonBackground.y = 12;
+      pan.utilTabButtonBackground.interactive = true;
+      pan.utilTabButtonBackground.on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
+      pan.utilTabButtonBackground.on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
+      pan.utilTabButtonBackground.on("mouseover", function() {
+        pan.utilTabButtonBackground.tint = 11184810;
+      });
+      pan.utilTabButtonBackground.on("mouseout", function() {
+        pan.utilTabButtonBackground.tint = 16777215;
+      });
+      pan.addChild(pan.utilTabButtonBackground);
+      return pan;
+    }
+    SettingsPanel.Tabs.UTIL = "util";
+    const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
+    app.menu.settingsPanel.destroy();
+    app.menu.settingsPanel = SettingsPanelNew(660, 524);
+    app.menu.settingsPanel.x = oldX;
+    app.menu.settingsPanel.y = oldY;
+    app.menu.resize();
+    app.menu.settingsPanel.displayTab = function(a) {
+      AudioEffects.ButtonClick.audio.play();
+      saveSettings();
+      switch (a) {
+        case SettingsPanel.Tabs.GRAPHICS:
+          this.controlsTab.parent && this.removeChild(this.controlsTab);
+          this.soundTab.parent && this.removeChild(this.soundTab);
+          this.utilTab.parent && this.removeChild(this.utilTab);
+          this.addChild(this.graphicsTab);
+          this.soundTabButtonBackground.alpha = 1;
+          this.graphicsTabButtonBackground.alpha = 0;
+          this.controlsTabButtonBackground.alpha = 1;
+          this.utilTabButtonBackground.alpha = 1;
+          break;
+        case SettingsPanel.Tabs.CONTROLS:
+          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
+          this.soundTab.parent && this.removeChild(this.soundTab);
+          this.utilTab.parent && this.removeChild(this.utilTab);
+          this.soundTabButtonBackground.alpha = 1;
+          this.graphicsTabButtonBackground.alpha = 1;
+          this.controlsTabButtonBackground.alpha = 0;
+          this.utilTabButtonBackground.alpha = 1;
+          this.addChild(this.controlsTab);
+          break;
+        case SettingsPanel.Tabs.SOUND:
+          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
+          this.controlsTab.parent && this.removeChild(this.controlsTab);
+          this.utilTab.parent && this.removeChild(this.utilTab);
+          this.soundTabButtonBackground.alpha = 0;
+          this.graphicsTabButtonBackground.alpha = 1;
+          this.controlsTabButtonBackground.alpha = 1;
+          this.utilTabButtonBackground.alpha = 1;
+          this.addChild(this.soundTab);
+          break;
+        case SettingsPanel.Tabs.UTIL:
+          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
+          this.controlsTab.parent && this.removeChild(this.controlsTab);
+          this.soundTab.parent && this.removeChild(this.soundTab);
+          this.soundTabButtonBackground.alpha = 1;
+          this.graphicsTabButtonBackground.alpha = 1;
+          this.controlsTabButtonBackground.alpha = 1;
+          this.utilTabButtonBackground.alpha = 0;
+          this.addChild(this.utilTab);
+          break;
+      }
+    };
+    [
+      [app.menu.settingsPanel.graphicsTabButtonBackground, SettingsPanel.Tabs.GRAPHICS],
+      [app.menu.settingsPanel.controlsTabButtonBackground, SettingsPanel.Tabs.CONTROLS],
+      [app.menu.settingsPanel.soundTabButtonBackground, SettingsPanel.Tabs.SOUND],
+      [app.menu.settingsPanel.utilTabButtonBackground, SettingsPanel.Tabs.UTIL]
+    ].forEach((d) => {
+      d[0].on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d[1]));
+      d[0]._events.mousedown.shift();
+    });
+  }
+
+  // src/shareURLs.ts
+  var savedPass = "";
+  function clearSaved() {
+    window.location.hash = "";
+    savedPass = "";
+  }
+  function initShareURLHook() {
+    App.Layer.on("join_game", (name, id, pass) => {
+      savedPass = pass || "";
+      setHash(id, name, pass);
+    });
+    app.client.addListener(Protocol.DISCONNECT, () => {
+      clearSaved();
+      settingsTab();
+    });
+    APIClient.realPostCreateGame = APIClient.postCreateGame;
+    APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
+      savedPass = serverPass;
+      setHash(serverID, serverName, serverPass);
+      return APIClient.realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
+    };
+  }
+  function tryJoinLink() {
+    const roomDetails = window.location.hash.substring(1);
+    if (!roomDetails)
+      return;
+    const [id, name, pass] = roomDetails.split("&").map(decodeURIComponent);
+    if (!id || !name)
+      return;
+    App.Console.log(`Attempting to join room ${name}...`);
+    const loadingMenu = App.Layer.loadingMenu;
+    App.Layer.addChild(loadingMenu);
+    loadingMenu.show();
+    loadingMenu.setTitle(`Click to join server.
+${name}`);
+    loadingMenu.cancelCount = -1;
+    loadingMenu.joinButton = new Button("join");
+    loadingMenu.joinButton.selected = true;
+    loadingMenu.joinButton.setText("Join");
+    loadingMenu.joinButton.scale.x = loadingMenu.joinButton.scale.y = 0.8;
+    loadingMenu.joinButton.addListener(Button.BUTTON_RELEASED, function() {
+      removeJoinStuff();
+      loadingMenu.show();
+      App.Layer.emit("join_game", name, id, pass || "");
+    });
+    loadingMenu.joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - loadingMenu.joinButton.width);
+    loadingMenu.joinButton.y = loadingMenu.title.y + 40;
+    loadingMenu.joinButton.setTint(config_default.Colors.green);
+    loadingMenu.container.addChild(loadingMenu.joinButton);
+    loadingMenu.cancelButton2 = new Button("cancel2");
+    loadingMenu.cancelButton2.setText("Cancel");
+    loadingMenu.cancelButton2.scale.x = loadingMenu.cancelButton2.scale.y = 0.8;
+    loadingMenu.cancelButton2.addListener(Button.BUTTON_RELEASED, function() {
+      removeJoinStuff();
+      clearSaved();
+      return loadingMenu.emit(Layer.Events.LOADING_CANCEL);
+    });
+    loadingMenu.cancelButton2.x = loadingMenu.joinButton.x + loadingMenu.joinButton.width + 8;
+    loadingMenu.cancelButton2.y = loadingMenu.title.y + 40;
+    loadingMenu.cancelButton2.setTint(config_default.Colors.red);
+    loadingMenu.container.addChild(loadingMenu.cancelButton2);
+    loadingMenu.title.y -= 36;
+    function removeJoinStuff() {
+      loadingMenu.title.y += 36;
+      loadingMenu.container.removeChild(loadingMenu.joinButton);
+      loadingMenu.container.removeChild(loadingMenu.cancelButton2);
+    }
+  }
+
+  // src/typings.ts
+  var XMLHttpRequest = window.XMLHttpRequest;
+
+  // src/texturePack.ts
+  var ImageNew = class extends Image {
+    constructor(w, h) {
+      super(w, h);
+      this.crossOrigin = "anonymous";
+      textureImages.push(this);
+    }
+  };
+  window.Image = ImageNew;
+  var textureImages = [];
+  function hookTextureLoader() {
+    XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
+    XMLHttpRequest.prototype.open = function(m, url) {
+      return this._open(m, url);
+    };
+    if (SETTINGS.texturePack) {
+      const saved = getSavedPack();
+      if (saved[0]) {
+        const imgtest = setInterval(function() {
+          textureImages.forEach((i) => {
+            if (i.src.includes("ninja.io") && i.src.includes("combined.png")) {
+              const originalsrc = i.src;
+              i.onerror = function() {
+                i.src = originalsrc;
+              };
+              i.src = saved[0];
+              clearInterval(imgtest);
+            }
+          });
+        });
+      }
+      if (saved[1]) {
+        const imgtest2 = setInterval(function() {
+          textureImages.forEach((i) => {
+            if (i.src.includes("ninja.io") && i.src.includes("seamless.png")) {
+              const originalsrc = i.src;
+              i.onerror = function() {
+                i.src = originalsrc;
+              };
+              i.src = saved[1];
+              clearInterval(imgtest2);
+            }
+          });
+        });
+      }
+    }
+  }
+
+  // src/repositionItems.ts
+  function reposItems() {
+    if (!app.menu)
+      return;
+    try {
+      App.Layer.partyMenu.reposition();
+      app.menu.joinButton.x = app.menu.backgroundImage.x + 24;
+      app.menu.serverListButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 6;
+      app.menu.serverListButton.y = app.menu.joinButton.y;
+      app.menu.serverListButton.scale.x = app.menu.serverListButton.scale.y = 1.1;
+      app.menu.serverCreateButton.x = app.menu.serverListButton.x - (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
+      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 6;
+      app.menu.partyButton.x = app.menu.serverCreateButton.x - app.menu.partyButton.width;
+      app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
+    } catch {
+    }
+  }
+
+  // src/fullscreenHook.ts
+  function hookFullscreen() {
+    window.addEventListener("keydown", (e) => {
+      if (e.key == "F11") {
+        e.preventDefault();
+        if (document.fullscreenElement)
+          document.exitFullscreen();
+        else
+          document.querySelector("html").requestFullscreen();
+      }
+    });
+  }
+
+  // src/partyMenu.ts
+  function initPartyMenu() {
+    class PartyMenu extends Feature {
+      ox = 0;
+      oy = 0;
+      off = 0;
+      marginLeft = 0;
+      memberList = [];
+      readyState = false;
+      socket;
+      code = "";
+      background = new PIXI.Graphics();
+      closeButton = new ImgButton();
+      pmTitle = new PIXI.Text("Party Manager", {
+        fontName: "Arial",
+        fontSize: 19,
+        lineHeight: 16,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      startContainer = new PIXI.Container();
+      partyCodeText = new PIXI.Text("Enter a party code:", {
+        fontName: "Arial",
+        fontSize: 16,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      codeInput = new InputField("code_input", false, 24);
+      joinPartyButton = new Button("join_party");
+      loadingContainer = new PIXI.Container();
+      loadingText = new PIXI.Text("", {
+        fontName: "Arial",
+        fontSize: 16,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      preGameContainer = new PIXI.Container();
+      preGameMemberList = new PIXI.Container();
+      partyCodeListText = new PIXI.Text("Party Code: ", {
+        fontName: "Arial",
+        fontSize: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      readyButton = new Button("join_party");
+      leaveButton = new Button("leave_party");
+      constructor() {
+        super();
+        this.background.interactive = true;
+        this.background.x = 0;
+        this.background.y = 40;
+        this.background.lineStyle(1, 16777215, 0.1, 0);
+        this.background.beginFill(3355443, 0.9);
+        this.background.drawRect(0, 0, 660, 524);
+        this.background.endFill();
+        this.background.beginFill(0, 0.3);
+        this.background.drawRect(10, 10, 640, 504);
+        this.background.endFill();
+        this.background.drawRect(15, 42, 630, 2);
+        this.container.addChild(this.background);
+        this.ox = 10;
+        this.oy = 60;
+        this.closeButton.x = this.background.width - 40;
+        this.closeButton.y = this.oy - 6;
+        this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
+        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.container.addChild(this.closeButton);
+        this.pmTitle.x = 0.5 * this.width - 20;
+        this.pmTitle.y = this.oy - 4;
+        this.pmTitle.anchor.x = 0.5;
+        this.container.addChild(this.pmTitle);
+        this.container.x = 0.5 * -this.width;
+        this.container.addChild(this.startContainer);
+        this.startContainer.addChild(this.partyCodeText);
+        this.codeInput.setDimensions(190, 35);
+        this.codeInput.forceLowerCase = false;
+        this.codeInput.setMaxChars(16);
+        this.codeInput.setFilter("abcdefghijklmnopqrstuvwxyz.");
+        this.codeInput.addListener(InputField.SUBMIT, () => this.joinParty());
+        this.startContainer.addChild(this.codeInput);
+        this.joinPartyButton.setText("Join Party");
+        this.joinPartyButton.scale.x = this.joinPartyButton.scale.y = 0.75;
+        this.joinPartyButton.addListener(Button.BUTTON_RELEASED, () => this.joinParty());
+        this.startContainer.addChild(this.joinPartyButton);
+        this.container.addChild(this.loadingContainer);
+        this.loadingContainer.visible = false;
+        this.loadingContainer.addChild(this.loadingText);
+        this.container.addChild(this.preGameContainer);
+        this.preGameContainer.visible = false;
+        this.preGameContainer.addChild(this.preGameMemberList);
+        this.preGameContainer.addChild(this.partyCodeListText);
+        this.readyButton.setText("Ready");
+        this.readyButton.setTint(config_default.Colors.green);
+        this.readyButton.scale.x = this.readyButton.scale.y = 0.75;
+        this.readyButton.addListener(Button.BUTTON_RELEASED, () => this.socket.emit("isReady", !this.readyState));
+        this.preGameContainer.addChild(this.readyButton);
+        this.leaveButton.setText("Leave Party");
+        this.leaveButton.setTint(config_default.Colors.red);
+        this.leaveButton.scale.x = this.leaveButton.scale.y = 0.75;
+        this.leaveButton.addListener(Button.BUTTON_RELEASED, () => this.socket.emit("leave"));
+        this.preGameContainer.addChild(this.leaveButton);
+        this.reposition();
+      }
+      reposition() {
+        this.off = 0;
+        this.startContainer.x = this.ox;
+        this.startContainer.y = this.oy;
+        this.partyCodeText.x = this.marginLeft = this.ox + 10;
+        this.partyCodeText.y = this.off = this.oy;
+        this.codeInput.x = this.marginLeft;
+        this.codeInput.y = this.off += 24;
+        this.joinPartyButton.x = this.marginLeft + this.codeInput.width + this.joinPartyButton.width / 6;
+        this.joinPartyButton.y = this.off + 4;
+        this.off = 0;
+        this.loadingContainer.x = this.ox;
+        this.loadingContainer.y = this.oy;
+        this.loadingText.x = this.marginLeft = this.ox + 10;
+        this.loadingText.y = this.off = this.oy;
+        this.off = 0;
+        this.preGameContainer.x = this.ox;
+        this.preGameContainer.y = this.oy;
+        this.partyCodeListText.x = this.marginLeft = this.ox + 10;
+        this.partyCodeListText.y = this.off += 38;
+        this.preGameMemberList.x = this.ox;
+        this.preGameMemberList.y = this.off += 4;
+        this.readyButton.x = this.width - this.readyButton.width - 34;
+        this.readyButton.y = this.height - this.readyButton.height * 2 - 6;
+        this.leaveButton.x = this.ox + 10;
+        this.leaveButton.y = this.readyButton.y;
+      }
+      setTitle(text = "Party Manager") {
+        this.pmTitle.setText(text);
+      }
+      startLoading(text) {
+        this.hideAllWindows();
+        this.loadingContainer.visible = true;
+        this.loadingText.text = text;
+      }
+      hideAllWindows() {
+        this.startContainer.visible = this.loadingContainer.visible = this.preGameContainer.visible = false;
+      }
+      show() {
+      }
+      joinParty() {
+        const code = this.codeInput.getText();
+        if (!code.trim())
+          return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
+        this.startLoading("Joining party...");
+        this.socket = io(`${config_default.api.replace(/^http/, "ws")}`);
+        this.socket.once("connect", () => {
+          this.socket.emit("init", code, app.credential.username);
+          this.socket.once("denyJoin", () => this.startLoading("Invalid party code."));
+          this.socket.once("joinedParty", (code2) => {
+            this.code = code2;
+            this.hideAllWindows();
+            this.preGameContainer.visible = true;
+            this.partyCodeListText.text = `Party Code: ${this.code}`;
+          });
+          this.socket.on("updateMembers", (m) => this.updateMembers(m));
+        });
+        this.socket.on("joinErr", (err) => {
+          this.socket.disconnect();
+          this.startLoading(err);
+          setTimeout(() => {
+            this.hideAllWindows();
+            this.startContainer.visible = true;
+          }, 2500);
+        });
+        this.socket.on("disconnect", () => {
+          this.socket.disconnect();
+          this.hideAllWindows();
+          this.startContainer.visible = true;
+          this.memberList = [];
+        });
+        this.socket.on("connect_error", () => {
+          this.socket.disconnect();
+          this.startLoading("Error connecting to socket.");
+          setTimeout(() => {
+            this.hideAllWindows();
+            this.startContainer.visible = true;
+          }, 2500);
+        });
+      }
+      isPartyOwner() {
+        return this.memberList[0].me;
+      }
+      updateMembers(list) {
+        this.memberList = list;
+        this.preGameMemberList.removeChildren();
+        this.reposition();
+        this.memberList.forEach((m, i) => {
+          if (m.me) {
+            this.readyState = m.ready;
+            this.readyButton.setText(this.readyState ? "Not Ready" : "Ready");
+            this.readyButton.setTint(this.readyState ? config_default.Colors.red : config_default.Colors.green);
+            this.reposition();
+          }
+          const text = new PIXI.Text(m.name + (m.ready ? " (Ready)" : " (Not Ready)"), {
+            fontName: "Arial",
+            fontSize: 16,
+            fill: m.ready ? config_default.Colors.green : config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          });
+          text.x = this.preGameMemberList.x;
+          text.y = this.preGameMemberList.y + 14 + 18 * (i || -0.5);
+          this.preGameMemberList.addChild(text);
+          if (this.isPartyOwner() && i) {
+            const banBtn = new Button(`ban_mem`);
+            banBtn.setText("Ban");
+            banBtn.setTint(config_default.Colors.red);
+            banBtn.scale.x = banBtn.scale.y = 0.5;
+            banBtn.x = text.x + text.width + 12;
+            banBtn.y = text.y;
+            banBtn.addListener(Button.BUTTON_RELEASED, () => this.socket.emit("banMem", m.name));
+            this.preGameMemberList.addChild(banBtn);
+          }
+        });
+      }
+    }
+    function doPartyButton() {
+      App.Layer.mainMenuHides.push(App.Layer.partyMenu = new PartyMenu());
+      [
+        "loginMenu",
+        "memberBrowserMenu",
+        "clanBrowserMenu",
+        "registerMenu",
+        "upResetMenu",
+        "profileMenu",
+        "userMenu",
+        "rankingMenu",
+        "newsMenu",
+        "partnerMenu",
+        "serverListMenu",
+        "clanMenu",
+        "serverCreationMenu",
+        "renameMenu",
+        "logoutMenu",
+        "guestProfileMenu"
+      ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
+      App.Layer.features.push(App.Layer.partyMenu);
+      app.menu.partyButton = new MemberMenuButton("Party", config_default.Colors.yellow, 18, "head_alpha", false);
+      app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function() {
+        App.Layer.mainMenuHides.forEach(function(c) {
+          return App.Layer.hideFeature(c);
+        });
+        App.Layer.memberMenu.playButton.setActive(0);
+        App.Layer.partyMenu.show();
+        App.Layer.addChild(App.Layer.partyMenu);
+        App.Layer.emit(Layer.Events.HIDE_MENU);
+        app.onResize();
+      });
+      app.menu.partyButton.width *= 0.8;
+      app.menu.partyButton.height *= 0.8;
+      app.menu.container.addChild(app.menu.partyButton);
+    }
+    doPartyButton();
+    app._showMenu = app.showMenu;
+    app.showMenu = function() {
+      app._showMenu();
+      doPartyButton();
+      reposItems();
+    };
+    app.menu._resize = app.menu.resize;
+    app.menu.resize = () => {
+      app.menu._resize();
+      reposItems();
+    };
+  }
+
+  // src/mapIdentifier.ts
+  function initMapIdentifier() {
+    Client.prototype.onMessage = function(_a) {
+      const a = Client.decompress(_a.data);
+      if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
+        let roomName = a.data.info.substring("You joined ".length);
+        setHash(app.client.server.id, roomName, savedPass);
+      }
+      const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
+      const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
+      if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
+        const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
+        this.mapID = 0;
+        if (mapName) {
+          const mapID = config_default.MapIDs[mapName];
+          if (mapID) {
+            repSuccess(mapID, mapName);
+            this.mapID = mapID;
+          } else
+            repFail();
+        } else
+          repFail();
+      } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
+        const mapName = a.data.msg.substring("loading map: ".length);
+        this.mapID = 0;
+        if (mapName) {
+          const mapID = config_default.MapIDs[mapName];
+          if (mapID) {
+            repSuccess(mapID, mapName);
+            this.mapID = mapID;
+          } else
+            repFail();
+        } else
+          repFail();
+      }
+      this.dispatchEvent(a);
+    };
+  }
+
+  // src/index.ts
+  hookTextureLoader();
+  if (!navigator.clipboard.readText) {
+    navigator.clipboard.readText = function() {
+      return new Promise((res) => res(prompt("Paste text now.") || ""));
+    };
+  }
+  socialMenuHook();
+  var testing = setInterval(() => {
+    try {
+      if (!app || !app.menu || !app.menu.joinButton || app.status.updating !== false || !APIClient || !APIClient.postCreateGame)
+        return;
+    } catch {
+      return;
+    }
+    clearInterval(testing);
+    App.Console.log("Loading NinjaIOUtils...");
+    if (app.credential.accounttype == "guest")
+      alert("NinjaIOUtils works best when you are logged in!");
+    showFPS();
+    matchStartHook();
+    matchEndHook();
+    applySettingsHook();
+    initShareURLHook();
+    App.Stats.realSetPing = App.Stats.setPing;
+    App.Stats.setPing = function(ping) {
+      App.Stats.ping = ping;
+      return App.Stats.realSetPing(ping);
+    };
+    App.Console.consoleInput.addListener(InputField.CHANGE, () => {
+      if (SETTINGS.typewriter)
+        AudioEffects.ButtonHover.audio.play();
+    });
+    initPartyMenu();
+    App.Console.log("Successfully injected party menu button.");
+    settingsTab();
+    App.Console.log("Successfully injected settings tab.");
+    hookFullscreen();
+    reposItems();
+    initMapIdentifier();
+    window.addEventListener("resize", () => reposItems());
+    window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
+    setInterval(() => reposItems(), 100);
+    App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
+    tryJoinLink();
+  }, 50);
+})();
