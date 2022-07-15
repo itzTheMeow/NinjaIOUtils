@@ -164,9 +164,12 @@ declare var Client: {
 };
 declare var app: {
   menu: Container & {
+    backgroundImage: Container;
     joinButton: Container;
     partyButton: MemberMenuButton;
     container: Container;
+    serverListButton: Container;
+    serverCreateButton: Container;
     settingsPanel: Container & {
       displayTab(tab: string): void;
       controlsTab: Container & {
@@ -178,6 +181,7 @@ declare var app: {
       utilTabButtonBackground: Container;
     };
     resize(): void;
+    _resize(): void;
   };
   status: { updating?: boolean; message?: string };
   credential: {

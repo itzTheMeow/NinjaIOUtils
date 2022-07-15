@@ -1,5 +1,9 @@
 # Userscript
 
+v1.3
+
+- rearranged the home screen buttons
+
 v1.2
 
 - fixed party button issue

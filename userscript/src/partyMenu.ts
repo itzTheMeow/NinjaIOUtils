@@ -295,4 +295,9 @@ export default function initPartyMenu() {
     doPartyButton();
     reposItems();
   };
+  app.menu._resize = app.menu.resize;
+  app.menu.resize = () => {
+    app.menu._resize();
+    reposItems();
+  };
 }

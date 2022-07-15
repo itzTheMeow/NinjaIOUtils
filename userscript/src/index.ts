@@ -68,6 +68,8 @@ const testing = setInterval(() => {
   reposItems();
   initMapIdentifier();
   window.addEventListener("resize", () => reposItems());
+  window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
+  setInterval(() => reposItems(), 100);
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
   tryJoinLink();
