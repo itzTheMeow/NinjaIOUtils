@@ -1,6 +1,6 @@
 import { Socket } from "socket.io-client";
 import config from "./config";
-import reposItems from "./repositionItems";
+import reposItems, { reindexItems } from "./repositionItems";
 import { saveSettings, SETTINGS } from "./settings";
 import { SocketTypes } from "./typings";
 import { io } from "./utils";
@@ -45,6 +45,7 @@ export default function initOnlineOptionHook() {
     app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
     app.menu.container.addChild(app.menu.onlineOption);
     app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
+    reindexItems();
     reposItems();
   }
   doOnlineStatusOption();

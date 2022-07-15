@@ -1,5 +1,9 @@
 # Userscript
 
+v1.5
+
+- Fixed some z-index issues.
+
 v1.4
 
 - Added "Appear Online" box.

@@ -22,3 +22,7 @@ export default function reposItems() {
       app.menu.onlineOption.height / 2;
   } catch {}
 }
+export function reindexItems() {
+  app.menu.modeContainer.parent.addChild(app.menu.modeContainer);
+  app.menu.serverContainer.parent.addChild(app.menu.serverContainer);
+}

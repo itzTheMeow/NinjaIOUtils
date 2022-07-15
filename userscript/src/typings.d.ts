@@ -173,6 +173,8 @@ declare var app: {
     serverListButton: Container;
     serverCreateButton: Container;
     onlineOption: Checkbox;
+    serverContainer: Container;
+    modeContainer: Container;
     settingsPanel: Container & {
       displayTab(tab: string): void;
       controlsTab: Container & {

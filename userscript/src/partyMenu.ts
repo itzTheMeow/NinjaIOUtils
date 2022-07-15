@@ -1,5 +1,5 @@
 import config from "./config";
-import reposItems from "./repositionItems";
+import reposItems, { reindexItems } from "./repositionItems";
 import type { Socket } from "socket.io-client";
 import { io } from "./utils";
 import { SocketTypes } from "./typings";
@@ -287,6 +287,7 @@ export default function initPartyMenu() {
     app.menu.partyButton.width *= 0.8;
     app.menu.partyButton.height *= 0.8;
     app.menu.container.addChild(app.menu.partyButton);
+    reindexItems();
   }
   doPartyButton();
   app.onShowMenu(() => doPartyButton());

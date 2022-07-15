@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.4
+// @version      1.5
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.4",
+    ver: "1.5",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -772,6 +772,10 @@ ${name}`);
     } catch {
     }
   }
+  function reindexItems() {
+    app.menu.modeContainer.parent.addChild(app.menu.modeContainer);
+    app.menu.serverContainer.parent.addChild(app.menu.serverContainer);
+  }
 
   // src/fullscreenHook.ts
   function hookFullscreen() {
@@ -1045,6 +1049,7 @@ ${name}`);
       app.menu.partyButton.width *= 0.8;
       app.menu.partyButton.height *= 0.8;
       app.menu.container.addChild(app.menu.partyButton);
+      reindexItems();
     }
     doPartyButton();
     app.onShowMenu(() => doPartyButton());
@@ -1135,6 +1140,7 @@ ${name}`);
       app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
       app.menu.container.addChild(app.menu.onlineOption);
       app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
+      reindexItems();
       reposItems();
     }
     doOnlineStatusOption();
