@@ -6,6 +6,7 @@ interface Settings {
   customPack: string | null;
   typewriter: boolean;
   apiKey: string;
+  appearOnline: boolean;
 }
 const settingsKey = "ninjaioutils";
 const packKey = "DONTEDIT_ninja_custompack";
@@ -17,6 +18,7 @@ export const SETTINGS: Settings = {
     customPack: null,
     typewriter: false,
     apiKey: "",
+    appearOnline: true,
   },
   ...JSON.parse(localStorage.getItem(settingsKey) || "{}"),
 };

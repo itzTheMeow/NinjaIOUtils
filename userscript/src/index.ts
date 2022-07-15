@@ -12,6 +12,7 @@ import settingsTab from "./settingsTab";
 import hookFullscreen from "./fullscreenHook";
 import initPartyMenu from "./partyMenu";
 import initMapIdentifier from "./mapIdentifier";
+import initOnlineOptionHook from "./onlineStatus";
 
 config; // ensures config is at the top of the compiled file
 
@@ -45,6 +46,17 @@ const testing = setInterval(() => {
   if (app.credential.accounttype == "guest")
     alert("NinjaIOUtils works best when you are logged in!");
 
+  app._showMenu = app.showMenu;
+  const menuListeners: (() => any)[] = [];
+  app.onShowMenu = (cb: () => any) => {
+    menuListeners.push(cb);
+  };
+  app.showMenu = function () {
+    app._showMenu();
+    menuListeners.forEach((l) => l());
+    reposItems();
+  };
+
   showFPS();
   matchStartHook();
   matchEndHook();
@@ -60,6 +72,7 @@ const testing = setInterval(() => {
   App.Console.consoleInput.addListener(InputField.CHANGE, () => {
     if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
   });
+  initOnlineOptionHook();
   initPartyMenu();
   App.Console.log("Successfully injected party menu button.");
   settingsTab();

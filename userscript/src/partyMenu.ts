@@ -1,8 +1,8 @@
 import config from "./config";
-import type { Socket } from "socket.io-client";
 import reposItems from "./repositionItems";
-
-declare function io(url: string): Socket;
+import type { Socket } from "socket.io-client";
+import { io } from "./utils";
+import { SocketTypes } from "./typings";
 
 export default function initPartyMenu() {
   class PartyMenu extends Feature {
@@ -170,9 +170,9 @@ export default function initPartyMenu() {
       const code = this.codeInput.getText();
       if (!code.trim()) return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
       this.startLoading("Joining party...");
-      this.socket = io(`${config.api.replace(/^http/, "ws")}`);
+      this.socket = io(`${config.api}`);
       this.socket.once("connect", () => {
-        this.socket.emit("init", code, app.credential.username);
+        this.socket.emit("init", SocketTypes.party, code, app.credential.username);
         this.socket.once("denyJoin", () => this.startLoading("Invalid party code."));
         this.socket.once("joinedParty", (code) => {
           this.code = code;
@@ -289,12 +289,7 @@ export default function initPartyMenu() {
     app.menu.container.addChild(app.menu.partyButton);
   }
   doPartyButton();
-  app._showMenu = app.showMenu;
-  app.showMenu = function () {
-    app._showMenu();
-    doPartyButton();
-    reposItems();
-  };
+  app.onShowMenu(() => doPartyButton());
   app.menu._resize = app.menu.resize;
   app.menu.resize = () => {
     app.menu._resize();

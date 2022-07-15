@@ -40,6 +40,14 @@ https://ninja.io/#8&NA%203%20Ranked%20%2314
 Anyone you send this to (with the script) can join your server! This includes the server password for private servers.
 If the game is full, the script will hang and you can't join the server. (working on notifying you if the server is full)
 
+### Online Mode
+
+When the "Appear Online" checkbox is checked, you will appear online and using utils to other users also using utils.
+
+**IF YOU APPEAR ONLINE, OTHER PEOPLE USING UTILS CAN JOIN YOUR _PUBLIC_ GAMES**
+
+Other people can not join your games if you do not appear online or your game has a password.
+
 ### Texture Packs
 
 You can use a texture pack via the in-game texture pack browser. If you have created a texture pack and would like to use it, DM me on discord or follow the instructions below:

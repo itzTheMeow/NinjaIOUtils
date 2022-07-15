@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.3
+// @version      1.4
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.3",
+    ver: "1.4",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -95,7 +95,8 @@
       texturePack: null,
       customPack: null,
       typewriter: false,
-      apiKey: ""
+      apiKey: "",
+      appearOnline: true
     },
     ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
   };
@@ -107,6 +108,9 @@
   var inGame = () => app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
   function setHash(id, name, pass) {
     window.location.hash = pass ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}` : `${id}&${encodeURIComponent(name)}`;
+  }
+  function io(url) {
+    return window.io(url);
   }
 
   // src/fpsCounter.ts
@@ -760,9 +764,11 @@ ${name}`);
       app.menu.serverListButton.y = app.menu.joinButton.y;
       app.menu.serverListButton.scale.x = app.menu.serverListButton.scale.y = 1.1;
       app.menu.serverCreateButton.x = app.menu.serverListButton.x - (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
-      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 6;
+      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 7;
       app.menu.partyButton.x = app.menu.serverCreateButton.x - app.menu.partyButton.width;
       app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
+      app.menu.onlineOption.x = app.menu.joinButton.x + (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
+      app.menu.onlineOption.y = app.menu.serverCreateButton.y + app.menu.serverCreateButton.height / 2 - app.menu.onlineOption.height / 2;
     } catch {
     }
   }
@@ -932,9 +938,9 @@ ${name}`);
         if (!code.trim())
           return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
         this.startLoading("Joining party...");
-        this.socket = io(`${config_default.api.replace(/^http/, "ws")}`);
+        this.socket = io(`${config_default.api}`);
         this.socket.once("connect", () => {
-          this.socket.emit("init", code, app.credential.username);
+          this.socket.emit("init", 1 /* party */, code, app.credential.username);
           this.socket.once("denyJoin", () => this.startLoading("Invalid party code."));
           this.socket.once("joinedParty", (code2) => {
             this.code = code2;
@@ -1041,12 +1047,7 @@ ${name}`);
       app.menu.container.addChild(app.menu.partyButton);
     }
     doPartyButton();
-    app._showMenu = app.showMenu;
-    app.showMenu = function() {
-      app._showMenu();
-      doPartyButton();
-      reposItems();
-    };
+    app.onShowMenu(() => doPartyButton());
     app.menu._resize = app.menu.resize;
     app.menu.resize = () => {
       app.menu._resize();
@@ -1093,6 +1094,56 @@ ${name}`);
     };
   }
 
+  // src/onlineStatus.ts
+  var failedOnline = false;
+  var onlineSocket;
+  function goOnline() {
+    failedOnline = false;
+    if (onlineSocket)
+      onlineSocket.disconnect();
+    onlineSocket = io(config_default.api);
+    onlineSocket.on("connect", () => onlineSocket.emit("init", 0 /* online */, app.credential.username));
+    onlineSocket.on("success", () => {
+      App.Console.log("Successfully went online!");
+    });
+    onlineSocket.on("fail", (msg) => {
+      failedOnline = true;
+      App.Console.log(`Failed to go online: ${msg}`);
+    });
+    onlineSocket.on("disconnect", () => {
+      onlineSocket = null;
+      App.Console.log("Went offline.");
+    });
+  }
+  function goOffline() {
+    if (onlineSocket) {
+      onlineSocket.emit("dc");
+      onlineSocket.disconnect();
+    }
+  }
+  function initOnlineOptionHook() {
+    function doOnlineStatusOption() {
+      app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
+      app.menu.onlineOption.on(Checkbox.CHANGE, function(b) {
+        SETTINGS.appearOnline = b;
+        saveSettings();
+        if (SETTINGS.appearOnline)
+          goOnline();
+        else
+          goOffline();
+      });
+      app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
+      app.menu.container.addChild(app.menu.onlineOption);
+      app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
+      reposItems();
+    }
+    doOnlineStatusOption();
+    app.onShowMenu(() => doOnlineStatusOption());
+    if (SETTINGS.appearOnline)
+      goOnline();
+    setInterval(() => SETTINGS.appearOnline && !onlineSocket && !failedOnline && goOnline(), 1e3);
+  }
+
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
@@ -1112,6 +1163,16 @@ ${name}`);
     App.Console.log("Loading NinjaIOUtils...");
     if (app.credential.accounttype == "guest")
       alert("NinjaIOUtils works best when you are logged in!");
+    app._showMenu = app.showMenu;
+    const menuListeners = [];
+    app.onShowMenu = (cb) => {
+      menuListeners.push(cb);
+    };
+    app.showMenu = function() {
+      app._showMenu();
+      menuListeners.forEach((l) => l());
+      reposItems();
+    };
     showFPS();
     matchStartHook();
     matchEndHook();
@@ -1126,6 +1187,7 @@ ${name}`);
       if (SETTINGS.typewriter)
         AudioEffects.ButtonHover.audio.play();
     });
+    initOnlineOptionHook();
     initPartyMenu();
     App.Console.log("Successfully injected party menu button.");
     settingsTab();

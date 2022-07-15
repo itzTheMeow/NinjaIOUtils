@@ -10,8 +10,15 @@ export default function reposItems() {
       app.menu.serverListButton.x -
       (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
     app.menu.serverCreateButton.y =
-      app.menu.serverListButton.y + app.menu.serverListButton.height + 6;
+      app.menu.serverListButton.y + app.menu.serverListButton.height + 7;
     app.menu.partyButton.x = app.menu.serverCreateButton.x - app.menu.partyButton.width;
     app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
+    app.menu.onlineOption.x =
+      app.menu.joinButton.x +
+      (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
+    app.menu.onlineOption.y =
+      app.menu.serverCreateButton.y +
+      app.menu.serverCreateButton.height / 2 -
+      app.menu.onlineOption.height / 2;
   } catch {}
 }

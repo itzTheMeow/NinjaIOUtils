@@ -101,7 +101,9 @@ declare var MemberMenuButton: MemberMenuButton &
     ): MemberMenuButton;
   };
 
-interface Checkbox extends Container {}
+interface Checkbox extends Container {
+  setChecked(checked: boolean): void;
+}
 declare var Checkbox: Container & {
   new (id: string, text: string, checked: boolean): Checkbox;
   CHANGE: string;
@@ -170,6 +172,7 @@ declare var app: {
     container: Container;
     serverListButton: Container;
     serverCreateButton: Container;
+    onlineOption: Checkbox;
     settingsPanel: Container & {
       displayTab(tab: string): void;
       controlsTab: Container & {
@@ -198,6 +201,7 @@ declare var app: {
   };
   showMenu(): void;
   _showMenu(): void;
+  onShowMenu(cb: () => any): void;
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
   onResize(): void;

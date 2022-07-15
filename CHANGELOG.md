@@ -1,12 +1,16 @@
 # Userscript
 
+v1.4
+
+- Added "Appear Online" box.
+
 v1.3
 
-- rearranged the home screen buttons
+- Rearranged the home screen buttons.
 
 v1.2
 
-- fixed party button issue
+- Fixed party button issue.
 
 v1.1
 
