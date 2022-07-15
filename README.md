@@ -48,7 +48,7 @@ You can use a texture pack via the in-game texture pack browser. If you have cre
 
 [Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder. There are no rules for packs, just don't make it NSFW.
 
-Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png).
+Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png). If your pack does not change terrain, don't upload the terrain file. If your pack does not change textures, don't upload the textures file.
 
 You need to create a file for your texture pack metadata, call it `id.json`. (example AllWhite.json)
 
