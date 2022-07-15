@@ -46,7 +46,7 @@ You can use a texture pack via the in-game texture pack browser. If you have cre
 
 #### How to Add a Texture Pack
 
-[Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder.
+[Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder. There are no rules for packs, just don't make it NSFW.
 
 Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png).
 
@@ -62,6 +62,8 @@ Fill this out and put it in the file:
   "description": "Such a cool pack!" // just describe what it does
 }
 ```
+
+You should now have a `.json` file and one or two `.png` files. You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
 
 <!--
 **Invisible** - Just floating bodies and UI components. - `https://i.imgur.com/A1tUIdN.png` - by Meow
