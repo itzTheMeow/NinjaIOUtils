@@ -130,6 +130,7 @@ interface SocialMenuProto {
   loadFriends(): Promise<void>;
   onlineFriends: string[];
   friends: FriendItem[];
+  container: Container;
 }
 declare var SocialMenu: Container &
   SocialMenuProto & {

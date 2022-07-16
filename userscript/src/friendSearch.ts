@@ -29,7 +29,7 @@ export function socialMenuHook() {
     }
     this.listContainer.removeChildren = () => {
       this.listContainer.removeChild(...this.listContainer.children);
-      this.removeChild(this.listSearch);
+      this.container.removeChild(this.listSearch);
     };
 
     const searchTerm = this.listSearch.getText() || "";
@@ -48,7 +48,7 @@ export function socialMenuHook() {
         });
       }
     });
-    if (!this.listSearch.parent) this.addChild(this.listSearch);
+    if (!this.listSearch.parent) this.container.addChild(this.listSearch);
     const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
     const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
     if (this.invites.length <= itemDisplayCount) {

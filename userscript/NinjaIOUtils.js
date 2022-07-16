@@ -190,7 +190,7 @@
       }
       this.listContainer.removeChildren = () => {
         this.listContainer.removeChild(...this.listContainer.children);
-        this.removeChild(this.listSearch);
+        this.container.removeChild(this.listSearch);
       };
       const searchTerm = this.listSearch.getText() || "";
       const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
@@ -205,7 +205,7 @@
         }
       });
       if (!this.listSearch.parent)
-        this.addChild(this.listSearch);
+        this.container.addChild(this.listSearch);
       const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
       const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
       if (this.invites.length <= itemDisplayCount) {
