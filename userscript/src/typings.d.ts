@@ -19,6 +19,7 @@ interface Container extends EventDispatcher {
   scale: { x: number; y: number };
   visible: boolean;
   text: string;
+  tint: number;
   setText(txt: string): void;
   addChild(child: Container): Container;
   removeChild(child: Container): void;
@@ -41,7 +42,17 @@ interface Text extends Container {
 declare var PIXI: {
   Text: Text;
   Container: Container & { new (): Container };
-  Graphics(): void;
+  Graphics: Container & {
+    new (): Container & {
+      beginFill(arg0: number, arg1: number): void;
+      drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
+      endFill(): void;
+      drawCircle(arg0: number, arg1: number, arg2: number): void;
+    };
+  };
+  BitmapText: Container & {
+    new (text: string, opts?: Partial<{ fontName: string; fontSize: number }>): Container;
+  };
 };
 
 declare var SettingsPanel: {
@@ -110,7 +121,14 @@ declare var Checkbox: Container & {
 };
 
 interface SocialMenuProto {
-  maskInvitationList: (scrollDist: number) => void;
+  maskInvitationList(scrollDist: number): void;
+  _maskFriendList(scrollDist: number): void;
+  maskFriendList(scrollDist: number): void;
+  friendScrollRatio: number;
+  mode: "friends" & string;
+  loadFriends(): Promise<void>;
+  onlineFriends: string[];
+  friends: FriendItem[];
 }
 declare var SocialMenu: Container &
   SocialMenuProto & {
@@ -128,7 +146,15 @@ declare var SocialMenu: Container &
       redReady: boolean;
     })[];
     prototype: SocialMenuProto;
+    ACCESS_PROFILE: string;
+    SHOW_FRIEND_DROPDOWN: string;
   };
+
+declare interface FriendItem extends Container {}
+declare class FriendItem {
+  seen: Date;
+  name: string;
+}
 
 declare interface Feature extends Container {}
 declare class Feature {
@@ -234,6 +260,7 @@ declare var App: {
     };
     mainMenuHides: Container[];
     features: Container[];
+    socialMenu: SocialMenuProto;
     hideFeature(feature: Container): void;
   };
   prototype: {

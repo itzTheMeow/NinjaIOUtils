@@ -16,6 +16,9 @@ export default {
     red: 12603201,
     yellow: 16763904,
     white: 13421772,
+    dotGreen: 65280,
+    dotOrange: 16757012,
+    dotGrey: 8947848,
   },
   MapIDs: {
     Hull: 1,

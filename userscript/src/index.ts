@@ -13,6 +13,7 @@ import hookFullscreen from "./fullscreenHook";
 import initPartyMenu from "./partyMenu";
 import initMapIdentifier from "./mapIdentifier";
 import initOnlineOptionHook from "./onlineStatus";
+import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -23,10 +24,21 @@ if (!navigator.clipboard.readText) {
     return new Promise((res) => res(prompt("Paste text now.") || ""));
   };
 }
-socialMenuHook();
 
+let socialMenuDone = false;
 /* Test to make sure game is fully loaded. */
 const testing = setInterval(() => {
+  if (!socialMenuDone) {
+    try {
+      if (SocialMenu && FriendItem) {
+        socialMenuHook();
+        initFriendOnlineHook();
+        socialMenuDone = true;
+      } else return;
+    } catch {
+      return;
+    }
+  }
   try {
     if (
       !app ||
@@ -44,7 +56,10 @@ const testing = setInterval(() => {
 
   App.Console.log("Loading NinjaIOUtils...");
   if (app.credential.accounttype == "guest")
-    alert("NinjaIOUtils works best when you are logged in!");
+    alert(
+      `NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`
+    );
 
   app._showMenu = app.showMenu;
   const menuListeners: (() => any)[] = [];
@@ -83,6 +98,10 @@ const testing = setInterval(() => {
   window.addEventListener("resize", () => reposItems());
   window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
   setInterval(() => reposItems(), 100);
+
+  updateFriendList();
+  setTimeout(() => updateFriendList(), 2000);
+  setInterval(() => updateFriendList(), 60000);
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
   tryJoinLink();

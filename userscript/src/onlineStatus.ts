@@ -8,11 +8,13 @@ import { io } from "./utils";
 let failedOnline = false;
 let onlineSocket: Socket;
 export function goOnline() {
+  if (app.credential.accounttype == "guest")
+    return App.Console.log("Failed to go online: You are not logged in!");
   failedOnline = false;
   if (onlineSocket) onlineSocket.disconnect();
   onlineSocket = io(config.api);
   onlineSocket.on("connect", () =>
-    onlineSocket.emit("init", SocketTypes.online, app.credential.username)
+    onlineSocket.emit("init", SocketTypes.online, app.credential.playerid)
   );
   onlineSocket.on("success", () => {
     App.Console.log("Successfully went online!");

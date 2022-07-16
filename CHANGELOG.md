@@ -1,5 +1,10 @@
 # Userscript
 
+v1.6
+
+- Changed the way online mode works.
+- Users not using utils appear orange instead of green.
+
 v1.5
 
 - Fixed some z-index issues.

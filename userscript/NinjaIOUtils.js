@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.5
+// @version      1.6
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.5",
+    ver: "1.6",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -42,7 +42,10 @@
       green: 8978312,
       red: 12603201,
       yellow: 16763904,
-      white: 13421772
+      white: 13421772,
+      dotGreen: 65280,
+      dotOrange: 16757012,
+      dotGrey: 8947848
     },
     MapIDs: {
       Hull: 1,
@@ -163,78 +166,76 @@
 
   // src/friendSearch.ts
   function socialMenuHook() {
-    if (window.SocialMenu) {
-      SocialMenu.prototype.maskInvitationList = function(scrollDist) {
-        const pl = "Type to search.";
-        const pad = 8;
-        if (!this.listSearch) {
-          this.listSearch = new InputField("list_search", false, SocialMenu.ItemHeight / 1.5);
-          this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
-          this.listSearch.forceLowerCase = false;
-          this.listSearch.setMaxChars(128);
-          this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.-_ ");
-          this.listSearch.x = pad;
-          this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
-          this.listSearch.setText(pl);
-          const ls = this;
-          this.listSearch.addListener(InputField.CHANGE, function(d2) {
-            d2 = d2.data.value || "";
-            if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
-              d2 = d2.substring(pl.length);
-              ls.listSearch.setText(d2);
-            }
-            ls.maskInvitationList(ls.inviteScrollRatio);
+    SocialMenu.prototype.maskInvitationList = function(scrollDist) {
+      const pl = "Type to search.";
+      const pad = 8;
+      if (!this.listSearch) {
+        this.listSearch = new InputField("list_search", false, SocialMenu.ItemHeight / 1.5);
+        this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
+        this.listSearch.forceLowerCase = false;
+        this.listSearch.setMaxChars(128);
+        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.-_ ");
+        this.listSearch.x = pad;
+        this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
+        this.listSearch.setText(pl);
+        const ls = this;
+        this.listSearch.addListener(InputField.CHANGE, function(d2) {
+          d2 = d2.data.value || "";
+          if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
+            d2 = d2.substring(pl.length);
+            ls.listSearch.setText(d2);
+          }
+          ls.maskInvitationList(ls.inviteScrollRatio);
+        });
+      }
+      const searchTerm = this.listSearch.getText() || "";
+      const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
+      this.invites.forEach((i) => {
+        i.alpha = 1;
+        i.isRed = false;
+        if (!i.redReady) {
+          i.redReady = true;
+          i.on("mouseout", function() {
+            i.tint = i.isRed ? config_default.Colors.red : 12303291;
           });
         }
-        const searchTerm = this.listSearch.getText() || "";
-        const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
-        this.invites.forEach((i) => {
-          i.alpha = 1;
-          i.isRed = false;
-          if (!i.redReady) {
-            i.redReady = true;
-            i.on("mouseout", function() {
-              i.tint = i.isRed ? config_default.Colors.red : 12303291;
-            });
-          }
-        });
-        if (!this.listSearch.parent)
-          this.listContainer.addChild(this.listSearch);
-        const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
-        const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
-        if (this.invites.length <= itemDisplayCount) {
-          this.listContainer.y = 0;
-        } else {
-          this.invites.forEach((i) => this.listContainer.removeChild(i));
-          this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
-          for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
-            const inv = this.invites[d + displayOffset];
-            this.listContainer.addChild(inv);
-            let g;
-            if (0 === displayOffset) {
-              g = d * SocialMenu.ItemHeight + this.listContainer.y;
-              inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
-            } else {
-              displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
-            }
-          }
-          this.inviteScrollRatio = scrollDist;
-        }
-        this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height - this.listContainer.y;
-        this.invites.forEach((i) => {
-          i.tint = 12303291;
-          if (!filtered)
-            return;
-          if (filtered.includes(i)) {
-            i.tint = 12603201;
-            i.alpha = 1;
-            i.isRed = true;
+      });
+      if (!this.listSearch.parent)
+        this.listContainer.addChild(this.listSearch);
+      const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
+      const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
+      if (this.invites.length <= itemDisplayCount) {
+        this.listContainer.y = 0;
+      } else {
+        this.invites.forEach((i) => this.listContainer.removeChild(i));
+        this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
+        for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
+          const inv = this.invites[d + displayOffset];
+          this.listContainer.addChild(inv);
+          let g;
+          if (0 === displayOffset) {
+            g = d * SocialMenu.ItemHeight + this.listContainer.y;
+            inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
           } else {
-            i.alpha *= 0.5;
+            displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
           }
-        });
-      };
-    }
+        }
+        this.inviteScrollRatio = scrollDist;
+      }
+      this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height - this.listContainer.y;
+      this.invites.forEach((i) => {
+        i.tint = 12303291;
+        if (!filtered)
+          return;
+        if (filtered.includes(i)) {
+          i.tint = 12603201;
+          i.alpha = 1;
+          i.isRed = true;
+        } else {
+          i.alpha *= 0.5;
+        }
+      });
+    };
   }
 
   // src/matchEndHook.ts
@@ -1103,11 +1104,13 @@ ${name}`);
   var failedOnline = false;
   var onlineSocket;
   function goOnline() {
+    if (app.credential.accounttype == "guest")
+      return App.Console.log("Failed to go online: You are not logged in!");
     failedOnline = false;
     if (onlineSocket)
       onlineSocket.disconnect();
     onlineSocket = io(config_default.api);
-    onlineSocket.on("connect", () => onlineSocket.emit("init", 0 /* online */, app.credential.username));
+    onlineSocket.on("connect", () => onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
     onlineSocket.on("success", () => {
       App.Console.log("Successfully went online!");
     });
@@ -1150,6 +1153,64 @@ ${name}`);
     setInterval(() => SETTINGS.appearOnline && !onlineSocket && !failedOnline && goOnline(), 1e3);
   }
 
+  // src/friendOnlineHook.ts
+  function initFriendOnlineHook() {
+    SocialMenu.prototype._maskFriendList = SocialMenu.prototype.maskFriendList;
+    SocialMenu.prototype.maskFriendList = function(scrollDist) {
+      this.friends.sort((f1, f2) => f2.seen.getTime() - f1.seen.getTime()).forEach((f, fi) => f.y = 47 + fi * SocialMenu.ItemHeight);
+      this._maskFriendList(scrollDist);
+    };
+    FriendItem = class FriendItem extends PIXI.Graphics {
+      id;
+      name;
+      seen;
+      clan;
+      interactive;
+      nameLabel;
+      onlineNow;
+      constructor(id, name, seen, clan) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.seen = new Date(Date.parse(seen) - 6e4 * new Date().getTimezoneOffset());
+        this.onlineNow = !!App.Layer.socialMenu.onlineFriends?.includes(this.id);
+        if (this.onlineNow)
+          this.seen = new Date();
+        this.clan = clan;
+        this.beginFill(16777215, 0.15);
+        this.drawRoundedRect(0, 0, 340, 26, 4);
+        this.endFill();
+        this.interactive = true;
+        this.tint = 12303291;
+        this.on("mouseover", () => {
+          this.tint = 16777215;
+        });
+        this.on("mouseout", () => {
+          this.tint = 12303291;
+        });
+        this.on("mousedown", () => this.emit(SocialMenu.ACCESS_PROFILE, this.id));
+        this.on("rightdown", () => this.emit(SocialMenu.SHOW_FRIEND_DROPDOWN, this.id));
+        this.beginFill(this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey, 1);
+        this.drawCircle(320, 13, 8);
+        this.endFill();
+        this.nameLabel = new PIXI.BitmapText(this.name, { fontName: "Open Sans", fontSize: 22 });
+        this.nameLabel.x = 8;
+        this.nameLabel.y = 2;
+        this.addChild(this.nameLabel);
+      }
+    };
+  }
+  async function updateFriendList() {
+    if (App.Layer.socialMenu.mode == "friends") {
+      try {
+        const friendsOnline = await fetch(`${config_default.api}/ninja/onlinepeeps`).then((res) => res.json());
+        App.Layer.socialMenu.onlineFriends = friendsOnline;
+      } catch {
+      }
+      await App.Layer.socialMenu.loadFriends();
+    }
+  }
+
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
@@ -1157,8 +1218,20 @@ ${name}`);
       return new Promise((res) => res(prompt("Paste text now.") || ""));
     };
   }
-  socialMenuHook();
+  var socialMenuDone = false;
   var testing = setInterval(() => {
+    if (!socialMenuDone) {
+      try {
+        if (SocialMenu && FriendItem) {
+          socialMenuHook();
+          initFriendOnlineHook();
+          socialMenuDone = true;
+        } else
+          return;
+      } catch {
+        return;
+      }
+    }
     try {
       if (!app || !app.menu || !app.menu.joinButton || app.status.updating !== false || !APIClient || !APIClient.postCreateGame)
         return;
@@ -1168,7 +1241,8 @@ ${name}`);
     clearInterval(testing);
     App.Console.log("Loading NinjaIOUtils...");
     if (app.credential.accounttype == "guest")
-      alert("NinjaIOUtils works best when you are logged in!");
+      alert(`NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`);
     app._showMenu = app.showMenu;
     const menuListeners = [];
     app.onShowMenu = (cb) => {
@@ -1204,6 +1278,9 @@ ${name}`);
     window.addEventListener("resize", () => reposItems());
     window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
     setInterval(() => reposItems(), 100);
+    updateFriendList();
+    setTimeout(() => updateFriendList(), 2e3);
+    setInterval(() => updateFriendList(), 6e4);
     App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
     tryJoinLink();
   }, 50);
