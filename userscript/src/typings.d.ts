@@ -20,9 +20,10 @@ interface Container extends EventDispatcher {
   visible: boolean;
   text: string;
   tint: number;
+  children: Container[];
   setText(txt: string): void;
   addChild(child: Container): Container;
-  removeChild(child: Container): void;
+  removeChild(...child: Container[]): void;
   removeChildren(): void;
   destroy(): void;
 }
@@ -237,7 +238,7 @@ declare var app: {
 declare var App: {
   DevicePixelRatio: number;
   Console: {
-    log(txt: string): void;
+    log(txt: string, color?: number): void;
     consoleInput: InputField;
   };
   Stats: Container & {

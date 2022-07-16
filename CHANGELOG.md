@@ -1,5 +1,10 @@
 # Userscript
 
+v1.7
+
+- Fixed issue with friend list search bar.
+- Added update checker.
+
 v1.6
 
 - Changed the way online mode works.

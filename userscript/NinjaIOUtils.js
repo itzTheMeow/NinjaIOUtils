@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.6
+// @version      1.7
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.6",
+    ver: "1.7",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -188,6 +188,10 @@
           ls.maskInvitationList(ls.inviteScrollRatio);
         });
       }
+      this.listContainer.removeChildren = () => {
+        this.listContainer.removeChild(...this.listContainer.children);
+        this.removeChild(this.listSearch);
+      };
       const searchTerm = this.listSearch.getText() || "";
       const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
       this.invites.forEach((i) => {
@@ -201,7 +205,7 @@
         }
       });
       if (!this.listSearch.parent)
-        this.listContainer.addChild(this.listSearch);
+        this.addChild(this.listSearch);
       const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
       const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
       if (this.invites.length <= itemDisplayCount) {
@@ -222,7 +226,7 @@
         }
         this.inviteScrollRatio = scrollDist;
       }
-      this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height - this.listContainer.y;
+      this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
       this.invites.forEach((i) => {
         i.tint = 12303291;
         if (!filtered)
@@ -1211,6 +1215,18 @@ ${name}`);
     }
   }
 
+  // src/updateChecker.ts
+  async function checkUpdate() {
+    try {
+      const newest = await fetch(`${config_default.api}/ninja/ver`).then((r) => r.text());
+      const num = (str) => Number(str.replace(/\./, ""));
+      if (num(newest) > num(config_default.ver)) {
+        App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
+      }
+    } catch {
+    }
+  }
+
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
@@ -1281,6 +1297,7 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     updateFriendList();
     setTimeout(() => updateFriendList(), 2e3);
     setInterval(() => updateFriendList(), 6e4);
+    checkUpdate();
     App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
     tryJoinLink();
   }, 50);

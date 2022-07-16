@@ -27,6 +27,10 @@ export function socialMenuHook() {
         ls.maskInvitationList(ls.inviteScrollRatio);
       });
     }
+    this.listContainer.removeChildren = () => {
+      this.listContainer.removeChild(...this.listContainer.children);
+      this.removeChild(this.listSearch);
+    };
 
     const searchTerm = this.listSearch.getText() || "";
     const filtered =
@@ -44,7 +48,7 @@ export function socialMenuHook() {
         });
       }
     });
-    if (!this.listSearch.parent) this.listContainer.addChild(this.listSearch);
+    if (!this.listSearch.parent) this.addChild(this.listSearch);
     const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
     const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
     if (this.invites.length <= itemDisplayCount) {
@@ -76,8 +80,7 @@ export function socialMenuHook() {
       }
       this.inviteScrollRatio = scrollDist;
     }
-    this.listSearch.y =
-      this.height - this.listSearch.height - pad / 2 - this.infoText.height - this.listContainer.y;
+    this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
     this.invites.forEach((i) => {
       i.tint = 12303291;
       if (!filtered) return;

@@ -14,6 +14,7 @@ import initPartyMenu from "./partyMenu";
 import initMapIdentifier from "./mapIdentifier";
 import initOnlineOptionHook from "./onlineStatus";
 import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
+import checkUpdate from "./updateChecker";
 
 config; // ensures config is at the top of the compiled file
 
@@ -102,6 +103,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   updateFriendList();
   setTimeout(() => updateFriendList(), 2000);
   setInterval(() => updateFriendList(), 60000);
+  checkUpdate();
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
   tryJoinLink();

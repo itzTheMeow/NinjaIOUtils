@@ -42,7 +42,7 @@ If the game is full, the script will hang and you can't join the server. (workin
 
 ### Online Mode
 
-When the "Appear Online" checkbox is checked, you will appear online and using utils to other users also using utils.
+When the "Appear Online" checkbox is checked, you will appear online and using utils to other users also using utils. Users using utils are marked with a green dot now, and users who are online but not using utils are orange.
 
 **IF YOU APPEAR ONLINE, OTHER PEOPLE USING UTILS CAN JOIN YOUR _PUBLIC_ GAMES**
 
