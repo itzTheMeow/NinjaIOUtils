@@ -12,7 +12,7 @@ export function socialMenuHook() {
       this.listSearch.forceLowerCase = false;
       this.listSearch.setMaxChars(128);
       this.listSearch.setFilter(
-        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.-_ "
+        "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ "
       );
       this.listSearch.x = pad;
       this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;

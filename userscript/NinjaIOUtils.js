@@ -174,7 +174,7 @@
         this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
         this.listSearch.forceLowerCase = false;
         this.listSearch.setMaxChars(128);
-        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.-_ ");
+        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ ");
         this.listSearch.x = pad;
         this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
         this.listSearch.setText(pl);
