@@ -49,6 +49,9 @@ declare var PIXI: {
       drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
       endFill(): void;
       drawCircle(arg0: number, arg1: number, arg2: number): void;
+      interactive: boolean;
+      lineStyle(arg0: number, arg1: number, arg2: number, arg3: number): void;
+      drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
     };
   };
   BitmapText: Container & {
