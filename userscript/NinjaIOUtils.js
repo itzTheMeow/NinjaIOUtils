@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         NinjaIOUtils
+// @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
 // @version      1.8
 // @description  Some small QOL improvements to ninja.io!

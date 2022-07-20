@@ -3,7 +3,6 @@
 v1.8
 
 - Added support for dm_Nexus map.
-- Changed script name from "Ninja.io Utils" to "NinjaIOUtils".
 
 v1.7
 
