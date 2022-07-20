@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         Ninja.io Utils
+// @name         NinjaIOUtils
 // @namespace    https://itsmeow.cat
-// @version      1.7
+// @version      1.8
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.7",
+    ver: "1.8",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -76,7 +76,8 @@
       dm_Sleet: 27,
       SpaceStation: 28,
       Sinkhole: 29,
-      LonelyIsland: 30
+      LonelyIsland: 30,
+      dm_Nexus: 31
     }
   };
 

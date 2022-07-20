@@ -50,5 +50,6 @@ export default {
     SpaceStation: 28,
     Sinkhole: 29,
     LonelyIsland: 30,
+    dm_Nexus: 31,
   },
 };
