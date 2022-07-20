@@ -168,6 +168,7 @@ declare class Feature {
 declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
+  getUserProfile(id: string): Promise<{ experience: string }>;
 };
 declare var Manager: {
   prototype: {

@@ -1,4 +1,5 @@
 import config from "./config";
+import { startingLevel } from "./matchStartHook";
 import { SETTINGS } from "./settings";
 
 export default function matchEndHook() {
@@ -62,6 +63,16 @@ export default function matchEndHook() {
         App.Console.log("Match is unranked or custom, scores not uploaded.");
       }
     }
+
+    (async () => {
+      const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+      if (xp && startingLevel.l)
+        App.Console.log(
+          `You gained ${(xp - startingLevel.l).toLocaleString()} experience this round!`,
+          config.Colors.green
+        );
+      startingLevel.l = 0;
+    })();
 
     return this._endGame(data);
   };

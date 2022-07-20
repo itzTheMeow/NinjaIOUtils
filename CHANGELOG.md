@@ -1,5 +1,9 @@
 # Userscript
 
+v1.9
+
+- Added "You have gained x experience this round." message when game finishes.
+
 v1.8
 
 - Added support for dm_Nexus map.

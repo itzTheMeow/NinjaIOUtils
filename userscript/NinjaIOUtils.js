@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.8
+// @version      1.9
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.8",
+    ver: "1.9",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     PacketTypeMap: {
@@ -243,6 +243,19 @@
     };
   }
 
+  // src/matchStartHook.ts
+  var startingLevel = { l: 0 };
+  function matchStartHook() {
+    App.prototype.realInitGameMode = App.prototype.initGameMode;
+    App.prototype.initGameMode = function(data) {
+      this.realInitGameMode(data);
+      this.game.on(Game.MATCH_START, async function() {
+        startingLevel.l = 0;
+        startingLevel.l = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+      });
+    };
+  }
+
   // src/matchEndHook.ts
   function matchEndHook() {
     Game.prototype._endGame = Game.prototype.endGame;
@@ -285,17 +298,13 @@
           App.Console.log("Match is unranked or custom, scores not uploaded.");
         }
       }
+      (async () => {
+        const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+        if (xp && startingLevel.l)
+          App.Console.log(`You gained ${(xp - startingLevel.l).toLocaleString()} experience this round!`, config_default.Colors.green);
+        startingLevel.l = 0;
+      })();
       return this._endGame(data);
-    };
-  }
-
-  // src/matchStartHook.ts
-  function matchStartHook() {
-    App.prototype.realInitGameMode = App.prototype.initGameMode;
-    App.prototype.initGameMode = function(data) {
-      this.realInitGameMode(data);
-      this.game.on(Game.MATCH_START, function() {
-      });
     };
   }
 
