@@ -3,11 +3,11 @@
   "verbose": true,
   "replace": false,
   "textures": {
-    "png": "https://ninja.io/assets-dev/combined/combined.png",
-    "json": "https://ninja.io/assets-dev/combined/combined.json"
+    "png": "https://ninja.io/assets/combined/combined.png",
+    "json": "https://ninja.io/assets/combined/combined.json"
   },
   "terrain": {
-    "png": "https://ninja.io/assets-dev/seamless/seamless.png",
-    "json": "https://ninja.io/assets-dev/seamless/seamless.json"
+    "png": "https://ninja.io/assets/seamless/seamless-min.png",
+    "json": "https://ninja.io/assets/seamless/seamless-min.json"
   }
 }
