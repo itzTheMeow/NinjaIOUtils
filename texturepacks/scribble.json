@@ -2,5 +2,6 @@
   "id": "scribble",
   "name": "Scribble",
   "author": "DarkMaster",
-  "description": "Oooo la la - scribbles"
+  "description": "Oooo la la - scribbles",
+  "supportedVersion": 1
 }
