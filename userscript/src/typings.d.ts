@@ -239,8 +239,10 @@ declare var app: {
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
   onResize(): void;
+  proceed(): void;
 };
 declare var App: {
+  ClientVersion: string;
   DevicePixelRatio: number;
   Console: {
     log(txt: string, color?: number): void;
@@ -269,6 +271,7 @@ declare var App: {
     socialMenu: SocialMenuProto;
     hideFeature(feature: Container): void;
   };
+  RemovePreloader(): void;
   prototype: {
     initGameMode(data: any): any;
     realInitGameMode(data: any): any;

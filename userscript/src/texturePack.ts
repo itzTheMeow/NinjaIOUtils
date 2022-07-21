@@ -38,7 +38,7 @@ export function hookTextureLoader() {
     if (saved[1]) {
       const imgtest2 = setInterval(function () {
         textureImages.forEach((i) => {
-          if (i.src.includes("ninja.io") && i.src.includes("seamless.png")) {
+          if (i.src.includes("ninja.io") && i.src.includes("seamless-min.png")) {
             const originalsrc = i.src;
             i.onerror = function () {
               i.src = originalsrc;

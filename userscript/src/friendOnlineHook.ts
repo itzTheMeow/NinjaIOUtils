@@ -15,7 +15,6 @@ export default function initFriendOnlineHook() {
     name: string;
     seen: Date;
     clan: string;
-    interactive: boolean;
     nameLabel: any;
     onlineNow: boolean;
     constructor(id: string, name: string, seen: string, clan: string) {

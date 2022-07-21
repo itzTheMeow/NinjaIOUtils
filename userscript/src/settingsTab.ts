@@ -195,7 +195,9 @@ export default function settingsTab() {
           if (pak.textureURL) flags.push("textures");
           if (pak.terrainURL) flags.push("terrain");
           const packDescription = new PIXI.Text(
-            `${pak.description || "No Description."} (${flags.join(", ")})`,
+            `${pak.supportedVersion !== config.actualGameVersion ? "OUTDATED PACK! " : ""}${
+              pak.description || "No Description."
+            } (${flags.join(", ")})`,
             {
               fontName: "Arial",
               fontSize: 14,

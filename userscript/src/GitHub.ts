@@ -25,6 +25,7 @@ interface TexturePackMetadata {
   name: string;
   author: string;
   description: string;
+  supportedVersion: string;
 }
 export interface TexturePack extends TexturePackMetadata {
   textureURL: string | null;
@@ -71,6 +72,7 @@ export async function fetchTexturePacks() {
           name: meta.name,
           author: meta.author,
           description: meta.description,
+          supportedVersion: meta.supportedVersion,
           textureURL: texture ? texture.url : null,
           terrainURL: terrain ? terrain.url : null,
         };

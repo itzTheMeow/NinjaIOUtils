@@ -2,6 +2,12 @@ export default {
   ver: "$$version",
   api: "https://itsmeow.cat",
   customDelimiter: "__custom",
+  actualGameVersion:
+    document
+      .querySelector<HTMLScriptElement>(`script[src*="game.js"]`)
+      ?.src.split("/")
+      .pop()
+      ?.split("?v=")?.[1] || App.ClientVersion,
   PacketTypeMap: {
     systemMessage: "w",
     chatSend: "x",

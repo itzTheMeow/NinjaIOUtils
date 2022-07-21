@@ -15,6 +15,7 @@ import initMapIdentifier from "./mapIdentifier";
 import initOnlineOptionHook from "./onlineStatus";
 import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import checkUpdate from "./updateChecker";
+import hookPreloader from "./preloaderHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -25,6 +26,7 @@ if (!navigator.clipboard.readText) {
     return new Promise((res) => res(prompt("Paste text now.") || ""));
   };
 }
+hookPreloader();
 
 let socialMenuDone = false;
 /* Test to make sure game is fully loaded. */

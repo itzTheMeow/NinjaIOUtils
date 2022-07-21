@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.9
+// @version      1.10
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,9 +26,10 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.9",
+    ver: "1.10",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
+    actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || App.ClientVersion,
     PacketTypeMap: {
       systemMessage: "w",
       chatSend: "x",
@@ -340,6 +341,7 @@
         name: meta.name,
         author: meta.author,
         description: meta.description,
+        supportedVersion: meta.supportedVersion,
         textureURL: texture ? texture.url : null,
         terrainURL: terrain ? terrain.url : null
       };
@@ -515,7 +517,7 @@
             flags.push("textures");
           if (pak.terrainURL)
             flags.push("terrain");
-          const packDescription = new PIXI.Text(`${pak.description || "No Description."} (${flags.join(", ")})`, {
+          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.actualGameVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
             fontName: "Arial",
             fontSize: 14,
             fill: config_default.Colors.white,
@@ -754,7 +756,7 @@ ${name}`);
       if (saved[1]) {
         const imgtest2 = setInterval(function() {
           textureImages.forEach((i) => {
-            if (i.src.includes("ninja.io") && i.src.includes("seamless.png")) {
+            if (i.src.includes("ninja.io") && i.src.includes("seamless-min.png")) {
               const originalsrc = i.src;
               i.onerror = function() {
                 i.src = originalsrc;
@@ -1179,7 +1181,6 @@ ${name}`);
       name;
       seen;
       clan;
-      interactive;
       nameLabel;
       onlineNow;
       constructor(id, name, seen, clan) {
@@ -1237,6 +1238,52 @@ ${name}`);
     }
   }
 
+  // src/preloaderHook.ts
+  function hookPreloader() {
+    const preloader = document.getElementById("preloader");
+    if (!preloader)
+      return;
+    const tst = setInterval(function() {
+      try {
+        App.RemovePreloader = function() {
+          let b = 1;
+          preloader.style.pointerEvents = "none";
+          const c = setInterval(() => {
+            0 < b - 0.05 ? (preloader.style.opacity = String(b), b -= 0.05) : (preloader.remove(), clearInterval(c));
+          }, 1e3 / 60);
+        };
+        App.ClientVersion = config_default.actualGameVersion;
+        clearInterval(tst);
+      } catch {
+      }
+    }, 10);
+    const st = document.createElement("style");
+    st.innerHTML = "#preloader{cursor:default!important;}#texresetbtn{cursor:pointer!important;}";
+    document.head.appendChild(st);
+    preloader.style.top = preloader.style.left = "0px";
+    const reset = document.createElement("button");
+    reset.id = "texresetbtn";
+    Object.entries({
+      backgroundColor: "#FF0000",
+      border: "1px solid rgba(255,255,255,0.7)",
+      position: "fixed",
+      bottom: "1rem",
+      right: "1rem",
+      opacity: "0.5",
+      borderRadius: "6px",
+      padding: "2px",
+      color: "white"
+    }).forEach((s) => {
+      reset.style[s[0]] = s[1];
+    });
+    reset.innerText = "Skip Loading Texture Packs";
+    reset.onclick = () => {
+      app.proceed();
+      reset.remove();
+    };
+    preloader.appendChild(reset);
+  }
+
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
@@ -1244,6 +1291,7 @@ ${name}`);
       return new Promise((res) => res(prompt("Paste text now.") || ""));
     };
   }
+  hookPreloader();
   var socialMenuDone = false;
   var testing = setInterval(() => {
     if (!socialMenuDone) {

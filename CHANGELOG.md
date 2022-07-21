@@ -1,5 +1,11 @@
 # Userscript
 
+v1.10
+
+- Added skip texture loading button.
+- Added texture pack supported versions.
+- Made the version number more exact.
+
 v1.9
 
 - Added "You have gained x experience this round." message when game finishes.
