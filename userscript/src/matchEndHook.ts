@@ -77,9 +77,9 @@ export default function matchEndHook() {
           (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
         const gain = xp - startingLevel.l;
         App.Console.log(
-          `You gained ${gain.toLocaleString()} (${(xpNeeded / gain).toFixed(
-            2
-          )}%) experience this round!`,
+          `You gained ${gain.toLocaleString()} (${
+            Math.round((gain / xpNeeded) * 1000) / 10
+          }%) experience this round!`,
           config.Colors.green
         );
         if (level > plevel)
