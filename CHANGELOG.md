@@ -1,5 +1,9 @@
 # Userscript
 
+v1.11
+
+- Added percentage of xp needed for next level.
+
 v1.10
 
 - Added skip texture loading button.

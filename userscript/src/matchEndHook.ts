@@ -66,11 +66,19 @@ export default function matchEndHook() {
 
     (async () => {
       const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
-      if (xp && startingLevel.l)
+      if (xp && startingLevel.l) {
+        const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
+        const xpNeeded =
+          15.625 * Math.pow((level + 1) / 0.2, 2) -
+          (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+        const gain = xp - startingLevel.l;
         App.Console.log(
-          `You gained ${(xp - startingLevel.l).toLocaleString()} experience this round!`,
+          `You gained ${gain.toLocaleString()} (${(xpNeeded / gain).toFixed(
+            2
+          )}%) experience this round!`,
           config.Colors.green
         );
+      }
       startingLevel.l = 0;
     })();
 

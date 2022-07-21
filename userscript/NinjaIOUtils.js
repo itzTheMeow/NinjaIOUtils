@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.10
+// @version      1.11
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.10",
+    ver: "1.11",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || App.ClientVersion,
@@ -301,8 +301,12 @@
       }
       (async () => {
         const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
-        if (xp && startingLevel.l)
-          App.Console.log(`You gained ${(xp - startingLevel.l).toLocaleString()} experience this round!`, config_default.Colors.green);
+        if (xp && startingLevel.l) {
+          const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
+          const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+          const gain = xp - startingLevel.l;
+          App.Console.log(`You gained ${gain.toLocaleString()} (${(xpNeeded / gain).toFixed(2)}%) experience this round!`, config_default.Colors.green);
+        }
         startingLevel.l = 0;
       })();
       return this._endGame(data);
