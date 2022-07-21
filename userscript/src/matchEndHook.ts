@@ -67,6 +67,10 @@ export default function matchEndHook() {
     (async () => {
       const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
       if (xp && startingLevel.l) {
+        const plevel = Math.min(
+          Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1),
+          160
+        );
         const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
         const xpNeeded =
           15.625 * Math.pow((level + 1) / 0.2, 2) -
@@ -78,6 +82,8 @@ export default function matchEndHook() {
           )}%) experience this round!`,
           config.Colors.green
         );
+        if (level > plevel)
+          App.Console.log(`You leveled up! You are now level ${level}.`, config.Colors.yellow);
       }
       startingLevel.l = 0;
     })();

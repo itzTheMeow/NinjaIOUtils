@@ -3,6 +3,7 @@
 v1.11
 
 - Added percentage of xp needed for next level.
+- Added levelup notification.
 
 v1.10
 
