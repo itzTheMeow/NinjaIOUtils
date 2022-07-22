@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.11
+// @version      1.12
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.11",
+    ver: "1.12",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || App.ClientVersion,
@@ -108,213 +108,6 @@
   var saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
   var getSavedPack = () => JSON.parse(localStorage.getItem(packKey) || '["",""]');
   var savePackData = (tex, ter) => localStorage.setItem(packKey, JSON.stringify([tex, ter]));
-
-  // src/utils.ts
-  var inGame = () => app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
-  function setHash(id, name, pass) {
-    window.location.hash = pass ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}` : `${id}&${encodeURIComponent(name)}`;
-  }
-  function io(url) {
-    return window.io(url);
-  }
-
-  // src/fpsCounter.ts
-  var frameDisplay = document.createElement("div");
-  Object.entries({
-    padding: "0.3rem 0.4rem",
-    font: "16px Arial",
-    display: "none",
-    position: "fixed",
-    top: "0px",
-    left: "50%",
-    transform: "translateX(-50%)",
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderBottomLeftRadius: "6px",
-    borderBottomRightRadius: "6px",
-    pointerEvents: "none",
-    userSelect: "none"
-  }).forEach((e) => {
-    frameDisplay.style[e[0]] = e[1];
-  });
-  frameDisplay.textContent = "...";
-  document.body.appendChild(frameDisplay);
-  function showFPS() {
-    let lastUpdate = Date.now(), frames = 0;
-    if (SETTINGS.showFPS)
-      frameDisplay.style.display = "block";
-    function updateCounter() {
-      const now = Date.now(), elapsed = now - lastUpdate;
-      if (elapsed < 500) {
-        frames++;
-      } else {
-        let fps = `${Math.round(frames / (elapsed / 1e3))} FPS`;
-        if (inGame())
-          fps += ` - ${App.Stats.ping || 0}ms`;
-        if (frameDisplay.innerText !== fps)
-          frameDisplay.innerText = fps;
-        frames = 0;
-        lastUpdate = now;
-        frameDisplay.style.display = "block";
-      }
-      if (!SETTINGS.showFPS)
-        return frameDisplay.style.display = "none";
-    }
-    app._stepCallback = app._stepCallback || app.stepCallback;
-    app.stepCallback = function(d) {
-      updateCounter();
-      return app._stepCallback(d);
-    };
-  }
-
-  // src/friendSearch.ts
-  function socialMenuHook() {
-    SocialMenu.prototype.maskInvitationList = function(scrollDist) {
-      const pl = "Type to search.";
-      const pad = 8;
-      if (!this.listSearch) {
-        this.listSearch = new InputField("list_search", false, SocialMenu.ItemHeight / 1.5);
-        this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
-        this.listSearch.forceLowerCase = false;
-        this.listSearch.setMaxChars(128);
-        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ ");
-        this.listSearch.x = pad;
-        this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
-        this.listSearch.setText(pl);
-        const ls = this;
-        this.listSearch.addListener(InputField.CHANGE, function(d2) {
-          d2 = d2.data.value || "";
-          if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
-            d2 = d2.substring(pl.length);
-            ls.listSearch.setText(d2);
-          }
-          ls.maskInvitationList(ls.inviteScrollRatio);
-        });
-      }
-      this.listContainer.removeChildren = () => {
-        this.listContainer.removeChild(...this.listContainer.children);
-        this.container.removeChild(this.listSearch);
-      };
-      const searchTerm = this.listSearch.getText() || "";
-      const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
-      this.invites.forEach((i) => {
-        i.alpha = 1;
-        i.isRed = false;
-        if (!i.redReady) {
-          i.redReady = true;
-          i.on("mouseout", function() {
-            i.tint = i.isRed ? config_default.Colors.red : 12303291;
-          });
-        }
-      });
-      if (!this.listSearch.parent)
-        this.container.addChild(this.listSearch);
-      const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
-      const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
-      if (this.invites.length <= itemDisplayCount) {
-        this.listContainer.y = 0;
-      } else {
-        this.invites.forEach((i) => this.listContainer.removeChild(i));
-        this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
-        for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
-          const inv = this.invites[d + displayOffset];
-          this.listContainer.addChild(inv);
-          let g;
-          if (0 === displayOffset) {
-            g = d * SocialMenu.ItemHeight + this.listContainer.y;
-            inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
-          } else {
-            displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
-          }
-        }
-        this.inviteScrollRatio = scrollDist;
-      }
-      this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
-      this.invites.forEach((i) => {
-        i.tint = 12303291;
-        if (!filtered)
-          return;
-        if (filtered.includes(i)) {
-          i.tint = 12603201;
-          i.alpha = 1;
-          i.isRed = true;
-        } else {
-          i.alpha *= 0.5;
-        }
-      });
-    };
-  }
-
-  // src/matchStartHook.ts
-  var startingLevel = { l: 0 };
-  function matchStartHook() {
-    App.prototype.realInitGameMode = App.prototype.initGameMode;
-    App.prototype.initGameMode = function(data) {
-      this.realInitGameMode(data);
-      this.game.on(Game.MATCH_START, async function() {
-        startingLevel.l = 0;
-        startingLevel.l = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
-      });
-    };
-  }
-
-  // src/matchEndHook.ts
-  function matchEndHook() {
-    Game.prototype._endGame = Game.prototype.endGame;
-    Game.prototype.endGame = function(data) {
-      if (SETTINGS.apiKey) {
-        App.Console.log("Attempting to upload match score...");
-        if (this.manager.isRanked) {
-          try {
-            const leaderIndex = data.leaderboard.id.indexOf(this.sessionId);
-            const statModel = {
-              id: app.credential.playerid,
-              map: app.client.mapID,
-              mode: this.mode,
-              kills: data.leaderboard.kills[leaderIndex],
-              deaths: data.leaderboard.deaths[leaderIndex],
-              caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
-            };
-            fetch(`${config_default.api}/ninja/submit?key=${SETTINGS.apiKey}`, {
-              method: "POST",
-              body: JSON.stringify(statModel),
-              headers: {
-                "Content-Type": "application/json"
-              }
-            }).then((res) => res.json()).then((res) => {
-              if (res.err) {
-                App.Console.log(`Failed to upload match score! ERR_${res.err}`);
-                App.Console.log(`Error: ${res.message}`);
-              } else {
-                App.Console.log("Successfully uploaded match score!");
-              }
-            }).catch((err) => {
-              App.Console.log("Failed to upload match score! (check console for errors)");
-              console.error(err);
-            });
-          } catch (err) {
-            App.Console.log("Failed to upload match score! (check console for errors)");
-            console.error(err);
-          }
-        } else {
-          App.Console.log("Match is unranked or custom, scores not uploaded.");
-        }
-      }
-      (async () => {
-        const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
-        if (xp && startingLevel.l) {
-          const plevel = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1), 160);
-          const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
-          const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
-          const gain = xp - startingLevel.l;
-          App.Console.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
-          if (level > plevel)
-            App.Console.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
-        }
-        startingLevel.l = 0;
-      })();
-      return this._endGame(data);
-    };
-  }
 
   // src/GitHub.ts
   var GHeaders = {
@@ -658,14 +451,13 @@
   }
 
   // src/shareURLs.ts
-  var savedPass = "";
+  var gameLinkData = { id: "", name: "", pass: "" };
   function clearSaved() {
     window.location.hash = "";
-    savedPass = "";
+    gameLinkData.id = gameLinkData.name = gameLinkData.pass = "";
   }
   function initShareURLHook() {
     App.Layer.on("join_game", (name, id, pass) => {
-      savedPass = pass || "";
       setHash(id, name, pass);
     });
     app.client.addListener(Protocol.DISCONNECT, () => {
@@ -674,16 +466,12 @@
     });
     APIClient.realPostCreateGame = APIClient.postCreateGame;
     APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
-      savedPass = serverPass;
       setHash(serverID, serverName, serverPass);
       return APIClient.realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
     };
   }
-  function tryJoinLink() {
-    const roomDetails = window.location.hash.substring(1);
-    if (!roomDetails)
-      return;
-    const [id, name, pass] = roomDetails.split("&").map(decodeURIComponent);
+  function tryJoinLink(args) {
+    const [id, name, pass] = args || window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
     if (!id || !name)
       return;
     App.Console.log(`Attempting to join room ${name}...`);
@@ -724,6 +512,216 @@ ${name}`);
       loadingMenu.container.removeChild(loadingMenu.joinButton);
       loadingMenu.container.removeChild(loadingMenu.cancelButton2);
     }
+  }
+
+  // src/utils.ts
+  var inGame = () => app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
+  function setHash(id, name, pass) {
+    gameLinkData.id = id;
+    gameLinkData.name = name;
+    gameLinkData.pass = pass || "";
+    window.location.hash = pass ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}` : `${id}&${encodeURIComponent(name)}`;
+  }
+  function io(url) {
+    return window.io(url);
+  }
+
+  // src/fpsCounter.ts
+  var frameDisplay = document.createElement("div");
+  Object.entries({
+    padding: "0.3rem 0.4rem",
+    font: "16px Arial",
+    display: "none",
+    position: "fixed",
+    top: "0px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    borderBottomLeftRadius: "6px",
+    borderBottomRightRadius: "6px",
+    pointerEvents: "none",
+    userSelect: "none"
+  }).forEach((e) => {
+    frameDisplay.style[e[0]] = e[1];
+  });
+  frameDisplay.textContent = "...";
+  document.body.appendChild(frameDisplay);
+  function showFPS() {
+    let lastUpdate = Date.now(), frames = 0;
+    if (SETTINGS.showFPS)
+      frameDisplay.style.display = "block";
+    function updateCounter() {
+      const now = Date.now(), elapsed = now - lastUpdate;
+      if (elapsed < 500) {
+        frames++;
+      } else {
+        let fps = `${Math.round(frames / (elapsed / 1e3))} FPS`;
+        if (inGame())
+          fps += ` - ${App.Stats.ping || 0}ms`;
+        if (frameDisplay.innerText !== fps)
+          frameDisplay.innerText = fps;
+        frames = 0;
+        lastUpdate = now;
+        frameDisplay.style.display = "block";
+      }
+      if (!SETTINGS.showFPS)
+        return frameDisplay.style.display = "none";
+    }
+    app._stepCallback = app._stepCallback || app.stepCallback;
+    app.stepCallback = function(d) {
+      updateCounter();
+      return app._stepCallback(d);
+    };
+  }
+
+  // src/friendSearch.ts
+  function socialMenuHook() {
+    SocialMenu.prototype.maskInvitationList = function(scrollDist) {
+      const pl = "Type to search.";
+      const pad = 8;
+      if (!this.listSearch) {
+        this.listSearch = new InputField("list_search", false, SocialMenu.ItemHeight / 1.5);
+        this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
+        this.listSearch.forceLowerCase = false;
+        this.listSearch.setMaxChars(128);
+        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ ");
+        this.listSearch.x = pad;
+        this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
+        this.listSearch.setText(pl);
+        const ls = this;
+        this.listSearch.addListener(InputField.CHANGE, function(d2) {
+          d2 = d2.data.value || "";
+          if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
+            d2 = d2.substring(pl.length);
+            ls.listSearch.setText(d2);
+          }
+          ls.maskInvitationList(ls.inviteScrollRatio);
+        });
+      }
+      this.listContainer.removeChildren = () => {
+        this.listContainer.removeChild(...this.listContainer.children);
+        this.container.removeChild(this.listSearch);
+      };
+      const searchTerm = this.listSearch.getText() || "";
+      const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
+      this.invites.forEach((i) => {
+        i.alpha = 1;
+        i.isRed = false;
+        if (!i.redReady) {
+          i.redReady = true;
+          i.on("mouseout", function() {
+            i.tint = i.isRed ? config_default.Colors.red : 12303291;
+          });
+        }
+      });
+      if (!this.listSearch.parent)
+        this.container.addChild(this.listSearch);
+      const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
+      const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
+      if (this.invites.length <= itemDisplayCount) {
+        this.listContainer.y = 0;
+      } else {
+        this.invites.forEach((i) => this.listContainer.removeChild(i));
+        this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
+        for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
+          const inv = this.invites[d + displayOffset];
+          this.listContainer.addChild(inv);
+          let g;
+          if (0 === displayOffset) {
+            g = d * SocialMenu.ItemHeight + this.listContainer.y;
+            inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
+          } else {
+            displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
+          }
+        }
+        this.inviteScrollRatio = scrollDist;
+      }
+      this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
+      this.invites.forEach((i) => {
+        i.tint = 12303291;
+        if (!filtered)
+          return;
+        if (filtered.includes(i)) {
+          i.tint = 12603201;
+          i.alpha = 1;
+          i.isRed = true;
+        } else {
+          i.alpha *= 0.5;
+        }
+      });
+    };
+  }
+
+  // src/matchStartHook.ts
+  var startingLevel = { l: 0 };
+  function matchStartHook() {
+    App.prototype.realInitGameMode = App.prototype.initGameMode;
+    App.prototype.initGameMode = function(data) {
+      this.realInitGameMode(data);
+      this.game.on(Game.MATCH_START, async function() {
+        startingLevel.l = 0;
+        startingLevel.l = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+      });
+    };
+  }
+
+  // src/matchEndHook.ts
+  function matchEndHook() {
+    Game.prototype._endGame = Game.prototype.endGame;
+    Game.prototype.endGame = function(data) {
+      if (SETTINGS.apiKey) {
+        App.Console.log("Attempting to upload match score...");
+        if (this.manager.isRanked) {
+          try {
+            const leaderIndex = data.leaderboard.id.indexOf(this.sessionId);
+            const statModel = {
+              id: app.credential.playerid,
+              map: app.client.mapID,
+              mode: this.mode,
+              kills: data.leaderboard.kills[leaderIndex],
+              deaths: data.leaderboard.deaths[leaderIndex],
+              caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
+            };
+            fetch(`${config_default.api}/ninja/submit?key=${SETTINGS.apiKey}`, {
+              method: "POST",
+              body: JSON.stringify(statModel),
+              headers: {
+                "Content-Type": "application/json"
+              }
+            }).then((res) => res.json()).then((res) => {
+              if (res.err) {
+                App.Console.log(`Failed to upload match score! ERR_${res.err}`);
+                App.Console.log(`Error: ${res.message}`);
+              } else {
+                App.Console.log("Successfully uploaded match score!");
+              }
+            }).catch((err) => {
+              App.Console.log("Failed to upload match score! (check console for errors)");
+              console.error(err);
+            });
+          } catch (err) {
+            App.Console.log("Failed to upload match score! (check console for errors)");
+            console.error(err);
+          }
+        } else {
+          App.Console.log("Match is unranked or custom, scores not uploaded.");
+        }
+      }
+      (async () => {
+        const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+        if (xp && startingLevel.l) {
+          const plevel = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1), 160);
+          const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
+          const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+          const gain = xp - startingLevel.l;
+          App.Console.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
+          if (level > plevel)
+            App.Console.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
+        }
+        startingLevel.l = 0;
+      })();
+      return this._endGame(data);
+    };
   }
 
   // src/typings.ts
@@ -1090,7 +1088,7 @@ ${name}`);
       const a = Client.decompress(_a.data);
       if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
         let roomName = a.data.info.substring("You joined ".length);
-        setHash(app.client.server.id, roomName, savedPass);
+        setHash(app.client.server.id, roomName, gameLinkData.pass);
       }
       const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
       const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
@@ -1123,6 +1121,30 @@ ${name}`);
     };
   }
 
+  // src/userCommunicationProtocol.ts
+  var commConfig = {
+    prefix: "$NIOU",
+    sep: "|"
+  };
+  var commPackets = {
+    gameLink: "requestGameLink"
+  };
+  function decodeUserCommunication(message) {
+    if (!message.startsWith(commConfig.prefix))
+      return null;
+    const args = message.split(commConfig.sep);
+    if (!Object.values(commPackets).includes(args[1]))
+      return null;
+    return {
+      packet: args[1],
+      args: args.slice(2)
+    };
+  }
+  async function communicateUser(id, packetID, args) {
+    await APIClient.postFriendMessage(id, [commConfig.prefix, packetID, ...args].join(commConfig.sep), app.credential.id);
+    return true;
+  }
+
   // src/onlineStatus.ts
   var failedOnline = false;
   var onlineSocket;
@@ -1145,6 +1167,23 @@ ${name}`);
       onlineSocket = null;
       App.Console.log("Went offline.");
     });
+    onlineSocket.on("needsLink", async (requestID) => {
+      const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;
+      const msg = messages?.find((m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink);
+      if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
+        if (!inGame())
+          onlineSocket.emit("gotLink", requestID, false);
+        else if (gameLinkData.pass)
+          onlineSocket.emit("gotLink", requestID, true);
+        else
+          onlineSocket.emit("gotLink", requestID, [
+            gameLinkData.id,
+            gameLinkData.name,
+            gameLinkData.pass
+          ]);
+      } else
+        onlineSocket.emit("gotLink", requestID, null);
+    });
   }
   function goOffline() {
     if (onlineSocket) {
@@ -1155,6 +1194,7 @@ ${name}`);
   function initOnlineOptionHook() {
     function doOnlineStatusOption() {
       app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
+      app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
       app.menu.onlineOption.on(Checkbox.CHANGE, function(b) {
         SETTINGS.appearOnline = b;
         saveSettings();
@@ -1165,7 +1205,6 @@ ${name}`);
       });
       app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
       app.menu.container.addChild(app.menu.onlineOption);
-      app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
       reindexItems();
       reposItems();
     }
@@ -1222,14 +1261,16 @@ ${name}`);
       }
     };
   }
-  async function updateFriendList() {
+  async function updateFriendList(reload = true) {
     if (App.Layer.socialMenu.mode == "friends") {
       try {
         const friendsOnline = await fetch(`${config_default.api}/ninja/onlinepeeps`).then((res) => res.json());
-        App.Layer.socialMenu.onlineFriends = friendsOnline;
+        App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
       } catch {
+        App.Layer.socialMenu.onlineFriends = [];
       }
-      await App.Layer.socialMenu.loadFriends();
+      if (reload)
+        await App.Layer.socialMenu.loadFriends();
     }
   }
 
@@ -1289,6 +1330,48 @@ ${name}`);
       reset.remove();
     };
     preloader.appendChild(reset);
+  }
+
+  // src/joinGameHook.ts
+  function hookJoinGameButton() {
+    const btn = new Button("usr_join");
+    btn.setText("Join Game");
+    btn.scale.x = btn.scale.y = 0.75;
+    const repos = () => btn.x = App.Layer.userMenu.ox + App.Layer.userMenu.w - btn.width - 30;
+    repos();
+    btn.y = App.Layer.userMenu.h - 10;
+    btn.visible = false;
+    btn.addListener(Button.BUTTON_PRESSED, async () => {
+      btn.setText("Requesting link...");
+      repos();
+      const rej = (msg) => {
+        btn.setText(msg);
+        repos();
+        setTimeout(() => (btn.setText("Join Game"), repos()), 4e3);
+      };
+      const req = String(Date.now());
+      await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
+      const res = (await fetch(`${config_default.api}/ninja/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
+      if (res == false)
+        rej("User not in game.");
+      else if (res == true)
+        rej("User in private game.");
+      else if (Array.isArray(res)) {
+        btn.setText("Join Game");
+        repos();
+        App.Layer.userMenu.onCloseButtonReleased();
+        tryJoinLink([res[0], res[1], res[2]]);
+      } else
+        return rej("User not online.");
+    });
+    App.Layer.userMenu.container.addChild(btn);
+    App.Layer.userMenu._load = App.Layer.userMenu.load;
+    App.Layer.userMenu.load = async (id, type) => {
+      btn.visible = false;
+      await App.Layer.userMenu._load(id, type);
+      await updateFriendList(false);
+      btn.visible = App.Layer.socialMenu.onlineFriends.includes(App.Layer.userMenu.id);
+    };
   }
 
   // src/index.ts
@@ -1360,6 +1443,7 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
     setInterval(() => reposItems(), 100);
     updateFriendList();
+    hookJoinGameButton();
     setTimeout(() => updateFriendList(), 2e3);
     setInterval(() => updateFriendList(), 6e4);
     checkUpdate();

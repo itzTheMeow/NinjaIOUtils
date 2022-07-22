@@ -44,9 +44,9 @@ If the game is full, the script will hang and you can't join the server. (workin
 
 When the "Appear Online" checkbox is checked, you will appear online and using utils to other users also using utils. Users using utils are marked with a green dot now, and users who are online but not using utils are orange.
 
-**IF YOU APPEAR ONLINE, OTHER PEOPLE USING UTILS CAN JOIN YOUR _PUBLIC_ GAMES**
+**IF YOU APPEAR ONLINE, FRIENDS USING UTILS CAN JOIN YOUR _PUBLIC_ GAMES**
 
-Other people can not join your games if you do not appear online or your game has a password.
+Other people can not join your games if you do not appear online or your game has a password. Only friends can join your games.
 
 ### Texture Packs
 

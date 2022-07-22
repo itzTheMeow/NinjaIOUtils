@@ -159,9 +159,15 @@ declare interface FriendItem extends Container {}
 declare class FriendItem {
   seen: Date;
   name: string;
+  id: string;
 }
 
-declare interface Feature extends Container {}
+declare interface Feature extends Container {
+  ox: number;
+  oy: number;
+  w: number;
+  h: number;
+}
 declare class Feature {
   container: Container;
 }
@@ -169,6 +175,8 @@ declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
   getUserProfile(id: string): Promise<{ experience: string }>;
+  postFriendMessage(friendID: string, message: string, auth: string): Promise<void>;
+  getMessages(auth: string): Promise<string>;
 };
 declare var Manager: {
   prototype: {
@@ -270,6 +278,12 @@ declare var App: {
     features: Container[];
     socialMenu: SocialMenuProto;
     hideFeature(feature: Container): void;
+    userMenu: Feature & {
+      id: string;
+      load(id: string, type: string): Promise<void>;
+      _load(id: string, type: string): Promise<void>;
+      onCloseButtonReleased(): void;
+    };
   };
   RemovePreloader(): void;
   prototype: {

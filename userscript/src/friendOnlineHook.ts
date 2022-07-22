@@ -56,14 +56,17 @@ export default function initFriendOnlineHook() {
   };
 }
 
-export async function updateFriendList() {
+export async function updateFriendList(reload = true) {
   if (App.Layer.socialMenu.mode == "friends") {
     try {
-      const friendsOnline = await fetch(`${config.api}/ninja/onlinepeeps`).then((res) =>
+      const friendsOnline = (await fetch(`${config.api}/ninja/onlinepeeps`).then((res) =>
         res.json()
-      );
-      App.Layer.socialMenu.onlineFriends = friendsOnline;
-    } catch {}
-    await App.Layer.socialMenu.loadFriends();
+      )) as string[];
+      App.Layer.socialMenu.onlineFriends =
+        friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
+    } catch {
+      App.Layer.socialMenu.onlineFriends = [];
+    }
+    if (reload) await App.Layer.socialMenu.loadFriends();
   }
 }

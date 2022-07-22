@@ -16,6 +16,7 @@ import initOnlineOptionHook from "./onlineStatus";
 import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import checkUpdate from "./updateChecker";
 import hookPreloader from "./preloaderHook";
+import hookJoinGameButton from "./joinGameHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -103,6 +104,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   setInterval(() => reposItems(), 100);
 
   updateFriendList();
+  hookJoinGameButton();
   setTimeout(() => updateFriendList(), 2000);
   setInterval(() => updateFriendList(), 60000);
   checkUpdate();

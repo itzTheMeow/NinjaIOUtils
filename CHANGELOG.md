@@ -1,5 +1,10 @@
 # Userscript
 
+v1.12
+
+- Fixed issue with going online/offline when leaving a game.
+- Added 'Join Game' button on profile.
+
 v1.11
 
 - Added percentage of xp needed for next level.

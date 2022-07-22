@@ -2,16 +2,15 @@ import config from "./config";
 import settingsTab from "./settingsTab";
 import { setHash } from "./utils";
 
-export let savedPass = "";
+export let gameLinkData = { id: "", name: "", pass: "" };
 function clearSaved() {
   window.location.hash = "";
-  savedPass = "";
+  gameLinkData.id = gameLinkData.name = gameLinkData.pass = "";
 }
 
 export function initShareURLHook() {
   /* Hooks into join_game event and sets your URL to the game you are in. */
   App.Layer.on("join_game", (name, id, pass) => {
-    savedPass = pass || "";
     setHash(id, name, pass);
   });
   /* Upon disconnect, remove the saved server. */
@@ -33,7 +32,6 @@ export function initShareURLHook() {
     auth
   ) {
     /* Saves created info to URL. */
-    savedPass = serverPass;
     setHash(serverID, serverName, serverPass);
     return APIClient.realPostCreateGame(
       serverID,
@@ -48,11 +46,10 @@ export function initShareURLHook() {
   };
 }
 
-export function tryJoinLink() {
-  const roomDetails = window.location.hash.substring(1);
-  if (!roomDetails) return;
+export function tryJoinLink(args?: [string, string, string]) {
   /* Extract room details from URL. */
-  const [id, name, pass] = roomDetails.split("&").map(decodeURIComponent);
+  const [id, name, pass] =
+    args || window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
   if (!id || !name) return;
   App.Console.log(`Attempting to join room ${name}...`);
   const loadingMenu = App.Layer.loadingMenu;

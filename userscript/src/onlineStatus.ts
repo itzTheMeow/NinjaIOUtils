@@ -2,8 +2,10 @@ import { Socket } from "socket.io-client";
 import config from "./config";
 import reposItems, { reindexItems } from "./repositionItems";
 import { saveSettings, SETTINGS } from "./settings";
+import { gameLinkData } from "./shareURLs";
 import { SocketTypes } from "./typings";
-import { io } from "./utils";
+import { commPackets, decodeUserCommunication } from "./userCommunicationProtocol";
+import { inGame, io } from "./utils";
 
 let failedOnline = false;
 let onlineSocket: Socket;
@@ -27,6 +29,30 @@ export function goOnline() {
     onlineSocket = null;
     App.Console.log("Went offline.");
   });
+  onlineSocket.on("needsLink", async (requestID) => {
+    const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages as {
+      // this is the official game api
+      id: string;
+      message: string;
+      target: string; // author id
+      created: string;
+      system: "0" | "1";
+    }[];
+
+    const msg = messages?.find(
+      (m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink
+    );
+    if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
+      if (!inGame()) onlineSocket.emit("gotLink", requestID, false);
+      else if (gameLinkData.pass) onlineSocket.emit("gotLink", requestID, true);
+      else
+        onlineSocket.emit("gotLink", requestID, [
+          gameLinkData.id,
+          gameLinkData.name,
+          gameLinkData.pass,
+        ]);
+    } else onlineSocket.emit("gotLink", requestID, null);
+  });
 }
 export function goOffline() {
   if (onlineSocket) {
@@ -38,6 +64,7 @@ export function goOffline() {
 export default function initOnlineOptionHook() {
   function doOnlineStatusOption() {
     app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
+    app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
     app.menu.onlineOption.on(Checkbox.CHANGE, function (b) {
       SETTINGS.appearOnline = b;
       saveSettings();
@@ -46,7 +73,6 @@ export default function initOnlineOptionHook() {
     });
     app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
     app.menu.container.addChild(app.menu.onlineOption);
-    app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
     reindexItems();
     reposItems();
   }
