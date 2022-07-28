@@ -68,7 +68,7 @@ Fill this out and put it in the file:
   "name": "Texture Pack Name", // example: All White
   "author": "My Name", // example: Meow
   "description": "Such a cool pack!", // just describe what it does
-  "supportedVersion": "0.2.0993" // replace this with the game version shown in bottom right
+  "supportedVersion": 1 // set this to the current packVersion in /userscript/src/config.ts
 }
 ```
 
