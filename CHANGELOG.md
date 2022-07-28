@@ -1,5 +1,10 @@
 # Userscript
 
+v1.13
+
+- Fixed a bug with client version number.
+- Changed texture pack version checking.
+
 v1.12
 
 - Fixed issue with going online/offline when leaving a game.

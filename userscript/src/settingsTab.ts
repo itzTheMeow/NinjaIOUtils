@@ -195,7 +195,7 @@ export default function settingsTab() {
           if (pak.textureURL) flags.push("textures");
           if (pak.terrainURL) flags.push("terrain");
           const packDescription = new PIXI.Text(
-            `${pak.supportedVersion !== config.actualGameVersion ? "OUTDATED PACK! " : ""}${
+            `${pak.supportedVersion !== config.packVersion ? "OUTDATED PACK! " : ""}${
               pak.description || "No Description."
             } (${flags.join(", ")})`,
             {

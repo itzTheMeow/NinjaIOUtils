@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.12
+// @version      1.13
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,10 +26,17 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.12",
+    ver: "1.13",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
-    actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || App.ClientVersion,
+    packVersion: 1,
+    actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
+      try {
+        return App.ClientVersion;
+      } catch {
+        return "unknown";
+      }
+    })(),
     PacketTypeMap: {
       systemMessage: "w",
       chatSend: "x",
@@ -317,7 +324,7 @@
             flags.push("textures");
           if (pak.terrainURL)
             flags.push("terrain");
-          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.actualGameVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
+          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
             fontName: "Arial",
             fontSize: 14,
             fill: config_default.Colors.white,

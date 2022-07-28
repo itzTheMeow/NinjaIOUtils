@@ -25,7 +25,7 @@ interface TexturePackMetadata {
   name: string;
   author: string;
   description: string;
-  supportedVersion: string;
+  supportedVersion: number;
 }
 export interface TexturePack extends TexturePackMetadata {
   textureURL: string | null;
