@@ -1,0 +1,7 @@
+{
+  "id": "EliteVV1",
+  "name": "EliteVV1",
+  "author": "velo",
+  "description": "Removes muzzle flash, clears up the game a little bit. Throwables are highlighted in red. Arrows are also highlighted in red. Some bullets are also supposed to be outlined in red. Shotgun pellets are also highlighted in red. ",
+  "supportedVersion": 1
+}
