@@ -2,6 +2,6 @@
   "id": "EliteVV1",
   "name": "EliteVV1",
   "author": "velo",
-  "description": "Removes muzzle flash, clears up the game a little bit. Throwables and some bullets are highlighted in red.",
+  "description": "Removes muzzle flash. Throwables, some bullets, and arrows are highlighted in red.",
   "supportedVersion": 1
 }
