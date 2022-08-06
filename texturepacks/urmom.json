@@ -1,0 +1,7 @@
+{
+  "id": "allurmom", // example: AllWhite
+  "name": "ur mom", // example: All White
+  "author": "Detective Demon.", // example: Meow
+  "description": "ur mom", // just describe what it does
+  "supportedVersion": 1  // set this to the current packVersion in /userscript/src/config.ts
+}
