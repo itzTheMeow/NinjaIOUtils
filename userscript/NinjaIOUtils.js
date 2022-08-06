@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.13
+// @version      1.14
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.13",
+    ver: "1.14",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 1,
@@ -794,7 +794,7 @@ ${name}`);
       app.menu.serverListButton.scale.x = app.menu.serverListButton.scale.y = 1.1;
       app.menu.serverCreateButton.x = app.menu.serverListButton.x - (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
       app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 7;
-      app.menu.partyButton.x = app.menu.serverCreateButton.x - app.menu.partyButton.width;
+      app.menu.partyButton.x = app.menu.serverCreateButton.x - (app.menu.partyButton.backgroundEnabled.width + 10);
       app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
       app.menu.onlineOption.x = app.menu.joinButton.x + (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
       app.menu.onlineOption.y = app.menu.serverCreateButton.y + app.menu.serverCreateButton.height / 2 - app.menu.onlineOption.height / 2;

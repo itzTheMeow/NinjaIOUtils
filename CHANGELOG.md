@@ -1,5 +1,9 @@
 # Userscript
 
+v1.14
+
+- Fixed an issue with the party button positioning.
+
 v1.13
 
 - Fixed a bug with client version number.

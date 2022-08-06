@@ -11,7 +11,8 @@ export default function reposItems() {
       (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
     app.menu.serverCreateButton.y =
       app.menu.serverListButton.y + app.menu.serverListButton.height + 7;
-    app.menu.partyButton.x = app.menu.serverCreateButton.x - app.menu.partyButton.width;
+    app.menu.partyButton.x =
+      app.menu.serverCreateButton.x - (app.menu.partyButton.backgroundEnabled.width + 10);
     app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
     app.menu.onlineOption.x =
       app.menu.joinButton.x +
