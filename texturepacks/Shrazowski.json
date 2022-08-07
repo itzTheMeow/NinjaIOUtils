@@ -1,7 +1,7 @@
 {
-  "id": "Shrazowski", // example: AllWhite
-  "name": "Shrazowski", // example: All White
-  "author": "Detective Demon.", // example: Meow
-  "description": "Shrazowski", // just describe what it does
-  "supportedVersion": 1  // set this to the current packVersion in /userscript/src/config.ts
+  "id": "Shrazowski", 
+  "name": "Shrazowski", 
+  "author": "Detective Demon.", 
+  "description": "Shrazowski", 
+  "supportedVersion": 1  
 }
