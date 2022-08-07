@@ -58,6 +58,11 @@ You can use a texture pack via the in-game texture pack browser. If you have cre
 
 Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png). If your pack does not change terrain, don't upload the terrain file. If your pack does not change textures, don't upload the textures file.
 
+Your images MUST be the proper size otherwise they won't load:
+
+- textures - 1964x1964
+- terrain - 1408x2048
+
 You need to create a file for your texture pack metadata, call it `id.json`. (example AllWhite.json)
 
 Fill this out and put it in the file:
@@ -116,6 +121,12 @@ These instructions assume windows as your operating system. If you are using lin
 - To pack your files once you are done, run `pack.bat`.
 - This will take the images from the `split_textures`/`split_terrain` folders and re-pack them into `textures.png` and `terrain.png` which you can then distribute as your texture pack(s).
 
-```
+## Credits
 
-```
+<sub><sup>_A list of people who helped in any way with the project._</sup></sub>
+
+- Meow (Main Programmer)
+- Gazerme (Tester)
+- Velo (Tester & Idea Man)
+- Dark Master (Tester & Idea Man)
+- Also thanks to everyone who made a texture pack!
