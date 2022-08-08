@@ -1,14 +1,23 @@
 import config from "./config";
 import { saveSettings } from "./settings";
+import getTexTab from "./settingsTabTex";
 import getUtilTab from "./settingsTabUtil";
 
 export default function settingsTab() {
   function SettingsPanelNew(w: number, h: number) {
     const pan = new SettingsPanel(w, h);
-    function newTab(name: string, x: number) {
+    function newTab(
+      title: string,
+      name: string,
+      x: number,
+      tab: {
+        (): void;
+        prototype: any;
+      }
+    ) {
       name = `${name}Tab`;
-      pan[name] = new (getUtilTab())();
-      pan[`${name}Button`] = new PIXI.Text("NinjaIOUtils", {
+      pan[name] = new tab();
+      pan[`${name}Button`] = new PIXI.Text(title, {
         fontName: "Arial",
         fontSize: 18,
         lineHeight: 18,
@@ -18,7 +27,7 @@ export default function settingsTab() {
       });
       pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
       pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
-      pan[`${name}Button`].x = 358;
+      pan[`${name}Button`].x = x + 56;
       pan[`${name}Button`].y = 28;
       pan.addChild(pan[`${name}Button`]);
       pan[`${name}ButtonBackground`] = new PIXI.Graphics();
@@ -44,10 +53,12 @@ export default function settingsTab() {
       });
       pan.addChild(pan[`${name}ButtonBackground`]);
     }
-    newTab("util", 302);
+    newTab("NinjaIOUtils", "util", 302, getUtilTab());
+    newTab("Texture Pack", "tex", 418, getTexTab());
     return pan;
   }
   SettingsPanel.Tabs.UTIL = "util";
+  SettingsPanel.Tabs.TEX = "tex";
   const oldX = app.menu.settingsPanel.x,
     oldY = app.menu.settingsPanel.y;
   // remove the old settings panel and add our own

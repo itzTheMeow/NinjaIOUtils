@@ -66,6 +66,7 @@ declare var SettingsPanel: {
     CONTROLS: string;
     SOUND: string;
     UTIL: string;
+    TEX: string;
   };
 };
 

@@ -156,6 +156,119 @@
     return texturePacks;
   }
 
+  // src/settingsTabTex.ts
+  function getTexTab() {
+    function TexTab() {
+      const tab = this;
+      PIXI.Container.call(this);
+      EventDispatcher.call(this);
+      this.marginLeft = 40;
+      this.marginTop = 52;
+      this.off = this.marginTop + 6;
+      this.texTitle = new PIXI.Text("Texture packs", {
+        fontName: "Arial",
+        fontSize: 18,
+        lineHeight: 18,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      this.texTitle.x = this.marginLeft - 5;
+      this.texTitle.y = this.off;
+      this.addChild(this.texTitle);
+      this.texHint = new PIXI.Text("(make sure to click save)", {
+        fontName: "Arial",
+        fontSize: 14,
+        fill: config_default.Colors.white,
+        strokeThickness: 2,
+        lineJoin: "round"
+      });
+      this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
+      this.texHint.y = this.off + 2;
+      this.addChild(this.texHint);
+      this.upButton = new Button("pak_up");
+      this.upButton.setText("Up");
+      this.upButton.scale.x = this.upButton.scale.y = 0.5;
+      this.upButton.x = this.texHint.x + this.texHint.width + 10;
+      this.upButton.y = this.off + 2;
+      this.upButton.addListener(Button.BUTTON_RELEASED, () => {
+        this.packIndex = Math.max(0, this.packIndex - 1);
+        this.runPacks();
+      });
+      this.addChild(this.upButton);
+      this.downButton = new Button("pak_down");
+      this.downButton.setText("Down");
+      this.downButton.scale.x = this.downButton.scale.y = 0.5;
+      this.downButton.x = this.upButton.x + this.upButton.width + 2;
+      this.downButton.y = this.off + 2;
+      this.downButton.addListener(Button.BUTTON_RELEASED, () => {
+        this.packIndex = Math.min(this.packList.length - 4, this.packIndex + 1);
+        this.runPacks();
+      });
+      this.addChild(this.downButton);
+      const off = this.off;
+      this.packIndex = 0;
+      !(this.runPacks = async () => {
+        this.off = off;
+        if (this.hadPacks)
+          this.hadPacks.map((p) => p.destroy());
+        this.hadPacks = [];
+        const packs = this.packList || (this.packList = await fetchTexturePacks());
+        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + 6).forEach((pak) => {
+          const hasPack = SETTINGS.texturePack == pak.id;
+          const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
+            fontName: "Arial",
+            fontSize: 16,
+            fill: config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          });
+          packName.x = this.marginLeft;
+          packName.y = this.off += 28;
+          this.hadPacks.push(this.addChild(packName));
+          const flags = [];
+          if (pak.textureURL)
+            flags.push("textures");
+          if (pak.terrainURL)
+            flags.push("terrain");
+          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
+            fontName: "Arial",
+            fontSize: 14,
+            fill: config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          });
+          packDescription.x = this.marginLeft;
+          packDescription.y = this.off += packName.height + 2;
+          this.hadPacks.push(this.addChild(packDescription));
+          const packButton = new Button(`pack_btn_${pak.id}`);
+          packButton.x = packName.x + packName.width + 12;
+          packButton.y = this.off - packName.height;
+          packButton.setText(hasPack ? "Remove" : "Use");
+          packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
+          packButton.scale.x = packButton.scale.y = 0.5;
+          packButton.addListener(Button.BUTTON_RELEASED, async () => {
+            if (hasPack) {
+              SETTINGS.texturePack = null;
+              savePackData("", "");
+            } else {
+              SETTINGS.texturePack = pak.id;
+              savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
+            }
+            app.menu.settingsPanel.controlsTab.forceRefresh = true;
+            saveSettings();
+            this.runPacks();
+          });
+          this.hadPacks.push(this.addChild(packButton));
+        });
+      })();
+    }
+    TexTab.prototype = Object.create(PIXI.Container.prototype);
+    TexTab.prototype.constructor = TexTab;
+    EventDispatcher.call(TexTab.prototype);
+    return TexTab;
+  }
+
   // src/settingsTabUtil.ts
   function getUtilTab() {
     function UtilTab() {
@@ -207,7 +320,7 @@
       this.keyTitle.x = this.marginLeft - 5;
       this.keyTitle.y = this.off += 36;
       this.addChild(this.keyTitle);
-      this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the userscript page for instructions.", {
+      this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the github for instructions.", {
         fontName: "Arial",
         fontSize: 14,
         fill: config_default.Colors.white,
@@ -258,103 +371,6 @@
       this.clearKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width + this.clearKeyButton.width / 4 + 4;
       this.clearKeyButton.y = this.off + 4;
       this.addChild(this.clearKeyButton);
-      this.texTitle = new PIXI.Text("Texture Pack", {
-        fontName: "Arial",
-        fontSize: 16,
-        lineHeight: 18,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      this.texTitle.x = this.marginLeft - 5;
-      this.texTitle.y = this.off += 42;
-      this.addChild(this.texTitle);
-      this.texHint = new PIXI.Text("(make sure to click save)", {
-        fontName: "Arial",
-        fontSize: 14,
-        fill: config_default.Colors.white,
-        strokeThickness: 2,
-        lineJoin: "round"
-      });
-      this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
-      this.texHint.y = this.off + 2;
-      this.addChild(this.texHint);
-      this.upButton = new Button("pak_up");
-      this.upButton.setText("Up");
-      this.upButton.scale.x = this.upButton.scale.y = 0.5;
-      this.upButton.x = this.texHint.x + this.texHint.width + 10;
-      this.upButton.y = this.off + 2;
-      this.upButton.addListener(Button.BUTTON_RELEASED, () => {
-        this.packIndex = Math.max(0, this.packIndex - 1);
-        this.runPacks();
-      });
-      this.addChild(this.upButton);
-      this.downButton = new Button("pak_down");
-      this.downButton.setText("Down");
-      this.downButton.scale.x = this.downButton.scale.y = 0.5;
-      this.downButton.x = this.upButton.x + this.upButton.width + 2;
-      this.downButton.y = this.off + 2;
-      this.downButton.addListener(Button.BUTTON_RELEASED, () => {
-        this.packIndex = Math.min(this.packList.length - 4, this.packIndex + 1);
-        this.runPacks();
-      });
-      this.addChild(this.downButton);
-      const off = this.off;
-      this.packIndex = 0;
-      !(this.runPacks = async () => {
-        this.off = off;
-        if (this.hadPacks)
-          this.hadPacks.map((p) => p.destroy());
-        this.hadPacks = [];
-        const packs = this.packList || (this.packList = await fetchTexturePacks());
-        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + 4).forEach((pak) => {
-          const hasPack = SETTINGS.texturePack == pak.id;
-          const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-            fontName: "Arial",
-            fontSize: 16,
-            fill: config_default.Colors.white,
-            strokeThickness: 2,
-            lineJoin: "round"
-          });
-          packName.x = this.marginLeft;
-          packName.y = this.off += 28;
-          this.hadPacks.push(this.addChild(packName));
-          const flags = [];
-          if (pak.textureURL)
-            flags.push("textures");
-          if (pak.terrainURL)
-            flags.push("terrain");
-          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
-            fontName: "Arial",
-            fontSize: 14,
-            fill: config_default.Colors.white,
-            strokeThickness: 2,
-            lineJoin: "round"
-          });
-          packDescription.x = this.marginLeft;
-          packDescription.y = this.off += packName.height + 2;
-          this.hadPacks.push(this.addChild(packDescription));
-          const packButton = new Button(`pack_btn_${pak.id}`);
-          packButton.x = packName.x + packName.width + 12;
-          packButton.y = this.off - packName.height;
-          packButton.setText(hasPack ? "Remove" : "Use");
-          packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
-          packButton.scale.x = packButton.scale.y = 0.5;
-          packButton.addListener(Button.BUTTON_RELEASED, async () => {
-            if (hasPack) {
-              SETTINGS.texturePack = null;
-              savePackData("", "");
-            } else {
-              SETTINGS.texturePack = pak.id;
-              savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
-            }
-            app.menu.settingsPanel.controlsTab.forceRefresh = true;
-            saveSettings();
-            this.runPacks();
-          });
-          this.hadPacks.push(this.addChild(packButton));
-        });
-      })();
     }
     UtilTab.prototype = Object.create(PIXI.Container.prototype);
     UtilTab.prototype.constructor = UtilTab;
@@ -366,10 +382,10 @@
   function settingsTab() {
     function SettingsPanelNew(w, h) {
       const pan = new SettingsPanel(w, h);
-      function newTab(name, x) {
+      function newTab(title, name, x, tab) {
         name = `${name}Tab`;
-        pan[name] = new (getUtilTab())();
-        pan[`${name}Button`] = new PIXI.Text("NinjaIOUtils", {
+        pan[name] = new tab();
+        pan[`${name}Button`] = new PIXI.Text(title, {
           fontName: "Arial",
           fontSize: 18,
           lineHeight: 18,
@@ -379,7 +395,7 @@
         });
         pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
         pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
-        pan[`${name}Button`].x = 358;
+        pan[`${name}Button`].x = x + 56;
         pan[`${name}Button`].y = 28;
         pan.addChild(pan[`${name}Button`]);
         pan[`${name}ButtonBackground`] = new PIXI.Graphics();
@@ -399,10 +415,12 @@
         });
         pan.addChild(pan[`${name}ButtonBackground`]);
       }
-      newTab("util", 302);
+      newTab("NinjaIOUtils", "util", 302, getUtilTab());
+      newTab("Texture Pack", "tex", 418, getTexTab());
       return pan;
     }
     SettingsPanel.Tabs.UTIL = "util";
+    SettingsPanel.Tabs.TEX = "tex";
     const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
     app.menu.settingsPanel.destroy();
     app.menu.settingsPanel = SettingsPanelNew(660, 524);
