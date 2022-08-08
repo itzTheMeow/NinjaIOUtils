@@ -156,8 +156,8 @@
     return texturePacks;
   }
 
-  // src/settingsTab.ts
-  function settingsTab() {
+  // src/settingsTabUtil.ts
+  function getUtilTab() {
     function UtilTab() {
       const tab = this;
       PIXI.Container.call(this);
@@ -359,38 +359,47 @@
     UtilTab.prototype = Object.create(PIXI.Container.prototype);
     UtilTab.prototype.constructor = UtilTab;
     EventDispatcher.call(UtilTab.prototype);
+    return UtilTab;
+  }
+
+  // src/settingsTab.ts
+  function settingsTab() {
     function SettingsPanelNew(w, h) {
-      let pan = new SettingsPanel(w, h);
-      pan.utilTab = new UtilTab();
-      pan.utilTabButton = new PIXI.Text("NinjaIOUtils", {
-        fontName: "Arial",
-        fontSize: 18,
-        lineHeight: 18,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      pan.utilTabButton.resolution = 1.5 * App.DevicePixelRatio;
-      pan.utilTabButton.anchor.x = pan.utilTabButton.anchor.y = 0.5;
-      pan.utilTabButton.x = 358;
-      pan.utilTabButton.y = 28;
-      pan.addChild(pan.utilTabButton);
-      pan.utilTabButtonBackground = new PIXI.Graphics();
-      pan.utilTabButtonBackground.beginFill(16777215, 0.1);
-      pan.utilTabButtonBackground.drawRoundedRect(0, 0, 112, 30, 2);
-      pan.utilTabButtonBackground.endFill();
-      pan.utilTabButtonBackground.x = 302;
-      pan.utilTabButtonBackground.y = 12;
-      pan.utilTabButtonBackground.interactive = true;
-      pan.utilTabButtonBackground.on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
-      pan.utilTabButtonBackground.on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
-      pan.utilTabButtonBackground.on("mouseover", function() {
-        pan.utilTabButtonBackground.tint = 11184810;
-      });
-      pan.utilTabButtonBackground.on("mouseout", function() {
-        pan.utilTabButtonBackground.tint = 16777215;
-      });
-      pan.addChild(pan.utilTabButtonBackground);
+      const pan = new SettingsPanel(w, h);
+      function newTab(name, x) {
+        name = `${name}Tab`;
+        pan[name] = new (getUtilTab())();
+        pan[`${name}Button`] = new PIXI.Text("NinjaIOUtils", {
+          fontName: "Arial",
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
+        pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
+        pan[`${name}Button`].x = 358;
+        pan[`${name}Button`].y = 28;
+        pan.addChild(pan[`${name}Button`]);
+        pan[`${name}ButtonBackground`] = new PIXI.Graphics();
+        pan[`${name}ButtonBackground`].beginFill(16777215, 0.1);
+        pan[`${name}ButtonBackground`].drawRoundedRect(0, 0, 112, 30, 2);
+        pan[`${name}ButtonBackground`].endFill();
+        pan[`${name}ButtonBackground`].x = x;
+        pan[`${name}ButtonBackground`].y = 12;
+        pan[`${name}ButtonBackground`].interactive = true;
+        pan[`${name}ButtonBackground`].on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
+        pan[`${name}ButtonBackground`].on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
+        pan[`${name}ButtonBackground`].on("mouseover", function() {
+          pan[`${name}ButtonBackground`].tint = 11184810;
+        });
+        pan[`${name}ButtonBackground`].on("mouseout", function() {
+          pan[`${name}ButtonBackground`].tint = 16777215;
+        });
+        pan.addChild(pan[`${name}ButtonBackground`]);
+      }
+      newTab("util", 302);
       return pan;
     }
     SettingsPanel.Tabs.UTIL = "util";
@@ -400,60 +409,20 @@
     app.menu.settingsPanel.x = oldX;
     app.menu.settingsPanel.y = oldY;
     app.menu.resize();
-    app.menu.settingsPanel.displayTab = function(a) {
+    app.menu.settingsPanel.displayTab = function(name) {
       AudioEffects.ButtonClick.audio.play();
       saveSettings();
-      switch (a) {
-        case SettingsPanel.Tabs.GRAPHICS:
-          this.controlsTab.parent && this.removeChild(this.controlsTab);
-          this.soundTab.parent && this.removeChild(this.soundTab);
-          this.utilTab.parent && this.removeChild(this.utilTab);
-          this.addChild(this.graphicsTab);
-          this.soundTabButtonBackground.alpha = 1;
-          this.graphicsTabButtonBackground.alpha = 0;
-          this.controlsTabButtonBackground.alpha = 1;
-          this.utilTabButtonBackground.alpha = 1;
-          break;
-        case SettingsPanel.Tabs.CONTROLS:
-          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
-          this.soundTab.parent && this.removeChild(this.soundTab);
-          this.utilTab.parent && this.removeChild(this.utilTab);
-          this.soundTabButtonBackground.alpha = 1;
-          this.graphicsTabButtonBackground.alpha = 1;
-          this.controlsTabButtonBackground.alpha = 0;
-          this.utilTabButtonBackground.alpha = 1;
-          this.addChild(this.controlsTab);
-          break;
-        case SettingsPanel.Tabs.SOUND:
-          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
-          this.controlsTab.parent && this.removeChild(this.controlsTab);
-          this.utilTab.parent && this.removeChild(this.utilTab);
-          this.soundTabButtonBackground.alpha = 0;
-          this.graphicsTabButtonBackground.alpha = 1;
-          this.controlsTabButtonBackground.alpha = 1;
-          this.utilTabButtonBackground.alpha = 1;
-          this.addChild(this.soundTab);
-          break;
-        case SettingsPanel.Tabs.UTIL:
-          this.graphicsTab.parent && this.removeChild(this.graphicsTab);
-          this.controlsTab.parent && this.removeChild(this.controlsTab);
-          this.soundTab.parent && this.removeChild(this.soundTab);
-          this.soundTabButtonBackground.alpha = 1;
-          this.graphicsTabButtonBackground.alpha = 1;
-          this.controlsTabButtonBackground.alpha = 1;
-          this.utilTabButtonBackground.alpha = 0;
-          this.addChild(this.utilTab);
-          break;
-      }
+      Object.values(SettingsPanel.Tabs).filter((t) => t !== name).forEach((i) => {
+        this[`${i}Tab`].parent && this.removeChild(this[`${i}Tab`]);
+        this[`${i}TabButtonBackground`].alpha = 1;
+      });
+      this[`${name}TabButtonBackground`].alpha = 0;
+      this.addChild(this[`${name}Tab`]);
     };
-    [
-      [app.menu.settingsPanel.graphicsTabButtonBackground, SettingsPanel.Tabs.GRAPHICS],
-      [app.menu.settingsPanel.controlsTabButtonBackground, SettingsPanel.Tabs.CONTROLS],
-      [app.menu.settingsPanel.soundTabButtonBackground, SettingsPanel.Tabs.SOUND],
-      [app.menu.settingsPanel.utilTabButtonBackground, SettingsPanel.Tabs.UTIL]
-    ].forEach((d) => {
-      d[0].on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d[1]));
-      d[0]._events.mousedown.shift();
+    Object.values(SettingsPanel.Tabs).forEach((d) => {
+      const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
+      tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
+      tab._events.mousedown.shift();
     });
   }
 
