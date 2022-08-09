@@ -1251,8 +1251,12 @@ ${name}`);
   var failedOnline = false;
   var onlineSocket;
   function goOnline() {
-    if (app.credential.accounttype == "guest")
+    if (app.credential.accounttype == "guest") {
+      if (failedOnline)
+        return;
+      failedOnline = true;
       return App.Console.log("Failed to go online: You are not logged in!");
+    }
     failedOnline = false;
     if (onlineSocket)
       onlineSocket.disconnect();
