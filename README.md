@@ -77,7 +77,7 @@ Fill this out and put it in the file:
 }
 ```
 
-Your description should not be more than 96 characters long. Make sure you remove the `//` and text after them. (highlighted red)
+Your description should not be more than 80 characters long. Make sure you remove the `//` and text after them. (highlighted red)
 
 You should now have a `.json` file and one or two `.png` files. You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
 

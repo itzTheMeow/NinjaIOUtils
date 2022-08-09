@@ -74,12 +74,18 @@ export default function settingsTab() {
     Object.values(SettingsPanel.Tabs)
       .filter((t) => t !== name) // gets all the other tabs and "closes" them
       .forEach((i) => {
-        this[`${i}Tab`].parent && this.removeChild(this[`${i}Tab`]);
+        const t = this[`${i}Tab`];
+        if (t.parent) {
+          if (t.onHide) t.onHide();
+          this.removeChild(t);
+        }
         this[`${i}TabButtonBackground`].alpha = 1;
       });
 
+    const t = this[`${name}Tab`];
     this[`${name}TabButtonBackground`].alpha = 0;
-    this.addChild(this[`${name}Tab`]);
+    this.addChild(t);
+    if (t.onShow) t.onShow();
   };
   Object.values(SettingsPanel.Tabs).forEach((d) => {
     // add our new mousedown listener and remove the old one (because we removed the old settings panel)

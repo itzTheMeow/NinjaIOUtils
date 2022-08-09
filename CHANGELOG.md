@@ -1,4 +1,9 @@
-# Userscript
+# Changelog
+
+v1.15
+
+- Moved texture packs to a separate tab.
+- Added scrollbar for texture packs.
 
 v1.14
 

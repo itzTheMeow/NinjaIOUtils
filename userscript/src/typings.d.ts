@@ -1,6 +1,10 @@
+type func = (...args: any) => any;
+
 interface EventDispatcher {
-  addListener(event: string, callback: (...args: any) => any): void;
-  on(event: string, callback: (...args: any) => any): void;
+  addListener(event: string, callback: func): void;
+  hasListener(event: string, callback: func): boolean;
+  removeListener(event: string, callback: func): void;
+  on(event: string, callback: func): void;
   emit(event: string, ...args: any[]): void;
   _events: {
     mousedown: any[];
@@ -20,6 +24,7 @@ interface Container extends EventDispatcher {
   visible: boolean;
   text: string;
   tint: number;
+  alpha: number;
   children: Container[];
   setText(txt: string): void;
   addChild(child: Container): Container;
@@ -40,20 +45,23 @@ interface Text extends Container {
     }>
   ): Container;
 }
+declare interface Rectangle {}
+declare interface Graphics extends Container {
+  beginFill(arg0: number, arg1: number): void;
+  drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
+  endFill(): void;
+  drawCircle(arg0: number, arg1: number, arg2: number): void;
+  interactive: boolean;
+  lineStyle(arg0: number, arg1: number, arg2: number, arg3: number): void;
+  drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
+  hitArea: Rectangle;
+}
+
 declare var PIXI: {
   Text: Text;
   Container: Container & { new (): Container };
-  Graphics: Container & {
-    new (): Container & {
-      beginFill(arg0: number, arg1: number): void;
-      drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
-      endFill(): void;
-      drawCircle(arg0: number, arg1: number, arg2: number): void;
-      interactive: boolean;
-      lineStyle(arg0: number, arg1: number, arg2: number, arg3: number): void;
-      drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
-    };
-  };
+  Graphics: Container & { new (): Graphics };
+  Rectangle: { new (x: number, y: number, width: number, height: number): Rectangle };
   BitmapText: Container & {
     new (text: string, opts?: Partial<{ fontName: string; fontSize: number }>): Container;
   };
@@ -173,6 +181,9 @@ declare interface Feature extends Container {
 declare class Feature {
   container: Container;
 }
+declare var UserInput: EventDispatcher & {
+  WHEEL: string;
+};
 declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
@@ -288,6 +299,7 @@ declare var App: {
     };
   };
   RemovePreloader(): void;
+  Scale: number;
   prototype: {
     initGameMode(data: any): any;
     realInitGameMode(data: any): any;

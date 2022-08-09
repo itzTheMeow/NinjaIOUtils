@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.14
+// @version      1.15
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.14",
+    ver: "1.15",
     api: "https://itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 1,
@@ -156,8 +156,110 @@
     return texturePacks;
   }
 
+  // src/Scrollbar.ts
+  function getScrollbar() {
+    class _Scrollbar extends PIXI.Container {
+      constructor(h, start = 0) {
+        super();
+        this.h = h;
+        this.start = start;
+        this.scrollBar = new PIXI.Graphics();
+        this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
+        this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
+        this.scrollBar.endFill();
+        this.scrollBar.x = 0;
+        this.scrollBar.y = 0;
+        this.scrollBar.interactive = true;
+        this.scrollBar.alpha = 0.5;
+        this.addChild(this.scrollBar);
+        this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
+        this.scrollButton = new PIXI.Graphics();
+        this.scrollButton.lineStyle(1, 16777215, 0.4, 0);
+        this.scrollButton.beginFill(16777215, 0.2);
+        this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
+        this.scrollButton.endFill();
+        this.addChild(this.scrollButton);
+        this.scrollButton.x = 2;
+        this.scrollButton.y = -3 + (this.h - 39) * this.start;
+        this.scrollBar.on("mouseover", () => {
+          this.scrollBar.alpha = 1;
+        });
+        this.scrollBar.on("mouseout", () => {
+          this.scrollBar.alpha = 0.5;
+        });
+        this.scrollBar.on("mouseupoutside", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("mousedown", (c) => {
+          c.stopPropagation();
+          this.scrolling = true;
+          this.oy = c.data.global.y / App.Scale;
+        });
+        this.scrollBar.on("mouseup", (c) => {
+          c.stopPropagation();
+          this.scrolling = false;
+        });
+        this.scrollBar.on("mousemove", (c) => {
+          this.scroll(c.data.global.y);
+        });
+        this.scrollBar.on("pointerup", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("pointerupoutside", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("pointerdown", (c) => {
+          this.scrolling = true;
+          this.oy = c.data.global.y / App.Scale;
+          this.scroll(c.data.global.y);
+        });
+        this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y));
+        this.wheelListener = (c) => {
+          this.scrolling = true;
+          this.scroll(this.oy + 0.2 * c.data.delta);
+          this.scrolling = false;
+        };
+      }
+      scrolling = false;
+      oy = 0;
+      scrollBar;
+      scrollButton;
+      wheelListener;
+      enableWheel() {
+        UserInput.hasListener(UserInput.WHEEL, this.wheelListener) || UserInput.addListener(UserInput.WHEEL, this.wheelListener);
+      }
+      disableWheel() {
+        UserInput.removeListener(UserInput.WHEEL, this.wheelListener);
+      }
+      scroll(a) {
+        if (this.scrolling) {
+          a /= App.Scale;
+          let b = this.scrollButton.y + (a - this.oy);
+          -3 > b ? b = -3 : b > this.h - 39 && (b = this.h - 39);
+          let c = this.h / (this.h - 39);
+          this.scrollButton.y = b;
+          this.oy = a;
+          this.emit(Scrollbar.SCROLL, 1 / this.h * (b + 3) * c);
+        }
+      }
+      reset() {
+        this.scrollButton.y = -3 + (this.h - 39) * this.start;
+      }
+      onMouseOver() {
+        this.scrollButton.alpha = 1;
+      }
+      onMouseOut() {
+        this.scrollButton.alpha = 0.5;
+      }
+    }
+    const Scrollbar = _Scrollbar;
+    Scrollbar.SCROLL = "scroll";
+    return Scrollbar;
+  }
+
   // src/settingsTabTex.ts
   function getTexTab() {
+    const maxPacks = 5;
     function TexTab() {
       const tab = this;
       PIXI.Container.call(this);
@@ -186,26 +288,7 @@
       this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
       this.texHint.y = this.off + 2;
       this.addChild(this.texHint);
-      this.upButton = new Button("pak_up");
-      this.upButton.setText("Up");
-      this.upButton.scale.x = this.upButton.scale.y = 0.5;
-      this.upButton.x = this.texHint.x + this.texHint.width + 10;
-      this.upButton.y = this.off + 2;
-      this.upButton.addListener(Button.BUTTON_RELEASED, () => {
-        this.packIndex = Math.max(0, this.packIndex - 1);
-        this.runPacks();
-      });
-      this.addChild(this.upButton);
-      this.downButton = new Button("pak_down");
-      this.downButton.setText("Down");
-      this.downButton.scale.x = this.downButton.scale.y = 0.5;
-      this.downButton.x = this.upButton.x + this.upButton.width + 2;
-      this.downButton.y = this.off + 2;
-      this.downButton.addListener(Button.BUTTON_RELEASED, () => {
-        this.packIndex = Math.min(this.packList.length - 4, this.packIndex + 1);
-        this.runPacks();
-      });
-      this.addChild(this.downButton);
+      this.off += 4;
       const off = this.off;
       this.packIndex = 0;
       !(this.runPacks = async () => {
@@ -214,7 +297,7 @@
           this.hadPacks.map((p) => p.destroy());
         this.hadPacks = [];
         const packs = this.packList || (this.packList = await fetchTexturePacks());
-        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + 6).forEach((pak) => {
+        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
           const hasPack = SETTINGS.texturePack == pak.id;
           const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
             fontName: "Arial",
@@ -265,6 +348,23 @@
     }
     TexTab.prototype = Object.create(PIXI.Container.prototype);
     TexTab.prototype.constructor = TexTab;
+    TexTab.prototype.onShow = function() {
+      if (!this.scroller) {
+        const off = this.parent.texTabButton.height + 32;
+        this.scroller = new (getScrollbar())(this.parent.height - off - 12 - this.parent.applyButton.height);
+        this.scroller.x = this.parent.width - this.scroller.width * 1.75;
+        this.scroller.y = off;
+        this.scroller.on(getScrollbar().SCROLL, (prog) => {
+          this.packIndex = Math.round((this.packList.length - maxPacks) * prog);
+          this.runPacks();
+        });
+        this.addChild(this.scroller);
+      }
+      this.scroller.enableWheel();
+    };
+    TexTab.prototype.onHide = function() {
+      this.scroller.disableWheel();
+    };
     EventDispatcher.call(TexTab.prototype);
     return TexTab;
   }
@@ -430,12 +530,20 @@
     app.menu.settingsPanel.displayTab = function(name) {
       AudioEffects.ButtonClick.audio.play();
       saveSettings();
-      Object.values(SettingsPanel.Tabs).filter((t) => t !== name).forEach((i) => {
-        this[`${i}Tab`].parent && this.removeChild(this[`${i}Tab`]);
+      Object.values(SettingsPanel.Tabs).filter((t2) => t2 !== name).forEach((i) => {
+        const t2 = this[`${i}Tab`];
+        if (t2.parent) {
+          if (t2.onHide)
+            t2.onHide();
+          this.removeChild(t2);
+        }
         this[`${i}TabButtonBackground`].alpha = 1;
       });
+      const t = this[`${name}Tab`];
       this[`${name}TabButtonBackground`].alpha = 0;
-      this.addChild(this[`${name}Tab`]);
+      this.addChild(t);
+      if (t.onShow)
+        t.onShow();
     };
     Object.values(SettingsPanel.Tabs).forEach((d) => {
       const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];

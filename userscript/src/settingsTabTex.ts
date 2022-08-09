@@ -1,9 +1,12 @@
 import config from "./config";
-import { frameDisplay, showFPS } from "./fpsCounter";
 import { fetchTexturePacks, getTextureImage, TexturePack } from "./GitHub";
+import getScrollbar from "./Scrollbar";
+import Scrollbar from "./Scrollbar";
 import { savePackData, saveSettings, SETTINGS } from "./settings";
 
 export default function getTexTab() {
+  const maxPacks = 5;
+
   function TexTab() {
     const tab = this;
     PIXI.Container.call(this);
@@ -36,27 +39,7 @@ export default function getTexTab() {
     this.texHint.y = this.off + 2;
     this.addChild(this.texHint);
 
-    this.upButton = new Button("pak_up");
-    this.upButton.setText("Up");
-    this.upButton.scale.x = this.upButton.scale.y = 0.5;
-    this.upButton.x = this.texHint.x + this.texHint.width + 10;
-    this.upButton.y = this.off + 2;
-    this.upButton.addListener(Button.BUTTON_RELEASED, () => {
-      this.packIndex = Math.max(0, this.packIndex - 1);
-      this.runPacks();
-    });
-    this.addChild(this.upButton);
-    this.downButton = new Button("pak_down");
-    this.downButton.setText("Down");
-    this.downButton.scale.x = this.downButton.scale.y = 0.5;
-    this.downButton.x = this.upButton.x + this.upButton.width + 2;
-    this.downButton.y = this.off + 2;
-    this.downButton.addListener(Button.BUTTON_RELEASED, () => {
-      this.packIndex = Math.min(this.packList.length - 4, this.packIndex + 1);
-      this.runPacks();
-    });
-    this.addChild(this.downButton);
-
+    this.off += 4;
     const off = this.off;
     this.packIndex = 0;
     !(this.runPacks = async () => {
@@ -66,7 +49,7 @@ export default function getTexTab() {
       const packs: TexturePack[] = this.packList || (this.packList = await fetchTexturePacks());
       packs
         .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
-        .slice(this.packIndex, this.packIndex + 6)
+        .slice(this.packIndex, this.packIndex + maxPacks)
         .forEach((pak) => {
           const hasPack = SETTINGS.texturePack == pak.id;
           const packName = new PIXI.Text(
@@ -127,6 +110,25 @@ export default function getTexTab() {
   }
   TexTab.prototype = Object.create(PIXI.Container.prototype);
   TexTab.prototype.constructor = TexTab;
+  TexTab.prototype.onShow = function () {
+    if (!this.scroller) {
+      const off = this.parent.texTabButton.height + 32;
+      this.scroller = new (getScrollbar())(
+        this.parent.height - off - 12 - this.parent.applyButton.height
+      );
+      this.scroller.x = this.parent.width - this.scroller.width * 1.75;
+      this.scroller.y = off;
+      this.scroller.on(getScrollbar().SCROLL, (prog: number) => {
+        this.packIndex = Math.round((this.packList.length - maxPacks) * prog);
+        this.runPacks();
+      });
+      this.addChild(this.scroller);
+    }
+    this.scroller.enableWheel();
+  };
+  TexTab.prototype.onHide = function () {
+    this.scroller.disableWheel();
+  };
   EventDispatcher.call(TexTab.prototype);
   return TexTab;
 }
