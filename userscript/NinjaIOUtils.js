@@ -98,7 +98,7 @@
     };
   }
 
-  // src/settings.ts
+  // src/settings/settings.ts
   var settingsKey = "ninjaioutils";
   var packKey = "DONTEDIT_ninja_custompack";
   var SETTINGS = {
@@ -257,7 +257,7 @@
     return Scrollbar;
   }
 
-  // src/settingsTabTex.ts
+  // src/settings/settingsTabTex.ts
   function getTexTab() {
     const maxPacks = 5;
     function TexTab() {
@@ -369,7 +369,7 @@
     return TexTab;
   }
 
-  // src/settingsTabUtil.ts
+  // src/settings/settingsTabUtil.ts
   function getUtilTab() {
     function UtilTab() {
       const tab = this;
@@ -478,7 +478,7 @@
     return UtilTab;
   }
 
-  // src/settingsTab.ts
+  // src/settings/settingsTab.ts
   function settingsTab() {
     function SettingsPanelNew(w, h) {
       const pan = new SettingsPanel(w, h);

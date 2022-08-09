@@ -1,4 +1,4 @@
-import config from "./config";
+import config from "../config";
 import { saveSettings } from "./settings";
 import getTexTab from "./settingsTabTex";
 import getUtilTab from "./settingsTabUtil";

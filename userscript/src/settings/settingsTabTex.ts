@@ -1,7 +1,7 @@
-import config from "./config";
-import { fetchTexturePacks, getTextureImage, TexturePack } from "./GitHub";
-import getScrollbar from "./Scrollbar";
-import Scrollbar from "./Scrollbar";
+import config from "../config";
+import { fetchTexturePacks, getTextureImage, TexturePack } from "../GitHub";
+import getScrollbar from "../Scrollbar";
+import Scrollbar from "../Scrollbar";
 import { savePackData, saveSettings, SETTINGS } from "./settings";
 
 export default function getTexTab() {

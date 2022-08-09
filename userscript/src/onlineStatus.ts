@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import config from "./config";
 import reposItems, { reindexItems } from "./repositionItems";
-import { saveSettings, SETTINGS } from "./settings";
+import { saveSettings, SETTINGS } from "./settings/settings";
 import { gameLinkData } from "./shareURLs";
 import { SocketTypes } from "./typings";
 import { commPackets, decodeUserCommunication } from "./userCommunicationProtocol";

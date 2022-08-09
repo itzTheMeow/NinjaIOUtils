@@ -1,6 +1,6 @@
-import config from "./config";
-import { frameDisplay, showFPS } from "./fpsCounter";
-import { fetchTexturePacks, getTextureImage, TexturePack } from "./GitHub";
+import config from "../config";
+import { frameDisplay, showFPS } from "../fpsCounter";
+import { fetchTexturePacks, getTextureImage, TexturePack } from "../GitHub";
 import { savePackData, saveSettings, SETTINGS } from "./settings";
 
 export default function getUtilTab() {

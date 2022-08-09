@@ -1,6 +1,6 @@
 import config from "./config";
 import { startingLevel } from "./matchStartHook";
-import { SETTINGS } from "./settings";
+import { SETTINGS } from "./settings/settings";
 
 export default function matchEndHook() {
   Game.prototype._endGame = Game.prototype.endGame;

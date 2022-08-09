@@ -1,4 +1,4 @@
-import { SETTINGS } from "./settings";
+import { SETTINGS } from "./settings/settings";
 import { inGame } from "./utils";
 
 export const frameDisplay = document.createElement("div");

@@ -1,4 +1,4 @@
-import { getSavedPack, SETTINGS } from "./settings";
+import { getSavedPack, SETTINGS } from "./settings/settings";
 import { XMLHttpRequest } from "./typings";
 
 class ImageNew extends Image {

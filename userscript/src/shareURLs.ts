@@ -1,5 +1,5 @@
 import config from "./config";
-import settingsTab from "./settingsTab";
+import settingsTab from "./settings/settingsTab";
 import { setHash } from "./utils";
 
 export let gameLinkData = { id: "", name: "", pass: "" };
