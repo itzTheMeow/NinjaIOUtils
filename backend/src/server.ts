@@ -5,6 +5,8 @@ import { Server } from "socket.io";
 import { SocketTypes } from "../../shared";
 import onlineUserConn, { onlineUsers } from "./onlineUserManager";
 import partyManagerConnection from "./party/partyManager";
+import initStatTracker from "./statTracker";
+import initLinkSharer from "./linkSharer";
 
 const config = {
   port: 8907,
@@ -33,6 +35,8 @@ app.get(
     res.json(onlineUsers.map((u) => u.id));
   }
 );
+initLinkSharer(app);
+initStatTracker(app);
 
 const server = app.listen(config.port, () => {
   console.log(`Listening on port ${config.port}.`);
