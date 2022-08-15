@@ -5,8 +5,3 @@ export const XMLHttpRequest = window.XMLHttpRequest as any as typeof window.XMLH
     _open: typeof window.XMLHttpRequest["prototype"]["open"];
   };
 };
-
-export enum SocketTypes {
-  online,
-  party,
-}

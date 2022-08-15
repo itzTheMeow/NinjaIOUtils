@@ -5,5 +5,5 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["src", "version.json"]
+  "include": ["src", "version.json", "shared.ts"]
 }

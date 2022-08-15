@@ -1,6 +1,6 @@
 export default {
   ver: "$$version",
-  api: "https://nutil.itsmeow.cat",
+  api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
   packVersion: 1,
   actualGameVersion:

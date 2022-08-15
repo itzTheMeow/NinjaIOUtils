@@ -3,7 +3,7 @@ import config from "./config";
 import reposItems, { reindexItems } from "./repositionItems";
 import { saveSettings, SETTINGS } from "./settings/settings";
 import { gameLinkData } from "./shareURLs";
-import { SocketTypes } from "./typings";
+import { SocketTypes } from "../../shared";
 import { commPackets, decodeUserCommunication } from "./userCommunicationProtocol";
 import { inGame, io } from "./utils";
 

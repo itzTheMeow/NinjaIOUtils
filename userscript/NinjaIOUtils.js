@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.15
+// @version      1.16
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,8 +26,8 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.15",
-    api: "https://itsmeow.cat",
+    ver: "1.16",
+    api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 1,
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -784,7 +784,7 @@ ${name}`);
               deaths: data.leaderboard.deaths[leaderIndex],
               caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
             };
-            fetch(`${config_default.api}/ninja/submit?key=${SETTINGS.apiKey}`, {
+            fetch(`${config_default.api}/submit?key=${SETTINGS.apiKey}`, {
               method: "POST",
               body: JSON.stringify(statModel),
               headers: {
@@ -1066,7 +1066,7 @@ ${name}`);
         if (!code.trim())
           return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
         this.startLoading("Joining party...");
-        this.socket = io(`${config_default.api}`);
+        this.socket = io(config_default.api);
         this.socket.once("connect", () => {
           this.socket.emit("init", 1 /* party */, code, app.credential.username);
           this.socket.once("denyJoin", () => this.startLoading("Invalid party code."));
@@ -1370,7 +1370,7 @@ ${name}`);
   async function updateFriendList(reload = true) {
     if (App.Layer.socialMenu.mode == "friends") {
       try {
-        const friendsOnline = await fetch(`${config_default.api}/ninja/onlinepeeps`).then((res) => res.json());
+        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) => res.json());
         App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
       } catch {
         App.Layer.socialMenu.onlineFriends = [];
@@ -1383,7 +1383,7 @@ ${name}`);
   // src/updateChecker.ts
   async function checkUpdate() {
     try {
-      const newest = await fetch(`${config_default.api}/ninja/ver`).then((r) => r.text());
+      const newest = await fetch(`${config_default.api}/ver`).then((r) => r.text());
       const num = (str) => Number(str.replace(/\./, ""));
       if (num(newest) > num(config_default.ver)) {
         App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
@@ -1457,7 +1457,7 @@ ${name}`);
       };
       const req = String(Date.now());
       await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
-      const res = (await fetch(`${config_default.api}/ninja/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
+      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
       if (res == false)
         rej("User not in game.");
       else if (res == true)
