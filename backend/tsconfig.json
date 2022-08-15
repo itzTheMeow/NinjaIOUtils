@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "CommonJS",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "dist"
+  },
+  "include": ["src", "version.json", "shared.ts"]
+}

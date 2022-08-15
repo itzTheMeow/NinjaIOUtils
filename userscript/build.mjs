@@ -1,8 +1,8 @@
-import fs from "fs";
+import fs, { readFileSync } from "fs";
 import { buildSync } from "esbuild";
 import meta from "./meta.json" assert { type: "json" };
-import ver from "./version.json" assert { type: "json" };
 
+const ver = readFileSync("../version.json").toString().replace(/"/g, "").trim();
 const scriptPath = "NinjaIOUtils.js";
 console.log("Building utils...");
 buildSync({

@@ -35,7 +35,7 @@ export default function matchEndHook() {
           };
 
           /* Uploads your match stats to the tracker. */
-          fetch(`${config.api}/ninja/submit?key=${SETTINGS.apiKey}`, {
+          fetch(`${config.api}/submit?key=${SETTINGS.apiKey}`, {
             method: "POST",
             body: JSON.stringify(statModel),
             headers: {

@@ -22,8 +22,8 @@ export default function hookJoinGameButton() {
     const req = String(Date.now());
     await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
     const res = (
-      await fetch(`${config.api}/ninja/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then(
-        (r) => r.json()
+      await fetch(`${config.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) =>
+        r.json()
       )
     )?.[0];
     if (res == false) rej("User not in game.");

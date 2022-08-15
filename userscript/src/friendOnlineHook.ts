@@ -59,7 +59,7 @@ export default function initFriendOnlineHook() {
 export async function updateFriendList(reload = true) {
   if (App.Layer.socialMenu.mode == "friends") {
     try {
-      const friendsOnline = (await fetch(`${config.api}/ninja/onlinepeeps`).then((res) =>
+      const friendsOnline = (await fetch(`${config.api}/onlineplayers`).then((res) =>
         res.json()
       )) as string[];
       App.Layer.socialMenu.onlineFriends =
