@@ -1,5 +1,10 @@
 # Changelog
 
+v1.16
+
+- Added new backend server, separate from my website.
+- Disabled stat tracker for now.
+
 v1.15
 
 - Moved texture packs to a separate tab.
