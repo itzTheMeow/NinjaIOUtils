@@ -2,7 +2,7 @@
   "name": "backend",
   "description": "The server that handles NinjaIOUtils data storage.",
   "version": "1.0.0",
-  "main": "dist/server.js",
+  "main": "dist/backend/server.js",
   "author": "Meow",
   "scripts": {
     "start": "tsc -b tsconfig.json && node ."
