@@ -2,7 +2,7 @@ export default {
   ver: "$$version",
   api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
-  packVersion: 1,
+  packVersion: 2,
   actualGameVersion:
     document
       .querySelector<HTMLScriptElement>(`script[src*="game.js"]`)

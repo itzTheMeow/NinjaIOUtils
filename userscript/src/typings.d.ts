@@ -114,6 +114,7 @@ declare var ImgButton: Container & {
 interface MemberMenuButton extends Button {
   setActive(active: 0 | 1): void;
   backgroundEnabled: Container;
+  icon: Container;
 }
 declare var MemberMenuButton: MemberMenuButton &
   ButtonEvents & {

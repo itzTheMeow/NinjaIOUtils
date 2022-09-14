@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.17
+// @version      1.18
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,10 +26,10 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.17",
+    ver: "1.18",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
-    packVersion: 1,
+    packVersion: 2,
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
       try {
         return App.ClientVersion;
@@ -260,94 +260,94 @@
   // src/settings/settingsTabTex.ts
   function getTexTab() {
     const maxPacks = 5;
-    function TexTab() {
-      const tab = this;
-      PIXI.Container.call(this);
-      EventDispatcher.call(this);
-      this.marginLeft = 40;
-      this.marginTop = 52;
-      this.off = this.marginTop + 6;
-      this.texTitle = new PIXI.Text("Texture packs", {
-        fontName: "Arial",
-        fontSize: 18,
-        lineHeight: 18,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      this.texTitle.x = this.marginLeft - 5;
-      this.texTitle.y = this.off;
-      this.addChild(this.texTitle);
-      this.texHint = new PIXI.Text("(make sure to click save)", {
-        fontName: "Arial",
-        fontSize: 14,
-        fill: config_default.Colors.white,
-        strokeThickness: 2,
-        lineJoin: "round"
-      });
-      this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
-      this.texHint.y = this.off + 2;
-      this.addChild(this.texHint);
-      this.off += 4;
-      const off = this.off;
-      this.packIndex = 0;
-      !(this.runPacks = async () => {
-        this.off = off;
-        if (this.hadPacks)
-          this.hadPacks.map((p) => p.destroy());
-        this.hadPacks = [];
-        const packs = this.packList || (this.packList = await fetchTexturePacks());
-        packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
-          const hasPack = SETTINGS.texturePack == pak.id;
-          const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-            fontName: "Arial",
-            fontSize: 16,
-            fill: config_default.Colors.white,
-            strokeThickness: 2,
-            lineJoin: "round"
-          });
-          packName.x = this.marginLeft;
-          packName.y = this.off += 28;
-          this.hadPacks.push(this.addChild(packName));
-          const flags = [];
-          if (pak.textureURL)
-            flags.push("textures");
-          if (pak.terrainURL)
-            flags.push("terrain");
-          const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
-            fontName: "Arial",
-            fontSize: 14,
-            fill: config_default.Colors.white,
-            strokeThickness: 2,
-            lineJoin: "round"
-          });
-          packDescription.x = this.marginLeft;
-          packDescription.y = this.off += packName.height + 2;
-          this.hadPacks.push(this.addChild(packDescription));
-          const packButton = new Button(`pack_btn_${pak.id}`);
-          packButton.x = packName.x + packName.width + 12;
-          packButton.y = this.off - packName.height;
-          packButton.setText(hasPack ? "Remove" : "Use");
-          packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
-          packButton.scale.x = packButton.scale.y = 0.5;
-          packButton.addListener(Button.BUTTON_RELEASED, async () => {
-            if (hasPack) {
-              SETTINGS.texturePack = null;
-              savePackData("", "");
-            } else {
-              SETTINGS.texturePack = pak.id;
-              savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
-            }
-            app.menu.settingsPanel.controlsTab.forceRefresh = true;
-            saveSettings();
-            this.runPacks();
-          });
-          this.hadPacks.push(this.addChild(packButton));
+    class TexTab extends PIXI.Container {
+      constructor() {
+        super();
+        const tab = this;
+        EventDispatcher.call(this);
+        this.marginLeft = 40;
+        this.marginTop = 52;
+        this.off = this.marginTop + 6;
+        this.texTitle = new PIXI.Text("Texture packs", {
+          fontName: "Arial",
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
         });
-      })();
+        this.texTitle.x = this.marginLeft - 5;
+        this.texTitle.y = this.off;
+        this.addChild(this.texTitle);
+        this.texHint = new PIXI.Text("(make sure to click save)", {
+          fontName: "Arial",
+          fontSize: 14,
+          fill: config_default.Colors.white,
+          strokeThickness: 2,
+          lineJoin: "round"
+        });
+        this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
+        this.texHint.y = this.off + 2;
+        this.addChild(this.texHint);
+        this.off += 4;
+        const off = this.off;
+        this.packIndex = 0;
+        !(this.runPacks = async () => {
+          this.off = off;
+          if (this.hadPacks)
+            this.hadPacks.map((p) => p.destroy());
+          this.hadPacks = [];
+          const packs = this.packList || (this.packList = await fetchTexturePacks());
+          packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
+            const hasPack = SETTINGS.texturePack == pak.id;
+            const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
+              fontName: "Arial",
+              fontSize: 16,
+              fill: config_default.Colors.white,
+              strokeThickness: 2,
+              lineJoin: "round"
+            });
+            packName.x = this.marginLeft;
+            packName.y = this.off += 28;
+            this.hadPacks.push(this.addChild(packName));
+            const flags = [];
+            if (pak.textureURL)
+              flags.push("textures");
+            if (pak.terrainURL)
+              flags.push("terrain");
+            const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
+              fontName: "Arial",
+              fontSize: 14,
+              fill: config_default.Colors.white,
+              strokeThickness: 2,
+              lineJoin: "round"
+            });
+            packDescription.x = this.marginLeft;
+            packDescription.y = this.off += packName.height + 2;
+            this.hadPacks.push(this.addChild(packDescription));
+            const packButton = new Button(`pack_btn_${pak.id}`);
+            packButton.x = packName.x + packName.width + 12;
+            packButton.y = this.off - packName.height;
+            packButton.setText(hasPack ? "Remove" : "Use");
+            packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
+            packButton.scale.x = packButton.scale.y = 0.5;
+            packButton.addListener(Button.BUTTON_RELEASED, async () => {
+              if (hasPack) {
+                SETTINGS.texturePack = null;
+                savePackData("", "");
+              } else {
+                SETTINGS.texturePack = pak.id;
+                savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
+              }
+              app.menu.settingsPanel.controlsTab.forceRefresh = true;
+              saveSettings();
+              this.runPacks();
+            });
+            this.hadPacks.push(this.addChild(packButton));
+          });
+        })();
+      }
     }
-    TexTab.prototype = Object.create(PIXI.Container.prototype);
-    TexTab.prototype.constructor = TexTab;
     TexTab.prototype.onShow = function() {
       if (!this.scroller) {
         const off = this.parent.texTabButton.height + 32;
@@ -365,116 +365,114 @@
     TexTab.prototype.onHide = function() {
       this.scroller.disableWheel();
     };
-    EventDispatcher.call(TexTab.prototype);
     return TexTab;
   }
 
   // src/settings/settingsTabUtil.ts
   function getUtilTab() {
-    function UtilTab() {
-      const tab = this;
-      PIXI.Container.call(this);
-      EventDispatcher.call(this);
-      this.marginLeft = 40;
-      this.marginTop = 52;
-      this.off = this.marginTop + 6;
-      this.utilTitle = new PIXI.Text("NinjaIOUtils settings", {
-        fontName: "Arial",
-        fontSize: 18,
-        lineHeight: 18,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      this.utilTitle.x = this.marginLeft - 5;
-      this.utilTitle.y = this.off;
-      this.addChild(this.utilTitle);
-      this.showFPS = new Checkbox("showFPS", "Show FPS Display", true);
-      this.showFPS.x = this.marginLeft;
-      this.showFPS.y = this.off += 34;
-      this.showFPS.on(Checkbox.CHANGE, function(b) {
-        SETTINGS.showFPS = b;
-        saveSettings();
-        if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
-          showFPS();
-      });
-      this.addChild(this.showFPS);
-      this.showFPS.setChecked(SETTINGS.showFPS);
-      this.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true);
-      this.typewriter.x = this.marginLeft;
-      this.typewriter.y = this.off += 34;
-      this.typewriter.on(Checkbox.CHANGE, function(b) {
-        SETTINGS.typewriter = b;
-        saveSettings();
-      });
-      this.addChild(this.typewriter);
-      this.typewriter.setChecked(SETTINGS.typewriter);
-      this.keyTitle = new PIXI.Text("API Key", {
-        fontName: "Arial",
-        fontSize: 16,
-        lineHeight: 18,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      this.keyTitle.x = this.marginLeft - 5;
-      this.keyTitle.y = this.off += 36;
-      this.addChild(this.keyTitle);
-      this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the github for instructions.", {
-        fontName: "Arial",
-        fontSize: 14,
-        fill: config_default.Colors.white,
-        strokeThickness: 2,
-        lineJoin: "round"
-      });
-      this.keyHint.x = this.marginLeft - 5;
-      this.keyHint.y = this.off += 24;
-      this.addChild(this.keyHint);
-      this.keyField = new InputField("key_field", false, 24);
-      this.keyField.setDimensions(370, 35);
-      this.keyField.forceLowerCase = false;
-      this.keyField.setMaxChars(128);
-      if (SETTINGS.apiKey)
-        this.keyField.setText(SETTINGS.apiKey);
-      this.keyField.x = this.marginLeft;
-      this.keyField.y = this.off += 24;
-      this.keyField.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-      this.keyField.addListener(InputField.CHANGE, function(d) {
-        d = d.data.value || "";
-        SETTINGS.apiKey = d;
-        saveSettings();
-      });
-      this.addChild(this.keyField);
-      this.pasteKeyButton = new Button("paste_key");
-      this.pasteKeyButton.selected = true;
-      this.pasteKeyButton.setText("Paste");
-      this.pasteKeyButton.scale.x = this.pasteKeyButton.scale.y = 0.75;
-      this.pasteKeyButton.addListener(Button.BUTTON_RELEASED, function() {
-        navigator.clipboard.readText().then(function(d) {
-          tab.keyField.setText(d);
+    class UtilTab extends PIXI.Container {
+      constructor() {
+        super();
+        const tab = this;
+        EventDispatcher.call(this);
+        this.marginLeft = 40;
+        this.marginTop = 52;
+        this.off = this.marginTop + 6;
+        this.utilTitle = new PIXI.Text("NinjaIOUtils settings", {
+          fontName: "Arial",
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.utilTitle.x = this.marginLeft - 5;
+        this.utilTitle.y = this.off;
+        this.addChild(this.utilTitle);
+        this.showFPS = new Checkbox("showFPS", "Show FPS Display", true);
+        this.showFPS.x = this.marginLeft;
+        this.showFPS.y = this.off += 34;
+        this.showFPS.on(Checkbox.CHANGE, function(b) {
+          SETTINGS.showFPS = b;
+          saveSettings();
+          if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
+            showFPS();
+        });
+        this.addChild(this.showFPS);
+        this.showFPS.setChecked(SETTINGS.showFPS);
+        this.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true);
+        this.typewriter.x = this.marginLeft;
+        this.typewriter.y = this.off += 34;
+        this.typewriter.on(Checkbox.CHANGE, function(b) {
+          SETTINGS.typewriter = b;
+          saveSettings();
+        });
+        this.addChild(this.typewriter);
+        this.typewriter.setChecked(SETTINGS.typewriter);
+        this.keyTitle = new PIXI.Text("API Key", {
+          fontName: "Arial",
+          fontSize: 16,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.keyTitle.x = this.marginLeft - 5;
+        this.keyTitle.y = this.off += 36;
+        this.addChild(this.keyTitle);
+        this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the github for instructions.", {
+          fontName: "Arial",
+          fontSize: 14,
+          fill: config_default.Colors.white,
+          strokeThickness: 2,
+          lineJoin: "round"
+        });
+        this.keyHint.x = this.marginLeft - 5;
+        this.keyHint.y = this.off += 24;
+        this.addChild(this.keyHint);
+        this.keyField = new InputField("key_field", false, 24);
+        this.keyField.setDimensions(370, 35);
+        this.keyField.forceLowerCase = false;
+        this.keyField.setMaxChars(128);
+        if (SETTINGS.apiKey)
+          this.keyField.setText(SETTINGS.apiKey);
+        this.keyField.x = this.marginLeft;
+        this.keyField.y = this.off += 24;
+        this.keyField.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
+        this.keyField.addListener(InputField.CHANGE, function(d) {
+          d = d.data.value || "";
           SETTINGS.apiKey = d;
           saveSettings();
         });
-      });
-      this.pasteKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width / 4;
-      this.pasteKeyButton.y = this.off + 4;
-      this.addChild(this.pasteKeyButton);
-      this.clearKeyButton = new Button("clear_key");
-      this.clearKeyButton.selected = true;
-      this.clearKeyButton.setText("Clear");
-      this.clearKeyButton.scale.x = this.clearKeyButton.scale.y = 0.75;
-      this.clearKeyButton.addListener(Button.BUTTON_RELEASED, function() {
-        tab.keyField.setText("");
-        SETTINGS.apiKey = "";
-        saveSettings();
-      });
-      this.clearKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width + this.clearKeyButton.width / 4 + 4;
-      this.clearKeyButton.y = this.off + 4;
-      this.addChild(this.clearKeyButton);
+        this.addChild(this.keyField);
+        this.pasteKeyButton = new Button("paste_key");
+        this.pasteKeyButton.selected = true;
+        this.pasteKeyButton.setText("Paste");
+        this.pasteKeyButton.scale.x = this.pasteKeyButton.scale.y = 0.75;
+        this.pasteKeyButton.addListener(Button.BUTTON_RELEASED, function() {
+          navigator.clipboard.readText().then(function(d) {
+            tab.keyField.setText(d);
+            SETTINGS.apiKey = d;
+            saveSettings();
+          });
+        });
+        this.pasteKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width / 4;
+        this.pasteKeyButton.y = this.off + 4;
+        this.addChild(this.pasteKeyButton);
+        this.clearKeyButton = new Button("clear_key");
+        this.clearKeyButton.selected = true;
+        this.clearKeyButton.setText("Clear");
+        this.clearKeyButton.scale.x = this.clearKeyButton.scale.y = 0.75;
+        this.clearKeyButton.addListener(Button.BUTTON_RELEASED, function() {
+          tab.keyField.setText("");
+          SETTINGS.apiKey = "";
+          saveSettings();
+        });
+        this.clearKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width + this.clearKeyButton.width / 4 + 4;
+        this.clearKeyButton.y = this.off + 4;
+        this.addChild(this.clearKeyButton);
+      }
     }
-    UtilTab.prototype = Object.create(PIXI.Container.prototype);
-    UtilTab.prototype.constructor = UtilTab;
-    EventDispatcher.call(UtilTab.prototype);
     return UtilTab;
   }
 
@@ -883,16 +881,15 @@ ${name}`);
       return;
     try {
       App.Layer.partyMenu.reposition();
-      app.menu.joinButton.x = app.menu.backgroundImage.x + 24;
-      app.menu.serverListButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 6;
+      app.menu.joinButton.x = app.menu.backgroundImage.x + 28;
+      app.menu.serverListButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 26;
       app.menu.serverListButton.y = app.menu.joinButton.y;
-      app.menu.serverListButton.scale.x = app.menu.serverListButton.scale.y = 1.1;
       app.menu.serverCreateButton.x = app.menu.serverListButton.x - (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
-      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 7;
+      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 14;
       app.menu.partyButton.x = app.menu.serverCreateButton.x - (app.menu.partyButton.backgroundEnabled.width - 10);
       app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
       app.menu.onlineOption.x = app.menu.joinButton.x + (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
-      app.menu.onlineOption.y = app.menu.serverCreateButton.y + app.menu.serverCreateButton.height / 2 - app.menu.onlineOption.height / 2;
+      app.menu.onlineOption.y = app.menu.serverCreateButton.y + app.menu.serverCreateButton.height / 2 - app.menu.onlineOption.height / 2 + 2;
     } catch {
     }
   }
@@ -1170,8 +1167,8 @@ ${name}`);
         App.Layer.emit(Layer.Events.HIDE_MENU);
         app.onResize();
       });
-      app.menu.partyButton.width *= 0.8;
-      app.menu.partyButton.height *= 0.8;
+      app.menu.partyButton.scale = { x: 0.8, y: 0.8 };
+      app.menu.partyButton.icon.scale = { x: 0.6, y: 0.6 };
       app.menu.container.addChild(app.menu.partyButton);
       reindexItems();
     }

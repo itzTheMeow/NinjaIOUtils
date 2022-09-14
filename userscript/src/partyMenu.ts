@@ -284,8 +284,8 @@ export default function initPartyMenu() {
       App.Layer.emit(Layer.Events.HIDE_MENU);
       app.onResize();
     });
-    app.menu.partyButton.width *= 0.8;
-    app.menu.partyButton.height *= 0.8;
+    app.menu.partyButton.scale = { x: 0.8, y: 0.8 };
+    app.menu.partyButton.icon.scale = { x: 0.6, y: 0.6 };
     app.menu.container.addChild(app.menu.partyButton);
     reindexItems();
   }

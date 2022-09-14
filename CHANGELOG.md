@@ -1,5 +1,9 @@
 # Changelog
 
+v1.18
+
+- Added support for new v0.3.0 release.
+
 v1.17
 
 - Fixed script not loading when the game is "updating".

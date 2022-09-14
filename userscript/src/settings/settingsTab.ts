@@ -11,7 +11,7 @@ export default function settingsTab() {
       name: string,
       x: number,
       tab: {
-        (): void;
+        new (): void;
         prototype: any;
       }
     ) {
