@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.18
+// @version      1.19
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.18",
+    ver: "1.19",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 2,
@@ -478,6 +478,8 @@
 
   // src/settings/settingsTab.ts
   function settingsTab() {
+    if (!app.menu.settingsPanel)
+      return setTimeout(() => settingsTab(), 500);
     function SettingsPanelNew(w, h) {
       const pan = new SettingsPanel(w, h);
       function newTab(title, name, x, tab) {

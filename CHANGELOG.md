@@ -1,5 +1,9 @@
 # Changelog
 
+v1.19
+
+- Fixed settings panel injection.
+
 v1.18
 
 - Added support for new v0.3.0 release.
