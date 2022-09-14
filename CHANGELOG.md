@@ -1,5 +1,9 @@
 # Changelog
 
+v1.17
+
+- Fixed script not loading when the game is "updating".
+
 v1.16
 
 - Added new backend server, separate from my website.

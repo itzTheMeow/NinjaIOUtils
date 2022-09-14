@@ -8,16 +8,29 @@ export default function matchEndHook() {
     // example - points can now be omitted
     /*{
       mode: 1,
-      winner: 1,
+      winner: 0,
       leaderboard: {
-        id: ["9", "4", "c", "0", "7", "2", "d", "a", "3", "6", "b", "8"],
-        points: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        kills: [21, 19, 13, 9, 8, 5, 2, 1, 1, 0, 0, -1],
-        deaths: [6, 7, 7, 2, 11, 18, 3, 1, 1, 1, 0, 2],
+        id: ["7", "d", "9", "4", "5", "b", "2", "c", "6", "0", "8"],
+        points: [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        kills: [31, 41, 21, 8, 8, 5, 5, 2, 0, -2, -6],
+        deaths: [11, 16, 8, 27, 22, 16, 8, 2, 0, 11, 23],
+        name: [
+          "sheep",
+          ".Frost.Killer",
+          "ALEXMEOW4560",
+          "rtyty",
+          "NinjaBK730",
+          "NinjaPH74",
+          "NinjaPL529",
+          "NinjaBD919",
+          "saldapaga",
+          "NinjaXO395",
+          "NinjaTA163",
+        ],
       },
       countdown: 24,
       completed: 0,
-    }*/
+    };*/
 
     if (SETTINGS.apiKey) {
       App.Console.log("Attempting to upload match score...");

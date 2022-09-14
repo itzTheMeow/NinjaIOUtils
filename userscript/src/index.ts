@@ -48,7 +48,7 @@ const testing = setInterval(() => {
       !app ||
       !app.menu ||
       !app.menu.joinButton ||
-      app.status.updating !== false ||
+      typeof app.status.updating !== "boolean" ||
       !APIClient ||
       !APIClient.postCreateGame
     )

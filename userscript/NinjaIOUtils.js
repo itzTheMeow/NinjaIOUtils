@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.16
+// @version      1.17
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.16",
+    ver: "1.17",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 1,
@@ -1503,7 +1503,7 @@ ${name}`);
       }
     }
     try {
-      if (!app || !app.menu || !app.menu.joinButton || app.status.updating !== false || !APIClient || !APIClient.postCreateGame)
+      if (!app || !app.menu || !app.menu.joinButton || typeof app.status.updating !== "boolean" || !APIClient || !APIClient.postCreateGame)
         return;
     } catch {
       return;
