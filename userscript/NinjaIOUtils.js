@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.19
+// @version      1.20
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.19",
+    ver: "1.20",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     packVersion: 2,
@@ -478,7 +478,7 @@
 
   // src/settings/settingsTab.ts
   function settingsTab() {
-    if (!app.menu.settingsPanel)
+    if (!app.menu?.settingsPanel)
       return setTimeout(() => settingsTab(), 500);
     function SettingsPanelNew(w, h) {
       const pan = new SettingsPanel(w, h);
@@ -670,9 +670,13 @@ ${name}`);
         return frameDisplay.style.display = "none";
     }
     app._stepCallback = app._stepCallback || app.stepCallback;
-    app.stepCallback = function(d) {
-      updateCounter();
-      return app._stepCallback(d);
+    app.stepCallback = function(...d) {
+      try {
+        updateCounter();
+      } catch (err) {
+        console.error(err);
+      }
+      return app._stepCallback(...d);
     };
   }
 
@@ -840,6 +844,7 @@ ${name}`);
   window.Image = ImageNew;
   var textureImages = [];
   function hookTextureLoader() {
+    return App.Console.log("Texture packs are disabled!");
     XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
     XMLHttpRequest.prototype.open = function(m, url) {
       return this._open(m, url);
@@ -1187,36 +1192,40 @@ ${name}`);
   function initMapIdentifier() {
     Client.prototype.onMessage = function(_a) {
       const a = Client.decompress(_a.data);
-      if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
-        let roomName = a.data.info.substring("You joined ".length);
-        setHash(app.client.server.id, roomName, gameLinkData.pass);
-      }
-      const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
-      const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
-      if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
-        const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
-        this.mapID = 0;
-        if (mapName) {
-          const mapID = config_default.MapIDs[mapName];
-          if (mapID) {
-            repSuccess(mapID, mapName);
-            this.mapID = mapID;
+      try {
+        if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
+          let roomName = a.data.info.substring("You joined ".length);
+          setHash(app.client.server.id, roomName, gameLinkData.pass);
+        }
+        const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
+        const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
+        if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
+          const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
+          this.mapID = 0;
+          if (mapName) {
+            const mapID = config_default.MapIDs[mapName];
+            if (mapID) {
+              repSuccess(mapID, mapName);
+              this.mapID = mapID;
+            } else
+              repFail();
           } else
             repFail();
-        } else
-          repFail();
-      } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
-        const mapName = a.data.msg.substring("loading map: ".length);
-        this.mapID = 0;
-        if (mapName) {
-          const mapID = config_default.MapIDs[mapName];
-          if (mapID) {
-            repSuccess(mapID, mapName);
-            this.mapID = mapID;
+        } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
+          const mapName = a.data.msg.substring("loading map: ".length);
+          this.mapID = 0;
+          if (mapName) {
+            const mapID = config_default.MapIDs[mapName];
+            if (mapID) {
+              repSuccess(mapID, mapName);
+              this.mapID = mapID;
+            } else
+              repFail();
           } else
             repFail();
-        } else
-          repFail();
+        }
+      } catch (err) {
+        console.error(err);
       }
       this.dispatchEvent(a);
     };

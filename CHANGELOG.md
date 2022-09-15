@@ -1,5 +1,9 @@
 # Changelog
 
+v1.20
+
+- Disabled texture packs (again).
+
 v1.19
 
 - Fixed settings panel injection.

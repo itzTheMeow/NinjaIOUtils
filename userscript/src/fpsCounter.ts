@@ -41,8 +41,12 @@ export function showFPS() {
     if (!SETTINGS.showFPS) return (frameDisplay.style.display = "none");
   }
   app._stepCallback = app._stepCallback || app.stepCallback;
-  app.stepCallback = function (d) {
-    updateCounter();
-    return app._stepCallback(d);
+  app.stepCallback = function (...d) {
+    try {
+      updateCounter();
+    } catch (err) {
+      console.error(err);
+    }
+    return app._stepCallback(...d);
   };
 }

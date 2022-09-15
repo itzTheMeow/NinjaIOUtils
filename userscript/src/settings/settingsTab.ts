@@ -5,7 +5,7 @@ import getUtilTab from "./settingsTabUtil";
 
 export default function settingsTab() {
   // retry panel inject if failed
-  if (!app.menu.settingsPanel) return setTimeout(() => settingsTab(), 500);
+  if (!app.menu?.settingsPanel) return setTimeout(() => settingsTab(), 500);
   function SettingsPanelNew(w: number, h: number) {
     const pan = new SettingsPanel(w, h);
     function newTab(

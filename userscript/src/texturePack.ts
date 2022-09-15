@@ -12,6 +12,7 @@ window.Image = ImageNew;
 const textureImages: ImageNew[] = [];
 
 export function hookTextureLoader() {
+  return App.Console.log("Texture packs are disabled!");
   XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
   XMLHttpRequest.prototype.open = function (m: string, url: string) {
     //if (url.includes("combined.png")) url = ``;
