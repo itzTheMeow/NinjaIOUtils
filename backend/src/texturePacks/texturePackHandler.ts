@@ -10,6 +10,7 @@ export default function texturePackHandler(app: Application) {
       origin: "*",
     }),
     async (req, res) => {
+      res.set("Cache-Control", "no-store");
       res.json(getAllTexturePacks());
     }
   );
@@ -19,6 +20,7 @@ export default function texturePackHandler(app: Application) {
       origin: "*",
     }),
     async (req, res) => {
+      res.set("Cache-Control", "no-store");
       const pack = getTexturePack(req.params.id);
       if (!pack) return res.json({ exists: false });
       res.json(pack.meta);
@@ -30,6 +32,7 @@ export default function texturePackHandler(app: Application) {
       origin: "*",
     }),
     async (req, res) => {
+      res.set("Cache-Control", "no-store");
       const pack = getTexturePack(req.params.id);
       if (!pack || !pack.meta.hasCombined) return res.send("DOES_NOT_EXIST");
       res.contentType("png").end(await pack.combined());
@@ -41,6 +44,7 @@ export default function texturePackHandler(app: Application) {
       origin: "*",
     }),
     async (req, res) => {
+      res.set("Cache-Control", "no-store");
       const pack = getTexturePack(req.params.id);
       if (!pack || !pack.meta.hasSeamless) return res.send("DOES_NOT_EXIST");
       res.contentType("png").end(await pack.seamless());
