@@ -9,6 +9,8 @@ For support DM `Meow#4567` on discord!
 
 # [DOWNLOAD THE USERSCRIPT HERE](https://greasyfork.org/en/scripts/441245-ninja-io-utils)
 
+### PLEASE DO NOT REPORT UTILS BUGS IN THE NINJA DISCORD, DM THEM TO ME
+
 ## How to Use
 
 Just install the script and open [ninja.io](https://ninja.io)!
