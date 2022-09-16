@@ -13,7 +13,11 @@ const unpack = async (arg) => {
   if (!fs.existsSync(splitDir)) fs.mkdirSync(splitDir);
 
   console.log("Downloading files...");
-  const textures = await loadImage(config[arg].png);
+  const textures = await loadImage(config[arg].png).catch((err) => {
+    console.error(err);
+    console.error("Failed to download image. Are your config.json URLs correct?");
+    process.exit();
+  });
   const textureJSON = (await axios.get(config[arg].json)).data;
   fs.writeFileSync(path.join(splitDir, "_meta.json"), JSON.stringify(textureJSON));
   console.log(`Files downloaded in ${-last + (last = Date.now())}ms.`);
@@ -24,7 +28,10 @@ const unpack = async (arg) => {
   textureCanvas.drawImage(textures, 0, 0);
   tx.createPNGStream().pipe(fs.createWriteStream(path.join(splitDir, "_original.png")));
   Object.keys(textureJSON.frames).forEach((key) => {
-    const file = path.join(splitDir, `${key}.png`);
+    const file = path.join(
+      splitDir,
+      `${key == "textures" ? "c" : key == "terrain" ? "s" : "x"}_${key}.png`
+    );
     if (!config.replace && fs.existsSync(file))
       return config.verbose && console.log(`Ignoring ${key}, already exists.`);
     const dim = textureJSON.frames[key];

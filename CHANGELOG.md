@@ -1,5 +1,12 @@
 # Changelog
 
+v1.21
+
+- Redid and stabilized texture pack system.
+- Depreciated texture packer.
+- Disabled/removed all old texture packs.
+- Changed the way texture packs load.
+
 v1.20
 
 - Disabled texture packs (again).

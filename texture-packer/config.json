@@ -1,13 +1,14 @@
 {
   "//": "If these URLs change, update them here.",
+  "///": "You may need to change assets to assets-dev and vice-versa.",
   "verbose": true,
   "replace": false,
   "textures": {
-    "png": "https://ninja.io/assets/combined/combined.png",
-    "json": "https://ninja.io/assets/combined/combined.json"
+    "png": "https://ninja.io/assets-dev/combined/combined.png",
+    "json": "https://ninja.io/assets-dev/combined/combined.json"
   },
   "terrain": {
-    "png": "https://ninja.io/assets/seamless/seamless-min.png",
-    "json": "https://ninja.io/assets/seamless/seamless-min.json"
+    "png": "https://ninja.io/assets-dev/seamless/seamless.png",
+    "json": "https://ninja.io/assets-dev/seamless/seamless.json"
   }
 }

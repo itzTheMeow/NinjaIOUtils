@@ -7,6 +7,8 @@ import onlineUserConn, { onlineUsers } from "./onlineUserManager";
 import partyManagerConnection from "./party/partyManager";
 import initStatTracker from "./statTracker";
 import initLinkSharer from "./linkSharer";
+import { getTextureURLs } from "./texturePacks/textureURLs";
+import texturePackHandler from "./texturePacks/texturePackHandler";
 
 const config = {
   port: 8907,
@@ -37,6 +39,7 @@ app.get(
 );
 initLinkSharer(app);
 initStatTracker(app);
+texturePackHandler(app);
 
 const server = app.listen(config.port, () => {
   console.log(`Listening on port ${config.port}.`);

@@ -56,35 +56,27 @@ You can use a texture pack via the in-game texture pack browser. If you have cre
 
 [Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder. There are no rules for packs, just don't make it NSFW.
 
-Your pack needs a unique id, for example `AllWhite`. For each texture your pack has (textures and/or terrain), upload your images as `id_terrain.png` and `id_textures.png` (example AllWhite_terrain.png). If your pack does not change terrain, don't upload the terrain file. If your pack does not change textures, don't upload the textures file.
+Your pack needs a unique id, for example `TransparentVignette`.
 
-Your images MUST be the proper size otherwise they won't load:
+You need to create a folder for your texture pack in the `texturepacks` folder using your ID from earlier. (ex. texturepacks/TransparentVignette)
 
-- textures - 1964x1964
-- terrain - 1408x2048
+You can then create an `_meta.json` file containing the following information:
 
-You need to create a file for your texture pack metadata, call it `id.json`. (example AllWhite.json)
-
-Fill this out and put it in the file:
+Fill this out and put it in the file: (ex: texturepacks/TransparentVignette/\_meta.json)
 
 ```json
 {
-  "id": "your_id", // example: AllWhite
-  "name": "Texture Pack Name", // example: All White
+  "name": "Texture Pack Name", // example: Transparent Vignette
   "author": "My Name", // example: Meow
-  "description": "Such a cool pack!", // just describe what it does
-  "supportedVersion": 1 // set this to the current packVersion in /userscript/src/config.ts
+  "description": "Such a cool pack!" // just describe what it does
 }
 ```
 
-Your description should not be more than 80 characters long. Make sure you remove the `//` and text after them. (highlighted red)
+Your description should not be more than 80 characters long. **Make sure you remove the `//` and text after them. (highlighted red)**
 
-You should now have a `.json` file and one or two `.png` files. You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
+Now you can upload your image files! Use the [texture unpacker](#texture-unpacking) to get the image files to edit. Edit the ones you want to change and put them in your folder. (**DO NOT UPLOAD IMAGES THAT YOU DIDN'T CHANGE**)
 
-<!--
-**Invisible** - Just floating bodies and UI components. - `https://i.imgur.com/A1tUIdN.png` - by Meow
-**MS Paint** - Just ms paint. - `https://i.imgur.com/I2gk5no.png` - by Dark Master
--->
+You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
 
 ### Stat Tracker
 
@@ -107,6 +99,7 @@ These instructions assume windows as your operating system. If you are using lin
 - Replacing files WILL overwrite them, so save your texture pack elsewhere if you don't want to have to re-edit the old files.
 - You can change `verbose` to `false` in config.json to disable the extra output from the commands.
 - This will (un)pack both game and terrain textures. (you dont have to edit or distribute both)
+- **The texture packer is depreciated and doesn't need to be used to make a texture pack. Just unpack your files and edit them, then follow [the instructions](#how-to-add-a-texture-pack) to add your pack.**
 
 #### Setup
 
@@ -117,9 +110,6 @@ These instructions assume windows as your operating system. If you are using lin
 
 - To unpack the image files, run `unpack.bat`.
 - You can then edit your files in the `split_textures` and `split_terrain` folders.
-
-- To pack your files once you are done, run `pack.bat`.
-- This will take the images from the `split_textures`/`split_terrain` folders and re-pack them into `textures.png` and `terrain.png` which you can then distribute as your texture pack(s).
 
 ## Credits
 

@@ -1,54 +1,50 @@
-import { getSavedPack, SETTINGS } from "./settings/settings";
-import { XMLHttpRequest } from "./typings";
-
-class ImageNew extends Image {
-  constructor(w?: number, h?: number) {
-    super(w, h);
-    this.crossOrigin = "anonymous";
-    textureImages.push(this);
-  }
-}
-window.Image = ImageNew;
-const textureImages: ImageNew[] = [];
+import { TexturePack } from "../../shared";
+import config from "./config";
+import { SETTINGS } from "./settings/settings";
 
 export function hookTextureLoader() {
-  return App.Console.log("Texture packs are disabled!");
-  XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
-  XMLHttpRequest.prototype.open = function (m: string, url: string) {
-    //if (url.includes("combined.png")) url = ``;
-    return this._open(m, url);
-  };
-
-  /* Replace the texture URLs for the texture packs. */
-  if (SETTINGS.texturePack) {
-    const saved = getSavedPack();
-    if (saved[0]) {
-      const imgtest = setInterval(function () {
-        textureImages.forEach((i) => {
-          if (i.src.includes("ninja.io") && i.src.includes("combined.png")) {
-            const originalsrc = i.src;
-            i.onerror = function () {
-              i.src = originalsrc;
-            };
-            i.src = saved[0];
-            clearInterval(imgtest);
-          }
-        });
-      });
+  class WorkerNew extends Worker {
+    _postMessage: any;
+    constructor(url: string, opts: any) {
+      super(url, opts);
+      this._postMessage = this.postMessage;
+      this.postMessage = this.newPostMessage;
     }
-    if (saved[1]) {
-      const imgtest2 = setInterval(function () {
-        textureImages.forEach((i) => {
-          if (i.src.includes("ninja.io") && i.src.includes("seamless-min.png")) {
-            const originalsrc = i.src;
-            i.onerror = function () {
-              i.src = originalsrc;
-            };
-            i.src = saved[1];
-            clearInterval(imgtest2);
-          }
-        });
-      });
+    // expected data, must be validated - example data:
+    // {"data":["https://ninja.io/assets-dev/combined/combined.png"],"uuid":0,"id":"loadImageBitmap"}
+    newPostMessage(data: { data: [string]; uuid: number; id: "loadImageBitmap" }, ...args: any) {
+      if (SETTINGS.texturePack && !(window as any).SKIP_TEX_LOAD) {
+        fetch(`${config.api}/packs/${SETTINGS.texturePack}`)
+          .then((r) => r.json())
+          .then((pack: TexturePack) => {
+            if (
+              pack &&
+              data.id == "loadImageBitmap" &&
+              typeof data.data[0] == "string" &&
+              SETTINGS.texturePack
+            ) {
+              if (
+                pack.hasCombined &&
+                data.data[0].includes("ninja.io") &&
+                data.data[0].includes("combined") &&
+                data.data[0].endsWith(".png")
+              )
+                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/combined.png`;
+              if (
+                pack.hasSeamless &&
+                data.data[0].includes("ninja.io") &&
+                data.data[0].includes("seamless") &&
+                data.data[0].endsWith(".png")
+              )
+                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/seamless.png`;
+            }
+            this._postMessage(data, ...args);
+          })
+          .catch(() => {
+            this._postMessage(data, ...args);
+          });
+      } else this._postMessage(data, ...args);
     }
   }
+  window.Worker = Worker = WorkerNew;
 }

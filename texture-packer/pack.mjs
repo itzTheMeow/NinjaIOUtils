@@ -1,3 +1,6 @@
+// THIS SCRIPT IS NO LONGER MAINTAINED
+// THIS IS ALL DONE SERVERSIDE NOW
+
 import fs from "fs";
 import { Canvas, loadImage } from "canvas";
 import path from "path";

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.20
+// @version      1.21
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,10 +26,9 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.20",
+    ver: "1.21",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
-    packVersion: 2,
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
       try {
         return App.ClientVersion;
@@ -100,12 +99,10 @@
 
   // src/settings/settings.ts
   var settingsKey = "ninjaioutils";
-  var packKey = "DONTEDIT_ninja_custompack";
   var SETTINGS = {
     ...{
       showFPS: true,
       texturePack: null,
-      customPack: null,
       typewriter: false,
       apiKey: "",
       appearOnline: true
@@ -113,48 +110,6 @@
     ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
   };
   var saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
-  var getSavedPack = () => JSON.parse(localStorage.getItem(packKey) || '["",""]');
-  var savePackData = (tex, ter) => localStorage.setItem(packKey, JSON.stringify([tex, ter]));
-
-  // src/GitHub.ts
-  var GHeaders = {
-    Authorization: atob("Z2hwXzlTR0l6cUdvRWJZdlo2dzJjUXRBYmxTNTZtVEZWQjM5RnZLYQ==")
-  };
-  async function fetchGithubTree(tree = "https://api.github.com/repos/itzTheMeow/NinjaIOUtils/git/trees/master") {
-    return await fetch(tree, {
-      headers: GHeaders
-    }).then((r) => r.json());
-  }
-  async function fetchGithubBlob(blob) {
-    return await fetch(blob, {
-      headers: GHeaders
-    }).then((r) => r.json());
-  }
-  async function getTextureImage(img) {
-    if (!img)
-      return "";
-    const file = await fetchGithubBlob(img);
-    return `data:image/png;base64,${file.content}`;
-  }
-  async function fetchTexturePacks() {
-    const packList = (await fetchGithubTree((await fetchGithubTree()).tree.find((t) => t.path == "texturepacks").url)).tree;
-    const texturePacks = await Promise.all(packList.filter((p) => p.path.endsWith(".json")).map(async (pak) => {
-      const pakid = pak.path.slice(0, pak.path.length - ".json".length);
-      const meta = JSON.parse(atob((await fetchGithubBlob(pak.url)).content));
-      const texture = packList.find((p) => p.path == `${pakid}_textures.png`);
-      const terrain = packList.find((p) => p.path == `${pakid}_terrain.png`);
-      return {
-        id: meta.id,
-        name: meta.name,
-        author: meta.author,
-        description: meta.description,
-        supportedVersion: meta.supportedVersion,
-        textureURL: texture ? texture.url : null,
-        terrainURL: terrain ? terrain.url : null
-      };
-    }));
-    return texturePacks;
-  }
 
   // src/Scrollbar.ts
   function getScrollbar() {
@@ -297,7 +252,7 @@
           if (this.hadPacks)
             this.hadPacks.map((p) => p.destroy());
           this.hadPacks = [];
-          const packs = this.packList || (this.packList = await fetchTexturePacks());
+          const packs = this.packList || (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r.json()));
           packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
             const hasPack = SETTINGS.texturePack == pak.id;
             const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
@@ -311,11 +266,11 @@
             packName.y = this.off += 28;
             this.hadPacks.push(this.addChild(packName));
             const flags = [];
-            if (pak.textureURL)
+            if (pak.hasCombined)
               flags.push("textures");
-            if (pak.terrainURL)
+            if (pak.hasSeamless)
               flags.push("terrain");
-            const packDescription = new PIXI.Text(`${pak.supportedVersion !== config_default.packVersion ? "OUTDATED PACK! " : ""}${pak.description || "No Description."} (${flags.join(", ")})`, {
+            const packDescription = new PIXI.Text(`${pak.description || "No Description."} (${flags.join(", ")})`, {
               fontName: "Arial",
               fontSize: 14,
               fill: config_default.Colors.white,
@@ -332,13 +287,7 @@
             packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
             packButton.scale.x = packButton.scale.y = 0.5;
             packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              if (hasPack) {
-                SETTINGS.texturePack = null;
-                savePackData("", "");
-              } else {
-                SETTINGS.texturePack = pak.id;
-                savePackData(await getTextureImage(pak.textureURL), await getTextureImage(pak.terrainURL));
-              }
+              SETTINGS.texturePack = hasPack ? null : pak.id;
               app.menu.settingsPanel.controlsTab.forceRefresh = true;
               saveSettings();
               this.runPacks();
@@ -830,56 +779,33 @@ ${name}`);
     };
   }
 
-  // src/typings.ts
-  var XMLHttpRequest = window.XMLHttpRequest;
-
   // src/texturePack.ts
-  var ImageNew = class extends Image {
-    constructor(w, h) {
-      super(w, h);
-      this.crossOrigin = "anonymous";
-      textureImages.push(this);
-    }
-  };
-  window.Image = ImageNew;
-  var textureImages = [];
   function hookTextureLoader() {
-    return App.Console.log("Texture packs are disabled!");
-    XMLHttpRequest.prototype._open = XMLHttpRequest.prototype.open;
-    XMLHttpRequest.prototype.open = function(m, url) {
-      return this._open(m, url);
-    };
-    if (SETTINGS.texturePack) {
-      const saved = getSavedPack();
-      if (saved[0]) {
-        const imgtest = setInterval(function() {
-          textureImages.forEach((i) => {
-            if (i.src.includes("ninja.io") && i.src.includes("combined.png")) {
-              const originalsrc = i.src;
-              i.onerror = function() {
-                i.src = originalsrc;
-              };
-              i.src = saved[0];
-              clearInterval(imgtest);
-            }
-          });
-        });
+    class WorkerNew extends Worker {
+      _postMessage;
+      constructor(url, opts) {
+        super(url, opts);
+        this._postMessage = this.postMessage;
+        this.postMessage = this.newPostMessage;
       }
-      if (saved[1]) {
-        const imgtest2 = setInterval(function() {
-          textureImages.forEach((i) => {
-            if (i.src.includes("ninja.io") && i.src.includes("seamless-min.png")) {
-              const originalsrc = i.src;
-              i.onerror = function() {
-                i.src = originalsrc;
-              };
-              i.src = saved[1];
-              clearInterval(imgtest2);
+      newPostMessage(data, ...args) {
+        if (SETTINGS.texturePack && !window.SKIP_TEX_LOAD) {
+          fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`).then((r) => r.json()).then((pack) => {
+            if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && SETTINGS.texturePack) {
+              if (pack.hasCombined && data.data[0].includes("ninja.io") && data.data[0].includes("combined") && data.data[0].endsWith(".png"))
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png`;
+              if (pack.hasSeamless && data.data[0].includes("ninja.io") && data.data[0].includes("seamless") && data.data[0].endsWith(".png"))
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png`;
             }
+            this._postMessage(data, ...args);
+          }).catch(() => {
+            this._postMessage(data, ...args);
           });
-        });
+        } else
+          this._postMessage(data, ...args);
       }
     }
+    window.Worker = Worker = WorkerNew;
   }
 
   // src/repositionItems.ts
@@ -1441,6 +1367,7 @@ ${name}`);
     reset.innerText = "Skip Loading Texture Packs";
     reset.onclick = () => {
       app.proceed();
+      window.SKIP_TEX_LOAD = true;
       reset.remove();
     };
     preloader.appendChild(reset);

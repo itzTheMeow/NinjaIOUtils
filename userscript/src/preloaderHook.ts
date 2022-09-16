@@ -43,6 +43,7 @@ export default function hookPreloader() {
   reset.innerText = "Skip Loading Texture Packs";
   reset.onclick = () => {
     app.proceed();
+    (window as any).SKIP_TEX_LOAD = true;
     reset.remove();
   };
   preloader.appendChild(reset);

@@ -1,8 +1,7 @@
+import { TexturePack } from "../../../shared";
 import config from "../config";
-import { fetchTexturePacks, getTextureImage, TexturePack } from "../GitHub";
 import getScrollbar from "../Scrollbar";
-import Scrollbar from "../Scrollbar";
-import { savePackData, saveSettings, SETTINGS } from "./settings";
+import { saveSettings, SETTINGS } from "./settings";
 
 export default function getTexTab() {
   const maxPacks = 5;
@@ -47,7 +46,9 @@ export default function getTexTab() {
         this.off = off;
         if (this.hadPacks) this.hadPacks.map((p) => p.destroy());
         this.hadPacks = [];
-        const packs: TexturePack[] = this.packList || (this.packList = await fetchTexturePacks());
+        const packs: TexturePack[] =
+          this.packList ||
+          (this.packList = await fetch(`${config.api}/packs`).then((r) => r.json()));
         packs
           .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
           .slice(this.packIndex, this.packIndex + maxPacks)
@@ -67,12 +68,10 @@ export default function getTexTab() {
             packName.y = this.off += 28;
             this.hadPacks.push(this.addChild(packName));
             const flags = [];
-            if (pak.textureURL) flags.push("textures");
-            if (pak.terrainURL) flags.push("terrain");
+            if (pak.hasCombined) flags.push("textures");
+            if (pak.hasSeamless) flags.push("terrain");
             const packDescription = new PIXI.Text(
-              `${pak.supportedVersion !== config.packVersion ? "OUTDATED PACK! " : ""}${
-                pak.description || "No Description."
-              } (${flags.join(", ")})`,
+              `${pak.description || "No Description."} (${flags.join(", ")})`,
               {
                 fontName: "Arial",
                 fontSize: 14,
@@ -91,16 +90,7 @@ export default function getTexTab() {
             packButton.setTint(hasPack ? config.Colors.red : config.Colors.green);
             packButton.scale.x = packButton.scale.y = 0.5;
             packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              if (hasPack) {
-                SETTINGS.texturePack = null;
-                savePackData("", "");
-              } else {
-                SETTINGS.texturePack = pak.id;
-                savePackData(
-                  await getTextureImage(pak.textureURL),
-                  await getTextureImage(pak.terrainURL)
-                );
-              }
+              SETTINGS.texturePack = hasPack ? null : pak.id;
               app.menu.settingsPanel.controlsTab.forceRefresh = true;
               saveSettings();
               this.runPacks();
