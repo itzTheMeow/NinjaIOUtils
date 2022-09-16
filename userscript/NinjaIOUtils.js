@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.21
+// @version      1.22
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.21",
+    ver: "1.22",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -1340,7 +1340,6 @@ ${name}`);
             0 < b - 0.05 ? (preloader.style.opacity = String(b), b -= 0.05) : (preloader.remove(), clearInterval(c));
           }, 1e3 / 60);
         };
-        App.ClientVersion = config_default.actualGameVersion;
         clearInterval(tst);
       } catch {
       }

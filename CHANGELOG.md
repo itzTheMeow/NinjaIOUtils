@@ -1,5 +1,9 @@
 # Changelog
 
+v1.22
+
+- Fixed game freezes.
+
 v1.21
 
 - Redid and stabilized texture pack system.

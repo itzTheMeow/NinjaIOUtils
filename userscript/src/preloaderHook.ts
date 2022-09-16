@@ -15,7 +15,6 @@ export default function hookPreloader() {
             : (preloader.remove(), clearInterval(c));
         }, 1000 / 60);
       };
-      App.ClientVersion = config.actualGameVersion;
       clearInterval(tst);
     } catch {}
   }, 10);
