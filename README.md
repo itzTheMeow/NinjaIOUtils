@@ -76,6 +76,8 @@ Your description should not be more than 80 characters long. **Make sure you rem
 
 Now you can upload your image files! Use the [texture unpacker](#texture-unpacking) to get the image files to edit. Edit the ones you want to change and put them in your folder. (**DO NOT UPLOAD IMAGES THAT YOU DIDN'T CHANGE**)
 
+Main texture images should start with `c_` and terrain start with `s_`, this makes sure they will load properly.
+
 You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
 
 ### Stat Tracker

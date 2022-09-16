@@ -30,7 +30,7 @@ const unpack = async (arg) => {
   Object.keys(textureJSON.frames).forEach((key) => {
     const file = path.join(
       splitDir,
-      `${key == "textures" ? "c" : key == "terrain" ? "s" : "x"}_${key}.png`
+      `${arg == "textures" ? "c" : arg == "terrain" ? "s" : "x"}_${key}.png`
     );
     if (!config.replace && fs.existsSync(file))
       return config.verbose && console.log(`Ignoring ${key}, already exists.`);
