@@ -5,6 +5,7 @@ import getUtilTab from "./settingsTabUtil";
 
 export default function settingsTab() {
   // retry panel inject if failed
+  SettingsPanel.OPEN_TAB = "opened_settings_tab";
   if (!app.menu?.settingsPanel) return setTimeout(() => settingsTab(), 500);
   function SettingsPanelNew(w: number, h: number) {
     const pan = new SettingsPanel(w, h);
@@ -88,6 +89,8 @@ export default function settingsTab() {
     this[`${name}TabButtonBackground`].alpha = 0;
     this.addChild(t);
     if (t.onShow) t.onShow();
+    app.menu.settingsPanel.selectedTab = name;
+    App.Layer.memberMenu.emit(SettingsPanel.OPEN_TAB, name);
   };
   Object.values(SettingsPanel.Tabs).forEach((d) => {
     // add our new mousedown listener and remove the old one (because we removed the old settings panel)

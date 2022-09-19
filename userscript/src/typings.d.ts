@@ -69,6 +69,7 @@ declare var PIXI: {
 
 declare var SettingsPanel: {
   new (w: number, h: number): any;
+  OPEN_TAB: string;
   Tabs: {
     GRAPHICS: string;
     CONTROLS: string;
@@ -135,6 +136,19 @@ declare var Checkbox: Container & {
   CHANGE: string;
 };
 
+declare var CustomizationMenu: {
+  new (): Container;
+  PLAYER: string;
+  WEAPONS: string;
+};
+declare var ProfileMenu: {
+  new (): Container;
+  TAB_OVERVIEW: string;
+  TAB_CLAN: string;
+  TAB_ACCOUNT: string;
+  TAB_SETTINGS: string;
+};
+
 interface SocialMenuProto {
   maskInvitationList(scrollDist: number): void;
   _maskFriendList(scrollDist: number): void;
@@ -199,7 +213,81 @@ declare var Manager: {
   };
 };
 declare var Layer: {
-  Events: any;
+  Events: {
+    DISCONNECT: "disconnect";
+    LOGIN_ACCESS: "login_access";
+    LOGIN_SUBMIT: "login_submit";
+    LOGIN_CANCEL: "login_cancel";
+    LOGOUT: "logout";
+    RECOVER_ACCESS: "recover_access";
+    RECOVER_SUBMIT: "recover_submit";
+    RECOVER_CANCEL: "recover_cancel";
+    REGISTER_ACCESS: "register_access";
+    REGISTER_SUBMIT: "register_submit";
+    REGISTER_CANCEL: "register_cancel";
+    PROFILE_ACCESS: "profile_access";
+    PROFILE_CANCEL: "profile_cancel";
+    PROFILE_RENAME: "profile_rename";
+    HIDE_MENU: "hide_menu";
+    SHOW_MENU: "show_menu";
+    UPDATE_CREDENTIAL: "update_credential";
+    CUSTOMIZATION_ACCESS: "customization_access";
+    CUSTOMIZATION_CANCEL: "customization_cancel";
+    USER_ACCESS: "user_access";
+    USER_CANCEL: "user_cancel";
+    USER_UNFRIEND: "user_unfriend";
+    RANKING_ACCESS: "ranking_access";
+    RANKING_CANCEL: "ranking_cancel";
+    MEMBER_ACCESS: "member_access";
+    MEMBER_CANCEL: "member_cancel";
+    NEWS_ACCESS: "news_access";
+    NEWS_CANCEL: "news_cancel";
+    PARTNER_ACCESS: "partner_access";
+    PARTNER_CANCEL: "partner_cancel";
+    LEAVE_CLAN: "leave_clan";
+    CREATE_CLAN: "create_clan";
+    JOIN_CLAN: "join_clan";
+    JOIN_GAME: "join_game";
+    JOIN_GAME_FAIL: "join_game_fail";
+    JOIN_SERVER: "join_server";
+    CREATE_SERVER: "create_server";
+    SERVER_LIST_REFRESH: "server_list_refresh";
+    SERVER_LIST_CANCEL: "server_list_cancel";
+    SERVER_CREATION_CANCEL: "server_creation_cancel";
+    SERVER_CREATION_INIT: "server_creation_init";
+    SERVER_CREATION_REGION: "server_creation_region";
+    SERVER_CREATION_JOIN_LOBBY: "server_creation_join_lobby";
+    SERVER_CREATION_SESSION_INIT: "server_creation_session_init";
+    SERVER_CREATED: "server_created";
+    CLAN_CHAT_ACCESS: "clan_chat_access";
+    CLAN_CHAT_CANCEL: "clan_chat_cancel";
+    LOADING_CANCEL: "loading_cancel";
+    CLAN_BROWSER_ACCESS: "clan_browser_access";
+    CLAN_BROWSER_CANCEL: "clan_browser_cancel";
+    CLAN_ACCESS: "clan_access";
+    CLAN_CANCEL: "clan_cancel";
+    RENAME_ACCESS: "rename_access";
+    RENAME_SUBMIT: "rename_submit";
+    RENAME_CANCEL: "rename_cancel";
+    RENAME_COMPLETED: "rename_completed";
+    LOGOUT_CANCEL: "logout_cancel";
+    LOGOUT_ACCESS: "logout_access";
+    JOYSTICK_MOVE_STATE: "joystick_move_state";
+    JOYSTICK_TARGET_STATE: "joystick_target_state";
+    DISPLAY_HELP: "display_help";
+    MUTE_TOGGLE: "mute_toggle";
+    SERVER_DETAIL_ACCESS: "server_detail_access";
+    SERVER_DETAIL_CANCEL: "server_detail_cancel";
+    MENU_ACCESS: "menu_access";
+    GUEST_PROFILE_ACCESS: "guest_profile_access";
+    GUEST_PROFILE_HIDE: "guest_profile_hide";
+    SETTINGS_ACCESS: "settings_access";
+    SETTINGS_HIDE: "settings_hide";
+    ESCAPE_MENU_ACCESS: "escape_menu_access";
+    REWARDS_ACCESS: "rewards_access";
+    REWARDS_CLAIMED: "rewards_claimed";
+    REWARDS_CANCEL: "rewards_cancel";
+  };
 };
 declare var Protocol: {
   DISCONNECT: string;
@@ -238,6 +326,7 @@ declare var app: {
       controlsTabButtonBackground: Container;
       soundTabButtonBackground: Container;
       utilTabButtonBackground: Container;
+      selectedTab: string;
     };
     resize(): void;
     _resize(): void;
@@ -276,6 +365,16 @@ declare var App: {
     realSetPing(ping: number): void;
   };
   Layer: Container & {
+    customizationMenu: Container & {
+      playerCustomizationButton: Graphics;
+      weaponCustomizationButton: Graphics;
+      display: string;
+    };
+    profileMenu: Container & {
+      _openTab(tab: string, audio?: boolean): void;
+      openTab(tab: string, audio?: boolean): void;
+      curTab: string;
+    };
     memberMenu: Container & { playButton: MemberMenuButton };
     partyMenu: Container & { show(): void; reposition(): void };
     loadingMenu: Container & {

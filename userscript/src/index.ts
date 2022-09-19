@@ -17,6 +17,7 @@ import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import checkUpdate from "./updateChecker";
 import hookPreloader from "./preloaderHook";
 import hookJoinGameButton from "./joinGameHook";
+import initHashManager from "./hashManager";
 
 config; // ensures config is at the top of the compiled file
 
@@ -96,6 +97,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   App.Console.log("Successfully injected party menu button.");
   settingsTab();
   App.Console.log("Successfully injected settings tab.");
+  initHashManager();
   hookFullscreen();
   reposItems();
   initMapIdentifier();
