@@ -16,6 +16,8 @@ If you know how, you can just clone the repository and use your own editor. If y
 
 First open [the web editor](https://github.dev/itzTheMeow/NinjaIOUtils). It should look like this:
 
+![image](https://user-images.githubusercontent.com/50887230/191050852-834a961a-978a-4d6c-bd94-f83d1b1435b3.png)
+
 Right click on `texturepacks` and create a new folder. Make sure the folder name doesn't contain spaces or special characters. It should also be relevant to your pack name.
 
 You can then right click your folder you created and create a new file called `_meta.json`. This will hold your pack information. Use this template:
