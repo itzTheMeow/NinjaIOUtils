@@ -6,6 +6,12 @@ There are no specific rules for packs, just don't make it NSFW.
 
 ## How to Create a Texture Pack
 
+### Editing Files
+
+Use the [texture unpacker](#texture-unpacking) to get the image files to edit. Once you're finished, put the files you changed somewhere and continue below. Don't upload any files that you didnt change.
+
+### Uploading Your Pack
+
 If you know how, you can just clone the repository and use your own editor. If you're less technically inclined:
 
 First open [the web editor](https://github.dev/itzTheMeow/NinjaIOUtils). It should look like this:
@@ -44,8 +50,24 @@ Click Fork Repository when prompted.
 
 ![image](https://user-images.githubusercontent.com/50887230/191047103-a7d77744-609b-48dd-85ac-8635cf51df82.png)
 
+You can choose whatever branch name you want.
+
 ![image](https://user-images.githubusercontent.com/50887230/191047202-febf12dd-d02a-4bf2-934f-2073328b5883.png)
+
+You can then switch to your fork.
+
 ![image](https://user-images.githubusercontent.com/50887230/191047245-dcd5cd4a-4383-4a38-8b69-e3fbcdf8b2b9.png)
+
+Go back to Source Control and click to create a pull request.
+
 ![image](https://user-images.githubusercontent.com/50887230/191047336-bd9e85fe-6289-4917-8058-c71b35b5aedb.png)
+
+You should see this neat little panel, change the title to your pack name and give a short description of the pack. Click Create.
+
 ![image](https://user-images.githubusercontent.com/50887230/191047613-38d625df-f00d-435d-9cd7-a7ce9d14c08d.png)
+
+That's it! You're done and now wait for the pack to be added or additional questions to be asked.
+
 ![image](https://user-images.githubusercontent.com/50887230/191047686-9c66a51d-db96-4bd0-ada8-fd45e807d80c.png)
+
+**If you're updating your pack, follow the same steps above and use a different branch name.**

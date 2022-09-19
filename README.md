@@ -54,35 +54,9 @@ Other people can not join your games if you do not appear online or your game ha
 
 You can use a texture pack via the in-game texture pack browser. If you have created a texture pack and would like to use it, DM me on discord or follow the instructions below:
 
-#### How to Add a Texture Pack
+#### [How to Add a Texture Pack](https://github.com/itzTheMeow/NinjaIOUtils/blob/master/docs/Texture%20Packs.md#texture-packs)
 
-[Fork](https://github.com/itzTheMeow/NinjaIOUtils/fork) this repository and create files in the texturepacks folder. There are no rules for packs, just don't make it NSFW.
-
-Your pack needs a unique id, for example `TransparentVignette`.
-
-You need to create a folder for your texture pack in the `texturepacks` folder using your ID from earlier. (ex. texturepacks/TransparentVignette)
-
-You can then create an `_meta.json` file containing the following information:
-
-Fill this out and put it in the file: (ex: texturepacks/TransparentVignette/\_meta.json)
-
-```json
-{
-  "name": "Texture Pack Name", // example: Transparent Vignette
-  "author": "My Name", // example: Meow
-  "description": "Such a cool pack!" // just describe what it does
-}
-```
-
-Your description should not be more than 80 characters long. **Make sure you remove the `//` and text after them. (highlighted red)**
-
-Now you can upload your image files! Use the [texture unpacker](#texture-unpacking) to get the image files to edit. Edit the ones you want to change and put them in your folder. (**DO NOT UPLOAD IMAGES THAT YOU DIDN'T CHANGE**)
-
-Main texture images should start with `c_` and terrain start with `s_`, this makes sure they will load properly.
-
-You can now [create a pull request](https://github.com/itzTheMeow/NinjaIOUtils/compare) and your pack will be added.
-
-### Stat Tracker
+### Stat Tracker (disabled)
 
 This script is used for my [stat tracker](https://itsmeow.cat/ninja). In order to start tracking your stats, log in [here](https://itsmeow.cat/manage) and copy the API key. Go to the settings page on ninja, NinjaIOUtils tab, and paste in the api key. (this is the api key FOR MY WEBSITE. you DO NOT need to give your ninja login details)
 
