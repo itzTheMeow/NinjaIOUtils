@@ -31106,6 +31106,7 @@ class Feature extends PIXI.Graphics {
   constructor() {
     super();
     this.hides = [];
+    this.on("mousedown", (a) => a.stopPropagation());
     this.container = new PIXI.Container();
     this.addChild(this.container);
   }
@@ -31166,6 +31167,7 @@ class MovementJoystick extends PIXI.Graphics {
     this.addChild(this.label);
   }
   onStart(a) {
+    this.hitArea = new PIXI.Circle(0, 0, 400);
     a.stopPropagation();
     this.pointerId = a.data.pointerId;
     let b = this.toGlobal(new PIXI.Point(0, 0)),
@@ -31175,7 +31177,8 @@ class MovementJoystick extends PIXI.Graphics {
   }
   onEnd(a) {
     a.data.pointerId === this.pointerId &&
-      ((this.pointerId = -1),
+      ((this.hitArea = new PIXI.Circle(0, 0, 60)),
+      (this.pointerId = -1),
       a.stopPropagation(),
       this.stick.clear(),
       (this.knob.x = 0),
@@ -31236,6 +31239,7 @@ class TargetingJoystick extends PIXI.Graphics {
     this.beginFill(16777215, 0.1);
     this.drawCircle(0, 0, 50);
     this.endFill();
+    this.hitArea = new PIXI.Circle(0, 0, 60);
     this.interactive = !0;
     this.throwing = !1;
     this.pointerCount = 0;
@@ -31297,6 +31301,7 @@ class TargetingJoystick extends PIXI.Graphics {
   }
   onStart(a) {
     a.stopPropagation();
+    this.hitArea = new PIXI.Circle(0, 0, 400);
     this.pointerCount += 2 > this.pointerCount ? 1 : 0;
     var b = Date.now();
     500 > b - this.tapTime && (this.throwing = !0);
@@ -31309,7 +31314,8 @@ class TargetingJoystick extends PIXI.Graphics {
   }
   onEnd(a) {
     a.data.pointerId === this.pointerId &&
-      ((this.pointerCount -= 0 < this.pointerCount ? 1 : 0),
+      ((this.hitArea = new PIXI.Circle(0, 0, 60)),
+      (this.pointerCount -= 0 < this.pointerCount ? 1 : 0),
       (this.pointerId = -1),
       a.stopPropagation(),
       this.stick.clear(),
@@ -32333,6 +32339,7 @@ class MemberBrowserScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -32484,9 +32491,9 @@ polyRotateCopy = function (a, b, c) {
   for (var d = a.length, e = [], f = 0; f < d; f++) {
     var g = a[f].x - c.x,
       h = a[f].y - c.y,
-      m = Math.sqrt(g * g + h * h);
+      k = Math.sqrt(g * g + h * h);
     g = Math.atan2(h, g);
-    e[f] = { x: m * Math.cos(g + b) + c.x, y: m * Math.sin(g + b) + c.y };
+    e[f] = { x: k * Math.cos(g + b) + c.x, y: k * Math.sin(g + b) + c.y };
   }
   return e;
 };
@@ -32502,26 +32509,26 @@ function fastAtan2(a, b) {
   } else if (((d /= 1 + 0.28 * d * d), 0 > b)) return 0 > a ? d - c : d + c;
   return d;
 }
-function Intersect(a, b, c, d, e, f, g, h, m) {
+function Intersect(a, b, c, d, e, f, g, h, k) {
   c -= a;
   d -= b;
   g -= e;
   var n = h - f;
   h = (-d * (a - e) + c * (b - f)) / (-g * d + c * n);
   e = (g * (b - f) - n * (a - e)) / (-g * d + c * n);
-  return 0 <= h && 1 >= h && 0 <= e && 1 >= e ? ((m.x = a + e * c), (m.y = b + e * d), !0) : !1;
+  return 0 <= h && 1 >= h && 0 <= e && 1 >= e ? ((k.x = a + e * c), (k.y = b + e * d), !0) : !1;
 }
 function Intersect3(a, b, c, d, e, f, g, h) {
-  var m = d - b,
+  var k = d - b,
     n = a - c,
-    l = c * b - a * d;
-  if (0 < (m * e + n * f + l) * (m * g + n * h + l)) return -1;
-  var k = h - f;
+    m = c * b - a * d;
+  if (0 < (k * e + n * f + m) * (k * g + n * h + m)) return -1;
+  var l = h - f;
   var p = e - g;
-  l = g * f - e * h;
-  g = k * a + p * b + l;
-  h = k * c + p * d + l;
-  return 0 < g * h ? -1 : 0 === m * p - k * n ? 0 : 1;
+  m = g * f - e * h;
+  g = l * a + p * b + m;
+  h = l * c + p * d + m;
+  return 0 < g * h ? -1 : 0 === k * p - l * n ? 0 : 1;
 }
 polyRotateFast = function (a, b) {
   for (var c = 0, d = a.length; c < d; c++) {
@@ -33020,6 +33027,7 @@ class ClanBrowserScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -33617,7 +33625,6 @@ class RegisterMenu extends Feature {
     this.emailField.setFilter(
       "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890@.+_-"
     );
-    this.container.addChild(this.emailField);
     App.WhiteLabel !== App.WhiteLabel_POKI && this.container.addChild(this.emailField);
     this.nameField = new InputField("register_name");
     this.nameField.setDimensions(300, 35);
@@ -34487,14 +34494,14 @@ class Visualizer extends PIXI.Container {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armLeftLower.anchor.x = g.ax), (this.armLeftLower.anchor.y = g.ay))));
-    var m = "armleftupper";
+    var k = "armleftupper";
     this.armLeftUpper.x = this.armLeftUpper.ox = -13;
     this.armLeftUpper.y = this.armLeftUpper.oy = 0.14 * -this.h;
     this.armLeftUpper.anchor.x = 0.55;
     this.armLeftUpper.anchor.y = 0.23;
     b.armleftupper &&
       0 < b.armleftupper.texture.length &&
-      ((m += "_" + b.armleftupper.texture),
+      ((k += "_" + b.armleftupper.texture),
       (g = b.armleftupper.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -34521,14 +34528,14 @@ class Visualizer extends PIXI.Container {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armRightUpper.anchor.x = g.ax), (this.armRightUpper.anchor.y = g.ay))));
-    var l = "armrightlower";
+    var m = "armrightlower";
     this.armRightLower.x = 22;
     this.armRightLower.y = 0.02 * -this.h;
     this.armRightLower.anchor.x = 0.66;
     this.armRightLower.anchor.y = 0.23;
     b.armrightlower &&
       0 < b.armrightlower.texture.length &&
-      ((l += "_" + b.armrightlower.texture),
+      ((m += "_" + b.armrightlower.texture),
       (g = b.armrightlower.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -34538,13 +34545,13 @@ class Visualizer extends PIXI.Container {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armRightLower.anchor.x = g.ax), (this.armRightLower.anchor.y = g.ay))));
-    var k = "legleftlower";
+    var l = "legleftlower";
     this.legLeftLower.x = this.legLeftLower.ox = 10;
     this.legLeftLower.y = this.legLeftLower.oy = 0.25 * this.h;
     this.legLeftLower.anchor.x = 0.58;
     this.legLeftLower.anchor.y = 0.36;
     b.legleftlower &&
-      (0 < b.legleftlower.texture.length && (k += "_" + b.legleftlower.texture),
+      (0 < b.legleftlower.texture.length && (l += "_" + b.legleftlower.texture),
       (g = b.legleftlower.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -34633,12 +34640,12 @@ class Visualizer extends PIXI.Container {
       ((this.customExtra = b.extra.cdata.custom), this.initializeCustomExtraFx());
     b = a[e];
     f = a[f];
-    e = a[m];
+    e = a[k];
     h = a[h];
     n = a[n];
+    m = a[m];
+    k = a[r];
     l = a[l];
-    m = a[r];
-    k = a[k];
     p = a[p];
     g = a[g];
     d = a[d];
@@ -34648,9 +34655,9 @@ class Visualizer extends PIXI.Container {
     this.armLeftUpper.texture = e;
     this.armLeftLower.texture = h;
     this.armRightUpper.texture = n;
-    this.armRightLower.texture = l;
-    this.legLeftUpper.texture = m;
-    this.legLeftLower.texture = k;
+    this.armRightLower.texture = m;
+    this.legLeftUpper.texture = k;
+    this.legLeftLower.texture = l;
     this.legRightUpper.texture = p;
     this.legRightLower.texture = g;
     this.aura.texture = d;
@@ -36491,6 +36498,7 @@ class WeaponListScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, -3, 16, 35, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = this.bh * this.start;
@@ -37681,6 +37689,7 @@ class MemberListScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, -3, 16, 35, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = this.bh * this.start;
@@ -38942,17 +38951,17 @@ class ColorPicker extends PIXI.Container {
         d = (a & 16711680) >> 16,
         e = (a & 65280) >> 8;
       a &= 255;
-      for (var f, g, h, m, n, l = this.size, k = 0; k < this.size; k++)
+      for (var f, g, h, k, n, m = this.size, l = 0; l < this.size; l++)
         for (var p = 0; p < this.size; p++)
-          (n = 4 * (k * l + p)),
-            (h = 255 - (255 / l) * p),
-            (m = l - k),
-            (f = h + (d / l) * p),
-            (g = h + (e / l) * p),
-            (h += (a / l) * p),
-            (c[n] = Math.floor((h / l) * m)),
-            (c[n + 1] = Math.floor((g / l) * m)),
-            (c[n + 2] = Math.floor((f / l) * m)),
+          (n = 4 * (l * m + p)),
+            (h = 255 - (255 / m) * p),
+            (k = m - l),
+            (f = h + (d / m) * p),
+            (g = h + (e / m) * p),
+            (h += (a / m) * p),
+            (c[n] = Math.floor((h / m) * k)),
+            (c[n + 1] = Math.floor((g / m) * k)),
+            (c[n + 2] = Math.floor((f / m) * k)),
             (c[n + 3] = 255),
             this.sliceColors.push((c[n] << 16) | (c[n + 1] << 8) | c[n + 2]);
       this.context.putImageData(b, 0, 0);
@@ -38981,27 +38990,27 @@ class ColorPicker extends PIXI.Container {
           f,
           g,
           h,
-          m,
+          k,
           n,
-          l,
-          k = 0;
-        k < this.barWidth;
-        k++
+          m,
+          l = 0;
+        l < this.barWidth;
+        l++
       )
         for (var p = 0; p < this.size; p++)
-          (l = 4 * (p * this.barWidth + k)),
+          (m = 4 * (p * this.barWidth + l)),
             (n = Math.floor(p / c)),
             (e = (d[n] & 16711680) >> 16),
             (f = (d[n] & 65280) >> 8),
             (g = d[n] & 255),
             (h = (d[(n + 1) % 7] & 16711680) >> 16),
-            (m = (d[(n + 1) % 7] & 65280) >> 8),
+            (k = (d[(n + 1) % 7] & 65280) >> 8),
             (n = d[(n + 1) % 7] & 255),
-            (b[l] = g + ((n - g) / c) * (p % c)),
-            (b[l + 1] = f + ((m - f) / c) * (p % c)),
-            (b[l + 2] = e + ((h - e) / c) * (p % c)),
-            (b[l + 3] = 255),
-            k || this.barColors.push(0 | (b[l + 2] << 16) | (b[l + 1] << 8) | b[l]);
+            (b[m] = g + ((n - g) / c) * (p % c)),
+            (b[m + 1] = f + ((k - f) / c) * (p % c)),
+            (b[m + 2] = e + ((h - e) / c) * (p % c)),
+            (b[m + 3] = 255),
+            l || this.barColors.push(0 | (b[m + 2] << 16) | (b[m + 1] << 8) | b[m]);
       this.context.putImageData(a, 0, 0);
       this.texBar && this.texBar.destroy();
       this.texBar = PIXI.Texture.from(this.canvas);
@@ -39020,14 +39029,22 @@ class ColorPicker extends PIXI.Container {
   }
   onColorBarDown(a) {
     const b = this.toGlobal(new PIXI.Point(this.x, this.y));
-    a = Clamp(0, this.size - 1, Math.floor(a.data.global.y - (b.y - this.y)));
+    a = Clamp(
+      0,
+      this.size - 1,
+      Math.floor(a.data.global.y / App.Scale - (b.y / App.Scale - this.y))
+    );
     this.barPointer.y = a;
     this.updateColorSlice(a);
   }
   onColorBarMove(a) {
     if (this.dragBar) {
       const b = this.toGlobal(new PIXI.Point(this.x, this.y));
-      a = Clamp(0, this.size - 1, Math.floor(a.data.global.y - (b.y - this.y)));
+      a = Clamp(
+        0,
+        this.size - 1,
+        Math.floor(a.data.global.y / App.Scale - (b.y / App.Scale - this.y))
+      );
       this.barPointer.y = a;
       this.updateColorSlice(a);
     }
@@ -39043,8 +39060,8 @@ class ColorPicker extends PIXI.Container {
   }
   onColorSliceDown(a) {
     const b = this.toGlobal(new PIXI.Point(this.x, this.y));
-    var c = a.data.global.x - (b.x - this.x);
-    a = a.data.global.y - (b.y - this.y);
+    var c = a.data.global.x / App.Scale - (b.x / App.Scale - this.x);
+    a = a.data.global.y / App.Scale - (b.y / App.Scale - this.y);
     this.dragSlice = !0;
     c = Clamp(0, this.size - 1, Math.floor(c));
     a = Clamp(0, this.size - 1, Math.floor(a));
@@ -39054,8 +39071,8 @@ class ColorPicker extends PIXI.Container {
   }
   onColorSliceMove(a) {
     const b = this.toGlobal(new PIXI.Point(this.x, this.y));
-    var c = a.data.global.x - (b.x - this.x);
-    a = a.data.global.y - (b.y - this.y);
+    var c = a.data.global.x / App.Scale - (b.x / App.Scale - this.x);
+    a = a.data.global.y / App.Scale - (b.y / App.Scale - this.y);
     this.dragSlice &&
       ((c = Clamp(0, this.size - 1, Math.floor(c))),
       (a = Clamp(0, this.size - 1, Math.floor(a))),
@@ -40918,7 +40935,8 @@ class SocialMenu extends Feature {
     this.resize();
   }
   resize(a, b, c = !1) {
-    this.scale.x = this.scale.y = 1.2 + (1 - App.Scale);
+    this.scale.x = this.scale.y =
+      1 < App.Scale ? Math.max(0.7, 0.6 * App.Scale) : 1 + (0.8 - App.Scale);
     a = a ?? App.ClientWidth;
     b = b ?? App.ClientHeight;
     a = new PIXI.Point(a, b);
@@ -41149,6 +41167,7 @@ class SocialMenuScrollbar extends PIXI.Graphics {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, -3, 16, 35, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = this.bh * this.start;
@@ -42324,6 +42343,7 @@ class GlobalRankingScrollbar extends PIXI.Container {
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.scrollBar.on("mouseover", () => {
       this.scrollBar.alpha = 1;
       AudioEffects.ButtonHover.audio.play();
@@ -42501,6 +42521,7 @@ class SkillRankingScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -42641,6 +42662,7 @@ class WeaponStatsScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -42788,6 +42810,7 @@ class WeaponTypeStatsScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -43344,6 +43367,12 @@ class ServerListMenu extends Feature {
       "",
       App.CombinedTextures.db_icon_notxt
     );
+    this.modeList.addItem(
+      "Training",
+      ServerListMenu.MODE_TRAINING,
+      "",
+      App.CombinedTextures.tr_icon_notxt
+    );
     this.modeList.scale.x = this.modeList.scale.y = 0.9;
     this.container.addChild(this.modeList);
     this.regionList = new Dropdown("regionSelect", "Region", 200, 200, !0);
@@ -43460,7 +43489,7 @@ class ServerListMenu extends Feature {
     let f = 0,
       g = 0,
       h = 0,
-      m = !1;
+      k = !1;
     this.serverListTableContainer.removeChildren();
     this.serverListTableContainer.y = 0;
     this.serverListScrollbar.reset();
@@ -43469,66 +43498,66 @@ class ServerListMenu extends Feature {
     this.activePrivate = c;
     this.activeRanked = d;
     this.activeCustom = e;
-    for (let l = 0; l < this.gameList.length; l++) {
-      const k = this.gameList[l];
-      if (a !== ServerListMenu.MODE_ALL && Game.MODE_MAP[k.mode] !== a) {
-        m = !0;
+    for (let m = 0; m < this.gameList.length; m++) {
+      const l = this.gameList[m];
+      if (a !== ServerListMenu.MODE_ALL && Game.MODE_MAP[l.mode] !== a) {
+        k = !0;
         continue;
       }
-      if (b !== ServerListMenu.REGION_ALL && k.region !== b) {
-        m = !0;
+      if (b !== ServerListMenu.REGION_ALL && l.region !== b) {
+        k = !0;
         continue;
       }
-      var n = parseInt(k.private);
-      let p = parseInt(k.ranked),
-        r = parseInt(k.custom);
+      var n = parseInt(l.private);
+      let p = parseInt(l.ranked),
+        r = parseInt(l.custom);
       n && p && r
-        ? (m = !(
+        ? (k = !(
             c === ServerListMenu.PRIVATE_ALL ||
             d === ServerListMenu.RANKED_ALL ||
             e === ServerListMenu.CUSTOM_ALL
           ))
         : n && p
-        ? (m = !(c === ServerListMenu.PRIVATE_ALL || d === ServerListMenu.RANKED_ALL))
+        ? (k = !(c === ServerListMenu.PRIVATE_ALL || d === ServerListMenu.RANKED_ALL))
         : n && r
-        ? (m = !(c === ServerListMenu.PRIVATE_ALL || e === ServerListMenu.CUSTOM_ALL))
+        ? (k = !(c === ServerListMenu.PRIVATE_ALL || e === ServerListMenu.CUSTOM_ALL))
         : p && r
-        ? (m = !(d === ServerListMenu.RANKED_ALL || e === ServerListMenu.CUSTOM_ALL))
+        ? (k = !(d === ServerListMenu.RANKED_ALL || e === ServerListMenu.CUSTOM_ALL))
         : n
-        ? (m = c !== ServerListMenu.PRIVATE_ALL)
+        ? (k = c !== ServerListMenu.PRIVATE_ALL)
         : p
-        ? (m = d !== ServerListMenu.RANKED_ALL)
-        : r && (m = e !== ServerListMenu.CUSTOM_ALL);
-      m ||
+        ? (k = d !== ServerListMenu.RANKED_ALL)
+        : r && (k = e !== ServerListMenu.CUSTOM_ALL);
+      k ||
         (g++,
-        (h += parseInt(k.players, 10)),
+        (h += parseInt(l.players, 10)),
         f++,
         (n = new ServerListTableRow(
           f + 1,
-          ServerListMenu.REGION_MAP[k.region],
-          k.server_id,
-          k.name,
-          k.mode,
-          k.players,
-          k.private,
-          k.ranked,
-          k.custom
+          ServerListMenu.REGION_MAP[l.region],
+          l.server_id,
+          l.name,
+          l.mode,
+          l.players,
+          l.private,
+          l.ranked,
+          l.custom
         )),
         (n.x = this.ox + 20),
         (n.y = this.oy + 36 * f + 100),
         n.on(ServerListTableRow.JOIN_GAME, (q) => {
           this.passwordField.markNone();
           let t = this.passwordField.getText().trim();
-          1 === parseInt(k.private) && 0 === t.length
+          1 === parseInt(l.private) && 0 === t.length
             ? this.passwordField.markInvalid()
-            : this.emit(Layer.Events.JOIN_GAME, q, k.server_id, t);
+            : this.emit(Layer.Events.JOIN_GAME, q, l.server_id, t);
         }),
         n.on(ServerListTableRow.DISPLAY_DETAILS, () =>
-          this.emit(Layer.Events.SERVER_DETAIL_ACCESS, k)
+          this.emit(Layer.Events.SERVER_DETAIL_ACCESS, l)
         ),
         this.serverListTableContainer.addChild(n));
     }
-    this.serverInfoText.text = "" + h + " players in " + g + " servers" + (m ? " [filtered]" : "");
+    this.serverInfoText.text = "" + h + " players in " + g + " servers" + (k ? " [filtered]" : "");
   }
   setPasswordInvalid() {
     this.passwordField.markInvalid();
@@ -43560,7 +43589,7 @@ ServerListMenu.COL_REGION = "region";
 ServerListMenu.COL_NAME = "name";
 ServerListMenu.COL_PLAYERS = "players";
 class ServerListTableRow extends PIXI.Container {
-  constructor(a, b, c, d, e, f, g, h, m) {
+  constructor(a, b, c, d, e, f, g, h, k) {
     super();
     this.id = c;
     this.index = a.toString();
@@ -43615,7 +43644,7 @@ class ServerListTableRow extends PIXI.Container {
     this.addChild(this.playerText);
     a = 1 === parseInt(g);
     h = 1 === parseInt(h);
-    m = 1 === parseInt(m);
+    k = 1 === parseInt(k);
     a &&
       ((this.privateIcon = new PIXI.Sprite(App.CombinedTextures.lock_icon)),
       (this.privateIcon.x = 400),
@@ -43628,7 +43657,7 @@ class ServerListTableRow extends PIXI.Container {
       (this.rankedIcon.y = 8),
       (this.rankedIcon.scale.x = this.rankedIcon.scale.y = 0.4),
       this.addChild(this.rankedIcon));
-    m &&
+    k &&
       ((this.customIcon = new PIXI.Sprite(App.CombinedTextures.gears_icon)),
       (this.customIcon.x = 460),
       (this.customIcon.y = 8),
@@ -43671,6 +43700,7 @@ class ServerListScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -44049,6 +44079,7 @@ class WeaponSelectionListTableRow extends PIXI.Container {
     this.nameText.x = 75;
     this.nameText.y = 12;
     this.nameText.tint = 16777215;
+    this.nameText.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.nameText);
   }
 }
@@ -44097,6 +44128,7 @@ class MapSelectionListTableRow extends PIXI.Container {
     });
     this.nameText.x = 48;
     this.nameText.y = 12;
+    this.nameText.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.nameText);
   }
 }
@@ -44145,6 +44177,7 @@ class DropSelectionListTableRow extends PIXI.Container {
     });
     this.nameText.x = 56;
     this.nameText.y = 12;
+    this.nameText.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.nameText);
   }
 }
@@ -44171,6 +44204,7 @@ class SelectionListScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -44554,6 +44588,12 @@ class ServerCreationMenu extends Feature {
       "",
       App.CombinedTextures.db_icon_notxt
     );
+    this.modeList.addItem(
+      Game.MODE_TITLES[Game.MODE_TR],
+      Game.MODE_TR,
+      "",
+      App.CombinedTextures.tr_icon_notxt
+    );
     this.modeList.scale.x = this.modeList.scale.y = 0.9;
     this.container.addChild(this.modeList);
     this.serverCreationDurationLabel = new PIXI.BitmapText("Duration", {
@@ -44732,7 +44772,7 @@ class ServerCreationMenu extends Feature {
         f = this.passwordField.getText().trim(),
         g = App.Credential.id,
         h = {
-          weapons: this.isCustom ? this.customization.weapons.map((m) => m.substring(1)) : [],
+          weapons: this.isCustom ? this.customization.weapons.map((k) => k.substring(1)) : [],
           maps: this.customization.maps,
           drops: this.customization.drops,
           shuriken: this.customization.shuriken,
@@ -45373,6 +45413,7 @@ class ClanMemberListScrollbar extends PIXI.Container {
     this.scrollButton.beginFill(16777215, 0.2);
     this.scrollButton.drawRoundedRect(0, -3, 16, 35, 4);
     this.scrollButton.endFill();
+    this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.addChild(this.scrollButton);
     this.scrollButton.x = 2;
     this.scrollButton.y = this.bh * this.start;
@@ -45974,6 +46015,7 @@ class Game extends PIXI.Container {
     this.interpreter.addCommand(GameCommands.SALUTE, () => this.onCmdSalute());
     this.interpreter.addCommand(GameCommands.LOG_PERF, () => this.onCmdLogPerf());
     this.interpreter.addCommand(GameCommands.SPAWN_BOT, (b) => this.onCmdSpawnBot(b));
+    this.interpreter.addCommand(GameCommands.IMMORTAL, (b) => this.onCmdImmortal(b));
     this.interpreter.setDefaultCommand(GameCommands.MESSAGE);
     App.Console.on(CommandConsole.SHOW, () => this.onShowConsole());
     App.Console.on(CommandConsole.HIDE, () => this.onHideConsole());
@@ -46512,6 +46554,13 @@ class Game extends PIXI.Container {
       num: a,
     });
   }
+  onCmdImmortal(a) {
+    this.emit(Protocol.GAME, {
+      t: Protocol.Game.COMMAND,
+      cmd: { name: GameCommands.IMMORTAL },
+      enable: a,
+    });
+  }
   resize() {}
   onShowConsole() {
     null !== this.busyTimeout && clearTimeout(this.busyTimeout);
@@ -46935,7 +46984,8 @@ class ServerDetailMenu extends Feature {
       if (
         this.mode === c.mode ||
         (c.mode === Game.MODE_CTF && this.mode === Game.MODE_DM) ||
-        (c.mode === Game.MODE_CTF && this.mode === Game.MODE_TDM)
+        (c.mode === Game.MODE_CTF && this.mode === Game.MODE_TDM) ||
+        (c.mode === Game.MODE_CTF && this.mode === Game.MODE_TR)
       )
         (c = new MapDisplayTableRow(
           b,
@@ -47679,17 +47729,17 @@ class RewardsMenu extends Feature {
         this.particles.push(g);
         this.animationContainer.addChild(g);
         for (let h = 0; 10 > h; h++) {
-          let m = ParticleEffects.GoldGlitter;
-          m.x = g.x;
-          m.y = g.y;
-          m.vx = -1 + 2 * Math.random();
-          m.vy = -1 + 2 * Math.random();
-          m.vr = -0.3 + 0.6 * Math.random();
-          m.a = 0.7;
-          let n = m.s;
-          m.s = 0.5;
-          this.particleContainer.spawn(m);
-          m.s = n;
+          let k = ParticleEffects.GoldGlitter;
+          k.x = g.x;
+          k.y = g.y;
+          k.vx = -1 + 2 * Math.random();
+          k.vy = -1 + 2 * Math.random();
+          k.vr = -0.3 + 0.6 * Math.random();
+          k.a = 0.7;
+          let n = k.s;
+          k.s = 0.5;
+          this.particleContainer.spawn(k);
+          k.s = n;
         }
         c++;
         this.rewardedAmountCounter.text = c.toString();
@@ -48417,7 +48467,10 @@ class Layer extends PIXI.Container {
             ? ((a = Registry.Instance.retrieve(Registry.Key.AUTOGEN)),
               void 0 !== a.name &&
                 void 0 !== a.password &&
-                ((b = await APIClient.postLogin(a.name, atob(a.password))),
+                ((a = await APIClient.postLogin(a.name, atob(a.password))),
+                a.success
+                  ? (b = a)
+                  : ((a = App.GenerateGuestName()), (b = await APIClient.getGuestCredentials(a))),
                 this.emit(Layer.Events.UPDATE_CREDENTIAL, b, !0),
                 "guest" !== b.accounttype ? this.applyMemberSetup() : this.applyGuestSetup()))
             : (this.emit(Layer.Events.UPDATE_CREDENTIAL, b, !0), this.applyGuestSetup())
@@ -49129,20 +49182,29 @@ class AssetLoader {
   constructor(a, b) {
     this.target = a;
     this.dir = b;
+    this.filesLoaded = this.totalFiles = 0;
     this.onProgress = this.onComplete = null;
   }
   async load(a) {
-    for (let c in a) {
-      let d = a[c];
-      for (let e = 0; e < d.length; e++) {
-        var b = this.dir + "/" + c;
-        PIXI.Assets.add(b, b + "/" + d[e].file);
-        b = await PIXI.Assets.load(b);
-        this.target[c] = b;
-      }
+    this.totalFiles = 0;
+    for (var b in a) {
+      var c = a[b];
+      for (var d = 0; d < c.length; d++) this.totalFiles++;
     }
-    this.onProgress({ progress: 1 });
+    for (let e in a)
+      for (b = a[e], c = 0; c < b.length; c++)
+        (d = this.dir + "/" + e),
+          PIXI.Assets.add(d, d + "/" + b[c].file),
+          (d = await PIXI.Assets.load(d, (f) => this.onFileProgress(f))),
+          this.filesLoaded++,
+          (this.target[e] = d);
+    this.onProgress({ progress: (1 / this.totalFiles) * this.filesLoaded });
     this.onComplete();
+  }
+  onFileProgress(a) {
+    this.onProgress({
+      progress: (1 / this.totalFiles) * this.filesLoaded + (1 / this.totalFiles) * a,
+    });
   }
 }
 var protocol = {};
@@ -49383,14 +49445,14 @@ class Thumbnail extends PIXI.Sprite {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armLeftLower.anchor.x = g.ax), (this.armLeftLower.anchor.y = g.ay))));
-    var m = "armleftupper";
+    var k = "armleftupper";
     this.armLeftUpper.x = -13;
     this.armLeftUpper.y = 0.14 * -this.h;
     this.armLeftUpper.anchor.x = 0.55;
     this.armLeftUpper.anchor.y = 0.23;
     b.armleftupper &&
       0 < b.armleftupper.texture.length &&
-      ((m += "_" + b.armleftupper.texture),
+      ((k += "_" + b.armleftupper.texture),
       (g = b.armleftupper.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -49415,14 +49477,14 @@ class Thumbnail extends PIXI.Sprite {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armRightUpper.anchor.x = g.ax), (this.armRightUpper.anchor.y = g.ay))));
-    var l = "armrightlower";
+    var m = "armrightlower";
     this.armRightLower.x = 22;
     this.armRightLower.y = 0.02 * -this.h;
     this.armRightLower.anchor.x = 0.66;
     this.armRightLower.anchor.y = 0.23;
     b.armrightlower &&
       0 < b.armrightlower.texture.length &&
-      ((l += "_" + b.armrightlower.texture),
+      ((m += "_" + b.armrightlower.texture),
       (g = b.armrightlower.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -49431,13 +49493,13 @@ class Thumbnail extends PIXI.Sprite {
         void 0 !== g.ax &&
           void 0 !== g.ay &&
           ((this.armRightLower.anchor.x = g.ax), (this.armRightLower.anchor.y = g.ay))));
-    var k = "legleftlower";
+    var l = "legleftlower";
     this.legLeftLower.x = 10;
     this.legLeftLower.y = 0.25 * this.h;
     this.legLeftLower.anchor.x = 0.58;
     this.legLeftLower.anchor.y = 0.36;
     b.legleftlower &&
-      (0 < b.legleftlower.texture.length && (k += "_" + b.legleftlower.texture),
+      (0 < b.legleftlower.texture.length && (l += "_" + b.legleftlower.texture),
       (g = b.legleftlower.cdata),
       void 0 !== g &&
         (void 0 !== g.ox &&
@@ -49514,12 +49576,12 @@ class Thumbnail extends PIXI.Sprite {
       : (this.face.visible = !1);
     b = a[e];
     f = a[f];
-    e = a[m];
+    e = a[k];
     h = a[h];
     n = a[n];
+    m = a[m];
+    k = a[r];
     l = a[l];
-    m = a[r];
-    k = a[k];
     p = a[p];
     g = a[g];
     d = a[d];
@@ -49529,9 +49591,9 @@ class Thumbnail extends PIXI.Sprite {
     this.armLeftUpper.texture = e;
     this.armLeftLower.texture = h;
     this.armRightUpper.texture = n;
-    this.armRightLower.texture = l;
-    this.legLeftUpper.texture = m;
-    this.legLeftLower.texture = k;
+    this.armRightLower.texture = m;
+    this.legLeftUpper.texture = k;
+    this.legLeftLower.texture = l;
     this.legRightUpper.texture = p;
     this.legRightLower.texture = g;
     this.aura.texture = d;
@@ -49738,9 +49800,8 @@ class App extends PIXI.Container {
     a.load(App.RESOURCES);
   }
   async fetchGuestCredential(a) {
-    return await APIClient.getGuestCredentials(
-      void 0 !== a && null !== a ? a : "Ninja" + Math.floor(1e3 * Math.random())
-    );
+    a = App.GenerateGuestName(a);
+    return await APIClient.getGuestCredentials(a);
   }
   async start() {
     switch (App.WhiteLabel) {
@@ -50061,13 +50122,13 @@ class App extends PIXI.Container {
       (g = performance.now()));
     c = performance.now();
     20 > a % 1e3 && 60 <= this.totalFrameTime.length
-      ? ((a = (this.totalFrameTime.reduce((h, m) => h + m) / this.totalFrameTime.length)
+      ? ((a = (this.totalFrameTime.reduce((h, k) => h + k) / this.totalFrameTime.length)
           .toFixed(3)
           .padEnd(4, "0")),
-        (b = (this.logicFrameTime.reduce((h, m) => h + m) / this.logicFrameTime.length)
+        (b = (this.logicFrameTime.reduce((h, k) => h + k) / this.logicFrameTime.length)
           .toFixed(3)
           .padEnd(4, "0")),
-        (d = (this.renderFrameTime.reduce((h, m) => h + m) / this.renderFrameTime.length)
+        (d = (this.renderFrameTime.reduce((h, k) => h + k) / this.renderFrameTime.length)
           .toFixed(3)
           .padEnd(4, "0")),
         App.Console.log("FT: " + a + " L: " + b + " R: " + d),
@@ -50447,7 +50508,7 @@ class App extends PIXI.Container {
     this.sky.endFill();
   }
   onResize(a = !1) {
-    App.WindowResized = !0;
+    App.WindowResized = a ? !1 : !0;
     var b = App.ClientWidth;
     let c = App.ClientHeight,
       d = !1;
@@ -50466,7 +50527,8 @@ class App extends PIXI.Container {
       (this.adLoaderBackground.height = App.ClientHeight),
       (b = Math.min(
         App.ClientWidth / App.ReferenceWidth,
-        (0.85 * App.ClientHeight) / App.ReferenceHeight
+        (App.ClientHeight * (App.WhiteLabel === App.WhiteLabel_POKI ? 0.95 : 0.85)) /
+          App.ReferenceHeight
       )),
       (App.Scale = b),
       this.menu &&
@@ -50499,8 +50561,8 @@ class App extends PIXI.Container {
         (this.redditLogo.scale.x = this.redditLogo.scale.y = 0.4 * App.Scale),
         (this.twitterLogo.scale.x = this.twitterLogo.scale.y = 0.4 * App.Scale),
         this.pokiLogo &&
-          ((this.pokiLogo.x = App.ClientWidth - 8),
-          (this.pokiLogo.y = App.ClientHeight - 8),
+          ((this.pokiLogo.x = App.ClientWidth - 4),
+          (this.pokiLogo.y = App.ClientHeight - 4),
           (this.pokiLogo.scale.x = this.pokiLogo.scale.y = 1 * App.Scale))),
       App.Renderer.resize(App.ClientWidth, App.ClientHeight));
     App.Stats && (App.Stats.x = App.ClientWidth - 12);
@@ -50687,6 +50749,9 @@ App.Autogen = !1;
 App.FirstRun = !1;
 App.Credential = {};
 App.DisplayFrameTime = !1;
+App.GenerateGuestName = function (a) {
+  return void 0 !== a && null !== a ? a : "Ninja" + Math.floor(1e3 * Math.random());
+};
 App.Customization = {
   HAIR: [],
   TORSO: [],
@@ -50897,14 +50962,16 @@ class AudioManager {
               var e = Clamp(0.05, 0.5, 0.4 * Math.sqrt(d.vx * d.vx + d.vy * d.vy));
               c.audio.volume(e);
             }
-            c.audio.stereo(AudioManager.Stereo(d));
+            d = AudioManager.Stereo(d);
+            c.audio.stereo(isFinite(d) ? d : 1);
             c.audio.play();
           } else
             (d = a.go.p),
               c.delta &&
                 ((e = Clamp(0.05, 0.5, 0.4 * Math.sqrt(d.vx * d.vx + d.vy * d.vy))),
                 c.audio.volume(e)),
-              c.audio.stereo(AudioManager.Stereo(d)),
+              (d = AudioManager.Stereo(d)),
+              c.audio.stereo(isFinite(d) ? d : 1),
               c.audio.play();
       }
     }
@@ -51168,23 +51235,23 @@ class Background extends PIXI.Graphics {
     var f = this.stepWidth;
     let g = this.stepHeight,
       h = [],
-      m = [],
+      k = [],
       n = (b -= 0.5 * (this.mountains * f - 0.5 * App.ClientWidth));
-    for (let k = 0; k < this.mountains; k++) {
-      var l = f + (-this.varyX + Math.random() * this.varyX * 2);
+    for (let l = 0; l < this.mountains; l++) {
+      var m = f + (-this.varyX + Math.random() * this.varyX * 2);
       let p = { x: n, y: c },
-        r = { x: n + 0.5 * l, y: c - (g + (-this.varyY + Math.random() * this.varyY * 2)) };
-      l = { x: n + l, y: c + (-this.varyY + Math.random() * this.varyY * 2) };
-      n = l.x;
-      c = l.y;
-      h.push([p, r], [r, l]);
+        r = { x: n + 0.5 * m, y: c - (g + (-this.varyY + Math.random() * this.varyY * 2)) };
+      m = { x: n + m, y: c + (-this.varyY + Math.random() * this.varyY * 2) };
+      n = m.x;
+      c = m.y;
+      h.push([p, r], [r, m]);
     }
     for (f = 0; f < e; f++) h = this.subdivide(h, this.amplitude);
-    for (e = 0; e < h.length; e++) m.push(h[e][0], h[e][1]);
-    m.push({ x: n + 1e3, y: c + 2e3 });
-    m.push({ x: b - 1e3, y: c + 2e3 });
+    for (e = 0; e < h.length; e++) k.push(h[e][0], h[e][1]);
+    k.push({ x: n + 1e3, y: c + 2e3 });
+    k.push({ x: b - 1e3, y: c + 2e3 });
     this.beginFill(a, d);
-    this.drawPolygon(m);
+    this.drawPolygon(k);
     this.endFill();
   }
   subdivide(a, b) {
@@ -51991,11 +52058,11 @@ class Canvas extends PIXI.utils.EventEmitter {
     if (void 0 === this.ropes[a]) {
       var g = [];
       for (var h = 0; 16 > h; h++) {
-        var m = new PIXI.Point(
+        var k = new PIXI.Point(
           20 * b.x + ((20 * e) / 16) * h * 1.1,
           20 * b.y + ((20 * c) / 16) * h * 1.1
         );
-        g.push(m);
+        g.push(k);
       }
       a = this.ropes[a] = new PIXI.SimpleRope(App.CombinedTextures.ray_gun_beam, g, -1);
       a.alpha = 1.1;
@@ -52005,13 +52072,13 @@ class Canvas extends PIXI.utils.EventEmitter {
     } else a = this.ropes[a];
     f = 1 * f + 1;
     for (g = 0; 16 > g; g++)
-      (m = h = 0),
+      (k = h = 0),
         0 === g ||
           (15 === g && d) ||
-          ((h = 0.5 * -f + Math.random() * f), (m = 0.5 * -f + Math.random() * f)),
-        (m = 20 * b.y + ((20 * c) / 16) * g * 1.0625 + m),
+          ((h = 0.5 * -f + Math.random() * f), (k = 0.5 * -f + Math.random() * f)),
+        (k = 20 * b.y + ((20 * c) / 16) * g * 1.0625 + k),
         (a.geometry.points[g].x = 20 * b.x + ((20 * e) / 16) * g * 1.0625 + h),
-        (a.geometry.points[g].y = m);
+        (a.geometry.points[g].y = k);
   }
   createEffect(a, b, c) {
     a[PP.DYNAMIC_ALT] &&
@@ -52393,15 +52460,15 @@ class Canvas extends PIXI.utils.EventEmitter {
   }
   onRightDown() {
     this.rightdown = !0;
-    App.UIVisible || this.emit(CanvasEvent.RIGHT_DOWN);
+    this.emit(CanvasEvent.RIGHT_DOWN);
   }
   onRightUp() {
     this.rightdown = !1;
-    App.UIVisible || this.emit(CanvasEvent.RIGHT_UP);
+    this.emit(CanvasEvent.RIGHT_UP);
   }
   onMouseDown(a) {
     document.hasFocus() || window.focus();
-    App.UIVisible || this.emit(CanvasEvent.MOUSE_DOWN);
+    this.emit(CanvasEvent.MOUSE_DOWN);
   }
   onMouseUp(a) {
     this.emit(CanvasEvent.MOUSE_UP);
@@ -53095,6 +53162,7 @@ const EntityCategory = {
     ITEM_BARRIER: 131072,
     BOT_BULLET: 262144,
     LOCAL2: 524288,
+    PLASMA: 1048576,
   },
   MaskBits = {};
 MaskBits[EntityCategory.STATIC_WORLD] = 16777215;
@@ -53121,7 +53189,10 @@ MaskBits[EntityCategory.BULLET] =
   EntityCategory.ITEM |
   EntityCategory.THROWN;
 MaskBits[EntityCategory.LIMB] =
-  EntityCategory.BULLET | EntityCategory.GRENADE | EntityCategory.BOT_BULLET;
+  EntityCategory.BULLET |
+  EntityCategory.GRENADE |
+  EntityCategory.BOT_BULLET |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.ITEM] =
   EntityCategory.DYNAMIC_WORLD |
   EntityCategory.STATIC_WORLD |
@@ -53131,12 +53202,14 @@ MaskBits[EntityCategory.ITEM] =
   EntityCategory.BOT_BULLET |
   EntityCategory.GRENADE |
   EntityCategory.THROWN |
-  EntityCategory.ITEM_BARRIER;
+  EntityCategory.ITEM_BARRIER |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.LOCAL] =
   EntityCategory.BULLET |
   EntityCategory.BOT_BULLET |
   EntityCategory.LOCAL |
-  EntityCategory.STATIC_WORLD;
+  EntityCategory.STATIC_WORLD |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.ZONE] = EntityCategory.ENTITY;
 MaskBits[EntityCategory.ENTITY] = EntityCategory.ZONE | EntityCategory.OBJECTIVE;
 MaskBits[EntityCategory.GRENADE] =
@@ -53149,7 +53222,8 @@ MaskBits[EntityCategory.GRENADE] =
   EntityCategory.AGENT |
   EntityCategory.ITEM |
   EntityCategory.BARRIER |
-  EntityCategory.LIMB;
+  EntityCategory.LIMB |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.BRIDGE] =
   EntityCategory.STATIC_WORLD |
   EntityCategory.DYNAMIC_WORLD |
@@ -53164,14 +53238,16 @@ MaskBits[EntityCategory.THROWN] =
   EntityCategory.ITEM |
   EntityCategory.BULLET |
   EntityCategory.BOT_BULLET |
-  EntityCategory.THROWN;
+  EntityCategory.THROWN |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.BOT] =
   EntityCategory.STATIC_WORLD |
   EntityCategory.DYNAMIC_WORLD |
   EntityCategory.BRIDGE |
   EntityCategory.BULLET |
   EntityCategory.GRENADE |
-  EntityCategory.BOT;
+  EntityCategory.BOT |
+  EntityCategory.PLASMA;
 MaskBits[EntityCategory.ITEM_BARRIER] = EntityCategory.STATIC_WORLD | EntityCategory.ITEM;
 MaskBits[EntityCategory.BOT_BULLET] =
   EntityCategory.BOT |
@@ -53184,6 +53260,15 @@ MaskBits[EntityCategory.BOT_BULLET] =
   EntityCategory.ITEM |
   EntityCategory.THROWN;
 MaskBits[EntityCategory.LOCAL2] = EntityCategory.STATIC_WORLD | EntityCategory.LOCAL2;
+MaskBits[EntityCategory.PLASMA] =
+  EntityCategory.BOT |
+  EntityCategory.LOCAL |
+  EntityCategory.LIMB |
+  EntityCategory.DYNAMIC_WORLD |
+  EntityCategory.STATIC_WORLD |
+  EntityCategory.GRENADE |
+  EntityCategory.ITEM |
+  EntityCategory.THROWN;
 var ghost = {};
 class Ghost {
   constructor(a) {
@@ -55080,7 +55165,7 @@ class BulletTrailRope extends PIXI.SimpleRope {
   }
 }
 BulletTrailRope.FX = ParticleEffects.BulletTrailRope;
-function ParticleEmitter(a, b, c, d, e, f, g, h, m, n, l) {
+function ParticleEmitter(a, b, c, d, e, f, g, h, k, n, m) {
   this.parent = a;
   this.emits = b;
   this.offset = c || { x: 0, y: 0 };
@@ -55089,10 +55174,10 @@ function ParticleEmitter(a, b, c, d, e, f, g, h, m, n, l) {
   this.ttl = f || -1;
   this.probability = g ?? 1;
   this.width = h ?? 0;
-  this.height = m ?? 0;
+  this.height = k ?? 0;
   if (0 !== this.width || 0 !== this.height) this.area = !0;
   void 0 !== n && (this.tint = n);
-  void 0 !== l && (this.id = l);
+  void 0 !== m && (this.id = m);
 }
 function AnchorBase() {
   this.anchors = {};
@@ -55170,10 +55255,10 @@ class BaseSprite extends PIXI.Container {
       else {
         g = d.v[0] && void 0 !== d.v[0].c ? BaseSprite.ColorMap[d.v[0].c] : "ffffffff";
         f = d.v[1] && void 0 !== d.v[1].c ? BaseSprite.ColorMap[d.v[1].c] : "ffffffff";
-        let m = d.v[2] && void 0 !== d.v[2].c ? BaseSprite.ColorMap[d.v[2].c] : "ffffffff";
+        let k = d.v[2] && void 0 !== d.v[2].c ? BaseSprite.ColorMap[d.v[2].c] : "ffffffff";
         g = d.v[0] ? uintToArr(g, d.v[0].mu ?? 1) : BaseSprite.DefaultColor;
         f = d.v[1] ? uintToArr(f, d.v[1].mu ?? 1) : BaseSprite.DefaultColor;
-        d = d.v[2] ? uintToArr(m, d.v[2].mu ?? 1) : BaseSprite.DefaultColor;
+        d = d.v[2] ? uintToArr(k, d.v[2].mu ?? 1) : BaseSprite.DefaultColor;
       }
       b = new PIXI.Geometry()
         .addAttribute("aVertexPosition", e, 2)
@@ -55201,11 +55286,11 @@ class BaseSprite extends PIXI.Container {
       f = c.o.y;
     var g = Math.sqrt(c.w * c.w + c.h * c.h),
       h = Math.atan2(c.h, c.w) + (c.r || 0);
-    let m = Math.atan2(c.w, c.h) + (c.r || 0);
+    let k = Math.atan2(c.w, c.h) + (c.r || 0);
     c = Math.cos(h + Math.PI) * g + e;
     h = Math.sin(h + Math.PI) * g + f;
-    let n = Math.cos(m + 0.5 * Math.PI) * g + e;
-    g = Math.sin(m + 0.5 * Math.PI) * g + f;
+    let n = Math.cos(k + 0.5 * Math.PI) * g + e;
+    g = Math.sin(k + 0.5 * Math.PI) * g + f;
     a = new PIXI.SimpleMesh(
       a,
       new Float32Array([
@@ -55230,30 +55315,30 @@ class BaseSprite extends PIXI.Container {
       f = (2 * Math.PI) / e,
       g = polyCenterArr(b),
       h = [],
-      m = [],
+      k = [],
       n = [g.x, g.y];
-    var l = g.x - b[0],
-      k = g.y - b[1];
-    l = Math.sqrt(l * l + k * k);
+    var m = g.x - b[0],
+      l = g.y - b[1];
+    m = Math.sqrt(m * m + l * l);
     b = Math.atan2(b[3] - b[1], b[2] - b[0]);
-    for (k = 0; k < e + 1; k++) {
-      var p = f * k;
+    for (l = 0; l < e + 1; l++) {
+      var p = f * l;
       h.push(Math.cos(p + (c.r || 0)) * c.radius, Math.sin(p + (c.r || 0)) * c.radius);
-      var r = Math.atan2(h[2 * k] / c.radius, h[2 * k + 1] / c.radius);
-      p = g.x + l * Math.cos(r + b);
-      r = g.y + l * Math.sin(r + b);
-      h[2 * k] += c.o.x;
-      h[2 * k + 1] += c.o.y;
+      var r = Math.atan2(h[2 * l] / c.radius, h[2 * l + 1] / c.radius);
+      p = g.x + m * Math.cos(r + b);
+      r = g.y + m * Math.sin(r + b);
+      h[2 * l] += c.o.x;
+      h[2 * l + 1] += c.o.y;
       n.push(p, r);
-      0 < k && m.push(0, k);
+      0 < l && k.push(0, l);
     }
     h.unshift(c.o.x, c.o.y);
-    m.push(0, 1);
+    k.push(0, 1);
     a = new PIXI.SimpleMesh(
       a,
       new Float32Array(h),
       new Float32Array(n),
-      new Uint16Array(m),
+      new Uint16Array(k),
       PIXI.DRAW_MODES.TRIANGLE_STRIP
     );
     a.tint = parseInt(void 0 !== d.c ? BaseSprite.ColorMap[d.c] : "ffffff", 16);
@@ -55340,34 +55425,34 @@ BaseSprite.CreateGroupedMesh = function (a, b) {
     var f = b[q],
       g = f.g,
       h = 0 !== f.p.r ? polyRotateCopy(f.p.sh[0].v, f.p.r || 0) : f.p.sh[0].v,
-      m = a.p.x - f.p.x;
+      k = a.p.x - f.p.x;
     f = a.p.y - f.p.y;
-    h = [h[0].x - m, h[0].y - f, h[1].x - m, h[1].y - f, h[2].x - m, h[2].y - f];
+    h = [h[0].x - k, h[0].y - f, h[1].x - k, h[1].y - f, h[2].x - k, h[2].y - f];
     d.push(g.uv[0], g.uv[1], g.uv[2], g.uv[3], g.uv[4], g.uv[5]);
     var n = void 0;
     void 0 === g.v
-      ? (m = n = g = BaseSprite.DefaultColor)
-      : ((m = g.v[0] && void 0 !== g.v[0].c ? BaseSprite.ColorMap[g.v[0].c] : "ffffffff"),
+      ? (k = n = g = BaseSprite.DefaultColor)
+      : ((k = g.v[0] && void 0 !== g.v[0].c ? BaseSprite.ColorMap[g.v[0].c] : "ffffffff"),
         (n = g.v[1] && void 0 !== g.v[1].c ? BaseSprite.ColorMap[g.v[1].c] : "ffffffff"),
         (f = g.v[2] && void 0 !== g.v[2].c ? BaseSprite.ColorMap[g.v[2].c] : "ffffffff"),
-        (m = g.v[0] ? uintToArr(m, g.v[0].mu ?? 1) : BaseSprite.DefaultColor),
+        (k = g.v[0] ? uintToArr(k, g.v[0].mu ?? 1) : BaseSprite.DefaultColor),
         (n = g.v[1] ? uintToArr(n, g.v[1].mu ?? 1) : BaseSprite.DefaultColor),
         (g = g.v[2] ? uintToArr(f, g.v[2].mu ?? 1) : BaseSprite.DefaultColor));
     c.push(
       new PIXI.Geometry()
         .addAttribute("aVertexPosition", h, 2)
-        .addAttribute("aColor", m.concat(n, g), 4)
+        .addAttribute("aColor", k.concat(n, g), 4)
     );
   }
-  let l = a.g;
+  let m = a.g;
   c = PIXI.Geometry.merge(c);
   c.addAttribute("aUvs", d);
-  let k = void 0 !== l.a ? l.a : 1;
+  let l = void 0 !== m.a ? m.a : 1;
   d = {
-    uSampler2: App.CombinedTextures[l.tx],
-    color: uintToArr("ff" + (void 0 !== l.c ? BaseSprite.ColorMap[l.c] : "ffffff"), 1),
+    uSampler2: App.CombinedTextures[m.tx],
+    color: uintToArr("ff" + (void 0 !== m.c ? BaseSprite.ColorMap[m.c] : "ffffff"), 1),
   };
-  d.color[3] *= k;
+  d.color[3] *= l;
   if (b.transform)
     switch (((b = b.transform), b.type)) {
       case GameAttribute.T_TRANSFORM:
@@ -55442,9 +55527,9 @@ BaseSprite.CreateGroupedMesh = function (a, b) {
   let r = new PIXI.Mesh(c, p);
   r.go = a;
   r.update = () => {
-    r.scale.x = l.sx ?? 1;
-    r.scale.y = l.sy ?? 1;
-    r.alpha = k;
+    r.scale.x = m.sx ?? 1;
+    r.scale.y = m.sy ?? 1;
+    r.alpha = l;
     r.rotation = 0;
     a.bounds = r.getLocalBounds();
   };
@@ -55576,29 +55661,29 @@ class FlagSprite extends PIXI.Sprite {
     a = this.d0s * Math.cos(this.a0s - f.rotation);
     g = this.d0s * Math.sin(this.a0s - f.rotation);
     var h = this.d1s * Math.cos(this.a1s - f.rotation),
-      m = this.d1s * Math.sin(this.a1s - f.rotation);
+      k = this.d1s * Math.sin(this.a1s - f.rotation);
     this.p2v.x = 0.2 * (this.p2v.x + 0.5 * PC.GRAVITY.x);
     this.p2v.y = 0.2 * (this.p2v.y + 0.5 * PC.GRAVITY.y);
     var n = this.p2.x + this.p2v.x - (a + b),
-      l = this.p2.y + this.p2v.y - (g + c),
-      k = Math.atan2(l, n);
-    n * n + l * l > this.flagStretch * this.flagStretch &&
+      m = this.p2.y + this.p2v.y - (g + c),
+      l = Math.atan2(m, n);
+    n * n + m * m > this.flagStretch * this.flagStretch &&
       ((this.p2v.x = 0.5 * -d),
       (this.p2v.y = 0.5 * -e),
-      (this.p2.x = a + b + (this.flagStretch - 1) * Math.cos(k)),
-      (this.p2.y = g + c + (this.flagStretch - 1) * Math.sin(k)));
+      (this.p2.x = a + b + (this.flagStretch - 1) * Math.cos(l)),
+      (this.p2.y = g + c + (this.flagStretch - 1) * Math.sin(l)));
     this.p2.x += this.p2v.x;
     this.p2.y += this.p2v.y;
     this.p3v.x = 0.7 * (this.p3v.x + 0.5 * PC.GRAVITY.x);
     this.p3v.y = 0.7 * (this.p3v.y + 0.5 * PC.GRAVITY.y);
     n = this.p3.x + this.p3v.x - (h + b);
-    l = this.p3.y + this.p3v.y - (m + c);
-    k = Math.atan2(l, n);
-    n * n + l * l > this.flagStretch * this.flagStretch &&
+    m = this.p3.y + this.p3v.y - (k + c);
+    l = Math.atan2(m, n);
+    n * n + m * m > this.flagStretch * this.flagStretch &&
       ((this.p3v.x = 0.7 * -d),
       (this.p3v.y = 0.7 * -e),
-      (this.p3.x = h + b + (this.flagStretch - 1) * Math.cos(k)),
-      (this.p3.y = m + c + (this.flagStretch - 1) * Math.sin(k)));
+      (this.p3.x = h + b + (this.flagStretch - 1) * Math.cos(l)),
+      (this.p3.y = k + c + (this.flagStretch - 1) * Math.sin(l)));
     this.p3.x += this.p3v.x;
     this.p3.y += this.p3v.y;
     f.vertices[0] = a;
@@ -55608,7 +55693,7 @@ class FlagSprite extends PIXI.Sprite {
     f.vertices[4] = this.p3.x - b;
     f.vertices[5] = this.p3.y - c;
     f.vertices[6] = h;
-    f.vertices[7] = m;
+    f.vertices[7] = k;
   }
   init(a) {
     this.alpha = 1;
@@ -56856,8 +56941,7 @@ class ArrowSprite extends PIXI.Sprite {
   }
   animate(a) {
     this.lastRotation = this.currentRotation;
-    this.currentRotation = Math.atan2(a.vy, a.vx);
-    this.rotation = this.currentRotation + Math.PI;
+    this.rotation = this.currentRotation = Math.atan2(a.vy, a.vx);
   }
   init() {}
 }
@@ -57206,7 +57290,7 @@ class ClusterNadeSprite extends PIXI.Sprite {
     this.nade.anchor.x = this.nade.anchor.y = 0.5;
     this.nade.scale.x = this.nade.scale.y = 1.1;
     this.addChild(this.nade);
-    this.scale.x = this.scale.y = 0.156;
+    this.scale.x = this.scale.y = 0.13;
     this.frame = 0;
   }
   animate(a) {
@@ -57214,8 +57298,8 @@ class ClusterNadeSprite extends PIXI.Sprite {
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
     0.1 < b && (this.trail.rotation = -this.rotation + fastAtan2(a.vy, a.vx) + Math.PI);
     3 < this.frame &&
-      ((this.trail.scale.x = 3.5 + 0.7 * b),
-      (this.trail.scale.y = 3.7),
+      ((this.trail.scale.x = 3.2 + 0.6 * b),
+      (this.trail.scale.y = 3.2),
       (this.trail.alpha = 0.005 * b));
   }
 }
@@ -57228,10 +57312,11 @@ class NadeSprite extends PIXI.Sprite {
     this.trail.anchor.x = 0.1;
     this.addChild(this.trail);
     this.nade = new PIXI.Sprite(App.CombinedTextures.handgrenade);
-    this.nade.anchor.x = this.nade.anchor.y = 0.5;
+    this.nade.anchor.x = 0.5;
+    this.nade.anchor.y = 0.45;
     this.nade.scale.x = this.nade.scale.y = 1;
     this.addChild(this.nade);
-    this.scale.x = this.scale.y = 0.156;
+    this.scale.x = this.scale.y = 0.13;
     this.frame = 0;
   }
   animate(a) {
@@ -57239,8 +57324,8 @@ class NadeSprite extends PIXI.Sprite {
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
     0.1 < b && (this.trail.rotation = -this.rotation + fastAtan2(a.vy, a.vx) + Math.PI);
     3 < this.frame &&
-      ((this.trail.scale.x = 3.5 + 0.7 * b),
-      (this.trail.scale.y = 3.7),
+      ((this.trail.scale.x = 3.2 + 0.6 * b),
+      (this.trail.scale.y = 3.2),
       (this.trail.alpha = 0.005 * b));
   }
 }
@@ -57265,8 +57350,8 @@ class ShurikenBladeSprite extends PIXI.Sprite {
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
     0.1 < b && (this.trail.rotation = -this.rotation + fastAtan2(a.vy, a.vx) + Math.PI);
     3 < this.frame &&
-      ((this.trail.scale.x = 3.3 + 0.7 * b),
-      (this.trail.scale.y = 3.5),
+      ((this.trail.scale.x = 3.5 + 1.5 * b),
+      (this.trail.scale.y = 6),
       (this.trail.alpha = 0.0025 * b));
     200 > --a.ttl && (this.alpha = 0.7 + 0.3 * Math.sin(a.ttl / 5));
   }
@@ -58371,6 +58456,7 @@ const GameCommands = {
   DONE: "done",
   LOG_PERF: "logperf",
   SPAWN_BOT: "spawnbot",
+  IMMORTAL: "immortal",
 };
 function GameStatus(a, b) {
   this.t = a;
@@ -59043,7 +59129,10 @@ class PlayerDropdown extends PIXI.Container {
     this.inviteRow.on("touchstart", () => this.onInvite());
     this.muteRow.on("touchstart", () => this.onMute());
     this.unmuteRow.on("touchstart", () => this.onUnmute());
-    this.on("mouseout", () => {
+    this.on("mouseup", () => {
+      this.parent && this.parent.removeChild(this);
+    });
+    this.on("rightdown", () => {
       this.parent && this.parent.removeChild(this);
     });
     this.muteRow.x = 10;
@@ -59098,6 +59187,7 @@ class PlayerDropdownActionRow extends PIXI.Container {
     this.hitArea = new PIXI.Rectangle(0, 0, 200, 30);
     this.actionText.tint = c;
     this.actionText.alpha = 0.7;
+    this.actionText.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
     this.on("mouseover", () => {
       this.actionText.alpha = 1;
     });
@@ -59238,8 +59328,8 @@ class LeaderboardDM extends PIXI.Container {
         : ((this.dropdown.target = b),
           this.addChild(this.dropdown),
           this.dropdown.show(),
-          (this.dropdown.x = a.data.global.x - this.x - 10),
-          (this.dropdown.y = a.data.global.y - this.y - 4)));
+          (this.dropdown.x = (a.data.global.x - this.x - 10) / App.Scale),
+          (this.dropdown.y = (a.data.global.y - this.y - 4) / App.Scale)));
   }
   hideDropdown() {
     this.dropdown.parent && this.removeChild(this.dropdown);
@@ -59266,8 +59356,8 @@ class LeaderboardDM extends PIXI.Container {
   }
   moveClientInfo(a) {
     this.rowLabel.parent &&
-      ((this.rowLabel.x = a.data.global.x - this.x),
-      (this.rowLabel.y = a.data.global.y - (this.y + this.rowLabel.height)));
+      ((this.rowLabel.x = (a.data.global.x - this.x) / App.Scale),
+      (this.rowLabel.y = (a.data.global.y - (this.y + this.rowLabel.height)) / App.Scale));
   }
   updateClient(a) {
     var b = this.rows.getIndexById(a.sid);
@@ -59802,8 +59892,8 @@ class LeaderboardTDM extends PIXI.Container {
         : ((this.dropdown.target = b),
           this.addChild(this.dropdown),
           this.dropdown.show(),
-          (this.dropdown.x = a.data.global.x - this.x),
-          (this.dropdown.y = a.data.global.y - this.y)));
+          (this.dropdown.x = (a.data.global.x - this.x) / App.Scale),
+          (this.dropdown.y = (a.data.global.y - this.y) / App.Scale)));
   }
   hideDropdown() {
     this.dropdown.parent && this.removeChild(this.dropdown);
@@ -59833,7 +59923,8 @@ class LeaderboardTDM extends PIXI.Container {
   }
   moveClientInfo(a) {
     this.rowLabel.parent &&
-      ((this.rowLabel.x = a.data.global.x - this.x), (this.rowLabel.y = a.data.global.y - this.y));
+      ((this.rowLabel.x = (a.data.global.x - this.x) / App.Scale),
+      (this.rowLabel.y = (a.data.global.y - this.y) / App.Scale));
   }
   updateTeamPoints(a) {
     this.alphaPointsTotal = a[0];
@@ -60420,8 +60511,8 @@ class LeaderboardCTF extends PIXI.Container {
         : ((this.dropdown.target = b),
           this.addChild(this.dropdown),
           this.dropdown.show(),
-          (this.dropdown.x = a.data.global.x - this.x),
-          (this.dropdown.y = a.data.global.y - this.y)));
+          (this.dropdown.x = (a.data.global.x - this.x) / App.Scale),
+          (this.dropdown.y = (a.data.global.y - this.y) / App.Scale)));
   }
   hideDropdown() {
     this.dropdown.parent && this.removeChild(this.dropdown);
@@ -60451,7 +60542,8 @@ class LeaderboardCTF extends PIXI.Container {
   }
   moveClientInfo(a) {
     this.rowLabel.parent &&
-      ((this.rowLabel.x = a.data.global.x - this.x), (this.rowLabel.y = a.data.global.y - this.y));
+      ((this.rowLabel.x = (a.data.global.x - this.x) / App.Scale),
+      (this.rowLabel.y = (a.data.global.y - this.y) / App.Scale));
   }
   updateTeamPoints(a) {
     this.alphaPointsTotal = a[0];
@@ -61041,8 +61133,8 @@ class LeaderboardDB extends PIXI.Container {
         : ((this.dropdown.target = b),
           this.addChild(this.dropdown),
           this.dropdown.show(),
-          (this.dropdown.x = a.data.global.x - this.x),
-          (this.dropdown.y = a.data.global.y - this.y)));
+          (this.dropdown.x = (a.data.global.x - this.x) / App.Scale),
+          (this.dropdown.y = (a.data.global.y - this.y) / App.Scale)));
   }
   hideDropdown() {
     this.dropdown.parent && this.removeChild(this.dropdown);
@@ -61072,7 +61164,8 @@ class LeaderboardDB extends PIXI.Container {
   }
   moveClientInfo(a) {
     this.rowLabel.parent &&
-      ((this.rowLabel.x = a.data.global.x - this.x), (this.rowLabel.y = a.data.global.y - this.y));
+      ((this.rowLabel.x = (a.data.global.x - this.x) / App.Scale),
+      (this.rowLabel.y = (a.data.global.y - this.y) / App.Scale));
   }
   registerTeamPoint(a) {
     0 === a ? this.alphaPointsTotal++ : 1 === a && this.bravoPointsTotal++;
@@ -61526,8 +61619,8 @@ class LeaderboardTR extends PIXI.Container {
         : ((this.dropdown.target = b),
           this.addChild(this.dropdown),
           this.dropdown.show(),
-          (this.dropdown.x = a.data.global.x - this.x - 10),
-          (this.dropdown.y = a.data.global.y - this.y - 4)));
+          (this.dropdown.x = (a.data.global.x - this.x - 10) / App.Scale),
+          (this.dropdown.y = (a.data.global.y - this.y - 4) / App.Scale)));
   }
   hideDropdown() {
     this.dropdown.parent && this.removeChild(this.dropdown);
@@ -61554,8 +61647,8 @@ class LeaderboardTR extends PIXI.Container {
   }
   moveClientInfo(a) {
     this.rowLabel.parent &&
-      ((this.rowLabel.x = a.data.global.x - this.x),
-      (this.rowLabel.y = a.data.global.y - (this.y + this.rowLabel.height)));
+      ((this.rowLabel.x = (a.data.global.x - this.x) / App.Scale),
+      (this.rowLabel.y = (a.data.global.y - (this.y + this.rowLabel.height)) / App.Scale));
   }
   updateClient(a) {
     var b = this.rows.getIndexById(a.sid);
@@ -64733,7 +64826,7 @@ class Player extends Agent {
           if (0.5 < Math.random()) {
             d.push(c[e]);
             let g = Player.REV_AMP_TABLE[c[e]];
-            for (let h = 0, m = g.length; h < m; h++)
+            for (let h = 0, k = g.length; h < k; h++)
               (this.ragdoll[g[h]].attached = !1),
                 this.setLimbGoreTexture(g[h], this.ragdoll[g[h]].visual);
           }
@@ -65390,7 +65483,7 @@ function BarrettBullet(a) {
     gs: 1,
     wd: 5,
     bu: -0.25,
-    ricoAngle: 80,
+    ricoAngle: 70,
     rico: 2,
     pen: 1,
     decay: 0.5,
@@ -65425,7 +65518,7 @@ function CarbineBullet(a) {
     ttl: 180,
     prefab: ShapeOptions.PARTICLE,
     ld: 0.3,
-    ricoAngle: 80,
+    ricoAngle: 70,
     gs: 1,
     wd: 7,
     bu: -0.25,
@@ -65520,7 +65613,7 @@ function FlameThrowerLiquid(a) {
   };
 }
 FlameThrowerLiquid.Shapes = [
-  { c: EntityCategory.BULLET, radius: 10, d: 0.1, fr: 0.4, re: 0.01, minRestitution: !0 },
+  { c: EntityCategory.PLASMA, radius: 10, d: 0.1, fr: 0.4, re: 0.01, minRestitution: !0 },
 ];
 function GhostLaser(a) {
   this.id = a.id;
@@ -65627,9 +65720,9 @@ LauncherNade.Audio = { onRemove: [AudioEffects.ExplosionNadeLauncher] };
 function MAC10Bullet(a) {
   this.id = a.id;
   this.type = PrefabList.MAC10Bullet;
-  this.contact = { damage: 0.25 };
+  this.contact = { damage: 0.3 };
   this.p = {
-    ttl: 25,
+    ttl: 21,
     prefab: ShapeOptions.PARTICLE,
     ld: 10,
     wd: 15,
@@ -65731,7 +65824,7 @@ PulseGunBullet.Audio = { onContact: [AudioEffects.PulseGunImpact], checkAltConta
 function RifleBullet(a) {
   this.id = a.id;
   this.type = PrefabList.RifleBullet;
-  this.contact = { damage: 0.1 };
+  this.contact = { damage: 0.01, absDamage: 6 };
   this.p = {
     ttl: 350,
     prefab: ShapeOptions.PARTICLE,
@@ -65813,8 +65906,8 @@ RLRocket.Update = (a, b) => {
   else {
     a.ref.fuel--;
     var c = Math.atan2(a.body.vel.y, a.body.vel.x);
-    a.body.vel.x += 60 * Math.cos(c) * b;
-    a.body.vel.y += 60 * Math.sin(c) * b;
+    a.body.vel.x += 80 * Math.cos(c) * b;
+    a.body.vel.y += 80 * Math.sin(c) * b;
   }
 };
 RLRocket.Audio = { onRemove: [AudioEffects.RLImpact], checkAltContact: !0 };
@@ -65829,7 +65922,7 @@ function RPGRocket(a) {
     ricoAngle: 70,
     update: RPGRocket.Update,
     wd: 3,
-    bu: 10,
+    bu: 2,
     decay: 1,
     rico: 3,
     id: this.id,
@@ -65866,7 +65959,7 @@ RPGRocket.Audio = { onRemove: [AudioEffects.ExplosionNadeLauncher], checkAltCont
 function ShockRifleBullet(a) {
   this.id = a.id;
   this.type = PrefabList.ShockRifleBullet;
-  this.contact = { damage: 6, constant: !0 };
+  this.contact = { damage: 10, constant: !0 };
   this.p = {
     ttl: 250,
     prefab: ShapeOptions.CIRCLE,
@@ -66912,7 +67005,7 @@ var shapeoptions = {};
 ShapeOptions = { CIRCLE: 1, RECTANGLE: 2, ROUNDED_RECT: 3, PLAYER: 4, COMPOUND: 5, PARTICLE: 6 };
 var rayparticle = {};
 class RayParticle {
-  constructor(a, b = 0, c = 0, d = 0, e = 0, f = 1, g = 0, h = 1, m = 0, n = 1, l = 2, k = 0) {
+  constructor(a, b = 0, c = 0, d = 0, e = 0, f = 1, g = 0, h = 1, k = 0, n = 1, m = 2, l = 0) {
     this.m_type = b2BodyType.b2_particleBody;
     this.cat = EntityCategory.BULLET;
     this.mask = MaskBits[EntityCategory.BULLET];
@@ -66922,10 +67015,10 @@ class RayParticle {
     this.d = f;
     this.fr = g;
     this.re = h;
-    this.ld = m;
+    this.ld = k;
     this.gs = n;
-    this.wd = l;
-    this.gi = k;
+    this.wd = m;
+    this.gi = l;
   }
   free() {
     b2Vec2.Free(this.pos);
@@ -67420,16 +67513,16 @@ BodyFactory = {
     return c;
   },
   joinBodies: function (a, b, c, d, e, f, g, h) {
-    let m = new b2RevoluteJointDef();
-    m.bodyA = a;
-    m.bodyB = b;
-    m.enableLimit = f || !1;
-    m.lowerAngle = g || 0;
-    m.upperAngle = h || 0;
-    m.localAnchorA = c;
-    m.localAnchorB = d;
-    m.collideConnected = e;
-    return this.world.CreateJoint(m);
+    let k = new b2RevoluteJointDef();
+    k.bodyA = a;
+    k.bodyB = b;
+    k.enableLimit = f || !1;
+    k.lowerAngle = g || 0;
+    k.upperAngle = h || 0;
+    k.localAnchorA = c;
+    k.localAnchorB = d;
+    k.collideConnected = e;
+    return this.world.CreateJoint(k);
   },
   weldJoinBodies: function (a, b, c, d, e) {
     let f = new b2WeldJointDef();
@@ -68733,16 +68826,16 @@ class PhysicsWorker {
       var e = h.GetPosition(),
         f = e.x - a.x,
         g = e.y - a.y;
-      let m = PhysicsWorker.ExplosionRayCallbackInst.Set(a, h);
-      this.world.RayCast(m, a, e);
-      m.fix ||
+      let k = PhysicsWorker.ExplosionRayCallbackInst.Set(a, h);
+      this.world.RayCast(k, a, e);
+      k.fix ||
         ((e = Math.sqrt(f * f + g * g)),
         (f = Math.atan2(g, f)),
         (g = b.radius - Math.min(b.radius, e)),
         (g = Math.min((b.blast / b.radius) * g * 10, b.blast)),
         h._player ? (g *= 15) : h._parent && (g *= 0.25),
         (f = b2Vec2.Alloc(g * Math.cos(f), g * Math.sin(f))),
-        h.ApplyImpulse(f, m.pt),
+        h.ApplyImpulse(f, k.pt),
         b2Vec2.Free(f),
         c.push(h.m_userData));
     }
@@ -68832,8 +68925,8 @@ class PhysicsWorker {
       b.y = e.y * PC.PM_RATIO;
       b.r = c.GetAngle();
       if (a.anchors)
-        for (let m = 0, n = a.anchors.length; m < n; m++)
-          if (((e = a.anchors[m]), (e.owner = c), (this.anchors[e.id] = e), this.joints[e.id])) {
+        for (let k = 0, n = a.anchors.length; k < n; k++)
+          if (((e = a.anchors[k]), (e.owner = c), (this.anchors[e.id] = e), this.joints[e.id])) {
             var f = this.anchors[this.joints[e.id].attr.anchorA],
               g = this.anchors[this.joints[e.id].attr.anchorB];
             f && g && BodyFactory.createJoint(this.joints[e.id].attr, f, g);
@@ -68976,17 +69069,17 @@ class PhysicsWorker {
                   (f = -0.3 + 0.6 * Math.random()))
                 : ((e = c.m_linearVelocity), (e.x *= 0.1), (e.y *= 0.1), (f = 0));
             if (void 0 !== a.detach)
-              for (let m = 0, n = a.detach.length; m < n; m++) {
-                g = b.ragdoll[a.detach[m]];
+              for (let k = 0, n = a.detach.length; k < n; k++) {
+                g = b.ragdoll[a.detach[k]];
                 h = g.GetBodyA();
-                let l = g.GetBodyB();
+                let m = g.GetBodyB();
                 this.world.DestroyJoint(g);
                 h.m_linearVelocity.x += e.x - 1 + 2 * Math.random();
                 h.m_linearVelocity.y += e.y - 1 + 2 * Math.random();
-                l.m_linearVelocity.x += e.x - 1 + 2 * Math.random();
-                l.m_linearVelocity.y += e.y - 1 + 2 * Math.random();
+                m.m_linearVelocity.x += e.x - 1 + 2 * Math.random();
+                m.m_linearVelocity.y += e.y - 1 + 2 * Math.random();
                 h.SetAngularVelocity(f);
-                l.SetAngularVelocity(f);
+                m.SetAngularVelocity(f);
               }
             for (g = b.ragdoll.joints.length; 0 < g--; ) b.ragdoll.joints[g].EnableMotor(!1);
             b.ragdoll.leftelbowjoint.EnableLimit(!0);
@@ -69094,148 +69187,153 @@ class PhysicsWorker {
     PhysicsWorker.TimeDelta = a;
     let b = b2Vec2.Alloc();
     for (let n in this.particles) {
-      let l = this.particles[n];
+      let m = this.particles[n];
       var c = this.particlesAdded[n];
-      let k = l.body;
+      let l = m.body;
       c
-        ? ((PhysicsWorker.ActiveQueryParticle = l),
+        ? ((PhysicsWorker.ActiveQueryParticle = m),
           this.world.QueryPoint(this.boundParticleQueryResult, {
-            x: k.pos.x,
-            y: k.pos.y + k.vel.y * a,
+            x: l.pos.x,
+            y: l.pos.y + l.vel.y * a,
           }),
-          (l.ref.wasSubmerged = !1))
-        : ((l.ref.wasSubmerged = l.ref.sub),
-          (l.ref.ttl -= App.FrameTime * (l.ref.sub ? l.ref.wttl ?? 2 : 1)));
-      void 0 !== l.ref.update && l.ref.update(l, a);
-      b.x = k.pos.x + a * k.vel.x;
-      b.y = k.pos.y + a * k.vel.y;
-      var d = 0;
+          (m.ref.wasSubmerged = !1))
+        : ((m.ref.wasSubmerged = m.ref.sub),
+          (m.ref.ttl -= App.FrameTime * (m.ref.sub ? m.ref.wttl ?? 2 : 1)));
+      void 0 !== m.ref.update && m.ref.update(m, a);
+      b.x = l.pos.x + a * l.vel.x;
+      b.y = l.pos.y + a * l.vel.y;
+      var d = 0,
+        e = 0;
       do {
-        var e = void 0;
+        if (99 < e++) {
+          console.error("WARNING: potentially infinite loop detected");
+          break;
+        }
+        var f = void 0;
         let p;
-        var f = this.raycastBullet(k, k.pos, b);
-        if (f) {
-          e = f.body;
-          var g = f.normal,
-            h = f.p;
-          if (void 0 !== e._parent) {
-            var m = this.entities[e.m_userData];
-            if (void 0 === m.body._local) {
-              e = norm(k.vel);
-              k.pos.x = h.x + 0.001 * e.x;
-              k.pos.y = h.y + 0.001 * e.y;
-              e = k.pos.x - b.x;
-              p = k.pos.y - b.y;
-              e = Math.sqrt(e * e + p * p);
-              h = {
+        var g = this.raycastBullet(l, l.pos, b);
+        if (g) {
+          f = g.body;
+          var h = g.normal,
+            k = g.p;
+          if (void 0 !== f._parent) {
+            let r = this.entities[f.m_userData];
+            if (void 0 === r.body._local) {
+              f = norm(l.vel);
+              l.pos.x = k.x + 0.001 * f.x;
+              l.pos.y = k.y + 0.001 * f.y;
+              f = l.pos.x - b.x;
+              p = l.pos.y - b.y;
+              f = Math.sqrt(f * f + p * p);
+              k = {
                 t: PhysicsWorker.Contact.CON,
-                a: l,
-                b: m,
-                p: h,
-                normal: g,
-                pen: l.ref.pen - 1,
+                a: m,
+                b: r,
+                p: k,
+                normal: h,
+                pen: m.ref.pen - 1,
                 local: !1,
               };
-              void 0 === this.solved[n] ? (this.solved[n] = [h]) : this.solved[n].push(h);
-              h.o = l.ref.origin;
-              if (void 0 === l.ref.pen) h.rem = !0;
-              else if (void 0 === l.ref.lastHit || l.ref.lastHit !== m.body._parent)
-                (l.ref.lastHit = m.body._parent),
-                  l.ref.pen--,
-                  (k.vel.x *= l.ref.decay),
-                  (k.vel.y *= l.ref.decay),
-                  0 > l.ref.pen && (h.rem = !0);
-              b.x = k.pos.x + a * k.vel.x * (1 - f.frac);
-              b.y = k.pos.y + a * k.vel.y * (1 - f.frac);
-              1e-4 > e && (h.rem = !0);
+              void 0 === this.solved[n] ? (this.solved[n] = [k]) : this.solved[n].push(k);
+              k.o = m.ref.origin;
+              if (void 0 === m.ref.pen) k.rem = !0;
+              else if (void 0 === m.ref.lastHit || m.ref.lastHit !== r.body._parent)
+                (m.ref.lastHit = r.body._parent),
+                  m.ref.pen--,
+                  (l.vel.x *= m.ref.decay),
+                  (l.vel.y *= m.ref.decay),
+                  0 > m.ref.pen && (k.rem = !0);
+              b.x = l.pos.x + a * l.vel.x * (1 - g.frac);
+              b.y = l.pos.y + a * l.vel.y * (1 - g.frac);
+              0.001 > f && (k.rem = !0);
             } else if (
-              ((f = b2Vec2.Alloc(k.d * k.vel.x * a, k.d * k.vel.y * a)),
-              e.ApplyImpulse(f, h),
-              b2Vec2.Free(f),
-              (k.pos.x = h.x + 0.001 * k.vel.x),
-              (k.pos.y = h.y + 0.001 * k.vel.y),
-              (f = Math.min(Math.max(1 - a * k.ld, 0), 1)),
-              (k.vel.x *= f),
-              (k.vel.y = (k.vel.y + 20 * k.gs * a) * f),
-              (h = {
+              ((g = b2Vec2.Alloc(l.d * l.vel.x * a, l.d * l.vel.y * a)),
+              f.ApplyImpulse(g, k),
+              b2Vec2.Free(g),
+              (l.pos.x = k.x + 0.001 * l.vel.x),
+              (l.pos.y = k.y + 0.001 * l.vel.y),
+              (g = Math.min(Math.max(1 - a * l.ld, 0), 1)),
+              (l.vel.x *= g),
+              (l.vel.y = (l.vel.y + 20 * l.gs * a) * g),
+              (k = {
                 t: PhysicsWorker.Contact.CON,
-                a: l,
-                b: m,
-                p: h,
-                normal: g,
-                pen: l.ref.pen,
+                a: m,
+                b: r,
+                p: k,
+                normal: h,
+                pen: m.ref.pen,
                 local: !0,
               }),
-              (h.o = l.ref.origin),
-              void 0 === this.solved[n] ? (this.solved[n] = [h]) : this.solved[n].push(h),
+              (k.o = m.ref.origin),
+              void 0 === this.solved[n] ? (this.solved[n] = [k]) : this.solved[n].push(k),
               !(6 > d++))
             )
               break;
           } else {
-            if (e.m_type === b2BodyType.b2_dynamicBody)
-              (d = b2Vec2.Alloc(k.d * k.vel.x * a, k.d * k.vel.y * a)),
-                e.ApplyImpulse(d, h),
+            if (f.m_type === b2BodyType.b2_dynamicBody)
+              (d = b2Vec2.Alloc(l.d * l.vel.x * a, l.d * l.vel.y * a)),
+                f.ApplyImpulse(d, k),
                 b2Vec2.Free(d);
-            else if (this.containsFluid && this.fluids[e.m_userData]) {
-              this.submergeParticle(e.m_userData, l);
-              g = norm(k.vel);
-              k.pos.x = h.x + 0.001 * g.x;
-              k.pos.y = h.y + 0.001 * g.y;
-              h = k.pos.x - b.x;
-              g = k.pos.y - b.y;
-              if (0.001 > Math.sqrt(h * h + g * g)) {
-                k.pos.x = b.x;
-                k.pos.y = b.y;
+            else if (this.containsFluid && this.fluids[f.m_userData]) {
+              this.submergeParticle(f.m_userData, m);
+              h = norm(l.vel);
+              l.pos.x = k.x + 0.001 * h.x;
+              l.pos.y = k.y + 0.001 * h.y;
+              k = l.pos.x - b.x;
+              h = l.pos.y - b.y;
+              if (0.001 > Math.sqrt(k * k + h * h)) {
+                l.pos.x = b.x;
+                l.pos.y = b.y;
                 break;
               }
               continue;
             }
-            0 < l.ref.rico
+            0 < m.ref.rico
               ? Math.PI -
                   Math.abs(
-                    Math.atan2(g.y * k.vel.x - g.x * k.vel.y, g.x * k.vel.x + g.y * k.vel.y)
+                    Math.atan2(h.y * l.vel.x - h.x * l.vel.y, h.x * l.vel.x + h.y * l.vel.y)
                   ) >=
-                (Math.PI / 180) * l.ref.ricoAngle
-                ? ((d = norm(g)),
-                  (m = 2 * dp(k.vel, d)),
-                  (k.pos.x = h.x + 0.01 * d.x),
-                  (k.pos.y = h.y + 0.01 * d.y),
-                  (k.vel.x = (k.vel.x - m * d.x) * l.ref.re),
-                  (k.vel.y = (k.vel.y - m * d.y) * l.ref.re),
-                  (d = Math.min(Math.max(1 - a * k.ld, 0), 1)),
-                  (k.vel.x *= d),
-                  (k.vel.y = (k.vel.y + 20 * k.gs * a) * d),
+                (Math.PI / 180) * m.ref.ricoAngle
+                ? ((d = norm(h)),
+                  (e = 2 * dp(l.vel, d)),
+                  (l.pos.x = k.x + 0.01 * d.x),
+                  (l.pos.y = k.y + 0.01 * d.y),
+                  (l.vel.x = (l.vel.x - e * d.x) * m.ref.re),
+                  (l.vel.y = (l.vel.y - e * d.y) * m.ref.re),
+                  (d = Math.min(Math.max(1 - a * l.ld, 0), 1)),
+                  (l.vel.x *= d),
+                  (l.vel.y = (l.vel.y + 20 * l.gs * a) * d),
                   (d = {
                     t: PhysicsWorker.Contact.CON,
-                    a: l,
-                    b: this.entities[e.m_userData],
-                    p: h,
-                    normal: g,
-                    pen: l.ref.pen,
+                    a: m,
+                    b: this.entities[f.m_userData],
+                    p: k,
+                    normal: h,
+                    pen: m.ref.pen,
                     local: !1,
                   }),
-                  0 >= l.ref.rico-- && (d.rem = !0))
-                : ((k.pos.x = h.x),
-                  (k.pos.y = h.y),
-                  (l.ref.rico = 0),
+                  0 >= m.ref.rico-- && (d.rem = !0))
+                : ((l.pos.x = k.x),
+                  (l.pos.y = k.y),
+                  (m.ref.rico = 0),
                   (d = {
                     t: PhysicsWorker.Contact.CON,
-                    a: l,
-                    b: this.entities[e.m_userData],
-                    p: h,
-                    normal: g,
+                    a: m,
+                    b: this.entities[f.m_userData],
+                    p: k,
+                    normal: h,
                     pen: 0,
                     rem: !0,
                     local: !1,
                   }))
-              : ((k.pos.x = h.x),
-                (k.pos.y = h.y),
+              : ((l.pos.x = k.x),
+                (l.pos.y = k.y),
                 (d = {
                   t: PhysicsWorker.Contact.CON,
-                  a: l,
-                  b: this.entities[e.m_userData],
-                  p: h,
-                  normal: g,
+                  a: m,
+                  b: this.entities[f.m_userData],
+                  p: k,
+                  normal: h,
                   pen: 0,
                   rem: !0,
                   local: !1,
@@ -69245,57 +69343,57 @@ class PhysicsWorker {
           }
         } else {
           c ||
-            ((k.pos.x = b.x),
-            (k.pos.y = b.y),
-            (d = Math.min(Math.max(1 - a * k.ld, 0), 1)),
-            (k.vel.x *= d),
-            (k.vel.y = (k.vel.y + 20 * k.gs * a) * d));
+            ((l.pos.x = b.x),
+            (l.pos.y = b.y),
+            (d = Math.min(Math.max(1 - a * l.ld, 0), 1)),
+            (l.vel.x *= d),
+            (l.vel.y = (l.vel.y + 20 * l.gs * a) * d));
           break;
         }
       } while (1);
-      if (l.ref.sub)
+      if (m.ref.sub)
         if (
-          ((l.body.vel.y -= this.fluids[l.fluids[0]].density * (l.ref.bu ?? 0.5) * 100 * a),
-          1 === l.fluids.length)
+          ((m.body.vel.y -= this.fluids[m.fluids[0]].density * (m.ref.bu ?? 0.5) * 100 * a),
+          1 === m.fluids.length)
         )
-          this.fluids[l.fluids[0]].body.m_fixtureList.TestPoint(l.body.pos) ||
-            this.surfaceParticle(l.fluids[0], l);
+          this.fluids[m.fluids[0]].body.m_fixtureList.TestPoint(m.body.pos) ||
+            this.surfaceParticle(m.fluids[0], m);
         else
-          for (d = 0; d < l.fluids.length; d++)
-            (h = l.fluids[d]),
-              this.fluids[h].body.m_fixtureList.TestPoint(l.body.pos) ||
-                (this.surfaceParticle(h, l), d--);
+          for (d = 0; d < m.fluids.length; d++)
+            (e = m.fluids[d]),
+              this.fluids[e].body.m_fixtureList.TestPoint(m.body.pos) ||
+                (this.surfaceParticle(e, m), d--);
       c ||
         ((c = {
           id: n,
-          x: k.pos.x * PC.PM_RATIO,
-          y: k.pos.y * PC.PM_RATIO,
+          x: l.pos.x * PC.PM_RATIO,
+          y: l.pos.y * PC.PM_RATIO,
           j: 1,
-          vx: k.vel.x,
-          vy: k.vel.y,
-          ttl: l.ref.ttl,
+          vx: l.vel.x,
+          vy: l.vel.y,
+          ttl: m.ref.ttl,
           r: 0,
         }),
         this.solved[n] && (c.c = this.solved[n]),
         this.onMessage({ type: PhysicsMessage.UPDATE_OBJECT, data: c }));
-      l.ref.sub && !l.ref.wasSubmerged
-        ? ((l.body._gs = l.body.gs),
-          (l.body._ld = l.body.ld),
-          void 0 === l.ref.bu && (l.body.gs = 0.1 * l.body._gs),
-          (l.body.ld = void 0 === l.ref.wd ? 2 * body._ld : l.ref.wd),
+      m.ref.sub && !m.ref.wasSubmerged
+        ? ((m.body._gs = m.body.gs),
+          (m.body._ld = m.body.ld),
+          void 0 === m.ref.bu && (m.body.gs = 0.1 * m.body._gs),
+          (m.body.ld = void 0 === m.ref.wd ? 2 * body._ld : m.ref.wd),
           this.onMessage({
             type: PhysicsMessage.SUBMERGE,
             data: {
               id: n,
-              ss: void 0 !== l.ref.ttl && 0 < l.ref.ttl && l.ref.ttl > l.ref._ttl - 1,
+              ss: void 0 !== m.ref.ttl && 0 < m.ref.ttl && m.ref.ttl > m.ref._ttl - 1,
             },
           }))
-        : !l.ref.sub &&
-          l.ref.wasSubmerged &&
-          ((l.body.gs = l.body._gs),
-          (l.body.ld = l.body._ld),
+        : !m.ref.sub &&
+          m.ref.wasSubmerged &&
+          ((m.body.gs = m.body._gs),
+          (m.body.ld = m.body._ld),
           this.onMessage({ type: PhysicsMessage.SURFACE, data: { id: n } }));
-      0 > l.ref.ttl && this.remove(n);
+      0 > m.ref.ttl && this.remove(n);
     }
     b2Vec2.Free(b);
     this.particlesAdded = {};
@@ -69522,8 +69620,8 @@ class PhysicsWorker {
     if (a.IsTouching()) {
       var b = a.m_fixtureA,
         c = a.m_fixtureB,
-        d = b.m_filter.categoryBits & EntityCategory.BULLET,
-        e = c.m_filter.categoryBits & EntityCategory.BULLET;
+        d = b.m_filter.categoryBits & (EntityCategory.BULLET | EntityCategory.PLASMA),
+        e = c.m_filter.categoryBits & (EntityCategory.BULLET | EntityCategory.PLASMA);
       null === b.m_body._parent && e
         ? ((d = c.m_body),
           (c = d.m_linearVelocity),
@@ -69593,25 +69691,25 @@ class PhysicsWorker {
     let g;
     if (c) {
       var h = a.body.GetUserData(),
-        m = {};
+        k = {};
       const r =
         AudioManager.CamDistance({ x: d.x * PC.PM_RATIO, y: d.y * PC.PM_RATIO }) <
         0.75 * App.ClientWidth;
       for (let q in a.animate) {
         if ("_" === q) continue;
-        a.animating[q] = m[q] = !0;
+        a.animating[q] = k[q] = !0;
         var n = c[q];
-        var l = n.offsets.length;
+        var m = n.offsets.length;
         n[h] || (n[h] = { frame: 0, delay: 0 });
         let t = n[h].frame;
-        e += n.offsets[t % l].x;
-        f += n.offsets[t % l].y;
+        e += n.offsets[t % m].x;
+        f += n.offsets[t % m].y;
         if (n[h].delay === n.frequency) {
           let u = n.timeline.length;
           for (; 0 < u--; )
             (g = n.timeline[u]),
-              (l = b[g.joint]),
-              l.SetMotorSpeed(ShortAngle(l.GetJointAngle(), g.frames[t]) * n.motorSpeed);
+              (m = b[g.joint]),
+              m.SetMotorSpeed(ShortAngle(m.GetJointAngle(), g.frames[t]) * n.motorSpeed);
           App.HasFocus &&
             r &&
             n.soundFx &&
@@ -69623,7 +69721,7 @@ class PhysicsWorker {
           n[h].frame = t === n.frames - 1 ? (n.frameRepeat ? 0 : t) : t + 1;
         } else n[h].delay++;
       }
-      for (let q in a.animating) m[q] || (delete c[q][h], delete a.animating[q]);
+      for (let q in a.animating) k[q] || (delete c[q][h], delete a.animating[q]);
     }
     n = a.body.m_linearVelocity;
     c = a.body.GetAngle();
@@ -69646,26 +69744,26 @@ class PhysicsWorker {
       : void 0 !== a.animate[Animation.PRONE_RIGHT] &&
         ((a.prone = !0), (a.proneInRight = 14), (a.proneAngle = 0));
     if (a.prone) {
-      var k = a.facing - (c - Math.PI05 - a.proneAngle);
+      var l = a.facing - (c - Math.PI05 - a.proneAngle);
       n = !1;
-      k <= Math.PI05 && k >= -Math.PI05 && (n = !0);
-      k = (n ? k - Math.PI : k) + 0.35 * Math.PI;
+      l <= Math.PI05 && l >= -Math.PI05 && (n = !0);
+      l = (n ? l - Math.PI : l) + 0.35 * Math.PI;
       c += Math.PI;
       var p;
       void 0 !== a.animate[Animation.PRONE_LEFT]
-        ? (p = k + a.proneAngle - 2 * Math.PI)
-        : void 0 !== a.animate[Animation.PRONE_RIGHT] && (p = k + a.proneAngle - 0.75 * Math.PI);
+        ? (p = l + a.proneAngle - 2 * Math.PI)
+        : void 0 !== a.animate[Animation.PRONE_RIGHT] && (p = l + a.proneAngle - 0.75 * Math.PI);
       h = Math.abs(1.3 * b.scale);
-      m = Math.abs(0.7 * b.scale);
+      k = Math.abs(0.7 * b.scale);
       0 < a.proneInLeft
         ? (a.proneInLeft--,
           (a.proneAngle -= (0.45 * Math.PI) / 14),
-          (p = k + a.proneAngle - 2.2 * Math.PI),
+          (p = l + a.proneAngle - 2.2 * Math.PI),
           a.body.SetAngle(Math.PI05 + a.proneAngle, !1))
         : 0 < a.proneInRight
         ? (a.proneInRight--,
           (a.proneAngle += (0.45 * Math.PI) / 14),
-          (p = k + a.proneAngle - 0.55 * Math.PI),
+          (p = l + a.proneAngle - 0.55 * Math.PI),
           a.body.SetAngle(Math.PI05 + a.proneAngle, !1))
         : ((a.proneInLeft = 0),
           (a.proneInRight = 0),
@@ -69673,7 +69771,7 @@ class PhysicsWorker {
             ? (a.proneAngle =
                 void 0 === a.animate[Animation.PRONE_LEFT] ? 0.45 * Math.PI : 0.45 * -Math.PI)
             : (a.body.SetPositionAndAngle(d, Math.PI05 + a.proneAngle, !1),
-              (p = n ? k + a.proneAngle - 2.2 * Math.PI : k + a.proneAngle - 0.55 * Math.PI)));
+              (p = n ? l + a.proneAngle - 2.2 * Math.PI : l + a.proneAngle - 0.55 * Math.PI)));
       void 0 !== p && b.head.SetAngle(p, !1);
       b.torsoupper.SetPositionAndAngle(
         { x: h * Math.cos(c) + d.x + e, y: h * Math.sin(c) + d.y + f },
@@ -69681,7 +69779,7 @@ class PhysicsWorker {
         !1
       );
       b.torsolower.SetPositionAndAngle(
-        { x: m * Math.cos(c) + d.x + e, y: m * Math.sin(c) + d.y + f },
+        { x: k * Math.cos(c) + d.x + e, y: k * Math.sin(c) + d.y + f },
         c - Math.PI05 + 0.4 * a.proneAngle,
         !1
       );
@@ -69702,17 +69800,17 @@ class PhysicsWorker {
                 : a.flipAngle > -(2 * Math.PI - Math.PI05)
             )
               ? ((a.flipAngle += 0.18 * a.flipDir),
-                (k = a.flipAngle + 0.5 * Math.PI),
-                b.armrightupper.SetAngle(k, !1),
-                b.armleftupper.SetAngle(k, !1),
-                b.legrightupper.SetAngle(k, !1),
-                b.legleftupper.SetAngle(k, !1),
+                (l = a.flipAngle + 0.5 * Math.PI),
+                b.armrightupper.SetAngle(l, !1),
+                b.armleftupper.SetAngle(l, !1),
+                b.legrightupper.SetAngle(l, !1),
+                b.legleftupper.SetAngle(l, !1),
                 b.legrightlower.SetAngle(
-                  k + 2.5 * Math.sin(0.5 * (a.flipAngle - Math.PI05)) * c,
+                  l + 2.5 * Math.sin(0.5 * (a.flipAngle - Math.PI05)) * c,
                   !1
                 ),
                 b.legleftlower.SetAngle(
-                  k + 1.5 * Math.sin(0.5 * (a.flipAngle - Math.PI05)) * c,
+                  l + 1.5 * Math.sin(0.5 * (a.flipAngle - Math.PI05)) * c,
                   !1
                 ),
                 b.head.SetAngle(
@@ -69720,7 +69818,7 @@ class PhysicsWorker {
                   !1
                 ),
                 a.body.SetAngle(a.flipAngle, !1),
-                (k = a.flipAngle + Math.PI05))
+                (l = a.flipAngle + Math.PI05))
               : ((a.flipping = !1), (a.flipAngle = Math.PI05), a.body.SetAngle(Math.PI05, !1)))
           : (void 0 !== a.animate[Animation.ROLL_LEFT]
               ? ((a.flipping = !0),
@@ -69732,14 +69830,14 @@ class PhysicsWorker {
                 (a.flipDir = 1),
                 (a.flipFacingLeft = h),
                 (a.flipAngle = Math.PI05)),
-            (k = p + 0.8 * (n + Math.PI > Math.PI05 ? n - Math.PI : n + Math.PI) - Math.PI05),
+            (l = p + 0.8 * (n + Math.PI > Math.PI05 ? n - Math.PI : n + Math.PI) - Math.PI05),
             b.head.SetAngle(n, !1)),
         (a = Math.abs(1.3 * b.scale)),
         (c = Math.abs(0.7 * b.scale)),
-        void 0 !== k
+        void 0 !== l
           ? b.torsoupper.SetPositionAndAngle(
               { x: a * Math.cos(p) + d.x + e, y: a * Math.sin(p) + d.y + f },
-              k,
+              l,
               !1
             )
           : b.torsoupper.SetPosition(
@@ -69852,7 +69950,8 @@ RaycastBulletCallback.Passable =
   EntityCategory.AGENT |
   EntityCategory.ENTITY |
   EntityCategory.PARTICLE |
-  EntityCategory.ITEM_BARRIER;
+  EntityCategory.ITEM_BARRIER |
+  EntityCategory.PLASMA;
 PhysicsWorker.ExplosionQueryIgnore =
   EntityCategory.OBJECTIVE |
   EntityCategory.ZONE |
@@ -70528,8 +70627,9 @@ class Dropdown extends PIXI.Container {
       (this.icon.x = this.selected.x),
       (this.icon.y = this.selected.y - 2),
       this.addChild(this.icon));
-    this.selectedIcon.texture = null;
-    this.displaySelectedIcon && b.iconSprite && (this.selectedIcon.texture = b.iconSprite.texture);
+    this.displaySelectedIcon &&
+      ((this.selectedIcon.texture = null),
+      b.iconSprite && (this.selectedIcon.texture = b.iconSprite.texture));
     this.selected.text = c;
     this.selectedId = a;
     this.collapse();
@@ -70561,21 +70661,21 @@ class Dropdown extends PIXI.Container {
       n.stopPropagation();
       this.onItemSelected(b);
     });
-    const m = new PIXI.Graphics();
-    m.interactive = !0;
-    m.beginFill(6710886, 1);
-    m.drawRect(-6, -1, this.dropWidth - 4, 28);
-    m.endFill();
-    m.alpha = 0.4;
-    m.on("mouseover", function () {
-      m.alpha = 0.8;
+    const k = new PIXI.Graphics();
+    k.interactive = !0;
+    k.beginFill(6710886, 1);
+    k.drawRect(-6, -1, this.dropWidth - 4, 28);
+    k.endFill();
+    k.alpha = 0.4;
+    k.on("mouseover", function () {
+      k.alpha = 0.8;
       AudioEffects.ButtonHover.audio.play();
     });
-    m.on("mouseout", function () {
-      m.alpha = 0.4;
+    k.on("mouseout", function () {
+      k.alpha = 0.4;
     });
     g.title = a;
-    g.addChild(m);
+    g.addChild(k);
     g.addChild(h);
     a = new PIXI.Text(c, {
       fontSize: 16,
@@ -71273,13 +71373,13 @@ Table.ROW_SELECTED = "rowSelected";
     }
     return function (f, g, h) {
       h = e[h.toLowerCase()];
-      let m = new c.Graphics();
-      h.fill && m.beginFill(h.fill);
-      h.stroke && m.lineStyle(h.stroke.width || 1, h.stroke.color || 0, h.stroke.alpha || 1);
-      h.rounded ? m.drawRoundedRect(0, 0, f, g, h.rounded) : m.drawRect(0, 0, f, g);
-      m.endFill();
-      m.closePath();
-      return m;
+      let k = new c.Graphics();
+      h.fill && k.beginFill(h.fill);
+      h.stroke && k.lineStyle(h.stroke.width || 1, h.stroke.color || 0, h.stroke.alpha || 1);
+      h.rounded ? k.drawRoundedRect(0, 0, f, g, h.rounded) : k.drawRect(0, 0, f, g);
+      k.endFill();
+      k.closePath();
+      return k;
     };
   }
   const c = a.PIXI;
