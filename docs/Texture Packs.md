@@ -29,8 +29,11 @@ You can then right click your folder you created and create a new file called `_
 You can now drag and drop your images into your folder! Main texture images should start with `c_` and terrain start with `s_`, this makes sure they will load properly.
 
 When you're done, click the "Source Control" button on the left.
+![image](https://user-images.githubusercontent.com/50887230/191046784-bd748d18-43ce-4fd1-b610-533c8223fe8a.png)
 
 Click the + by Changes to add your changes.
+![image](https://user-images.githubusercontent.com/50887230/191046607-5740c265-c4ed-4bb0-8272-ee4e1af8945d.png)
 
 Put a short description of what you did (added/updated pack) and click the checkmark at the top.
+![image](https://user-images.githubusercontent.com/50887230/191046681-0f0dcaa1-ead0-4ff4-913f-958a85bfdfbf.png)
 
