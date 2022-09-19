@@ -8,6 +8,8 @@ export default function getScrollbar() {
 
     constructor(public h: number, public start = 0) {
       super();
+      this.scrolling = !1;
+      this.oy = 0;
       this.scrollBar = new PIXI.Graphics();
       this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
       this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
@@ -23,6 +25,7 @@ export default function getScrollbar() {
       this.scrollButton.beginFill(16777215, 0.2);
       this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
       this.scrollButton.endFill();
+      this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
       this.addChild(this.scrollButton);
       this.scrollButton.x = 2;
       this.scrollButton.y = -3 + (this.h - 39) * this.start;
@@ -45,7 +48,7 @@ export default function getScrollbar() {
         this.scrolling = !1;
       });
       this.scrollBar.on("mousemove", (c) => {
-        this.scroll(c.data.global.y);
+        this.scroll(c.data.global.y / App.Scale);
       });
       this.scrollBar.on("pointerup", () => {
         this.scrolling = !1;
@@ -56,13 +59,13 @@ export default function getScrollbar() {
       this.scrollBar.on("pointerdown", (c) => {
         this.scrolling = !0;
         this.oy = c.data.global.y / App.Scale;
-        this.scroll(c.data.global.y);
+        this.scroll(c.data.global.y / App.Scale);
       });
-      this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y));
+      this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y / App.Scale));
       this.wheelListener = (c) => {
-        this.scrolling = true;
+        this.scrolling = !0;
         this.scroll(this.oy + 0.2 * c.data.delta);
-        this.scrolling = false;
+        this.scrolling = !1;
       };
     }
     enableWheel() {
@@ -72,9 +75,8 @@ export default function getScrollbar() {
     disableWheel() {
       UserInput.removeListener(UserInput.WHEEL, this.wheelListener);
     }
-    scroll(a: number) {
+    scroll(a) {
       if (this.scrolling) {
-        a /= App.Scale;
         let b = this.scrollButton.y + (a - this.oy);
         -3 > b ? (b = -3) : b > this.h - 39 && (b = this.h - 39);
         let c = this.h / (this.h - 39);

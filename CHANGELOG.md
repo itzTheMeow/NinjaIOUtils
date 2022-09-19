@@ -1,5 +1,9 @@
 # Changelog
 
+v1.23
+
+- Fixed texture pack scrollbar.
+
 v1.22
 
 - Fixed game freezes.
