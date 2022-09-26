@@ -1,5 +1,9 @@
 # Changelog
 
+v1.24
+
+- Added experimental recorder.
+
 v1.23
 
 - Fixed texture pack scrollbar.

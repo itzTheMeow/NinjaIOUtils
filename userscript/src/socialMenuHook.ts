@@ -131,17 +131,7 @@ export default function hookSocialMenu() {
       this.dlWEBM.x = this.mx;
       this.dlWEBM.y = this.my += this.donedl.height + 8;
       this.dlWEBM.addListener(Button.BUTTON_RELEASED, () => {
-        const blob = new Blob(this.recordedChunks, { type: "video/webm" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `NinjaRecording-${new Date()
-          .toISOString()
-          .split(".")[0]
-          .replace("T", "-")
-          .replace(/:/g, ".")}.webm`;
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
+        this.dlBlob(new Blob(this.recordedChunks, { type: "video/webm" }));
       });
       this.postContainer.addChild(this.dlWEBM);
       this.dlMP4 = new Button("dl_mp4");
@@ -149,6 +139,80 @@ export default function hookSocialMenu() {
       this.dlMP4.scale.x = this.dlMP4.scale.y = 0.7;
       this.dlMP4.x = this.dlWEBM.x + this.dlWEBM.width + 6;
       this.dlMP4.y = this.dlWEBM.y;
+      this.dlMP4.addListener(Button.BUTTON_RELEASED, async () => {
+        try {
+          this.dlMP4.setText("Starting...");
+          const worker = new Worker(
+            URL.createObjectURL(
+              new Blob([await fetch(`${config.api}/ffmpeg.js`).then((r) => r.text())], {
+                type: "application/javascript",
+              })
+            )
+          );
+          worker.onmessage = async (e) => {
+            try {
+              const msg = e.data as {
+                type: "ready" | "done" | "stdout" | "stderr";
+                data: string | { MEMFS: { name: string; data: Uint8Array }[] };
+              };
+              switch (msg.type) {
+                case "ready":
+                  this.dlMP4.setText("Converting...");
+                  console.log(`[ConversionWorker] Worker ready!`);
+                  worker.postMessage({
+                    bypass: true,
+                    type: "run",
+                    arguments: [
+                      "-i",
+                      "video.webm",
+                      "-vf",
+                      "crop=trunc(iw/2)*2:trunc(ih/2)*2",
+                      /*"-c:v",
+                      "h264",
+                      "-c:a",
+                      "aac", // or vorbis
+                      "-b:v",
+                      "6400k", // video bitrate
+                      "-b:a",
+                      "4800k", // audio bitrate
+                      "-strict",
+                      "experimental",*/
+                      "-preset",
+                      "ultrafast",
+                      "vid.mp4",
+                    ],
+                    MEMFS: [
+                      {
+                        name: "video.webm",
+                        data: await new Blob(this.recordedChunks, {
+                          type: "video/webm",
+                        }).arrayBuffer(),
+                      },
+                    ],
+                  });
+                  break;
+                case "stdout":
+                case "stderr":
+                  console.log(`[ConversionWorker.${msg.type}] ${msg.data}`);
+                  if (msg.data == "Conversion failed!") {
+                    this.dlMP4.setText("Error!");
+                  }
+                  break;
+                case "done":
+                  this.dlMP4.setText("Convert to MP4 (slow)");
+                  if (typeof msg.data !== "string" && msg.data.MEMFS) {
+                    this.dlBlob(new Blob([msg.data.MEMFS[0].data], { type: "video/mp4" }));
+                  }
+                  break;
+              }
+            } catch (err) {
+              alert(`Error with conversion: ${err}, ${err.stack}`);
+            }
+          };
+        } catch (err) {
+          alert(`Error creating conversion worker: ${err}, ${err.stack}`);
+        }
+      });
       this.postContainer.addChild(this.dlMP4);
     }
     public updateTitle() {
@@ -189,7 +253,7 @@ export default function hookSocialMenu() {
         this.recorder.onstop = () => this.onRecStop();
         this.recorder.start();
       } catch (err) {
-        alert(`Error starting recording: ${err} ${err.stack}`);
+        alert(`Error starting recording: ${err}, ${err.stack}`);
       }
     }
     public onRecStop() {
@@ -199,8 +263,20 @@ export default function hookSocialMenu() {
 
       this.preContainer.visible = false;
       this.postContainer.visible = true;
+      this.dlMP4.setText("Convert to MP4 (slow)");
+    }
 
-      // ffmpeg -i rec.webm -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2" rec.mp4
+    public dlBlob(blob: Blob) {
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = `NinjaRecording-${new Date()
+        .toISOString()
+        .split(".")[0]
+        .replace("T", "-")
+        .replace(/:/g, ".")}.${blob.type.split("/").pop()}`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
     }
   }
 

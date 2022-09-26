@@ -12,8 +12,11 @@ export function hookTextureLoader() {
     }
     // expected data, must be validated - example data:
     // {"data":["https://ninja.io/assets-dev/combined/combined.png"],"uuid":0,"id":"loadImageBitmap"}
-    newPostMessage(data: { data: [string]; uuid: number; id: "loadImageBitmap" }, ...args: any) {
-      if (SETTINGS.texturePack && !(window as any).SKIP_TEX_LOAD) {
+    newPostMessage(
+      data: { bypass?: boolean; data: [string]; uuid: number; id: "loadImageBitmap" },
+      ...args: any
+    ) {
+      if (SETTINGS.texturePack && !(window as any).SKIP_TEX_LOAD && !data?.bypass) {
         fetch(`${config.api}/packs/${SETTINGS.texturePack}`)
           .then((r) => r.json())
           .then((pack: TexturePack) => {
