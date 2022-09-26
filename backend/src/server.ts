@@ -37,6 +37,9 @@ app.get(
     res.json(onlineUsers.map((u) => u.id));
   }
 );
+app.get("/ffmpeg.js", cors({ origin: "*" }), (req, res) =>
+  res.sendFile(process.cwd() + "/node_modules/ffmpeg.js/ffmpeg-worker-mp4.js")
+);
 initLinkSharer(app);
 initStatTracker(app);
 texturePackHandler(app);

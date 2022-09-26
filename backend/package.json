@@ -14,6 +14,7 @@
     "canvas": "^2.10.1",
     "cors": "^2.8.5",
     "express": "^4.18.1",
+    "ffmpeg.js": "^4.2.9003",
     "socket.io": "^4.5.1",
     "typescript": "^4.7.4"
   },
