@@ -19,6 +19,7 @@ interface Container extends EventDispatcher {
   width: number;
   height: number;
   parent: Container;
+  interactive: boolean;
   anchor: { x: number; y: number };
   scale: { x: number; y: number };
   visible: boolean;
@@ -31,6 +32,7 @@ interface Container extends EventDispatcher {
   removeChild(...child: Container[]): void;
   removeChildren(): void;
   destroy(): void;
+  hitArea?: Rectangle;
 }
 interface Text extends Container {
   new (
@@ -47,6 +49,7 @@ interface Text extends Container {
 }
 declare interface Rectangle {}
 declare interface Graphics extends Container {
+  clear(): void;
   beginFill(arg0: number, arg1: number): void;
   drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
   endFill(): void;
@@ -56,11 +59,13 @@ declare interface Graphics extends Container {
   drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
   hitArea: Rectangle;
 }
+declare interface Sprite extends Container {}
 
 declare var PIXI: {
   Text: Text;
   Container: Container & { new (): Container };
   Graphics: Container & { new (): Graphics };
+  Sprite: Container & { new (name: string): Sprite };
   Rectangle: { new (x: number, y: number, width: number, height: number): Rectangle };
   BitmapText: Container & {
     new (text: string, opts?: Partial<{ fontName: string; fontSize: number }>): Container;
@@ -156,7 +161,7 @@ declare var ProfileMenu: {
   TAB_SETTINGS: string;
 };
 
-interface SocialMenuProto {
+interface SocialMenuProto extends Container {
   maskInvitationList(scrollDist: number): void;
   _maskFriendList(scrollDist: number): void;
   maskFriendList(scrollDist: number): void;
@@ -166,26 +171,30 @@ interface SocialMenuProto {
   onlineFriends: string[];
   friends: FriendItem[];
   container: Container;
+  clanButton: Button;
+  clanChatButton: Button;
+  onClanChatButtonReleased: () => any;
+  dropdownButton: Button;
+  recMenu: Container;
 }
-declare var SocialMenu: Container &
-  SocialMenuProto & {
-    ItemHeight: number;
-    ListHeight: number;
-    listSearch: InputField;
-    listContainer: Container;
-    infoText: Text;
-    inviteScrollRatio: number;
-    invites: (Container & {
-      name: string;
-      tint: number;
-      alpha: number;
-      isRed: boolean;
-      redReady: boolean;
-    })[];
-    prototype: SocialMenuProto;
-    ACCESS_PROFILE: string;
-    SHOW_FRIEND_DROPDOWN: string;
-  };
+declare var SocialMenu: SocialMenuProto & {
+  ItemHeight: number;
+  ListHeight: number;
+  listSearch: InputField;
+  listContainer: Container;
+  infoText: Text;
+  inviteScrollRatio: number;
+  invites: (Container & {
+    name: string;
+    tint: number;
+    alpha: number;
+    isRed: boolean;
+    redReady: boolean;
+  })[];
+  prototype: SocialMenuProto;
+  ACCESS_PROFILE: string;
+  SHOW_FRIEND_DROPDOWN: string;
+};
 
 declare interface FriendItem extends Container {}
 declare class FriendItem {
@@ -199,6 +208,8 @@ declare interface Feature extends Container {
   oy: number;
   w: number;
   h: number;
+  show(): void;
+  hide(): void;
 }
 declare class Feature {
   container: Container;
@@ -364,6 +375,7 @@ declare var app: {
   proceed(): void;
 };
 declare var App: {
+  CombinedTextures: { [key: string]: string };
   NUIScale: number;
   ClientVersion: string;
   DevicePixelRatio: number;

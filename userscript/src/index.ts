@@ -18,6 +18,7 @@ import checkUpdate from "./updateChecker";
 import hookPreloader from "./preloaderHook";
 import hookJoinGameButton from "./joinGameHook";
 import initHashManager from "./hashManager";
+import hookSocialMenu from "./socialMenuHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -101,6 +102,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   hookFullscreen();
   reposItems();
   initMapIdentifier();
+  hookSocialMenu();
   window.addEventListener("resize", () => reposItems());
   window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
   setInterval(() => reposItems(), 100);
