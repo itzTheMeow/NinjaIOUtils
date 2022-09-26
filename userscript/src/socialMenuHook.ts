@@ -12,7 +12,13 @@ export default function hookSocialMenu() {
     public background: Graphics;
     public closeButton: Sprite;
     public startButton: Button;
+    public dlWEBM: Button;
+    public dlMP4: Button;
+    public donedl: Button;
+    public previd: Button;
     public recordingSince = 0;
+    public preContainer: Container;
+    public postContainer: Container;
 
     constructor() {
       super();
@@ -76,16 +82,74 @@ export default function hookSocialMenu() {
       });
       this.container.addChild(this.closeButton);
 
+      this.container.addChild((this.preContainer = new PIXI.Container()));
+      this.container.addChild((this.postContainer = new PIXI.Container()));
+      this.postContainer.visible = false;
+
       this.startButton = new Button("start_rec");
       this.setupStartButton();
       this.startButton.scale.x = this.startButton.scale.y = 0.75;
       this.startButton.x = this.mx + 10;
       this.startButton.y = this.my += this.title.height + 10;
       this.startButton.addListener(Button.BUTTON_RELEASED, () => {
-        if (this.recordingSince) this.onRecStop();
+        if (this.recordingSince && this.recorder) this.recorder.stop();
         else this.onRecStart();
       });
-      this.container.addChild(this.startButton);
+      this.preContainer.addChild(this.startButton);
+
+      this.mx = 18;
+      this.my = this.title.height + 16;
+      this.donedl = new Button("dl_done");
+      this.donedl.setText("Done");
+      this.donedl.setTint(config.Colors.yellow);
+      this.donedl.scale.x = this.donedl.scale.y = 0.7;
+      this.donedl.x = this.mx;
+      this.donedl.y = this.my;
+      this.donedl.addListener(Button.BUTTON_RELEASED, () => {
+        this.preContainer.visible = true;
+        this.postContainer.visible = false;
+        this.stream = this.recorder = this.recordedChunks = null;
+      });
+      this.postContainer.addChild(this.donedl);
+      this.previd = new Button("dl_prev");
+      this.previd.setText("Preview");
+      this.previd.setTint(config.Colors.green);
+      this.previd.scale.x = this.previd.scale.y = 0.7;
+      this.previd.x = this.donedl.x + this.donedl.width + 6;
+      this.previd.y = this.my;
+      this.previd.addListener(Button.BUTTON_RELEASED, () =>
+        window.open(
+          URL.createObjectURL(new Blob(this.recordedChunks, { type: "video/webm" })),
+          "_blank"
+        )
+      );
+      this.postContainer.addChild(this.previd);
+
+      this.dlWEBM = new Button("dl_webm");
+      this.dlWEBM.setText("Download WEBM");
+      this.dlWEBM.scale.x = this.dlWEBM.scale.y = 0.7;
+      this.dlWEBM.x = this.mx;
+      this.dlWEBM.y = this.my += this.donedl.height + 8;
+      this.dlWEBM.addListener(Button.BUTTON_RELEASED, () => {
+        const blob = new Blob(this.recordedChunks, { type: "video/webm" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = `NinjaRecording-${new Date()
+          .toISOString()
+          .split(".")[0]
+          .replace("T", "-")
+          .replace(/:/g, ".")}.webm`;
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+      });
+      this.postContainer.addChild(this.dlWEBM);
+      this.dlMP4 = new Button("dl_mp4");
+      this.dlMP4.setText("Convert to MP4 (slow)");
+      this.dlMP4.scale.x = this.dlMP4.scale.y = 0.7;
+      this.dlMP4.x = this.dlWEBM.x + this.dlWEBM.width + 6;
+      this.dlMP4.y = this.dlWEBM.y;
+      this.postContainer.addChild(this.dlMP4);
     }
     public updateTitle() {
       const timeRec = Math.floor((Date.now() - this.recordingSince) / 1000);
@@ -102,16 +166,41 @@ export default function hookSocialMenu() {
       this.startButton.setTint(config.Colors.green);
     }
 
+    public stream: MediaStream;
+    public recorder: MediaRecorder;
+    public recordedChunks: Blob[];
     public onRecStart() {
       this.recordingSince = Date.now();
       this.updateTitle();
       this.startButton.setText("Stop Recording");
       this.startButton.setTint(config.Colors.red);
+
+      try {
+        this.stream = new MediaStream();
+        const howlStream = Howler.ctx.createMediaStreamDestination();
+        Howler.masterGain.connect(howlStream); // redirect the HowlerJS (audio)
+        const vid = App.Renderer.view.captureStream(); // capture the game screen
+        this.stream.addTrack(howlStream.stream.getTracks()[0]);
+        this.stream.addTrack(vid.getTracks()[0]);
+
+        this.recordedChunks = [];
+        this.recorder = new MediaRecorder(this.stream, { bitsPerSecond: 40000000 });
+        this.recorder.ondataavailable = (e) => this.recordedChunks.push(e.data);
+        this.recorder.onstop = () => this.onRecStop();
+        this.recorder.start();
+      } catch (err) {
+        alert(`Error starting recording: ${err} ${err.stack}`);
+      }
     }
     public onRecStop() {
       this.recordingSince = 0;
       this.updateTitle();
       this.setupStartButton();
+
+      this.preContainer.visible = false;
+      this.postContainer.visible = true;
+
+      // ffmpeg -i rec.webm -vf "crop=trunc(iw/2)*2:trunc(ih/2)*2" rec.mp4
     }
   }
 

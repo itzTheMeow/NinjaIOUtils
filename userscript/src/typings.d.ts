@@ -376,6 +376,9 @@ declare var app: {
 };
 declare var App: {
   CombinedTextures: { [key: string]: string };
+  Renderer: {
+    view: HTMLCanvasElement;
+  };
   NUIScale: number;
   ClientVersion: string;
   DevicePixelRatio: number;
@@ -449,3 +452,4 @@ declare var Game: {
   };
 };
 declare var AudioEffects: any;
+declare var Howler: any;
