@@ -97,7 +97,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   App.Console.log("Successfully injected party menu button.");
   settingsTab();
   App.Console.log("Successfully injected settings tab.");
-  initHashManager();
+  //initHashManager();
   hookFullscreen();
   reposItems();
   initMapIdentifier();
@@ -110,6 +110,15 @@ No support will be provided to logged out users experiencing issues, sorry.`
   setTimeout(() => updateFriendList(), 2000);
   setInterval(() => updateFriendList(), 60000);
   checkUpdate();
+
+  // replace the app scale setter function
+  app.onResize = window.eval(
+    "(function " +
+      app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) +
+      ")"
+  );
+  App.NUIScale = SETTINGS.uiScale;
+  app.onResize();
 
   App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
   tryJoinLink();

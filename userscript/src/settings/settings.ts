@@ -1,6 +1,7 @@
 /* Set up and load the settings. */
 
 interface Settings {
+  uiScale: number;
   showFPS: boolean;
   texturePack: string | null;
   typewriter: boolean;
@@ -11,6 +12,7 @@ const settingsKey = "ninjaioutils";
 
 export const SETTINGS: Settings = {
   ...{
+    uiScale: 0,
     showFPS: true,
     texturePack: null,
     typewriter: false,

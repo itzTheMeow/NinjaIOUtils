@@ -3,6 +3,7 @@
 v1.23
 
 - Fixed texture pack scrollbar.
+- Added UI Scale setting.
 
 v1.22
 

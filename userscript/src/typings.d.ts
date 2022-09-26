@@ -135,6 +135,13 @@ declare var Checkbox: Container & {
   new (id: string, text: string, checked: boolean): Checkbox;
   CHANGE: string;
 };
+interface Slider extends Container {
+  valueLabel: Container;
+}
+declare var Slider: Container & {
+  new (id: string, label: string, value: number, max: number, min?: number): Slider;
+  CHANGE: string;
+};
 
 declare var CustomizationMenu: {
   new (): Container;
@@ -322,6 +329,10 @@ declare var app: {
       controlsTab: Container & {
         forceRefresh: boolean;
       };
+      graphicsTab: Container & {
+        enableAA: Container;
+        uiScaler: Slider;
+      };
       graphicsTabButtonBackground: Container;
       controlsTabButtonBackground: Container;
       soundTabButtonBackground: Container;
@@ -349,10 +360,11 @@ declare var app: {
   onShowMenu(cb: () => any): void;
   stepCallback(delta: number): any;
   _stepCallback(delta: number): any;
-  onResize(): void;
+  onResize(win?: boolean): void;
   proceed(): void;
 };
 declare var App: {
+  NUIScale: number;
   ClientVersion: string;
   DevicePixelRatio: number;
   Console: {

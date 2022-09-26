@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.22
+// @version      1.23
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.22",
+    ver: "1.23",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -101,6 +101,7 @@
   var settingsKey = "ninjaioutils";
   var SETTINGS = {
     ...{
+      uiScale: 0,
       showFPS: true,
       texturePack: null,
       typewriter: false,
@@ -429,6 +430,7 @@
 
   // src/settings/settingsTab.ts
   function settingsTab() {
+    SettingsPanel.OPEN_TAB = "opened_settings_tab";
     if (!app.menu?.settingsPanel)
       return setTimeout(() => settingsTab(), 500);
     function SettingsPanelNew(w, h) {
@@ -495,11 +497,52 @@
       this.addChild(t);
       if (t.onShow)
         t.onShow();
+      app.menu.settingsPanel.selectedTab = name;
+      App.Layer.memberMenu.emit(SettingsPanel.OPEN_TAB, name);
     };
     Object.values(SettingsPanel.Tabs).forEach((d) => {
       const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
       tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
       tab._events.mousedown.shift();
+    });
+    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.uiScaler = new Slider("chatOpacity", "UI scale", SETTINGS.uiScale || 0.4, 2, 0.4));
+    if (!SETTINGS.uiScale)
+      app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
+    app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
+    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 14;
+    app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b) => {
+      b = Math.round(b * 10) / 10;
+      if (b == 0.4) {
+        app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
+        b = 0;
+      }
+      if (b == SETTINGS.uiScale)
+        return;
+      App.NUIScale = SETTINGS.uiScale = b;
+      saveSettings();
+      app.onResize();
+      const conf = document.createElement("div");
+      const confy = document.createElement("button");
+      confy.innerHTML = "OK";
+      confy.onclick = () => conf.remove();
+      conf.appendChild(confy);
+      const confn = document.createElement("button");
+      confn.innerHTML = "Undo";
+      confn.onclick = () => {
+        App.NUIScale = SETTINGS.uiScale = 0;
+        saveSettings();
+        app.onResize();
+        conf.remove();
+      };
+      confn.style.marginLeft = "0.3rem";
+      conf.appendChild(confn);
+      conf.style.position = "absolute";
+      conf.style.top = "50%";
+      conf.style.left = "50%";
+      conf.style.transform = "translate(-50%,-50%)";
+      conf.style.backgroundColor = "rgba(0,0,0,0.8)";
+      conf.style.padding = "0.5rem";
+      document.body.appendChild(conf);
     });
   }
 
@@ -1489,6 +1532,9 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     setTimeout(() => updateFriendList(), 2e3);
     setInterval(() => updateFriendList(), 6e4);
     checkUpdate();
+    app.onResize = window.eval("(function " + app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) + ")");
+    App.NUIScale = SETTINGS.uiScale;
+    app.onResize();
     App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
     tryJoinLink();
   }, 50);
