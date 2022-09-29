@@ -19,6 +19,7 @@ import hookPreloader from "./preloaderHook";
 import hookJoinGameButton from "./joinGameHook";
 import initHashManager from "./hashManager";
 import hookSocialMenu from "./socialMenuHook";
+import { handleKeyDown } from "./hotkeyMessages";
 
 config; // ensures config is at the top of the compiled file
 
@@ -26,7 +27,7 @@ hookTextureLoader();
 /* Fixes pasting in firefox. */
 if (!navigator.clipboard.readText) {
   navigator.clipboard.readText = function () {
-    return new Promise((res) => res(prompt("Paste text now.") || ""));
+    return new Promise(res => res(prompt("Paste text now.") || ""));
   };
 }
 hookPreloader();
@@ -74,7 +75,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   };
   app.showMenu = function () {
     app._showMenu();
-    menuListeners.forEach((l) => l());
+    menuListeners.forEach(l => l());
     reposItems();
   };
 
@@ -107,6 +108,9 @@ No support will be provided to logged out users experiencing issues, sorry.`
   window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
   setInterval(() => reposItems(), 100);
 
+  //Handler for HotkeyMessages
+  document.addEventListener("keydown", handleKeyDown);
+
   updateFriendList();
   hookJoinGameButton();
   setTimeout(() => updateFriendList(), 2000);
@@ -116,7 +120,9 @@ No support will be provided to logged out users experiencing issues, sorry.`
   // replace the app scale setter function
   app.onResize = window.eval(
     "(function " +
-      app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) +
+      app.onResize
+        .toString()
+        .replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) +
       ")"
   );
   App.NUIScale = SETTINGS.uiScale;
