@@ -106,15 +106,25 @@
       texturePack: null,
       typewriter: false,
       apiKey: "",
-      appearOnline: true
+      appearOnline: true,
+      enableHotkeyMessages: true,
+      hotkeyMessages: []
     },
     ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
   };
-  var saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+  var saveSettings = () => {
+    localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+  };
 
   // src/settings/settingsTabGraphics.ts
   function hookGraphicsSettingsTab() {
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox("showFPS", "Show FPS Display", true));
+    app.menu.settingsPanel.graphicsTab.addChild(
+      app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox(
+        "showFPS",
+        "Show FPS Display",
+        true
+      )
+    );
     app.menu.settingsPanel.graphicsTab.fpsDisplay.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
     app.menu.settingsPanel.graphicsTab.fpsDisplay.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 14;
     app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function(b) {
@@ -124,7 +134,15 @@
         showFPS();
     });
     app.menu.settingsPanel.graphicsTab.fpsDisplay.setChecked(SETTINGS.showFPS);
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.uiScaler = new Slider("chatOpacity", "UI scale", SETTINGS.uiScale || 0.4, 2, 0.4));
+    app.menu.settingsPanel.graphicsTab.addChild(
+      app.menu.settingsPanel.graphicsTab.uiScaler = new Slider(
+        "chatOpacity",
+        "UI scale",
+        SETTINGS.uiScale || 0.4,
+        2,
+        0.4
+      )
+    );
     if (!SETTINGS.uiScale)
       app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
     app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
@@ -167,7 +185,13 @@
 
   // src/settings/settingsTabSound.ts
   function hookSoundSettingsTab() {
-    app.menu.settingsPanel.soundTab.addChild(app.menu.settingsPanel.soundTab.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true));
+    app.menu.settingsPanel.soundTab.addChild(
+      app.menu.settingsPanel.soundTab.typewriter = new Checkbox(
+        "typewriter",
+        "Enable Typing Noise",
+        true
+      )
+    );
     app.menu.settingsPanel.soundTab.typewriter.x = app.menu.settingsPanel.soundTab.volumeSlider.x;
     app.menu.settingsPanel.soundTab.typewriter.y = app.menu.settingsPanel.soundTab.volumeSlider.y + app.menu.settingsPanel.soundTab.volumeSlider.height + 14;
     app.menu.settingsPanel.soundTab.typewriter.on(Checkbox.CHANGE, function(b) {
@@ -323,13 +347,16 @@
           const packs = this.packList || (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r.json()));
           packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
             const hasPack = SETTINGS.texturePack == pak.id;
-            const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-              fontName: "Arial",
-              fontSize: 16,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
-            });
+            const packName = new PIXI.Text(
+              `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
+              {
+                fontName: "Arial",
+                fontSize: 16,
+                fill: config_default.Colors.white,
+                strokeThickness: 2,
+                lineJoin: "round"
+              }
+            );
             packName.x = this.marginLeft;
             packName.y = this.off += 28;
             this.hadPacks.push(this.addChild(packName));
@@ -338,13 +365,16 @@
               flags.push("textures");
             if (pak.hasSeamless)
               flags.push("terrain");
-            const packDescription = new PIXI.Text(`${pak.description || "No Description."} (${flags.join(", ")})`, {
-              fontName: "Arial",
-              fontSize: 14,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
-            });
+            const packDescription = new PIXI.Text(
+              `${pak.description || "No Description."} (${flags.join(", ")})`,
+              {
+                fontName: "Arial",
+                fontSize: 14,
+                fill: config_default.Colors.white,
+                strokeThickness: 2,
+                lineJoin: "round"
+              }
+            );
             packDescription.x = this.marginLeft;
             packDescription.y = this.off += packName.height + 2;
             this.hadPacks.push(this.addChild(packDescription));
@@ -368,7 +398,9 @@
     TexTab.prototype.onShow = function() {
       if (!this.scroller) {
         const off = this.parent.texTabButton.height + 32;
-        this.scroller = new (getScrollbar())(this.parent.height - off - 12 - this.parent.applyButton.height);
+        this.scroller = new (getScrollbar())(
+          this.parent.height - off - 12 - this.parent.applyButton.height
+        );
         this.scroller.x = this.parent.width - this.scroller.width * 1.75;
         this.scroller.y = off;
         this.scroller.on(getScrollbar().SCROLL, (prog) => {
@@ -383,6 +415,249 @@
       this.scroller.disableWheel();
     };
     return TexTab;
+  }
+
+  // src/hotkeyMessages.ts
+  var isRateLimited = false;
+  var registeredHotkeyMessages = new Map(SETTINGS.hotkeyMessages);
+  async function handleKeyDown(e) {
+    if (e.repeat)
+      return;
+    const isAltPressed = UserInput.pressed[18];
+    const message = registeredHotkeyMessages.get(e.key);
+    if (message && isAltPressed && SETTINGS.enableHotkeyMessages)
+      sendChatMessage(message);
+  }
+  async function sendChatMessage(message) {
+    if (!app.client.socket || isRateLimited)
+      return;
+    const binaryChatMessage = Client.compress({
+      t: config_default.PacketTypeMap.chatSend,
+      msg: message
+    });
+    app.client.socket.send(binaryChatMessage);
+    isRateLimited = true;
+    setTimeout(() => isRateLimited = false, 1e3 * 1.4);
+  }
+
+  // src/settings/settingsTabHotkeyMsgs.ts
+  function getHotkeyMsgsTab() {
+    class HotkeyMessagesTab extends PIXI.Container {
+      constructor() {
+        super();
+        const tab = this;
+        EventDispatcher.call(this);
+        this.marginLeft = 40;
+        this.marginTop = 52;
+        this.off = this.marginTop + 6;
+        this.hkmTitle = new PIXI.Text("Hotkey Messages", {
+          fontName: "Arial",
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.hkmTitle.x = this.marginLeft - 5;
+        this.hkmTitle.y = this.off;
+        this.addChild(this.hkmTitle);
+        this.hkmHint = new PIXI.Text(
+          "(Use fullscreen to avoid conflics with browser hotkeys)",
+          {
+            fontName: "Arial",
+            fontSize: 14,
+            fill: config_default.Colors.white,
+            strokeThickness: 2,
+            lineJoin: "round"
+          }
+        );
+        this.hkmHint.x = this.hkmTitle.x + this.hkmTitle.width + 3;
+        this.hkmHint.y = this.off + 2;
+        this.addChild(this.hkmHint);
+        this.enableHKM = new Checkbox(
+          "enableHKM",
+          "Enable Hotkey Messages",
+          true
+        );
+        this.enableHKM.x = this.marginLeft;
+        this.enableHKM.y = this.off += 34;
+        this.enableHKM.on(Checkbox.CHANGE, function(b) {
+          SETTINGS.enableHotkeyMessages = b;
+          saveSettings();
+        });
+        this.addChild(this.enableHKM);
+        this.enableHKM.setChecked(SETTINGS.enableHotkeyMessages);
+        this.aLabel = new PIXI.Text("ALT + A", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.aLabel.x = this.marginLeft;
+        this.aLabel.y = this.off += 55;
+        this.addChild(this.aLabel);
+        this.aHotkey = new InputField("a_hotkey", false, 24);
+        this.aHotkey.setDimensions(370, 35);
+        this.aHotkey.forceLowerCase = false;
+        this.aHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("a"))
+          this.aHotkey.setText(registeredHotkeyMessages.get("a"));
+        this.aHotkey.x = this.aLabel.width + 60;
+        this.aHotkey.y = this.off - 6;
+        this.aHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.aHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("a", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.aHotkey);
+        this.sLabel = new PIXI.Text("ALT + S", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.sLabel.x = this.marginLeft;
+        this.sLabel.y = this.off += 55;
+        this.addChild(this.sLabel);
+        this.sHotkey = new InputField("s_hotkey", false, 24);
+        this.sHotkey.setDimensions(370, 35);
+        this.sHotkey.forceLowerCase = false;
+        this.sHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("s"))
+          this.sHotkey.setText(registeredHotkeyMessages.get("s"));
+        this.sHotkey.x = this.aLabel.width + 60;
+        this.sHotkey.y = this.off - 6;
+        this.sHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.sHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("s", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.sHotkey);
+        this.dLabel = new PIXI.Text("ALT + D", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.dLabel.x = this.marginLeft;
+        this.dLabel.y = this.off += 55;
+        this.addChild(this.dLabel);
+        this.dHotkey = new InputField("d_hotkey", false, 24);
+        this.dHotkey.setDimensions(370, 35);
+        this.dHotkey.forceLowerCase = false;
+        this.dHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("d"))
+          this.dHotkey.setText(registeredHotkeyMessages.get("d"));
+        this.dHotkey.x = this.aLabel.width + 60;
+        this.dHotkey.y = this.off - 6;
+        this.dHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.dHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("d", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.dHotkey);
+        this.qLabel = new PIXI.Text("ALT + Q", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.qLabel.x = this.marginLeft;
+        this.qLabel.y = this.off += 55;
+        this.addChild(this.qLabel);
+        this.qHotkey = new InputField("q_hotkey", false, 24);
+        this.qHotkey.setDimensions(370, 35);
+        this.qHotkey.forceLowerCase = false;
+        this.qHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("q"))
+          this.qHotkey.setText(registeredHotkeyMessages.get("q"));
+        this.qHotkey.x = this.aLabel.width + 60;
+        this.qHotkey.y = this.off - 6;
+        this.qHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.qHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("q", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.qHotkey);
+        this.wLabel = new PIXI.Text("ALT + W", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.wLabel.x = this.marginLeft;
+        this.wLabel.y = this.off += 55;
+        this.addChild(this.wLabel);
+        this.wHotkey = new InputField("w_hotkey", false, 24);
+        this.wHotkey.setDimensions(370, 35);
+        this.wHotkey.forceLowerCase = false;
+        this.wHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("w"))
+          this.wHotkey.setText(registeredHotkeyMessages.get("w"));
+        this.wHotkey.x = this.wLabel.width + 60;
+        this.wHotkey.y = this.off - 6;
+        this.wHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.wHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("w", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.wHotkey);
+        this.eLabel = new PIXI.Text("ALT + E", {
+          fontName: "Arial",
+          fontSize: 16,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.eLabel.x = this.marginLeft;
+        this.eLabel.y = this.off += 55;
+        this.addChild(this.eLabel);
+        this.eHotkey = new InputField("e_hotkey", false, 24);
+        this.eHotkey.setDimensions(370, 35);
+        this.eHotkey.forceLowerCase = false;
+        this.eHotkey.setMaxChars(40);
+        if (registeredHotkeyMessages.get("e"))
+          this.eHotkey.setText(registeredHotkeyMessages.get("e"));
+        this.eHotkey.x = this.aLabel.width + 60;
+        this.eHotkey.y = this.off - 6;
+        this.eHotkey.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+        );
+        this.eHotkey.addListener(InputField.CHANGE, function(d) {
+          const message = d.data.value || "";
+          registeredHotkeyMessages.set("e", message);
+          SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+          saveSettings();
+        });
+        this.addChild(this.eHotkey);
+      }
+    }
+    return HotkeyMessagesTab;
   }
 
   // src/settings/settingsTab.ts
@@ -415,8 +690,14 @@
         pan[`${name}ButtonBackground`].x = x;
         pan[`${name}ButtonBackground`].y = 12;
         pan[`${name}ButtonBackground`].interactive = true;
-        pan[`${name}ButtonBackground`].on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
-        pan[`${name}ButtonBackground`].on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
+        pan[`${name}ButtonBackground`].on(
+          "touchstart",
+          pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL)
+        );
+        pan[`${name}ButtonBackground`].on(
+          "mousedown",
+          pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL)
+        );
         pan[`${name}ButtonBackground`].on("mouseover", function() {
           pan[`${name}ButtonBackground`].tint = 11184810;
         });
@@ -426,9 +707,11 @@
         pan.addChild(pan[`${name}ButtonBackground`]);
       }
       newTab("Texture Pack", "tex", 302, getTexTab());
+      newTab("Messages", "hkm", 418, getHotkeyMsgsTab());
       return pan;
     }
     SettingsPanel.Tabs.TEX = "tex";
+    SettingsPanel.Tabs.HKM = "hkm";
     const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
     app.menu.settingsPanel.destroy();
     app.menu.settingsPanel = SettingsPanelNew(660, 524);
@@ -457,7 +740,10 @@
     };
     Object.values(SettingsPanel.Tabs).forEach((d) => {
       const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
-      tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
+      tab.on(
+        "mousedown",
+        app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d)
+      );
       tab._events.mousedown.shift();
     });
     hookSoundSettingsTab();
@@ -481,7 +767,16 @@
     APIClient.realPostCreateGame = APIClient.postCreateGame;
     APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
       setHash(serverID, serverName, serverPass);
-      return APIClient.realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
+      return APIClient.realPostCreateGame(
+        serverID,
+        settings,
+        mode,
+        time,
+        serverName,
+        serverPass,
+        customData,
+        auth
+      );
     };
   }
   function tryJoinLink(args) {
@@ -602,7 +897,9 @@ ${name}`);
         this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
         this.listSearch.forceLowerCase = false;
         this.listSearch.setMaxChars(128);
-        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ ");
+        this.listSearch.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ "
+        );
         this.listSearch.x = pad;
         this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
         this.listSearch.setText(pl);
@@ -678,7 +975,9 @@ ${name}`);
       this.realInitGameMode(data);
       this.game.on(Game.MATCH_START, async function() {
         startingLevel.l = 0;
-        startingLevel.l = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+        startingLevel.l = Number(
+          (await APIClient.getUserProfile(app.credential.playerid)).experience
+        );
       });
     };
   }
@@ -728,11 +1027,17 @@ ${name}`);
       (async () => {
         const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
         if (xp && startingLevel.l) {
-          const plevel = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1), 160);
+          const plevel = Math.min(
+            Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1),
+            160
+          );
           const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
           const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
           const gain = xp - startingLevel.l;
-          App.Console.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
+          App.Console.log(
+            `You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`,
+            config_default.Colors.green
+          );
           if (level > plevel)
             App.Console.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
         }
@@ -876,7 +1181,10 @@ ${name}`);
         this.closeButton.x = this.background.width - 40;
         this.closeButton.y = this.oy - 6;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
-        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.closeButton.on(
+          ImgButton.CLICK,
+          () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS)
+        );
         this.container.addChild(this.closeButton);
         this.pmTitle.x = 0.5 * this.width - 20;
         this.pmTitle.y = this.oy - 4;
@@ -905,7 +1213,10 @@ ${name}`);
         this.readyButton.setText("Ready");
         this.readyButton.setTint(config_default.Colors.green);
         this.readyButton.scale.x = this.readyButton.scale.y = 0.75;
-        this.readyButton.addListener(Button.BUTTON_RELEASED, () => this.socket.emit("isReady", !this.readyState));
+        this.readyButton.addListener(
+          Button.BUTTON_RELEASED,
+          () => this.socket.emit("isReady", !this.readyState)
+        );
         this.preGameContainer.addChild(this.readyButton);
         this.leaveButton.setText("Leave Party");
         this.leaveButton.setTint(config_default.Colors.red);
@@ -1052,7 +1363,13 @@ ${name}`);
         "guestProfileMenu"
       ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
       App.Layer.features.push(App.Layer.partyMenu);
-      app.menu.partyButton = new MemberMenuButton("Party", config_default.Colors.yellow, 18, "head_alpha", false);
+      app.menu.partyButton = new MemberMenuButton(
+        "Party",
+        config_default.Colors.yellow,
+        18,
+        "head_alpha",
+        false
+      );
       app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function() {
         App.Layer.mainMenuHides.forEach(function(c) {
           return App.Layer.hideFeature(c);
@@ -1140,7 +1457,11 @@ ${name}`);
     };
   }
   async function communicateUser(id, packetID, args) {
-    await APIClient.postFriendMessage(id, [commConfig.prefix, packetID, ...args].join(commConfig.sep), app.credential.id);
+    await APIClient.postFriendMessage(
+      id,
+      [commConfig.prefix, packetID, ...args].join(commConfig.sep),
+      app.credential.id
+    );
     return true;
   }
 
@@ -1158,7 +1479,10 @@ ${name}`);
     if (onlineSocket)
       onlineSocket.disconnect();
     onlineSocket = io(config_default.api);
-    onlineSocket.on("connect", () => onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
+    onlineSocket.on(
+      "connect",
+      () => onlineSocket.emit("init", 0 /* online */, app.credential.playerid)
+    );
     onlineSocket.on("success", () => {
       App.Console.log("Successfully went online!");
     });
@@ -1172,7 +1496,9 @@ ${name}`);
     });
     onlineSocket.on("needsLink", async (requestID) => {
       const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;
-      const msg = messages?.find((m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink);
+      const msg = messages?.find(
+        (m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink
+      );
       if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
         if (!inGame())
           onlineSocket.emit("gotLink", requestID, false);
@@ -1254,7 +1580,10 @@ ${name}`);
         });
         this.on("mousedown", () => this.emit(SocialMenu.ACCESS_PROFILE, this.id));
         this.on("rightdown", () => this.emit(SocialMenu.SHOW_FRIEND_DROPDOWN, this.id));
-        this.beginFill(this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey, 1);
+        this.beginFill(
+          this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey,
+          1
+        );
         this.drawCircle(320, 13, 8);
         this.endFill();
         this.nameLabel = new PIXI.BitmapText(this.name, { fontName: "Open Sans", fontSize: 22 });
@@ -1267,7 +1596,9 @@ ${name}`);
   async function updateFriendList(reload = true) {
     if (App.Layer.socialMenu.mode == "friends") {
       try {
-        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) => res.json());
+        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then(
+          (res) => res.json()
+        );
         App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
       } catch {
         App.Layer.socialMenu.onlineFriends = [];
@@ -1283,7 +1614,10 @@ ${name}`);
       const newest = await fetch(`${config_default.api}/ver`).then((r) => r.text());
       const num = (str) => Number(str.replace(/\./, ""));
       if (num(newest) > num(config_default.ver)) {
-        App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
+        App.Console.log(
+          `Hey! A new version of NinjaIOUtils is available. (${newest})`,
+          config_default.Colors.red
+        );
       }
     } catch {
     }
@@ -1354,7 +1688,9 @@ ${name}`);
       };
       const req = String(Date.now());
       await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
-      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
+      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then(
+        (r) => r.json()
+      ))?.[0];
       if (res == false)
         rej("User not in game.");
       else if (res == true)
@@ -1489,7 +1825,13 @@ ${name}`);
         this.previd.scale.x = this.previd.scale.y = 0.7;
         this.previd.x = this.donedl.x + this.donedl.width + 6;
         this.previd.y = this.my;
-        this.previd.addListener(Button.BUTTON_RELEASED, () => window.open(URL.createObjectURL(new Blob(this.recordedChunks, { type: "video/webm" })), "_blank"));
+        this.previd.addListener(
+          Button.BUTTON_RELEASED,
+          () => window.open(
+            URL.createObjectURL(new Blob(this.recordedChunks, { type: "video/webm" })),
+            "_blank"
+          )
+        );
         this.postContainer.addChild(this.previd);
         this.dlWEBM = new Button("dl_webm");
         this.dlWEBM.setText("Download WEBM");
@@ -1508,9 +1850,13 @@ ${name}`);
         this.dlMP4.addListener(Button.BUTTON_RELEASED, async () => {
           try {
             this.dlMP4.setText("Starting...");
-            const worker = new Worker(URL.createObjectURL(new Blob([await fetch(`${config_default.api}/ffmpeg.js`).then((r) => r.text())], {
-              type: "application/javascript"
-            })));
+            const worker = new Worker(
+              URL.createObjectURL(
+                new Blob([await fetch(`${config_default.api}/ffmpeg.js`).then((r) => r.text())], {
+                  type: "application/javascript"
+                })
+              )
+            );
             worker.onmessage = async (e) => {
               try {
                 const msg = e.data;
@@ -1624,12 +1970,20 @@ ${name}`);
         this.background.drawRoundedRect(0, 0, 110, 64, 4);
         this.background.endFill();
         this.addChild(this.background);
-        const clanChatBtn = new SocialMenuDropdownActionRow("Clan Chat", () => menu.onClanChatButtonReleased.bind(menu)(), config_default.Colors.white);
-        const recordBtn = new SocialMenuDropdownActionRow("Record", () => {
-          menu.addChild(menu.recMenu);
-          menu.recMenu.x = -Math.abs(menu.width - menu.recMenu.width) / 2;
-          menu.recMenu.y = -Math.abs(menu.height - menu.recMenu.height) / 2;
-        }, config_default.Colors.red);
+        const clanChatBtn = new SocialMenuDropdownActionRow(
+          "Clan Chat",
+          () => menu.onClanChatButtonReleased.bind(menu)(),
+          config_default.Colors.white
+        );
+        const recordBtn = new SocialMenuDropdownActionRow(
+          "Record",
+          () => {
+            menu.addChild(menu.recMenu);
+            menu.recMenu.x = -Math.abs(menu.width - menu.recMenu.width) / 2;
+            menu.recMenu.y = -Math.abs(menu.height - menu.recMenu.height) / 2;
+          },
+          config_default.Colors.red
+        );
         clanChatBtn.x = 10;
         clanChatBtn.y = 4;
         recordBtn.x = 10;
@@ -1706,8 +2060,10 @@ ${name}`);
     clearInterval(testing);
     App.Console.log("Loading NinjaIOUtils...");
     if (app.credential.accounttype == "guest")
-      alert(`NinjaIOUtils works best when you are logged in!
-No support will be provided to logged out users experiencing issues, sorry.`);
+      alert(
+        `NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`
+      );
     app._showMenu = app.showMenu;
     const menuListeners = [];
     app.onShowMenu = (cb) => {
@@ -1744,12 +2100,15 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     window.addEventListener("resize", () => reposItems());
     window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
     setInterval(() => reposItems(), 100);
+    document.addEventListener("keydown", handleKeyDown);
     updateFriendList();
     hookJoinGameButton();
     setTimeout(() => updateFriendList(), 2e3);
     setInterval(() => updateFriendList(), 6e4);
     checkUpdate();
-    app.onResize = window.eval("(function " + app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) + ")");
+    app.onResize = window.eval(
+      "(function " + app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`) + ")"
+    );
     App.NUIScale = SETTINGS.uiScale;
     app.onResize();
     App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
