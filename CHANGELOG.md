@@ -1,5 +1,12 @@
 # Changelog
 
+v1.25
+
+- Removed API Key.
+- Removed NinjaIOUtils settings tab.
+- Moved FPS Display setting to Display tab.
+- Moved Typing Noise setting to Sound tab.
+
 v1.24
 
 - Added experimental recorder.

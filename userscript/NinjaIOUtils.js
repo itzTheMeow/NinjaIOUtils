@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.24
+// @version      1.25
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.24",
+    ver: "1.25",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -111,6 +111,71 @@
     ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
   };
   var saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+
+  // src/settings/settingsTabGraphics.ts
+  function hookGraphicsSettingsTab() {
+    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox("showFPS", "Show FPS Display", true));
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 14;
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function(b) {
+      SETTINGS.showFPS = b;
+      saveSettings();
+      if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
+        showFPS();
+    });
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.setChecked(SETTINGS.showFPS);
+    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.uiScaler = new Slider("chatOpacity", "UI scale", SETTINGS.uiScale || 0.4, 2, 0.4));
+    if (!SETTINGS.uiScale)
+      app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
+    app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
+    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.fpsDisplay.y + app.menu.settingsPanel.graphicsTab.fpsDisplay.height + 14;
+    app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b) => {
+      b = Math.round(b * 10) / 10;
+      if (b == 0.4) {
+        app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
+        b = 0;
+      }
+      if (b == SETTINGS.uiScale)
+        return;
+      App.NUIScale = SETTINGS.uiScale = b;
+      saveSettings();
+      app.onResize();
+      const conf = document.createElement("div");
+      const confy = document.createElement("button");
+      confy.innerHTML = "OK";
+      confy.onclick = () => conf.remove();
+      conf.appendChild(confy);
+      const confn = document.createElement("button");
+      confn.innerHTML = "Undo";
+      confn.onclick = () => {
+        App.NUIScale = SETTINGS.uiScale = 0;
+        saveSettings();
+        app.onResize();
+        conf.remove();
+      };
+      confn.style.marginLeft = "0.3rem";
+      conf.appendChild(confn);
+      conf.style.position = "absolute";
+      conf.style.top = "50%";
+      conf.style.left = "50%";
+      conf.style.transform = "translate(-50%,-50%)";
+      conf.style.backgroundColor = "rgba(0,0,0,0.8)";
+      conf.style.padding = "0.5rem";
+      document.body.appendChild(conf);
+    });
+  }
+
+  // src/settings/settingsTabSound.ts
+  function hookSoundSettingsTab() {
+    app.menu.settingsPanel.soundTab.addChild(app.menu.settingsPanel.soundTab.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true));
+    app.menu.settingsPanel.soundTab.typewriter.x = app.menu.settingsPanel.soundTab.volumeSlider.x;
+    app.menu.settingsPanel.soundTab.typewriter.y = app.menu.settingsPanel.soundTab.volumeSlider.y + app.menu.settingsPanel.soundTab.volumeSlider.height + 14;
+    app.menu.settingsPanel.soundTab.typewriter.on(Checkbox.CHANGE, function(b) {
+      SETTINGS.typewriter = b;
+      saveSettings();
+    });
+    app.menu.settingsPanel.soundTab.typewriter.setChecked(SETTINGS.typewriter);
+  }
 
   // src/Scrollbar.ts
   function getScrollbar() {
@@ -320,114 +385,6 @@
     return TexTab;
   }
 
-  // src/settings/settingsTabUtil.ts
-  function getUtilTab() {
-    class UtilTab extends PIXI.Container {
-      constructor() {
-        super();
-        const tab = this;
-        EventDispatcher.call(this);
-        this.marginLeft = 40;
-        this.marginTop = 52;
-        this.off = this.marginTop + 6;
-        this.utilTitle = new PIXI.Text("NinjaIOUtils settings", {
-          fontName: "Arial",
-          fontSize: 18,
-          lineHeight: 18,
-          fill: config_default.Colors.yellow,
-          strokeThickness: 3,
-          lineJoin: "round"
-        });
-        this.utilTitle.x = this.marginLeft - 5;
-        this.utilTitle.y = this.off;
-        this.addChild(this.utilTitle);
-        this.showFPS = new Checkbox("showFPS", "Show FPS Display", true);
-        this.showFPS.x = this.marginLeft;
-        this.showFPS.y = this.off += 34;
-        this.showFPS.on(Checkbox.CHANGE, function(b) {
-          SETTINGS.showFPS = b;
-          saveSettings();
-          if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
-            showFPS();
-        });
-        this.addChild(this.showFPS);
-        this.showFPS.setChecked(SETTINGS.showFPS);
-        this.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true);
-        this.typewriter.x = this.marginLeft;
-        this.typewriter.y = this.off += 34;
-        this.typewriter.on(Checkbox.CHANGE, function(b) {
-          SETTINGS.typewriter = b;
-          saveSettings();
-        });
-        this.addChild(this.typewriter);
-        this.typewriter.setChecked(SETTINGS.typewriter);
-        this.keyTitle = new PIXI.Text("API Key", {
-          fontName: "Arial",
-          fontSize: 16,
-          lineHeight: 18,
-          fill: config_default.Colors.yellow,
-          strokeThickness: 3,
-          lineJoin: "round"
-        });
-        this.keyTitle.x = this.marginLeft - 5;
-        this.keyTitle.y = this.off += 36;
-        this.addChild(this.keyTitle);
-        this.keyHint = new PIXI.Text("The API key for uploading to the stat tracker. See the github for instructions.", {
-          fontName: "Arial",
-          fontSize: 14,
-          fill: config_default.Colors.white,
-          strokeThickness: 2,
-          lineJoin: "round"
-        });
-        this.keyHint.x = this.marginLeft - 5;
-        this.keyHint.y = this.off += 24;
-        this.addChild(this.keyHint);
-        this.keyField = new InputField("key_field", false, 24);
-        this.keyField.setDimensions(370, 35);
-        this.keyField.forceLowerCase = false;
-        this.keyField.setMaxChars(128);
-        if (SETTINGS.apiKey)
-          this.keyField.setText(SETTINGS.apiKey);
-        this.keyField.x = this.marginLeft;
-        this.keyField.y = this.off += 24;
-        this.keyField.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890");
-        this.keyField.addListener(InputField.CHANGE, function(d) {
-          d = d.data.value || "";
-          SETTINGS.apiKey = d;
-          saveSettings();
-        });
-        this.addChild(this.keyField);
-        this.pasteKeyButton = new Button("paste_key");
-        this.pasteKeyButton.selected = true;
-        this.pasteKeyButton.setText("Paste");
-        this.pasteKeyButton.scale.x = this.pasteKeyButton.scale.y = 0.75;
-        this.pasteKeyButton.addListener(Button.BUTTON_RELEASED, function() {
-          navigator.clipboard.readText().then(function(d) {
-            tab.keyField.setText(d);
-            SETTINGS.apiKey = d;
-            saveSettings();
-          });
-        });
-        this.pasteKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width / 4;
-        this.pasteKeyButton.y = this.off + 4;
-        this.addChild(this.pasteKeyButton);
-        this.clearKeyButton = new Button("clear_key");
-        this.clearKeyButton.selected = true;
-        this.clearKeyButton.setText("Clear");
-        this.clearKeyButton.scale.x = this.clearKeyButton.scale.y = 0.75;
-        this.clearKeyButton.addListener(Button.BUTTON_RELEASED, function() {
-          tab.keyField.setText("");
-          SETTINGS.apiKey = "";
-          saveSettings();
-        });
-        this.clearKeyButton.x = this.marginLeft + this.keyField.width + this.pasteKeyButton.width + this.clearKeyButton.width / 4 + 4;
-        this.clearKeyButton.y = this.off + 4;
-        this.addChild(this.clearKeyButton);
-      }
-    }
-    return UtilTab;
-  }
-
   // src/settings/settingsTab.ts
   function settingsTab() {
     SettingsPanel.OPEN_TAB = "opened_settings_tab";
@@ -468,11 +425,9 @@
         });
         pan.addChild(pan[`${name}ButtonBackground`]);
       }
-      newTab("NinjaIOUtils", "util", 302, getUtilTab());
-      newTab("Texture Pack", "tex", 418, getTexTab());
+      newTab("Texture Pack", "tex", 302, getTexTab());
       return pan;
     }
-    SettingsPanel.Tabs.UTIL = "util";
     SettingsPanel.Tabs.TEX = "tex";
     const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
     app.menu.settingsPanel.destroy();
@@ -505,45 +460,8 @@
       tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
       tab._events.mousedown.shift();
     });
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.uiScaler = new Slider("chatOpacity", "UI scale", SETTINGS.uiScale || 0.4, 2, 0.4));
-    if (!SETTINGS.uiScale)
-      app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
-    app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
-    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 14;
-    app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b) => {
-      b = Math.round(b * 10) / 10;
-      if (b == 0.4) {
-        app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
-        b = 0;
-      }
-      if (b == SETTINGS.uiScale)
-        return;
-      App.NUIScale = SETTINGS.uiScale = b;
-      saveSettings();
-      app.onResize();
-      const conf = document.createElement("div");
-      const confy = document.createElement("button");
-      confy.innerHTML = "OK";
-      confy.onclick = () => conf.remove();
-      conf.appendChild(confy);
-      const confn = document.createElement("button");
-      confn.innerHTML = "Undo";
-      confn.onclick = () => {
-        App.NUIScale = SETTINGS.uiScale = 0;
-        saveSettings();
-        app.onResize();
-        conf.remove();
-      };
-      confn.style.marginLeft = "0.3rem";
-      conf.appendChild(confn);
-      conf.style.position = "absolute";
-      conf.style.top = "50%";
-      conf.style.left = "50%";
-      conf.style.transform = "translate(-50%,-50%)";
-      conf.style.backgroundColor = "rgba(0,0,0,0.8)";
-      conf.style.padding = "0.5rem";
-      document.body.appendChild(conf);
-    });
+    hookSoundSettingsTab();
+    hookGraphicsSettingsTab();
   }
 
   // src/shareURLs.ts

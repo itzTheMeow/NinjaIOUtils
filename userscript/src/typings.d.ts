@@ -340,9 +340,14 @@ declare var app: {
       controlsTab: Container & {
         forceRefresh: boolean;
       };
+      soundTab: Container & {
+        volumeSlider: Slider;
+        typewriter: Checkbox;
+      };
       graphicsTab: Container & {
         enableAA: Container;
         uiScaler: Slider;
+        fpsDisplay: Checkbox;
       };
       graphicsTabButtonBackground: Container;
       controlsTabButtonBackground: Container;
