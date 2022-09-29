@@ -51,7 +51,13 @@ declare interface Rectangle {}
 declare interface Graphics extends Container {
   clear(): void;
   beginFill(arg0: number, arg1: number): void;
-  drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
+  drawRoundedRect(
+    arg0: number,
+    arg1: number,
+    arg2: number,
+    arg3: number,
+    arg4: number
+  ): void;
   endFill(): void;
   drawCircle(arg0: number, arg1: number, arg2: number): void;
   interactive: boolean;
@@ -66,9 +72,14 @@ declare var PIXI: {
   Container: Container & { new (): Container };
   Graphics: Container & { new (): Graphics };
   Sprite: Container & { new (name: string): Sprite };
-  Rectangle: { new (x: number, y: number, width: number, height: number): Rectangle };
+  Rectangle: {
+    new (x: number, y: number, width: number, height: number): Rectangle;
+  };
   BitmapText: Container & {
-    new (text: string, opts?: Partial<{ fontName: string; fontSize: number }>): Container;
+    new (
+      text: string,
+      opts?: Partial<{ fontName: string; fontSize: number }>
+    ): Container;
   };
 };
 
@@ -81,6 +92,7 @@ declare var SettingsPanel: {
     SOUND: string;
     UTIL: string;
     TEX: string;
+    HKM: string;
   };
 };
 
@@ -144,7 +156,13 @@ interface Slider extends Container {
   valueLabel: Container;
 }
 declare var Slider: Container & {
-  new (id: string, label: string, value: number, max: number, min?: number): Slider;
+  new (
+    id: string,
+    label: string,
+    value: number,
+    max: number,
+    min?: number
+  ): Slider;
   CHANGE: string;
 };
 
@@ -216,12 +234,20 @@ declare class Feature {
 }
 declare var UserInput: EventDispatcher & {
   WHEEL: string;
+  KEY_DOWN: string;
+  KEY_UP: string;
+  pressed: Object;
+  hasFocus: boolean;
 };
 declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
   getUserProfile(id: string): Promise<{ experience: string }>;
-  postFriendMessage(friendID: string, message: string, auth: string): Promise<void>;
+  postFriendMessage(
+    friendID: string,
+    message: string,
+    auth: string
+  ): Promise<void>;
   getMessages(auth: string): Promise<string>;
 };
 declare var Manager: {
@@ -311,6 +337,7 @@ declare var Protocol: {
   DISCONNECT: string;
 };
 declare var Client: {
+  compress(data: any): Uint8Array;
   decompress(data: any): {
     type: string;
     data: {
