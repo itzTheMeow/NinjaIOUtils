@@ -1,5 +1,9 @@
 # Changelog
 
+v1.26
+
+- Added shortcut message keys. (thanks Anna)
+
 v1.25
 
 - Removed API Key.
