@@ -6,7 +6,7 @@ This tutorial will show you how to create a standalone ninja webapp using chrome
 
 It acts similar to a desktop app but it runs ninja! Extensions like Tampermonkey will work for utils as well.
 
-----
+---
 
 1. If it's not already, make sure your bookmarks bar is shown and that Ninja.io is bookmarked.
 
@@ -25,4 +25,4 @@ It acts similar to a desktop app but it runs ninja! Extensions like Tampermonkey
 ![image](https://user-images.githubusercontent.com/50887230/193303577-adc2c461-5b2e-4416-ac54-8ed89a95024e.png)
 
 5. You can create shortcuts if you want. (one is automatically created on your desktop)
-Launch the shortcut and you'll have a ninja standalone webapp!
+   Launch the shortcut and you'll have a ninja standalone webapp!
