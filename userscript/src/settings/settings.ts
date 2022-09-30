@@ -1,4 +1,5 @@
 /* Set up and load the settings. */
+type hotkeyMessage = [hotkey: string, message: string];
 
 interface Settings {
   uiScale: number;
@@ -7,6 +8,8 @@ interface Settings {
   typewriter: boolean;
   apiKey: string;
   appearOnline: boolean;
+  enableHotkeyMessages: boolean;
+  hotkeyMessages: Array<hotkeyMessage>;
 }
 const settingsKey = "ninjaioutils";
 
@@ -18,7 +21,11 @@ export const SETTINGS: Settings = {
     typewriter: false,
     apiKey: "",
     appearOnline: true,
+    enableHotkeyMessages: true,
+    hotkeyMessages: [],
   },
   ...JSON.parse(localStorage.getItem(settingsKey) || "{}"),
 };
-export const saveSettings = () => localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+export const saveSettings = () => {
+  localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
+};

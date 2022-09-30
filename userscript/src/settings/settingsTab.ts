@@ -3,6 +3,7 @@ import { saveSettings, SETTINGS } from "./settings";
 import hookGraphicsSettingsTab from "./settingsTabGraphics";
 import hookSoundSettingsTab from "./settingsTabSound";
 import getTexTab from "./settingsTabTex";
+import getHotkeyMsgsTab from "./settingsTabHotkeyMsgs";
 
 export default function settingsTab() {
   // retry panel inject if failed
@@ -58,9 +59,11 @@ export default function settingsTab() {
       pan.addChild(pan[`${name}ButtonBackground`]);
     }
     newTab("Texture Pack", "tex", 302, getTexTab());
+    newTab("Messages", "hkm", 418, getHotkeyMsgsTab());
     return pan;
   }
   SettingsPanel.Tabs.TEX = "tex";
+  SettingsPanel.Tabs.HKM = "hkm";
   const oldX = app.menu.settingsPanel.x,
     oldY = app.menu.settingsPanel.y;
   // remove the old settings panel and add our own
@@ -74,8 +77,8 @@ export default function settingsTab() {
     AudioEffects.ButtonClick.audio.play();
     saveSettings();
     Object.values(SettingsPanel.Tabs)
-      .filter((t) => t !== name) // gets all the other tabs and "closes" them
-      .forEach((i) => {
+      .filter(t => t !== name) // gets all the other tabs and "closes" them
+      .forEach(i => {
         const t = this[`${i}Tab`];
         if (t.parent) {
           if (t.onHide) t.onHide();
@@ -91,10 +94,13 @@ export default function settingsTab() {
     app.menu.settingsPanel.selectedTab = name;
     App.Layer.memberMenu.emit(SettingsPanel.OPEN_TAB, name);
   };
-  Object.values(SettingsPanel.Tabs).forEach((d) => {
+  Object.values(SettingsPanel.Tabs).forEach(d => {
     // add our new mousedown listener and remove the old one (because we removed the old settings panel)
     const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
-    tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
+    tab.on(
+      "mousedown",
+      app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d)
+    );
     tab._events.mousedown.shift();
   });
 
