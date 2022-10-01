@@ -51,13 +51,7 @@ declare interface Rectangle {}
 declare interface Graphics extends Container {
   clear(): void;
   beginFill(arg0: number, arg1: number): void;
-  drawRoundedRect(
-    arg0: number,
-    arg1: number,
-    arg2: number,
-    arg3: number,
-    arg4: number
-  ): void;
+  drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
   endFill(): void;
   drawCircle(arg0: number, arg1: number, arg2: number): void;
   interactive: boolean;
@@ -76,10 +70,7 @@ declare var PIXI: {
     new (x: number, y: number, width: number, height: number): Rectangle;
   };
   BitmapText: Container & {
-    new (
-      text: string,
-      opts?: Partial<{ fontName: string; fontSize: number }>
-    ): Container;
+    new (text: string, opts?: Partial<{ fontName: string; fontSize: number }>): Container;
   };
 };
 
@@ -130,9 +121,13 @@ declare var ImgButton: Container & {
   CLICK: string;
 };
 interface MemberMenuButton extends Button {
+  active: 0 | 1;
   setActive(active: 0 | 1): void;
   backgroundEnabled: Container;
+  label: Container;
   icon: Container;
+  rectWidth: number;
+  rectHeight: number;
 }
 declare var MemberMenuButton: MemberMenuButton &
   ButtonEvents & {
@@ -140,8 +135,8 @@ declare var MemberMenuButton: MemberMenuButton &
       text: string,
       color: number,
       fontSize: number,
-      sprite: string,
-      noBG: boolean
+      sprite?: string,
+      noBG?: boolean
     ): MemberMenuButton;
   };
 
@@ -156,13 +151,7 @@ interface Slider extends Container {
   valueLabel: Container;
 }
 declare var Slider: Container & {
-  new (
-    id: string,
-    label: string,
-    value: number,
-    max: number,
-    min?: number
-  ): Slider;
+  new (id: string, label: string, value: number, max: number, min?: number): Slider;
   CHANGE: string;
 };
 
@@ -243,11 +232,7 @@ declare var APIClient: {
   realPostCreateGame(...args: any): void;
   postCreateGame(...args: any): void;
   getUserProfile(id: string): Promise<{ experience: string }>;
-  postFriendMessage(
-    friendID: string,
-    message: string,
-    auth: string
-  ): Promise<void>;
+  postFriendMessage(friendID: string, message: string, auth: string): Promise<void>;
   getMessages(auth: string): Promise<string>;
 };
 declare var Manager: {
@@ -434,8 +419,20 @@ declare var App: {
       openTab(tab: string, audio?: boolean): void;
       curTab: string;
     };
-    memberMenu: Container & { playButton: MemberMenuButton };
+    menu: Container;
+    memberMenu: Container & {
+      container: Container;
+      mode: string;
+      playButton: MemberMenuButton;
+      rankingButton: MemberMenuButton;
+      memberButton: MemberMenuButton;
+      clanButton: MemberMenuButton;
+
+      memberclanButton: MemberMenuButton;
+      utilsButton: MemberMenuButton;
+    };
     partyMenu: Container & { show(): void; reposition(): void };
+    utilsMenu: Container & { show(): void; reposition(): void };
     loadingMenu: Container & {
       title: Container;
       container: Container;
