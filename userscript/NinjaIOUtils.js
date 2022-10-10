@@ -99,6 +99,7 @@
 
   // src/settings/settings.ts
   var settingsKey = "ninjaioutils";
+  var settingsApiKey = localStorage.getItem("niou_apikey");
   var SETTINGS = {
     ...{
       uiScale: 0,
@@ -1914,6 +1915,14 @@ ${name}`);
         strokeThickness: 3,
         lineJoin: "round"
       });
+      linkedStatus = new PIXI.Text("", {
+        fontName: "Arial",
+        fontSize: 16,
+        lineHeight: 16,
+        fill: config_default.Colors.white,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
       constructor() {
         super();
         this.background.interactive = true;
@@ -1940,10 +1949,16 @@ ${name}`);
         this.pmTitle.anchor.x = 0.5;
         this.container.addChild(this.pmTitle);
         this.container.x = 0.5 * -this.width;
+        this.linkedStatus.text = settingsApiKey ? `Your data is being synced!` : `Your data is not being synced! Link your account below to start syncing.`;
+        this.linkedStatus.tint = settingsApiKey ? config_default.Colors.green : config_default.Colors.red;
+        this.container.addChild(this.linkedStatus);
         this.reposition();
       }
       reposition() {
-        this.off = 0;
+        this.marginLeft = this.ox + 10;
+        this.off = this.oy + 30;
+        this.linkedStatus.x = this.marginLeft;
+        this.linkedStatus.y = this.off += 8;
       }
       show() {
       }

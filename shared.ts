@@ -10,3 +10,14 @@ export interface TexturePack {
   hasCombined: boolean;
   hasSeamless: boolean;
 }
+
+export interface Settings {
+  uiScale: number;
+  showFPS: boolean;
+  texturePack: string | null;
+  typewriter: boolean;
+  apiKey: string;
+  appearOnline: boolean;
+  enableHotkeyMessages: boolean;
+  hotkeyMessages: Array<[hotkey: string, message: string]>;
+}

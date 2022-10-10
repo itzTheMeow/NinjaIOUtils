@@ -1,17 +1,9 @@
 /* Set up and load the settings. */
-type hotkeyMessage = [hotkey: string, message: string];
+import { Settings } from "../../../shared";
 
-interface Settings {
-  uiScale: number;
-  showFPS: boolean;
-  texturePack: string | null;
-  typewriter: boolean;
-  apiKey: string;
-  appearOnline: boolean;
-  enableHotkeyMessages: boolean;
-  hotkeyMessages: Array<hotkeyMessage>;
-}
 const settingsKey = "ninjaioutils";
+
+export const settingsApiKey = localStorage.getItem("niou_apikey");
 
 export const SETTINGS: Settings = {
   ...{
