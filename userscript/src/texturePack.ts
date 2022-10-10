@@ -32,14 +32,14 @@ export function hookTextureLoader() {
                 data.data[0].includes("combined") &&
                 data.data[0].endsWith(".png")
               )
-                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/combined.png`;
+                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config.actualGameVersion}`;
               if (
                 pack.hasSeamless &&
                 data.data[0].includes("ninja.io") &&
                 data.data[0].includes("seamless") &&
                 data.data[0].endsWith(".png")
               )
-                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/seamless.png`;
+                data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config.actualGameVersion}`;
             }
             this._postMessage(data, ...args);
           })

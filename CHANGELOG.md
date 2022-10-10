@@ -1,5 +1,10 @@
 # Changelog
 
+v1.27
+
+- Added experimental NinjaIOUtils tab.
+- Changed texture pack URLs to disable caching.
+
 v1.26
 
 - Added shortcut message keys. (thanks Anna)

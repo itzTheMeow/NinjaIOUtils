@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.26
+// @version      1.27
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.26",
+    ver: "1.27",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -859,9 +859,9 @@ ${name}`);
           fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`).then((r) => r.json()).then((pack) => {
             if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && SETTINGS.texturePack) {
               if (pack.hasCombined && data.data[0].includes("ninja.io") && data.data[0].includes("combined") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png`;
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
               if (pack.hasSeamless && data.data[0].includes("ninja.io") && data.data[0].includes("seamless") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png`;
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
             }
             this._postMessage(data, ...args);
           }).catch(() => {
