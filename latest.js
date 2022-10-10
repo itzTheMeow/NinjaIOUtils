@@ -5624,7 +5624,7 @@ const Box2D = {};
           (Box2D.Common.b2Settings.b2_velocityThreshold = 1),
           (Box2D.Common.b2Settings.b2_maxLinearCorrection = 0.2),
           (Box2D.Common.b2Settings.b2_maxAngularCorrection = (2 / 180) * t.b2_pi),
-          (Box2D.Common.b2Settings.b2_maxTranslation = 2),
+          (Box2D.Common.b2Settings.b2_maxTranslation = 1),
           (Box2D.Common.b2Settings.b2_maxTranslationSquared =
             t.b2_maxTranslation * t.b2_maxTranslation),
           (Box2D.Common.b2Settings.b2_maxRotation = 0.5 * t.b2_pi),
@@ -30958,7 +30958,7 @@ class InputState {
       ? ((this.oldB = c),
         (this.changed = !0),
         (b |= 2),
-        (this.b2 = (((this.$ & 16383) << 14) | this._) >>> 0))
+        (this.b2 = (((Math.floor(this.$ / 8) & 255) << 8) | (Math.floor(this._ / 64) & 255)) >>> 0))
       : ((c = this._ << 2), (this.b2 = this.$ & 16383));
     this.b1 = c | b;
   }
@@ -32718,6 +32718,7 @@ class ClanBrowserMenu extends Feature {
     this.titleText.x = 0.5 * this.width - 20;
     this.titleText.y = this.oy + 36;
     this.titleText.anchor.x = 0.5;
+    this.titleText.resolution = 1.5;
     this.container.addChild(this.titleText);
     this.closeButton = new ImgButton();
     this.closeButton.x = this.background.width - 40;
@@ -32736,6 +32737,7 @@ class ClanBrowserMenu extends Feature {
     });
     this.clanNameTitle.x = this.ox - 12;
     this.clanNameTitle.y = this.oy + 78;
+    this.clanNameTitle.resolution = 1.5;
     this.container.addChild(this.clanNameTitle);
     this.searchField = new InputField("name_search");
     this.searchField.setDimensions(300, 35);
@@ -32760,6 +32762,7 @@ class ClanBrowserMenu extends Feature {
     });
     this.loaderText.x = this.ox + 20;
     this.loaderText.y = this.oy + 139;
+    this.loaderText.resolution = 1.5;
     this.container.addChild(this.loaderText);
     this.nameText = new PIXI.Text("Name", {
       fontName: "Arial",
@@ -32773,6 +32776,7 @@ class ClanBrowserMenu extends Feature {
     this.nameText.y = this.oy + 109;
     this.nameText.tint = 16755200;
     this.nameText.interactive = !0;
+    this.nameText.resolution = 1.5;
     this.nameText.hitArea = new PIXI.Rectangle(0, 0, this.nameText.width, this.nameText.height);
     this.container.addChild(this.nameText);
     this.nameText.on("mouseover", () => {
@@ -32798,6 +32802,7 @@ class ClanBrowserMenu extends Feature {
     this.membersText.x = this.ox + 220;
     this.membersText.y = this.oy + 109;
     this.membersText.tint = 16755200;
+    this.membersText.resolution = 1.5;
     this.membersText.interactive = !0;
     this.membersText.hitArea = new PIXI.Rectangle(
       0,
@@ -32829,6 +32834,7 @@ class ClanBrowserMenu extends Feature {
     this.skillRankingText.x = this.ox + 340;
     this.skillRankingText.y = this.oy + 109;
     this.skillRankingText.tint = 16755200;
+    this.skillRankingText.resolution = 1.5;
     this.skillRankingText.interactive = !0;
     this.skillRankingText.hitArea = new PIXI.Rectangle(
       0,
@@ -32860,6 +32866,7 @@ class ClanBrowserMenu extends Feature {
     this.experienceRankingText.x = this.ox + 440;
     this.experienceRankingText.y = this.oy + 109;
     this.experienceRankingText.tint = 16755200;
+    this.experienceRankingText.resolution = 1.5;
     this.experienceRankingText.interactive = !0;
     this.experienceRankingText.hitArea = new PIXI.Rectangle(
       0,
@@ -33139,14 +33146,14 @@ class Button extends PIXI.Graphics {
   setText(a, b, c) {
     this.text
       ? (this.text.text = a)
-      : ((this.text = new PIXI.Text(a, {
+      : (this.text = new PIXI.Text(a, {
           fontSize: 22,
           fontFamily: "Arial",
           fill: 16777215,
           lineJoin: "round",
           strokeThickness: 3,
-        })),
-        (this.text.resolution = 1.5 * App.DevicePixelRatio));
+        }));
+    this.text.resolution = 1.5 * App.DevicePixelRatio;
     this.addChild(this.text);
     this.text.x = b || 0;
     this.text.y = c || 5;
@@ -38561,6 +38568,7 @@ class ItemOverview extends PIXI.Container {
     });
     this.title.x = 0;
     this.title.y = 6;
+    this.title.resolution = 1.5;
     this.addChild(this.title);
     this.comingSoon = new PIXI.Text("Coming soon..", {
       fontName: "Arial",
@@ -38573,6 +38581,7 @@ class ItemOverview extends PIXI.Container {
     this.comingSoon.x = 4;
     this.comingSoon.y = 58;
     this.comingSoon.visible = !1;
+    this.comingSoon.resolution = 1.5;
     this.addChild(this.comingSoon);
     this.background = new PIXI.Graphics();
     this.background.lineStyle(1, 16777215, 0.2, 0);
@@ -38777,6 +38786,7 @@ class IOItem extends PIXI.Container {
     c.x = 72 + (0 < b.width - 68 ? b.width - 68 : 0);
     c.y = 24;
     c.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+    c.resolution = 1.5;
     this.addChild(c);
     a = "free" === a.status ? "Free" : a.own ? "Owned" : numberWithPeriods(a.price);
     a = new PIXI.Text(a, {
@@ -38790,6 +38800,7 @@ class IOItem extends PIXI.Container {
     a.x = 180;
     a.y = 26;
     a.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+    a.resolution = 1.5;
     this.addChild(a);
   }
   onMouseOver() {
@@ -39422,6 +39433,7 @@ class CustomizationMenu extends Feature {
     });
     this.savedText.x = this.width - 340;
     this.savedText.y = this.height - 4;
+    this.savedText.resolution = 1.5;
     this.playerContainer.addChild(this.savedText);
     this.savedText.visible = !1;
     this.customizationTitle = new PIXI.Text("Shop", {
@@ -39434,6 +39446,7 @@ class CustomizationMenu extends Feature {
     });
     this.customizationTitle.x = this.ox + 2;
     this.customizationTitle.y = this.oy + 48;
+    this.customizationTitle.resolution = 1.5;
     this.container.addChild(this.customizationTitle);
     this.errorMessage = new PIXI.Text("", {
       fontName: "Arial",
@@ -39445,6 +39458,7 @@ class CustomizationMenu extends Feature {
     });
     this.errorMessage.x = this.width - 340;
     this.errorMessage.y = this.height - 4;
+    this.errorMessage.resolution = 1.5;
     this.playerContainer.addChild(this.errorMessage);
     this.container.x = 0.5 * -this.width;
     this.goldIcon = new PIXI.Sprite(App.CombinedTextures.gold1);
@@ -39462,6 +39476,7 @@ class CustomizationMenu extends Feature {
     });
     this.goldText.x = 57;
     this.goldText.y = this.goldIcon.y + 6;
+    this.goldText.resolution = 1.5;
     this.playerContainer.addChild(this.goldText);
     this.goldRewardText = new PIXI.Text("", {
       fontName: "Arial",
@@ -39473,6 +39488,7 @@ class CustomizationMenu extends Feature {
     });
     this.goldRewardText.x = this.goldText.x;
     this.goldRewardText.y = this.goldText.y;
+    this.goldRewardText.resolution = 1.5;
     this.playerContainer.addChild(this.goldRewardText);
     this.goldRewardText.visible = !1;
     this.playerCustomizationButton = new PIXI.Graphics();
@@ -40136,6 +40152,7 @@ class InputField extends PIXI.Container {
         });
     this.text.tint = 16777215;
     this.text.anchor.y = 1;
+    this.text.resolution = 1.5;
     this.passwordText = new PIXI.BitmapText("", {
       fontName: "Open Sans",
       align: "left",
@@ -43586,6 +43603,7 @@ ServerListMenu.MODE_TEAM_DEATHMATCH = "tdm";
 ServerListMenu.MODE_CAPTURE_THE_FLAG = "ctf";
 ServerListMenu.MODE_DODGEBALL = "db";
 ServerListMenu.MODE_TRAINING = "tr";
+ServerListMenu.MODE_ZOMBIE_SURVIVAL = "zs";
 ServerListMenu.REGION_NA_EAST = "na_east";
 ServerListMenu.REGION_EU_WEST = "eu_west";
 ServerListMenu.REGION_AS_SOUTH = "as_south";
@@ -45112,6 +45130,7 @@ class ClanMenu extends Feature {
     this.titleText.x = 0.5 * this.width - 20;
     this.titleText.y = this.oy + 36;
     this.titleText.anchor.x = 0.5;
+    this.titleText.resolution = 1.5;
     this.container.addChild(this.titleText);
     this.closeButton = new ImgButton();
     this.closeButton.x = this.background.width - 40;
@@ -45131,6 +45150,7 @@ class ClanMenu extends Feature {
     });
     this.uploadText.x = this.ox - 12;
     this.uploadText.y = this.oy + 76;
+    this.uploadText.resolution = 1.5;
     this.container.addChild(this.uploadText);
     this.nameText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45142,6 +45162,7 @@ class ClanMenu extends Feature {
     });
     this.nameText.x = this.ox + 44;
     this.nameText.y = this.oy + 78;
+    this.nameText.resolution = 1.5;
     this.container.addChild(this.nameText);
     this.memberText = new PIXI.Text("- members", {
       fontName: "Arial",
@@ -45152,6 +45173,7 @@ class ClanMenu extends Feature {
     });
     this.memberText.x = this.ox - 14;
     this.memberText.y = this.oy + 128;
+    this.memberText.resolution = 1.5;
     this.container.addChild(this.memberText);
     this.statsText = new PIXI.Text("Clan statistics", {
       fontName: "Arial",
@@ -45162,11 +45184,13 @@ class ClanMenu extends Feature {
     });
     this.statsText.x = this.ox + 300;
     this.statsText.y = this.oy + 128;
+    this.statsText.resolution = 1.5;
     this.container.addChild(this.statsText);
     this.levelIcon = new PIXI.Sprite();
     this.levelIcon.x = this.ox + 305;
     this.levelIcon.y = this.oy + 180;
     this.levelIcon.scale.x = this.levelIcon.scale.y = 0.5;
+    this.levelIcon.resolution = 1.5;
     this.container.addChild(this.levelIcon);
     this.levelLabel = new PIXI.Text("Avg. level", {
       fontName: "Arial",
@@ -45177,6 +45201,7 @@ class ClanMenu extends Feature {
     });
     this.levelLabel.x = this.ox + 314;
     this.levelLabel.y = this.oy + 164;
+    this.levelLabel.resolution = 1.5;
     this.container.addChild(this.levelLabel);
     this.levelText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45187,6 +45212,7 @@ class ClanMenu extends Feature {
     });
     this.levelText.x = this.ox + 341;
     this.levelText.y = this.oy + 188;
+    this.levelText.resolution = 1.5;
     this.container.addChild(this.levelText);
     this.levelRankLabel = new PIXI.Text("Level rank", {
       fontName: "Arial",
@@ -45197,6 +45223,7 @@ class ClanMenu extends Feature {
     });
     this.levelRankLabel.x = this.ox + 314;
     this.levelRankLabel.y = this.oy + 218;
+    this.levelRankLabel.resolution = 1.5;
     this.container.addChild(this.levelRankLabel);
     this.levelRankText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45207,6 +45234,7 @@ class ClanMenu extends Feature {
     });
     this.levelRankText.x = this.ox + 314;
     this.levelRankText.y = this.oy + 242;
+    this.levelRankText.resolution = 1.5;
     this.container.addChild(this.levelRankText);
     this.skillRankLabel = new PIXI.Text("Skill rank", {
       fontName: "Arial",
@@ -45217,6 +45245,7 @@ class ClanMenu extends Feature {
     });
     this.skillRankLabel.x = this.ox + 314;
     this.skillRankLabel.y = this.oy + 272;
+    this.skillRankLabel.resolution = 1.5;
     this.container.addChild(this.skillRankLabel);
     this.skillRankText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45227,6 +45256,7 @@ class ClanMenu extends Feature {
     });
     this.skillRankText.x = this.ox + 314;
     this.skillRankText.y = this.oy + 296;
+    this.skillRankText.resolution = 1.5;
     this.container.addChild(this.skillRankText);
     this.killsLabel = new PIXI.Text("Kills", {
       fontName: "Arial",
@@ -45237,6 +45267,7 @@ class ClanMenu extends Feature {
     });
     this.killsLabel.x = this.ox + 460;
     this.killsLabel.y = this.oy + 164;
+    this.killsLabel.resolution = 1.5;
     this.container.addChild(this.killsLabel);
     this.killsText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45247,6 +45278,7 @@ class ClanMenu extends Feature {
     });
     this.killsText.x = this.ox + 460;
     this.killsText.y = this.oy + 188;
+    this.killsText.resolution = 1.5;
     this.container.addChild(this.killsText);
     this.deathsLabel = new PIXI.Text("Deaths", {
       fontName: "Arial",
@@ -45267,6 +45299,7 @@ class ClanMenu extends Feature {
     });
     this.deathsText.x = this.ox + 460;
     this.deathsText.y = this.oy + 242;
+    this.deathsText.resolution = 1.5;
     this.container.addChild(this.deathsText);
     this.ctfLabel = new PIXI.Text("CTF caps", {
       fontName: "Arial",
@@ -45277,6 +45310,7 @@ class ClanMenu extends Feature {
     });
     this.ctfLabel.x = this.ox + 460;
     this.ctfLabel.y = this.oy + 272;
+    this.ctfLabel.resolution = 1.5;
     this.container.addChild(this.ctfLabel);
     this.ctfText = new PIXI.Text("Loading..", {
       fontName: "Arial",
@@ -45287,6 +45321,7 @@ class ClanMenu extends Feature {
     });
     this.ctfText.x = this.ox + 460;
     this.ctfText.y = this.oy + 296;
+    this.ctfText.resolution = 1.5;
     this.container.addChild(this.ctfText);
     this.createdText = new PIXI.Text("", {
       fontName: "Arial",
@@ -45297,6 +45332,7 @@ class ClanMenu extends Feature {
     });
     this.createdText.x = 478;
     this.createdText.y = this.oy + 72;
+    this.createdText.resolution = 1.5;
     this.container.addChild(this.createdText);
     this.listContainer = new PIXI.Container();
     this.listContainer.x = this.ox - 14;
@@ -45565,6 +45601,7 @@ class LoadingMenu extends Feature {
     this.title.x = 290;
     this.title.y = 150;
     this.title.tint = 16763904;
+    this.title.resolution = 1.5;
     this.container.addChild(this.title);
     this.container.x = 0.5 * -this.container.width;
     this.container.y = 40;
@@ -46093,17 +46130,18 @@ class Game extends PIXI.Container {
     let b = this.manager.getLocalPlayer();
     if (b && b.alive) {
       if (b.primaryItem) {
-        var c = b.primaryItem.itemType,
-          d = this.reticle.scale.x;
-        if (ItemMap[c].resizeReticle) {
-          c = ItemMap[c].resizeReticle;
+        var c = this.reticle.scale.x,
+          d = ItemMap[b.primaryItem.itemType];
+        if (d.resizeReticle) {
+          d = d.resizeReticle;
           let e = 0.01 * (b.p.vx * b.p.vx + b.p.vy * b.p.vy),
-            f = c.max - c.min,
+            f = d.max - d.min,
             g = App.Time - b.lastInjuredTime;
           2e3 > g && (e += 0.01 * (2e3 - g));
-          c = c.min + (e * f > f ? f : e * f);
-          this.reticle.scale.x = this.reticle.scale.y += c < d ? 0.1 * -(d - c) : 0.1 * (c - d);
-        } else 1 !== d && (this.reticle.scale.x = this.reticle.scale.y = 1);
+          d.drift && ((e += 5 * b.primaryItem.drift), b.primaryItem.updateDrift(a));
+          d = d.min + (e * f > f ? f : e * f);
+          this.reticle.scale.x = this.reticle.scale.y += d < c ? 0.1 * -(c - d) : 0.1 * (d - c);
+        } else 1 !== c && (this.reticle.scale.x = this.reticle.scale.y = 1);
       }
       b.facingChanged &&
         (this.input.updateFacing(Math.round((16383 / (2 * Math.PI)) * (b.virtualFacing + Math.PI))),
@@ -46112,11 +46150,11 @@ class Game extends PIXI.Container {
           this.reticleLine.visible &&
           ((this.reticleLine.x = this.reticle.x),
           (this.reticleLine.y = this.reticle.y),
-          (d = 0.5 * App.ClientWidth - this.reticle.x),
-          (c = 0.5 * App.ClientHeight - this.reticle.y),
-          (d = Math.sqrt(d * d + c * c)),
-          (this.reticleLine.scale.x = 0.003 * d),
-          (this.reticleLine.alpha = 0.5 < 8e-4 * d ? 0.5 : 8e-4 * d),
+          (c = 0.5 * App.ClientWidth - this.reticle.x),
+          (d = 0.5 * App.ClientHeight - this.reticle.y),
+          (c = Math.sqrt(c * c + d * d)),
+          (this.reticleLine.scale.x = 0.003 * c),
+          (this.reticleLine.alpha = 0.5 < 8e-4 * c ? 0.5 : 8e-4 * c),
           (this.reticleLine.rotation = b.facing + Math.PI)));
     }
     this.manager.update(a);
@@ -46232,9 +46270,9 @@ class Game extends PIXI.Container {
     if (!a.skip) {
       var b = "";
       if (1 === a.mode) {
-        var c = !1;
-        let d = this.manager.getLocalPlayer(),
-          e;
+        var c = !1,
+          d = this.manager.getLocalPlayer();
+        let e;
         switch (this.mode) {
           case Game.MODE_CTF:
             -1 === a.winner
@@ -46278,13 +46316,8 @@ class Game extends PIXI.Container {
             setTimeout(() => this.manager.suspend(), 150);
             break;
           case Game.MODE_TR:
-            (e = this.clients[d.id]),
-              (b = "Training match has ended."),
-              setTimeout(() => {
-                this.manager.suspend();
-                (e = this.manager.getPlayerById(d.id)) &&
-                  this.canvas.initDMVictoryAnimation(e.torsoupper.id);
-              }, 150),
+            (b = "Training match has ended."),
+              setTimeout(() => this.manager.suspend(), 150),
               (c = !1);
         }
         if (c)
@@ -46304,8 +46337,8 @@ class Game extends PIXI.Container {
       App.Console.log(b, 16766720);
       if (a.leaderboard) {
         a.leaderboard.name = [];
-        for (let d = 0, e = a.leaderboard.id.length; d < e; d++)
-          (b = this.clients[a.leaderboard.id[d]]) && a.leaderboard.name.push(b.name);
+        for (let e = 0, f = a.leaderboard.id.length; e < f; e++)
+          (d = this.clients[a.leaderboard.id[e]]) && a.leaderboard.name.push(d.name);
         this.hud.setLeaderboard(a.leaderboard);
       }
     }
@@ -46591,6 +46624,7 @@ Game.MODE_TDM = "teamDeathmatch";
 Game.MODE_DB = "dodgeball";
 Game.MODE_TR = "training";
 Game.MODE_1V1 = "1v1";
+Game.MODE_ZS = "zombieSurvival";
 Game.MATCH_END = "matchEnd";
 Game.MATCH_START = "matchStart";
 Game.MODE_MAP = {
@@ -46600,6 +46634,7 @@ Game.MODE_MAP = {
   [Game.MODE_DB]: "db",
   [Game.MODE_TR]: "tr",
   [Game.MODE_1V1]: "1v1",
+  [Game.MODE_ZS]: "zs",
 };
 Game.MODE_TITLES = {
   [Game.MODE_CTF]: "Capture the flag",
@@ -46608,6 +46643,7 @@ Game.MODE_TITLES = {
   [Game.MODE_DB]: "Dodgeball",
   [Game.MODE_TR]: "Training",
   [Game.MODE_1V1]: "1 vs 1",
+  [Game.MODE_ZS]: "Zombie Survival",
 };
 Game.EVENT_DEATH = "death";
 Game.RankTitles =
@@ -46650,6 +46686,9 @@ Game.WeaponMapping = {
   29: "35",
   30: "36",
   31: "37",
+  33: "38",
+  34: "39",
+  35: "41",
 };
 var serverdetailmenu = {};
 class ServerDetailMenu extends Feature {
@@ -47177,6 +47216,7 @@ class GuestProfileMenu extends Feature {
     this.guestProfileTitle.x = 0.5 * this.width - 20;
     this.guestProfileTitle.y = this.oy - 4;
     this.guestProfileTitle.anchor.x = 0.5;
+    this.guestProfileTitle.resolution = 1.5;
     this.container.addChild(this.guestProfileTitle);
     this.container.x = 0.5 * -this.width;
     this.profileItemContainer = new PIXI.Container();
@@ -47189,6 +47229,7 @@ class GuestProfileMenu extends Feature {
     );
     this.registerDesc.x = this.ox + 10;
     this.registerDesc.y = this.oy + 50;
+    this.registerDesc.resolution = 1.5;
     this.container.addChild(this.registerDesc);
     this.loginButton = new Button("login");
     this.loginButton.selected = !0;
@@ -50729,8 +50770,8 @@ App.Stage = null;
 App.Console = null;
 App.Stats = null;
 App.Layer = null;
-App.ClientVersion = "0.3.0";
-App.MinVersion = "1";
+App.ClientVersion = "0.3.1";
+App.MinVersion = "";
 App.HasFocus = !0;
 App.Scale = 1;
 App.StartTime = Date.now();
@@ -50806,9 +50847,9 @@ App.GetNearestGeoServer = (a) => {
   }
   return c;
 };
-App.RESOURCE_FOLDER = "./assets-dev";
+App.RESOURCE_FOLDER = "./assets";
 App.RESOURCES = {
-  combined: [{ id: "combined", file: "combined.json" }],
+  combined: [{ id: "combined", file: "combined2.json" }],
   seamless: [{ id: "seamless", file: "seamless.json" }],
   fonts: [{ id: "opensans", file: "opensans.fnt" }],
 };
@@ -50967,7 +51008,12 @@ class AudioManager {
           }
           c && c.audio && c.audio.altContact ? ((f = c.audio.altContact), (c = !0)) : (c = !1);
         }
-        !c && b.onContact && (f = b.onContact);
+        !c &&
+          b.onContact &&
+          (b.onContact && (f = b.onContact),
+          b.onAgentContact &&
+            (a.contact.a.body._parent || a.contact.b.body._parent) &&
+            (f = f.concat(b.onAgentContact)));
         for (b = 0; b < f.length; b++)
           if (((c = f[b]), c instanceof Array)) {
             c = c[Math.floor(Math.random() * c.length)];
@@ -51035,13 +51081,28 @@ var audiofx = {},
     BowFire: { audio: new Howl({ src: [AudioFolder + "bow-shot-1.mp3"], volume: 0.75 }) },
     CarbineFire: { audio: new Howl({ src: [AudioFolder + "carbine-shot-1.mp3"], volume: 0.75 }) },
     ShockrifleFire: { audio: new Howl({ src: [AudioFolder + "shockrifle-shot.mp3"] }) },
+    ShockrifleRemove: { audio: new Howl({ src: [AudioFolder + "shockrifle-remove.mp3"] }) },
     RLRocketFire: { audio: new Howl({ src: [AudioFolder + "rl-launch.mp3"], volume: 0.75 }) },
     DeagleFire: { audio: new Howl({ src: [AudioFolder + "deagle-shot.mp3"] }) },
+    UziFire: { audio: new Howl({ src: [AudioFolder + "uzi-shot.mp3"], volume: 0.35 }) },
+    M60Fire: { audio: new Howl({ src: [AudioFolder + "m60-shot.mp3"], volume: 0.5 }) },
     FlamethrowerFire: {
       audio: new Howl({ src: [AudioFolder + "flamethrower-shot.mp3"] }),
       single: !0,
       sub_start: 0.3,
       sub_end: 1.4,
+    },
+    Boomerang: {
+      audio: new Howl({ src: [AudioFolder + "boomerang.mp3"], volume: 0.5 }),
+      single: !0,
+      sub_start: 0,
+      sub_end: 2,
+    },
+    BoomerangImpact: {
+      audio: new Howl({ src: [AudioFolder + "boomerang-impact.mp3"], volume: 0.1 }),
+    },
+    BoomerangSlice: {
+      audio: new Howl({ src: [AudioFolder + "boomerang-slice.mp3"], volume: 0.3 }),
     },
     EnergyJetFeet: {
       audio: new Howl({ src: [AudioFolder + "jetfeet.mp3"], volume: 0.5 }),
@@ -53368,6 +53429,9 @@ var prefablist = {},
     RLRocket: 30,
     CarbineBullet: 31,
     GhostLaser: 32,
+    Boomerang: 33,
+    M60Bullet: 34,
+    UziBullet: 35,
     X75Nade: 75,
     TinyShrapnel: 101,
     GhostBotDebris1: 102,
@@ -53395,6 +53459,9 @@ var prefablist = {},
     Bow: 220,
     RocketLauncher: 221,
     Carbine: 222,
+    BoomerangGun: 223,
+    M60: 224,
+    Uzi: 225,
     Bouncyball: 300,
     HealthBox: 400,
     NadeBox: 401,
@@ -53447,6 +53514,9 @@ var prefablist = {},
     30: RLRocket,
     31: CarbineBullet,
     32: GhostLaser,
+    33: Boomerang,
+    34: M60Bullet,
+    35: UziBullet,
     101: TinyShrapnel,
     102: GhostBotDebris1,
     103: GhostBotDebris2,
@@ -53471,6 +53541,9 @@ var prefablist = {},
     220: Bow,
     221: RocketLauncher,
     222: Carbine,
+    223: BoomerangGun,
+    224: M60,
+    225: Uzi,
     300: Bouncyball,
     400: HealthBox,
     401: NadeBox,
@@ -53634,8 +53707,32 @@ PE[PP.VELOCITY_MULTIPLIER] = 0.1;
 PE[PP.ALPHA_CHANGE] = -0.025;
 PE[PP.ANGULAR] = 2;
 PE[PP.ANGULAR_RANDOM] = { min: -0.3, max: 0.6 };
-PE[PP.BUFFER_ID] = "arrow2";
-PE[PP.COLLIDE] = !0;
+PE[PP.COLLIDE] = !1;
+PE = ParticleEffects.BoomerangImpactDynamic = {};
+PE[PP.TEXTURE] = "boomerang";
+PE[PP.TTL] = 40;
+PE[PP.SCALE] = 0.22;
+PE[PP.ALPHA] = 1;
+PE[PP.GRAVITY_SCALE] = 0.1;
+PE[PP.ROTATION] = 2;
+PE[PP.ANCHOR] = { x: 0.6, y: 0.5 };
+PE[PP.VELOCITY] = 5;
+PE[PP.VELOCITY_MULTIPLIER] = 0.1;
+PE[PP.ALPHA_CHANGE] = -0.025;
+PE[PP.ANGULAR] = 2;
+PE[PP.ANGULAR_RANDOM] = { min: -0.3, max: 0.6 };
+PE[PP.COLLIDE] = !1;
+PE = ParticleEffects.BoomerangImpactStatic = {};
+PE[PP.TEXTURE] = "boomerang";
+PE[PP.TTL] = 300;
+PE[PP.SCALE] = 0.22;
+PE[PP.ALPHA] = 1;
+PE[PP.GRAVITY_SCALE] = 0;
+PE[PP.ROTATION] = 2;
+PE[PP.ANCHOR] = { x: 0.6, y: 0.5 };
+PE[PP.VELOCITY_ALPHA_TTL] = 10;
+PE[PP.ALPHA_CHANGE] = 0;
+PE[PP.DYNAMIC_ALT] = ParticleEffects.BoomerangImpactDynamic;
 PE = ParticleEffects.ArrowImpactStatic = {};
 PE[PP.TEXTURE] = "arrow";
 PE[PP.TTL] = 300;
@@ -53703,6 +53800,16 @@ PE[PP.SCALE] = 0.4;
 PE[PP.SCALE_CHANGE] = -0.02;
 PE[PP.ALPHA] = 1;
 PE[PP.ALPHA_CHANGE] = -0.05;
+PE[PP.ROTATION] = 2;
+PE[PP.GRAVITY_SCALE] = 0;
+PE[PP.FOREGROUND] = !0;
+PE = ParticleEffects.Electricity3 = {};
+PE[PP.TEXTURE] = "shockrifle_orb2";
+PE[PP.TTL] = 10;
+PE[PP.SCALE] = 0.2;
+PE[PP.SCALE_CHANGE] = -0.018;
+PE[PP.ALPHA] = 0.5;
+PE[PP.ALPHA_CHANGE] = -0.04;
 PE[PP.ROTATION] = 2;
 PE[PP.GRAVITY_SCALE] = 0;
 PE[PP.FOREGROUND] = !0;
@@ -54182,6 +54289,14 @@ PE[PP.ALPHA] = 0.18;
 PE[PP.ALPHA_CHANGE] = -0.01;
 PE[PP.ROTATION] = 1;
 PE[PP.ANCHOR] = { x: 0.4, y: 0.5 };
+PE = ParticleEffects.M60BulletTrail = {};
+PE[PP.TEXTURE] = "bullettrail";
+PE[PP.TTL] = 20;
+PE[PP.SCALE] = 1;
+PE[PP.ALPHA] = 0.2;
+PE[PP.ALPHA_CHANGE] = -0.01;
+PE[PP.ROTATION] = 1;
+PE[PP.ANCHOR] = { x: 0.4, y: 0.5 };
 PE = ParticleEffects.ArrowTrail = {};
 PE[PP.TEXTURE] = "bullettrail";
 PE[PP.TTL] = 20;
@@ -54530,6 +54645,15 @@ PE[PP.TTL] = 10;
 PE[PP.SCALE] = 0.45;
 PE[PP.ALPHA] = 0.3;
 PE[PP.ALPHA_CHANGE] = -0.1;
+PE[PP.ROTATION] = 6;
+PE[PP.VELOCITY] = 1;
+PE[PP.GRAVITY_SCALE] = 0;
+PE = ParticleEffects.BoomerangTrail = {};
+PE[PP.TEXTURE] = "boomerang";
+PE[PP.TTL] = 20;
+PE[PP.SCALE] = 0.22;
+PE[PP.ALPHA] = 0.5;
+PE[PP.ALPHA_CHANGE] = -0.025;
 PE[PP.ROTATION] = 6;
 PE[PP.VELOCITY] = 1;
 PE[PP.GRAVITY_SCALE] = 0;
@@ -56141,6 +56265,59 @@ class BarrettSprite extends PIXI.Sprite {
     this.alpha = 1;
   }
 }
+class BoomerangGunSprite extends PIXI.Sprite {
+  constructor() {
+    let a = App.CombinedTextures.boomerang_item;
+    super(a);
+    AnchorBase.call(this);
+    this.rotation = 0.95 * Math.PI;
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.pivot.x = 0;
+    this.pivot.y = 0;
+    this.activeTexture = a;
+    this.secondaryScale = { x: -0.6, y: -0.6 };
+    this.secondaryAnchor = { x: 0.9, y: 0.6 };
+    this.fireAnchor = new PIXI.Container();
+    this.fireAnchor.x = 200;
+    this.fireAnchor.y = -12;
+    this.addAnchor(1, this.fireAnchor);
+    this.ejectionAnchor = new PIXI.Container();
+    this.ejectionAnchor.x = 40;
+    this.ejectionAnchor.y = -8;
+    this.addAnchor(2, this.ejectionAnchor);
+    this.gearArmOffset = { x: -5, y: 0 };
+  }
+  animate(a) {
+    200 > a.ttl && (this.alpha = 0.7 + 0.3 * Math.sin(a.ttl / 5));
+  }
+  pointLeft() {
+    this.scale.x = 0.53;
+    this.scale.y = -0.53;
+    this.anchor.x = 0.75;
+    this.anchor.y = 0.58;
+    this.rotation = Math.PI;
+  }
+  pointRight() {
+    this.scale.x = 0.53;
+    this.scale.y = 0.53;
+    this.anchor.x = 0.75;
+    this.anchor.y = 0.58;
+    this.rotation = Math.PI;
+  }
+  init() {
+    this.alpha = 1;
+  }
+  onUse() {
+    this.texture = App.CombinedTextures.boomerang_1;
+  }
+  animateReload() {
+    this.texture = App.CombinedTextures.boomerang_1;
+  }
+  stopReloadAnimation() {
+    this.texture = App.CombinedTextures.boomerang_item;
+  }
+}
 class BowSprite extends PIXI.Sprite {
   constructor() {
     super(App.CombinedTextures.bow_item);
@@ -56378,8 +56555,8 @@ class LaserGunSprite extends PIXI.Sprite {
     this.anchor.y = 0.7;
     this.origin = { x: 0.5, y: 0 };
     this.fireAnchor = new PIXI.Container();
-    this.fireAnchor.x = 200;
-    this.fireAnchor.y = -20;
+    this.fireAnchor.x = 210;
+    this.fireAnchor.y = -22;
     this.addAnchor(1, this.fireAnchor);
     this.ejectionAnchor = new PIXI.Container();
     this.ejectionAnchor.x = 40;
@@ -56435,6 +56612,57 @@ class LinkGunSprite extends PIXI.Sprite {
     this.alpha = 1;
   }
   onUse() {}
+}
+class M60Sprite extends PIXI.Sprite {
+  constructor() {
+    super(App.CombinedTextures.m60);
+    AnchorBase.call(this);
+    this.secondaryScale = { x: 0.65, y: 0.65 };
+    this.rotation = Math.PI;
+    this.anchor.x = 0.35;
+    this.anchor.y = 0.45;
+    this.fireAnchor = new PIXI.Container();
+    this.fireAnchor.x = 310;
+    this.fireAnchor.y = -30;
+    this.addAnchor(1, this.fireAnchor);
+    this.ejectionAnchor = new PIXI.Container();
+    this.ejectionAnchor.x = 40;
+    this.ejectionAnchor.y = -8;
+    this.addAnchor(2, this.ejectionAnchor);
+    this.drift = this.lastFiredTime = 0;
+    this.used = !1;
+  }
+  pointLeft() {
+    this.scale.x = -0.5;
+    this.scale.y = -0.5;
+  }
+  pointRight() {
+    this.scale.x = -0.5;
+    this.scale.y = 0.5;
+  }
+  animate(a) {
+    200 > a.ttl && (this.alpha = 0.7 + 0.3 * Math.sin(a.ttl / 5));
+  }
+  onUse() {
+    var a = (1e3 - Math.min(App.Time - this.lastFiredTime, 1e3)) / 1e3;
+    0 === a
+      ? (this.drift = 0)
+      : ((a = 0.03 * (a - 0.5)),
+        (this.drift = Math.max(0, Math.min(0.4, this.drift + (0 > a ? 4 * a : a)))));
+    this.lastFiredTime = App.Time;
+    this.used = !0;
+  }
+  updateDrift(a) {
+    this.used
+      ? (this.used = !1)
+      : 0 < this.drift &&
+        200 < App.Time - this.lastFiredTime &&
+        ((a *= 1 / (1e3 / 60)),
+        (this.drift = 0 > this.drift - 0.0025 * a ? 0 : this.drift - 0.0025 * a));
+  }
+  init() {
+    this.alpha = 1;
+  }
 }
 class MAC10Sprite extends PIXI.Sprite {
   constructor() {
@@ -56569,11 +56797,11 @@ class RifleSprite extends PIXI.Sprite {
     super(App.CombinedTextures.rifle_m16);
     AnchorBase.call(this);
     this.rotation = Math.PI;
-    this.anchor.x = 0.27;
+    this.anchor.x = 0.28;
     this.anchor.y = 0.62;
     this.fireAnchor = new PIXI.Container();
     this.fireAnchor.x = 200;
-    this.fireAnchor.y = -20;
+    this.fireAnchor.y = -26;
     this.addAnchor(1, this.fireAnchor);
     this.ejectionAnchor = new PIXI.Container();
     this.ejectionAnchor.x = 40;
@@ -56582,12 +56810,12 @@ class RifleSprite extends PIXI.Sprite {
     this.gearArmOffset = { x: -8, y: -6 };
   }
   pointLeft() {
-    this.scale.x = -0.85;
-    this.scale.y = -0.85;
+    this.scale.x = -0.84;
+    this.scale.y = -0.84;
   }
   pointRight() {
-    this.scale.x = -0.85;
-    this.scale.y = 0.85;
+    this.scale.x = -0.84;
+    this.scale.y = 0.84;
   }
   animate(a) {
     200 > a.ttl && (this.alpha = 0.7 + 0.3 * Math.sin(a.ttl / 5));
@@ -56666,18 +56894,20 @@ class ShockRifleSprite extends PIXI.Sprite {
     super(App.CombinedTextures.shockrifle);
     AnchorBase.call(this);
     this.rotation = Math.PI;
-    this.anchor.x = 0.2;
-    this.anchor.y = 0.5;
+    this.anchor.x = 0.35;
+    this.anchor.y = 0.55;
+    this.secondaryScale = { x: 0.75, y: 0.75 };
     this.fireAnchor = new PIXI.Container();
     this.fireAnchor.x = 200;
     this.fireAnchor.y = -12;
     this.addAnchor(1, this.fireAnchor);
     this.ejectionAnchor = new PIXI.Container();
-    this.ejectionAnchor.x = 40;
+    this.ejectionAnchor.x = 160;
     this.ejectionAnchor.y = -8;
     this.addAnchor(2, this.ejectionAnchor);
     this.scale.x = 1;
     this.scale.y = 1;
+    this.gearArmOffset = { x: 0, y: 10 };
   }
   pointLeft() {
     this.scale.x = -0.5;
@@ -56743,6 +56973,40 @@ class SubmachineGunSprite extends PIXI.Sprite {
     this.ejectionAnchor.y = -8;
     this.addAnchor(2, this.ejectionAnchor);
     this.gearArmOffset = { x: -8, y: 2 };
+  }
+  pointLeft() {
+    this.scale.x = -0.85;
+    this.scale.y = -0.85;
+  }
+  pointRight() {
+    this.scale.x = -0.85;
+    this.scale.y = 0.85;
+  }
+  animate(a) {
+    200 > a.ttl && (this.alpha = 0.7 + 0.3 * Math.sin(a.ttl / 5));
+  }
+  init() {
+    this.alpha = 1;
+  }
+}
+class UziSprite extends PIXI.Sprite {
+  constructor() {
+    super(App.CombinedTextures.uzi);
+    AnchorBase.call(this);
+    this.secondaryScale = { x: 0.85, y: 0.85 };
+    this.rotation = Math.PI;
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.origin = { x: 0.5, y: 0 };
+    this.fireAnchor = new PIXI.Container();
+    this.fireAnchor.x = 115;
+    this.fireAnchor.y = -20;
+    this.addAnchor(1, this.fireAnchor);
+    this.ejectionAnchor = new PIXI.Container();
+    this.ejectionAnchor.x = 40;
+    this.ejectionAnchor.y = -8;
+    this.addAnchor(2, this.ejectionAnchor);
+    this.gearArmOffset = { x: -15, y: -2 };
   }
   pointLeft() {
     this.scale.x = -0.85;
@@ -56971,10 +57235,28 @@ class BarrettBulletSprite extends PIXI.Sprite {
   animate(a) {
     this.frame++;
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
-    0.1 < b && (this.rotation = fastAtan2(a.vy, a.vx) + Math.PI);
+    0.1 < b && (this.rotation = Math.atan2(a.vy, a.vx) + Math.PI);
     3 < this.frame && ((this.scale.x = 0.09 + 0.005 * b), (this.alpha = 0.6));
   }
 }
+class BoomerangSprite extends PIXI.Sprite {
+  constructor() {
+    super(App.CombinedTextures.boomerang);
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.scale.x = 0.25;
+    this.scale.y = 0.25;
+    this.frame = this.alpha = this.rotation = 0;
+  }
+  animate(a) {
+    this.frame++;
+    this.rotation = a.r;
+    3 < this.frame && (this.alpha = 1);
+    this.frame++;
+  }
+  init() {}
+}
+BoomerangSprite.TEXTURE = null;
 class CarbineBulletSprite extends PIXI.Sprite {
   constructor() {
     super(App.CombinedTextures.streak);
@@ -57051,14 +57333,14 @@ class LaserGunBulletSprite extends PIXI.Sprite {
     super(App.CombinedTextures.laser_green);
     this.anchor.x = 0.2;
     this.anchor.y = 0.5;
-    this.scale.y = 0.2;
+    this.scale.y = 0.1;
     this.frame = this.alpha = 0;
   }
   animate(a) {
     this.frame++;
     this.rotation = Math.atan2(a.vy, a.vx) + Math.PI;
-    4 < this.frame &&
-      ((this.scale.x = 0.03 + 0.005 * Math.sqrt(a.vx * a.vx + a.vy * a.vy)), (this.alpha = 0.8));
+    3 < this.frame &&
+      ((this.scale.x = 0.02 + 0.0025 * Math.sqrt(a.vx * a.vx + a.vy * a.vy)), (this.alpha = 0.8));
   }
   init() {}
 }
@@ -57081,6 +57363,21 @@ class LauncherNadeSprite extends PIXI.Sprite {
 }
 LauncherNadeSprite.prototype = Object.create(PIXI.Sprite.prototype);
 LauncherNadeSprite.TEXTURE = null;
+class M60BulletSprite extends PIXI.Sprite {
+  constructor() {
+    super(App.CombinedTextures.streak);
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.scale.y = 0.3;
+    this.frame = this.alpha = 0;
+  }
+  animate(a) {
+    this.frame++;
+    let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
+    0.1 < b && (this.rotation = Math.atan2(a.vy, a.vx) + Math.PI);
+    3 < this.frame && ((this.scale.x = 0.06 + 0.003 * b), (this.alpha = 0.6));
+  }
+}
 class MAC10BulletSprite extends PIXI.Sprite {
   constructor() {
     super(App.CombinedTextures.streak);
@@ -57139,15 +57436,15 @@ class RifleBulletSprite extends PIXI.Sprite {
   constructor() {
     super(App.CombinedTextures.streak);
     this.anchor.x = 0.25;
-    this.anchor.y = 0.5;
-    this.scale.y = 0.3;
+    this.anchor.y = 0.25;
+    this.scale.y = 0.25;
     this.frame = this.alpha = 0;
   }
   animate(a) {
     this.frame++;
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
-    0.1 < b && (this.rotation = fastAtan2(a.vy, a.vx) + Math.PI);
-    5 < this.frame && ((this.scale.x = 0.02 + 0.01 * b), (this.alpha = 0.4));
+    0.1 < b && (this.rotation = Math.atan2(a.vy, a.vx) + Math.PI);
+    5 < this.frame && ((this.scale.x = 0.01 + 0.008 * b), (this.alpha = 0.4));
   }
 }
 class RLRocketSprite extends PIXI.Sprite {
@@ -57192,20 +57489,20 @@ class RPGRocketSprite extends PIXI.Sprite {
 RPGRocketSprite.TEXTURE = null;
 class ShockRifleBulletSprite extends PIXI.Sprite {
   constructor() {
-    super(App.CombinedTextures.shockrifle_orb);
+    super(App.CombinedTextures.shockrifle_orb2);
     this.anchor.x = 0.5;
     this.anchor.y = 0.5;
-    this.scale.x = 0.8;
-    this.scale.y = 0.8;
+    this.scale.x = 0.36;
+    this.scale.y = 0.36;
     this.frame = this.alpha = 0;
   }
   animate(a) {
     this.frame++;
-    this.rotation = a.r;
-    this.scale.x = this.scale.y = 0.8 + 0.1 * Math.sin(0.5 * this.frame);
+    this.rotation = Math.random() * Math.PI * 2;
+    this.scale.x = this.scale.y = 0.36 + 0.025 * Math.sin(0.1 * this.frame);
     4 < this.frame
       ? (this.alpha = 1)
-      : ((this.alpha += 0.25), (this.scale.x += 0.1), (this.scale.y += 0.1));
+      : ((this.alpha += 0.25), (this.scale.x += 0.09), (this.scale.y += 0.09));
   }
 }
 class ShotgunPelletSprite extends PIXI.Sprite {
@@ -57235,6 +57532,21 @@ class SubmachineGunBulletSprite extends PIXI.Sprite {
     let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
     0.1 < b && (this.rotation = Math.atan2(a.vy, a.vx) + Math.PI);
     4 < this.frame && ((this.scale.x = 0.01 + 0.006 * b), (this.alpha = 0.4));
+  }
+}
+class UziBulletSprite extends PIXI.Sprite {
+  constructor() {
+    super(App.CombinedTextures.streak);
+    this.anchor.x = 0.5;
+    this.anchor.y = 0.5;
+    this.scale.y = 0.2;
+    this.frame = this.alpha = 0;
+  }
+  animate(a) {
+    this.frame++;
+    let b = Math.sqrt(a.vx * a.vx + a.vy * a.vy);
+    0.1 < b && (this.rotation = Math.atan2(a.vy, a.vx) + Math.PI);
+    4 < this.frame && ((this.scale.x = 0.01 + 0.006 * b), (this.alpha = 0.4 - 0.005 * this.frame));
   }
 }
 class X75NadeSprite extends PIXI.Sprite {
@@ -57677,6 +57989,9 @@ var itemlist = {},
     Bow: "i35",
     RocketLauncher: "i36",
     Carbine: "i37",
+    BoomerangGun: "i38",
+    M60: "i39",
+    Uzi: "i41",
     Bouncyball: "i40",
     HealthBox: "i80",
     NadeBox: "i81",
@@ -57739,6 +58054,14 @@ ItemMap[ItemList.SubmachineGun] = {
   onUse: {
     visual: [ParticleEffects.SMGMuzzleFlash, ParticleEffects.SMGCartridge],
     audio: [AudioEffects.SMGFire],
+  },
+  equip: ItemMap.Equip.PRIMARY,
+};
+ItemMap[ItemList.Uzi] = {
+  title: "Uzi",
+  onUse: {
+    visual: [ParticleEffects.SMGMuzzleFlash, ParticleEffects.SMGCartridge],
+    audio: [AudioEffects.UziFire],
   },
   equip: ItemMap.Equip.PRIMARY,
 };
@@ -57853,6 +58176,15 @@ ItemMap[ItemList.Barrett] = {
   equip: ItemMap.Equip.PRIMARY,
   resizeReticle: { min: 1, max: 2 },
 };
+ItemMap[ItemList.M60] = {
+  title: "M60",
+  onUse: {
+    visual: [ParticleEffects.RifleMuzzleFlash, ParticleEffects.BarrettCartridge],
+    audio: [AudioEffects.M60Fire],
+  },
+  equip: ItemMap.Equip.PRIMARY,
+  resizeReticle: { min: 1, max: 2, drift: !0 },
+};
 ItemMap[ItemList.Carbine] = {
   title: "Carbine",
   onUse: {
@@ -57862,6 +58194,13 @@ ItemMap[ItemList.Carbine] = {
   equip: ItemMap.Equip.PRIMARY,
   resizeReticle: { min: 1, max: 1.3 },
 };
+ItemMap[ItemList.BoomerangGun] = {
+  title: "Boomerang",
+  onUse: { visual: [], audio: [AudioEffects.Boomerang] },
+  equip: ItemMap.Equip.SECONDARY,
+  tracking: !0,
+  resizeReticle: { min: 1, max: 1.3 },
+};
 ItemMap[ItemList.ShockRifle] = {
   title: "Shock Rifle",
   onUse: {
@@ -57869,6 +58208,7 @@ ItemMap[ItemList.ShockRifle] = {
     audio: [AudioEffects.ShockrifleFire],
   },
   equip: ItemMap.Equip.PRIMARY,
+  tracking: !0,
 };
 ItemMap[ItemList.Bouncyball] = {
   title: "Ball",
@@ -57988,6 +58328,7 @@ SpriteMap[PrefabList.PulseGunBullet] = PulseGunBulletSprite;
 SpriteMap[PrefabList.FlameThrowerLiquid] = FlameThrowerLiquidSprite;
 SpriteMap[PrefabList.RPGRocket] = RPGRocketSprite;
 SpriteMap[PrefabList.RLRocket] = RLRocketSprite;
+SpriteMap[PrefabList.Boomerang] = BoomerangSprite;
 SpriteMap[PrefabList.LauncherNade] = LauncherNadeSprite;
 SpriteMap[PrefabList.BarrettBullet] = BarrettBulletSprite;
 SpriteMap[PrefabList.CarbineBullet] = CarbineBulletSprite;
@@ -57996,6 +58337,8 @@ SpriteMap[PrefabList.LaserGunBullet] = LaserGunBulletSprite;
 SpriteMap[PrefabList.MinigunBullet] = MinigunBulletSprite;
 SpriteMap[PrefabList.X75Nade] = X75NadeSprite;
 SpriteMap[PrefabList.MAC10Bullet] = MAC10BulletSprite;
+SpriteMap[PrefabList.M60Bullet] = M60BulletSprite;
+SpriteMap[PrefabList.UziBullet] = UziBulletSprite;
 SpriteMap[PrefabList.Nade] = NadeSprite;
 SpriteMap[PrefabList.ShurikenBlade] = ShurikenBladeSprite;
 SpriteMap[PrefabList.SnowballProjectile] = SnowballProjectileSprite;
@@ -58024,6 +58367,9 @@ SpriteMap[PrefabList.Barrett] = BarrettSprite;
 SpriteMap[PrefabList.Carbine] = CarbineSprite;
 SpriteMap[PrefabList.Bow] = BowSprite;
 SpriteMap[PrefabList.RocketLauncher] = RocketLauncherSprite;
+SpriteMap[PrefabList.BoomerangGun] = BoomerangGunSprite;
+SpriteMap[PrefabList.M60] = M60Sprite;
+SpriteMap[PrefabList.Uzi] = UziSprite;
 SpriteMap[PrefabList.ShockRifle] = ShockRifleSprite;
 SpriteMap[PrefabList.HealthBox] = HealthBoxSprite;
 SpriteMap[PrefabList.NadeBox] = NadeBoxSprite;
@@ -58045,6 +58391,9 @@ SpriteMap[ItemList.AK47] = AK47Sprite;
 SpriteMap[ItemList.DesertEagle] = DesertEagleSprite;
 SpriteMap[ItemList.Barrett] = BarrettSprite;
 SpriteMap[ItemList.Carbine] = CarbineSprite;
+SpriteMap[ItemList.BoomerangGun] = BoomerangGunSprite;
+SpriteMap[ItemList.M60] = M60Sprite;
+SpriteMap[ItemList.Uzi] = UziSprite;
 SpriteMap[ItemList.Bow] = BowSprite;
 SpriteMap[ItemList.RocketLauncher] = RocketLauncherSprite;
 SpriteMap[ItemList.ShockRifle] = ShockRifleSprite;
@@ -58527,6 +58876,7 @@ class ActionTable extends PIXI.Container {
     this.alphaFlagCount.x = a.x + a.width + 8;
     this.alphaFlagCount.y = a.y + 5;
     this.alphaFlagCount.alpha = 0.7;
+    this.alphaFlagCount.resolution = 1.5;
     this.addChild(this.alphaFlagCount);
     a = new PIXI.Sprite(App.CombinedTextures.flag_bravo);
     a.x = this.tableWidth - 80;
@@ -58544,6 +58894,7 @@ class ActionTable extends PIXI.Container {
     this.bravoFlagCount.x = a.x + a.width + 8;
     this.bravoFlagCount.y = a.y + 5;
     this.bravoFlagCount.alpha = 0.7;
+    this.bravoFlagCount.resolution = 1.5;
     this.addChild(this.bravoFlagCount);
   }
   updateFlagScore(a) {
@@ -58602,6 +58953,7 @@ class ActionTable extends PIXI.Container {
     this.alphaFlagCount.x = a.x + a.width + 8;
     this.alphaFlagCount.y = a.y + 7;
     this.alphaFlagCount.alpha = 0.7;
+    this.alphaFlagCount.resolution = 1.5;
     this.addChild(this.alphaFlagCount);
     a = new PIXI.Sprite(App.CombinedTextures.tdm_bravo);
     a.x = this.tableWidth - 80;
@@ -58619,6 +58971,7 @@ class ActionTable extends PIXI.Container {
     this.bravoFlagCount.x = a.x + a.width + 8;
     this.bravoFlagCount.y = a.y + 7;
     this.bravoFlagCount.alpha = 0.7;
+    this.bravoFlagCount.resolution = 1.5;
     this.addChild(this.bravoFlagCount);
   }
   displayDBUI() {
@@ -58638,6 +58991,7 @@ class ActionTable extends PIXI.Container {
     this.alphaFlagCount.x = a.x + a.width + 8;
     this.alphaFlagCount.y = a.y + 7;
     this.alphaFlagCount.alpha = 0.7;
+    this.alphaFlagCount.resolution = 1.5;
     this.addChild(this.alphaFlagCount);
     a = new PIXI.Sprite(App.CombinedTextures.db_bravo);
     a.x = this.tableWidth - 80;
@@ -58655,6 +59009,7 @@ class ActionTable extends PIXI.Container {
     this.bravoFlagCount.x = a.x + a.width + 8;
     this.bravoFlagCount.y = a.y + 7;
     this.bravoFlagCount.alpha = 0.7;
+    this.bravoFlagCount.resolution = 1.5;
     this.addChild(this.bravoFlagCount);
   }
   updateTopListing(a) {
@@ -58684,9 +59039,11 @@ class ActionTable extends PIXI.Container {
     this.addChild(c);
     this.textFields.push(c);
     b &&
-      ((b.x = this.tableWidth - 34),
+      ((c = Math.min(64 / b.width, 32 / b.height)),
+      (b.scale.x *= c),
+      (b.scale.y *= c),
+      (b.x = this.tableWidth - 34),
       (b.y = 16 + 21 * a),
-      (b.scale.x = b.scale.y = 0.225),
       (b.rotation = 1.9 * Math.PI),
       this.addChild(b));
     if (a === this.maxLines) {
@@ -58886,6 +59243,7 @@ class EscapeMenu extends PIXI.Graphics {
     this.title.resolution = 1.5 * App.DevicePixelRatio;
     this.title.x = 0.5 * (this.width - this.title.width);
     this.title.y = 16;
+    this.title.resolution = 1.5;
     this.addChild(this.title);
     this.muteButton = new EscapeMenuButton(
       this.mute === EscapeMenu.MUTE_YES ? EscapeMenu.MUTE_NO : EscapeMenu.MUTE_YES,
@@ -58954,7 +59312,7 @@ class EscapeMenuButton extends PIXI.Graphics {
       strokeThickness: 3,
       lineJoin: "round",
     });
-    this.title.resolution = 1.5 * App.DevicePixelRatio;
+    this.title.resolution = 1.5;
     this.title.x = 0.5 * (this.width - this.title.width);
     this.title.y = 0.5 * (this.height - this.title.height) + 1;
     this.addChild(this.title);
@@ -59203,6 +59561,7 @@ class PlayerDropdownActionRow extends PIXI.Container {
     this.actionText.tint = c;
     this.actionText.alpha = 0.7;
     this.actionText.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+    this.actionText.resolution = 1.5;
     this.on("mouseover", () => {
       this.actionText.alpha = 1;
     });
@@ -62761,7 +63120,7 @@ class WeaponMenu extends PIXI.Graphics {
     this.secondaryTitle.resolution = 1.5;
     this.addChild(this.secondaryTitle);
     this.closeButton = new PIXI.Sprite(App.CombinedTextures.exit);
-    this.closeButton.x = this.width - 52;
+    this.closeButton.x = this.width - 56;
     this.closeButton.y = 10;
     this.closeButton.interactive = !0;
     this.closeButton.on("mouseover", () => AudioEffects.ButtonHover.audio.play());
@@ -62837,17 +63196,17 @@ class WeaponMenu extends PIXI.Graphics {
           ((c.enabled = 1 === xorshift128() % 3),
           c.enabled || (this.disabledCount++, (c.sprite.enabled = !1), (c.sprite.alpha = 0.3))),
         this.addChild(c.sprite),
-        (c.sprite.x = a + 50),
+        (c.sprite.x = a + 44),
         (c.sprite.y = b + 75),
-        (a += 96),
-        480 <= a && ((a = 0), (b += 76));
+        (a += 80),
+        480 <= a && ((a = 0), (b += 63));
     this.essentialItemSelected = !1;
     a = 0;
     for (let d in this.secondaryItems)
       (b = this.secondaryItems[d]),
         this.addChild(b.sprite),
-        (b.sprite.x = ((96 * a) % 480) + 50),
-        (b.sprite.y = 76 * Math.floor((a + 1) / 6) + 345),
+        (b.sprite.x = ((80 * a) % 480) + 44),
+        (b.sprite.y = 63 * Math.floor((a + 1) / 7) + 345),
         a++;
     this.secondaryItemSelected = !1;
   }
@@ -62891,28 +63250,28 @@ class WeaponButton extends PIXI.Container {
     this.hover = !1;
     this.graphics = new PIXI.Graphics();
     this.graphics.beginFill(this.equip === ItemMap.Equip.SECONDARY ? 16763904 : 16777215, 0.4);
-    this.graphics.drawRect(0, 0, 90, 70, 5);
-    this.graphics.x = -30;
-    this.graphics.y = -20;
+    this.graphics.drawRect(0, 0, 75, 58, 5);
+    this.graphics.x = -25.5;
+    this.graphics.y = -17;
     this.graphics.alpha = 0.5;
     this.addChild(this.graphics);
     this.lineGraphic = new PIXI.Graphics();
     this.lineGraphic.lineStyle(2, 16777215, 1);
-    this.lineGraphic.drawRect(0, 0, 90, 70, 5);
-    this.lineGraphic.x = -30;
-    this.lineGraphic.y = -20;
+    this.lineGraphic.drawRect(0, 0, 75, 58, 5);
+    this.lineGraphic.x = -25.5;
+    this.lineGraphic.y = -17;
     this.lineGraphic.alpha = 0.4;
     this.equip === ItemMap.Equip.SECONDARY && (this.lineGraphic.tint = 16763904);
     this.icon = new SpriteMap[a]();
     b = this.icon.width;
     let c = this.icon.height,
-      d = b >= c ? (60 < b ? 60 / b : 1) : 40 < c ? 40 / c : 1;
+      d = b >= c ? (51 < b ? 51 / b : 1) : 34 < c ? 34 / c : 1;
     b === c && (d = 0.4);
     this.initialScale = 1.4 * d;
     this.icon.rotation = 0;
     this.icon.anchor.x = this.icon.anchor.y = 0;
     this.icon.scale.x = this.icon.scale.y = this.initialScale;
-    this.icon.x = 0.5 * (60 - this.icon.width) - 16;
+    this.icon.x = 0.5 * (51 - this.icon.width) - 16;
     this.icon.y = 15;
     this.icon.rotation = -0.2;
     this.addChild(this.icon);
@@ -62928,7 +63287,7 @@ class WeaponButton extends PIXI.Container {
     this.title.x = -24;
     this.title.y = -18;
     this.addChild(this.title);
-    82 < this.title.width && (this.title.scale.x = this.title.scale.y = 82 / this.title.width);
+    67 < this.title.width && (this.title.scale.x = this.title.scale.y = 67 / this.title.width);
     this.enabled = this.interactive = !0;
     this.on("mouseover", (e) => this.onMouseOver(e));
     this.on("mouseout", (e) => this.onMouseOut(e));
@@ -64019,6 +64378,45 @@ Barrett.Shapes = [
   { t: GameShape.RECTANGLE, c: EntityCategory.ITEM, w: 22, h: 4, fr: 0.7, re: 0.3, s: !1, d: 1 },
 ];
 Barrett.Audio = { onContact: [AudioEffects.Tap] };
+function BoomerangGun(a) {
+  this.id = a.id;
+  this.prefab = PrefabList.BoomerangGun;
+  this.p = {
+    prefab: ShapeOptions.COMPOUND,
+    type: b2BodyType.b2_dynamicBody,
+    id: this.id,
+    ttl: a.p.ttl || 1500,
+    sh: BoomerangGun.Shapes,
+    contact: [this.id],
+    bu: -5,
+    wd: 4,
+  };
+  Prefab.call(this, a);
+  this.g = {
+    type: PrefabList.BoomerangGun,
+    scale: { x: 0.12 * (a.l ? -1 : 1), y: 0.12 },
+    offset: { x: 0.5, y: 0.4 },
+    animate: !0,
+    onContact: [ParticleEffects.SparkTrail2],
+  };
+  this.audio = NadeLauncher.Audio;
+}
+BoomerangGun.Shapes = [
+  {
+    t: GameShape.POLYGON,
+    c: EntityCategory.ITEM,
+    v: [
+      { x: -16, y: 4 },
+      { x: 16, y: 4 },
+      { x: 0, y: -7 },
+    ],
+    fr: 0.7,
+    re: 0.3,
+    s: !1,
+    d: 1,
+  },
+];
+BoomerangGun.Audio = { onContact: [AudioEffects.Tap] };
 function Bow(a) {
   this.id = a.id;
   this.prefab = PrefabList.Bow;
@@ -64220,6 +64618,33 @@ LinkGun.Shapes = [
   { t: GameShape.RECTANGLE, c: EntityCategory.ITEM, w: 18, h: 6, fr: 0.7, re: 0.3, s: !1, d: 1 },
 ];
 LinkGun.Audio = { onContact: [AudioEffects.Tap] };
+function M60(a) {
+  this.id = a.id;
+  this.prefab = PrefabList.M60;
+  this.p = {
+    prefab: ShapeOptions.COMPOUND,
+    type: b2BodyType.b2_dynamicBody,
+    id: this.id,
+    ttl: a.p.ttl || 1500,
+    sh: M60.Shapes,
+    contact: [this.id],
+    bu: -5,
+    wd: 4,
+  };
+  Prefab.call(this, a);
+  this.g = {
+    type: PrefabList.M60,
+    scale: { x: 0.12 * (a.l ? -1 : 1), y: 0.12 },
+    offset: { x: 0.5, y: 0.4 },
+    animate: !0,
+    onContact: [ParticleEffects.SparkTrail2],
+  };
+  this.audio = M60.Audio;
+}
+M60.Shapes = [
+  { t: GameShape.RECTANGLE, c: EntityCategory.ITEM, w: 22, h: 4, fr: 0.7, re: 0.3, s: !1, d: 1 },
+];
+M60.Audio = { onContact: [AudioEffects.Tap] };
 function MAC10(a) {
   this.id = a.id;
   this.prefab = PrefabList.MAC10;
@@ -64490,6 +64915,33 @@ SubmachineGun.Shapes = [
   { t: GameShape.RECTANGLE, c: EntityCategory.ITEM, w: 12, h: 3, fr: 0.7, re: 0.3, s: !1, d: 1 },
 ];
 SubmachineGun.Audio = { onContact: [AudioEffects.Tap] };
+function Uzi(a) {
+  this.id = a.id;
+  this.prefab = PrefabList.Uzi;
+  this.p = {
+    prefab: ShapeOptions.COMPOUND,
+    type: b2BodyType.b2_dynamicBody,
+    id: this.id,
+    ttl: a.p.ttl || 1500,
+    sh: Uzi.Shapes,
+    contact: [this.id],
+    bu: -5,
+    wd: 4,
+  };
+  Prefab.call(this, a);
+  this.g = {
+    type: PrefabList.Uzi,
+    scale: { x: 0.18 * (a.l ? -1 : 1), y: 0.2 },
+    offset: { x: 0.5, y: 0.35 },
+    animate: !0,
+    onContact: [ParticleEffects.SparkTrail2],
+  };
+  this.audio = Uzi.Audio;
+}
+Uzi.Shapes = [
+  { t: GameShape.RECTANGLE, c: EntityCategory.ITEM, w: 12, h: 3, fr: 0.7, re: 0.3, s: !1, d: 1 },
+];
+Uzi.Audio = { onContact: [AudioEffects.Tap] };
 function X75(a) {
   this.id = a.id;
   this.prefab = PrefabList.X75;
@@ -64543,8 +64995,9 @@ class Player extends Agent {
     this.hasTurned = !0;
     this.isLocal = !1;
     this.facingChanged = this.isPlayer = !0;
-    this.targeting = !1;
+    this.tracking = !1;
     this.lastInjuredTime = this.age = 0;
+    this.pointer = { x: 0, y: 0 };
     this.head = new GameObject({
       id: this.id + "_head",
       p: { prefab: -1, x: 0, y: 0, r: 0, vx: 0, vy: 0 },
@@ -64745,6 +65198,7 @@ class Player extends Agent {
   }
   equip(a) {
     super.equip();
+    this.tracking = ItemMap[a].tracking ? !0 : !1;
     this.primaryItem && this.gearContainer.removeChild(this.primaryItem);
     this.primaryItem = SpriteFactory.CreateSprite({ type: a });
     this.primaryItem.gearArmOffset
@@ -65013,12 +65467,16 @@ class Player extends Agent {
                 ? (this.primaryItem.customOffset ||
                     ((this.gearContainer.x = ProneScopeGunLeftAnimation.gearOffset.x + 35),
                     (this.gearContainer.y = ProneScopeGunLeftAnimation.gearOffset.y + 10)),
-                  (this.armleftupper.visual.alpha = 0))
+                  (this.armleftupper.visual.alpha = 1),
+                  (this.armleftupper.visual.rotation =
+                    this.facing + 0.4 * Math.sin(this.facing + 1 * Math.PI) - 0.55 * Math.PI))
                 : void 0 !== this.animations[Animation.PRONE_SCOPE_RIGHT] &&
                   (this.primaryItem.customOffset ||
                     ((this.gearContainer.x = ProneScopeGunRightAnimation.gearOffset.x - 35),
                     (this.gearContainer.y = ProneScopeGunRightAnimation.gearOffset.y + 10)),
-                  (this.armrightupper.visual.alpha = 0))
+                  (this.armrightupper.visual.alpha = 1),
+                  (this.armrightupper.visual.rotation =
+                    this.facing + 0.4 * Math.sin(this.facing) - 0.45 * Math.PI))
               : (void 0 === this.animations[Animation.SCOPE_GUN_LEFT] ||
                 this.primaryItem.customOffset
                   ? void 0 === this.animations[Animation.SCOPE_GUN_RIGHT] ||
@@ -65051,58 +65509,64 @@ class Player extends Agent {
               (this.gearArmOffsetY = this.primaryItem.gearArmOffsetAnimating.y),
               a
                 ? (this.armleftupper.visual.rotation = 1.2 * this.facing + 1.4 * Math.PI)
-                : (this.armrightupper.visual.rotation =
-                    1.2 * this.facing + 1.41 * Math.PI + (b ? 0 : 1.25))),
+                : (this.armrightupper.visual.rotation = 1.2 * this.facing + 1.41 * Math.PI)),
             a
-              ? (b
-                  ? this.crouching
-                    ? ((this.gearArmLeft.rotation = 1.5 * Math.PI - 0.05 * d),
-                      (this.gearArmLeft.x = 70 + this.gearArmOffsetX),
-                      (this.gearArmLeft.y = this.gearArmOffsetY),
-                      this.primaryItem.customOffset || (this.primaryItem.x = 0),
-                      e || (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 1.8))
-                    : ((this.gearArmLeft.x = 70 + 5 * d + this.gearArmOffsetX),
-                      (this.gearArmLeft.y = this.gearArmOffsetY),
-                      (this.primaryItem.x = 5 * d),
-                      e
-                        ? (this.gearArmLeft.rotation = 1.5 * Math.PI)
-                        : ((this.armleftupper.visual.rotation = -this.gearContainer.rotation - 3),
-                          (this.gearArmLeft.rotation = 1.5 * Math.PI - 0.15 * d)))
-                  : ((this.gearArmLeft.x = 70 + this.gearArmOffsetX),
+              ? b
+                ? this.crouching
+                  ? ((this.gearArmLeft.rotation = 1.5 * Math.PI - 0.05 * d),
+                    (this.gearArmLeft.x = 70 + this.gearArmOffsetX),
                     (this.gearArmLeft.y = this.gearArmOffsetY),
-                    this.crouching
-                      ? ((this.gearArmLeft.rotation = 1.5 * Math.PI + 0.05 * d),
-                        e ||
-                          (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 1.8))
-                      : e ||
-                        ((this.armleftupper.visual.rotation = -this.gearContainer.rotation - 3),
-                        (this.gearArmLeft.rotation = 1.5 * Math.PI + 0.1 * d))),
-                this.prone && (this.gearArmLeft.rotation += 0.3))
-              : (b
-                  ? this.crouching
-                    ? ((this.gearArmRight.rotation = -(0.5 * Math.PI - 0.05 * d)),
-                      (this.gearArmRight.x = 70 + this.gearArmOffsetX),
-                      (this.gearArmRight.y = -this.gearArmOffsetY),
-                      this.primaryItem.customOffset || (this.primaryItem.x = 0),
+                    this.primaryItem.customOffset || (this.primaryItem.x = 0),
+                    this.prone ||
                       e ||
-                        (this.armrightupper.visual.rotation = -this.gearContainer.rotation - 1.3))
-                    : ((this.gearArmRight.x = 70 + 5 * d + this.gearArmOffsetX),
-                      (this.gearArmRight.y = -this.gearArmOffsetY),
-                      (this.primaryItem.x = 5 * d),
-                      e
-                        ? (this.gearArmRight.rotation = 0.5 * -Math.PI)
-                        : ((this.armrightupper.visual.rotation = -this.gearContainer.rotation),
-                          (this.gearArmRight.rotation = -(0.5 * Math.PI - 0.15 * d))))
-                  : ((this.gearArmRight.x = 70 + this.gearArmOffsetX),
-                    (this.gearArmRight.y = -this.gearArmOffsetY),
-                    this.crouching
-                      ? ((this.gearArmRight.rotation = -(0.5 * Math.PI - 0.05 * d)),
+                      (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 1.8))
+                  : ((this.gearArmLeft.x = 70 + 5 * d + this.gearArmOffsetX),
+                    (this.gearArmLeft.y = this.gearArmOffsetY),
+                    (this.primaryItem.x = 5 * d),
+                    e
+                      ? (this.gearArmLeft.rotation = 1.5 * Math.PI)
+                      : (this.prone ||
+                          (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 3),
+                        (this.gearArmLeft.rotation = 1.5 * Math.PI - 0.15 * d)))
+                : ((this.gearArmLeft.x = 70 + this.gearArmOffsetX),
+                  (this.gearArmLeft.y = this.gearArmOffsetY),
+                  this.crouching
+                    ? ((this.gearArmLeft.rotation = 1.5 * Math.PI + 0.05 * d),
+                      this.prone ||
                         e ||
-                          (this.armrightupper.visual.rotation = -this.gearContainer.rotation - 1.3))
-                      : e ||
-                        ((this.armrightupper.visual.rotation = -this.gearContainer.rotation),
-                        (this.gearArmRight.rotation = -(0.5 * Math.PI + -0.05 * d)))),
-                this.prone && (this.gearArmRight.rotation -= 0.3)),
+                        (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 1.8))
+                    : e ||
+                      (this.prone ||
+                        (this.armleftupper.visual.rotation = -this.gearContainer.rotation - 3),
+                      (this.gearArmLeft.rotation = 1.5 * Math.PI + 0.1 * d)))
+              : b
+              ? this.crouching
+                ? ((this.gearArmRight.rotation = -(0.5 * Math.PI - 0.05 * d)),
+                  (this.gearArmRight.x = 70 + this.gearArmOffsetX),
+                  (this.gearArmRight.y = -this.gearArmOffsetY),
+                  this.primaryItem.customOffset || (this.primaryItem.x = 0),
+                  this.prone ||
+                    e ||
+                    (this.armrightupper.visual.rotation = -this.gearContainer.rotation - 1.3))
+                : ((this.gearArmRight.x = 70 + 5 * d + this.gearArmOffsetX),
+                  (this.gearArmRight.y = -this.gearArmOffsetY),
+                  (this.primaryItem.x = 5 * d),
+                  e
+                    ? (this.gearArmRight.rotation = 0.5 * -Math.PI)
+                    : (this.prone ||
+                        (this.armrightupper.visual.rotation = -this.gearContainer.rotation),
+                      (this.gearArmRight.rotation = -(0.5 * Math.PI - 0.15 * d))))
+              : ((this.gearArmRight.x = 70 + this.gearArmOffsetX),
+                (this.gearArmRight.y = -this.gearArmOffsetY),
+                this.crouching
+                  ? ((this.gearArmRight.rotation = -(0.5 * Math.PI - 0.05 * d)),
+                    this.prone ||
+                      e ||
+                      (this.armrightupper.visual.rotation = -this.gearContainer.rotation - 1.3))
+                  : e ||
+                    (this.prone ||
+                      (this.armrightupper.visual.rotation = -this.gearContainer.rotation),
+                    (this.gearArmRight.rotation = -(0.5 * Math.PI + -0.05 * d)))),
             void 0 !== this.animations[Animation.THROW_LEFT] ||
             void 0 !== this.animations[Animation.THROW_RIGHT]
               ? ((this.gearArmRight.visible = !1),
@@ -65112,11 +65576,17 @@ class Player extends Agent {
               : c ||
                 (void 0 !== this.animations[Animation.RELOAD_LEFT]
                   ? ((this.reloadCount += 0.05 + 0.1 * Math.random()),
-                    (this.gearContainer.rotation += 0.07 * Math.cos(this.reloadCount)))
+                    (this.gearContainer.rotation += 0.07 * Math.cos(this.reloadCount)),
+                    this.primaryItem.animateReload && this.primaryItem.animateReload(),
+                    this.prone && (this.armleftupper.visual.rotation = 0))
                   : void 0 !== this.animations[Animation.RELOAD_RIGHT]
                   ? ((this.reloadCount += 0.05 + 0.1 * Math.random()),
-                    (this.gearContainer.rotation -= 0.07 * Math.cos(this.reloadCount)))
-                  : (this.reloadCount = 0)),
+                    (this.gearContainer.rotation -= 0.07 * Math.cos(this.reloadCount)),
+                    this.primaryItem.animateReload && this.primaryItem.animateReload(),
+                    this.prone && (this.armrightupper.visual.rotation = 0))
+                  : 0 !== this.reloadCount &&
+                    ((this.reloadCount = 0),
+                    this.primaryItem.animateReload && this.primaryItem.stopReloadAnimation())),
             void 0 !== this.animations[Animation.SWITCH_LEFT]
               ? (this.gearContainer.rotation = -this.armrightupper.visual.rotation + 1 * Math.PI)
               : void 0 !== this.animations[Animation.SWITCH_RIGHT]
@@ -65165,10 +65635,15 @@ class Player extends Agent {
     }
   }
   updateFacing(a) {
-    const b = this.getOffset();
-    var c = this.p.x + b.x + (a.x - App.TransformedMouseX);
+    var b = this.getOffset(),
+      c = this.p.x + b.x + (a.x - App.TransformedMouseX);
     a = this.p.y + b.y + (a.y - App.TransformedMouseY);
-    Player.Input.$ = this.targeting ? Math.floor(Math.sqrt(c * c + a * a)) : 0;
+    this.tracking
+      ? ((b = Math.floor(Math.sqrt(c * c + a * a))),
+        (Player.Input.$ = b),
+        (this.pointer.x = (this.p.x - b * Math.cos(this.facing)) / 20),
+        (this.pointer.y = (this.p.y - b * Math.sin(this.facing)) / 20))
+      : (Player.Input.$ = 0);
     c = Math.atan2(a, c);
     Math.round(400 * this.facing) !== Math.round(400 * c) &&
       this.updateFacingDir(ToPrecision(3, c));
@@ -65224,13 +65699,11 @@ class Player extends Agent {
         };
   }
   getOffset() {
-    let a, b;
+    let a = { x: 0, y: -12 };
     this.prone
-      ? ((a = this.facingDir === Player.FACING_LEFT ? -18 : 18), (b = 1))
-      : this.crouching
-      ? ((a = 0), (b = -7))
-      : ((a = 0), (b = -12));
-    return { x: a, y: b };
+      ? ((a.x = this.facingDir === Player.FACING_LEFT ? -18 : 18), (a.y = 1))
+      : this.crouching && (a.y = -7);
+    return a;
   }
 }
 Player.Audio = { onContact: [AudioEffects.Thud], onAdded: [AudioEffects.Spawn] };
@@ -65436,7 +65909,7 @@ function AK47Bullet(a) {
     id: this.id,
     contact: [this.id],
     d: 0.4,
-    fr: 0.1,
+    fr: 1,
     re: 1,
     wttl: 3,
   };
@@ -65471,8 +65944,8 @@ function Arrow(a) {
     contact: [this.id],
     track: !1,
     d: 2,
-    fr: 0.1,
-    re: 0.2,
+    fr: 1,
+    re: 1,
   };
   Prefab.call(this, a);
   a = new ParticleEmitter(null, [ParticleEffects.ArrowTrail]);
@@ -65498,7 +65971,7 @@ function BarrettBullet(a) {
     gs: 1,
     wd: 5,
     bu: -0.25,
-    ricoAngle: 70,
+    ricoAngle: 60,
     rico: 2,
     pen: 1,
     decay: 0.5,
@@ -65506,8 +65979,8 @@ function BarrettBullet(a) {
     contact: [this.id],
     track: !0,
     d: 2,
-    fr: 0.1,
-    re: 1,
+    fr: 1,
+    re: 0.71,
   };
   Prefab.call(this, a);
   a = new ParticleEmitter(null, [ParticleEffects.BulletTrail]);
@@ -65524,7 +65997,74 @@ function BarrettBullet(a) {
   };
   this.audio = BarrettBullet.Audio;
 }
-BarrettBullet.Audio = { onContact: [AudioEffects.Rico], checkAltContact: !0 };
+BarrettBullet.Audio = {
+  onContact: [AudioEffects.Rico],
+  onAgentContact: [AudioEffects.AK47Fire],
+  checkAltContact: !0,
+};
+function Boomerang(a) {
+  this.id = a.id;
+  this.prefab = PrefabList.Boomerang;
+  this.p = {
+    ttl: 300,
+    prefab: ShapeOptions.CIRCLE,
+    type: Box2D.b2BodyType.b2_dynamicBody,
+    continuous: !0,
+    fixedRotation: !0,
+    allowSleep: !1,
+    tracking: !0,
+    ld: 0,
+    gs: 0,
+    update: Boomerang.Update,
+    fuel: 3,
+    rico: 0,
+    bu: 0,
+    wd: 0.2,
+    pen: 6,
+    track: !0,
+    decay: 1,
+    id: this.id,
+    contact: [this.id],
+    d: 2,
+    fr: 1,
+    re: 1,
+    wttl: 3,
+    sh: [{ c: EntityCategory.BULLET, radius: 13 }],
+  };
+  Prefab.call(this, a);
+  a = new ParticleEmitter(null, [ParticleEffects.BoomerangTrail]);
+  this.g = {
+    type: PrefabList.Boomerang,
+    onContact: [ParticleEffects.SmallRicochet, ParticleEffects.BoomerangImpactStatic],
+    onRemoveContact: [ParticleEffects.BoomerangImpactDynamic],
+    onAgentContact: [ParticleEffects.Bloodsplat1, ParticleEffects.Bloodsplat3],
+    onAgentContactSubmerged: [ParticleEffects.GoreTrailWater],
+    emitters: [a],
+  };
+  this.audio = Boomerang.Audio;
+}
+Boomerang.Update = (a, b) => {
+  a.body.SetAngle(a.body.GetAngle() - 0.35, !1);
+  if (0 >= a.ref.fuel) a.body.SetGravityScale(1.5), a.body.SetLinearDamping(0.5);
+  else {
+    a.ref.fuel -= (a.ref.sub ? 3 : 1) * b;
+    var c = a.ref.actor;
+    if (c) {
+      var d = a.body.GetPosition();
+      d = Math.atan2(c.pointer.y - d.y, c.pointer.x - d.x);
+      var e = a.body.GetLinearVelocity();
+      c = Math.sqrt(e.x * e.x + e.y * e.y);
+      e = Math.atan2(e.y, e.x);
+      d = ShortAngle(e, d);
+      b = e + (0 > d ? (-0.1 > d ? -0.1 : d) : 0.1 < d ? 0.1 : d) * b * 60;
+      a.body.SetLinearVelocity({ x: c * Math.cos(b), y: c * Math.sin(b) });
+    }
+  }
+};
+Boomerang.Audio = {
+  onContact: [AudioEffects.BoomerangImpact],
+  onAgentContact: [AudioEffects.BoomerangSlice],
+};
 function CarbineBullet(a) {
   this.id = a.id;
   this.type = PrefabList.CarbineBullet;
@@ -65533,7 +66073,7 @@ function CarbineBullet(a) {
     ttl: 180,
     prefab: ShapeOptions.PARTICLE,
     ld: 0.3,
-    ricoAngle: 70,
+    ricoAngle: 80,
     gs: 1,
     wd: 7,
     bu: -0.25,
@@ -65545,7 +66085,7 @@ function CarbineBullet(a) {
     track: !0,
     d: 0.5,
     fr: 1,
-    re: 1,
+    re: 0.75,
     wttl: 2.5,
   };
   Prefab.call(this, a);
@@ -65648,7 +66188,7 @@ function GhostLaser(a) {
     id: this.id,
     contact: [this.id],
     d: 1,
-    fr: 0.001,
+    fr: 1,
     re: 1,
   };
   Prefab.call(this, a);
@@ -65707,7 +66247,7 @@ function LauncherNade(a) {
     bu: 1,
     decay: 1,
     d: 2,
-    fr: 0.001,
+    fr: 1,
     re: 1,
     id: this.id,
     explosive: { damage: 100, radius: 5, blast: 10 },
@@ -65732,6 +66272,44 @@ function LauncherNade(a) {
   this.audio = LauncherNade.Audio;
 }
 LauncherNade.Audio = { onRemove: [AudioEffects.ExplosionNadeLauncher] };
+function M60Bullet(a) {
+  this.id = a.id;
+  this.type = PrefabList.M60Bullet;
+  this.contact = { damage: 0.75 };
+  this.p = {
+    ttl: 180,
+    prefab: ShapeOptions.PARTICLE,
+    ld: 0.3,
+    gs: 1,
+    wd: 5,
+    bu: -0.25,
+    ricoAngle: 70,
+    rico: 2,
+    pen: 1,
+    decay: 0.5,
+    id: this.id,
+    contact: [this.id],
+    track: !1,
+    d: 2,
+    fr: 1,
+    re: 0.8,
+  };
+  Prefab.call(this, a);
+  a = new ParticleEmitter(null, [ParticleEffects.M60BulletTrail]);
+  this.g = {
+    type: PrefabList.M60Bullet,
+    onContact: [
+      ParticleEffects.SmallRicochet,
+      ParticleEffects.LargeRicochet,
+      ParticleEffects.SparkTrail1,
+    ],
+    onAgentContact: [ParticleEffects.Bloodsplat1, ParticleEffects.Bloodsplat3],
+    onAgentContactSubmerged: [ParticleEffects.GoreTrailWater],
+    emitters: [a],
+  };
+  this.audio = M60Bullet.Audio;
+}
+M60Bullet.Audio = { onContact: [AudioEffects.Rico], checkAltContact: !0 };
 function MAC10Bullet(a) {
   this.id = a.id;
   this.type = PrefabList.MAC10Bullet;
@@ -65744,7 +66322,7 @@ function MAC10Bullet(a) {
     bu: 0,
     gs: 1,
     d: 0.5,
-    fr: 0.001,
+    fr: 1,
     re: 1,
     id: this.id,
     rico: 0,
@@ -65773,13 +66351,13 @@ function MinigunBullet(a) {
     wd: 5,
     bu: -0.25,
     id: this.id,
-    ricoAngle: 80,
-    rico: 1,
+    ricoAngle: 75,
+    rico: 2,
     decay: 1,
     contact: [this.id],
     d: 0.2,
-    fr: 0.99,
-    re: 1,
+    fr: 1,
+    re: 1.4,
     wttl: 3,
   };
   Prefab.call(this, a);
@@ -65813,7 +66391,7 @@ function PulseGunBullet(a) {
     knockback: 5,
     contact: [this.id],
     d: 2,
-    fr: 0,
+    fr: 1,
     re: 1,
   };
   Prefab.call(this, a);
@@ -65853,8 +66431,8 @@ function RifleBullet(a) {
     id: this.id,
     contact: [this.id],
     d: 0.3,
-    fr: 0.1,
-    re: 0.2,
+    fr: 1,
+    re: 1,
     wttl: 3,
   };
   Prefab.call(this, a);
@@ -65880,7 +66458,7 @@ function RLRocket(a) {
     gs: 0,
     ricoAngle: 70,
     update: RLRocket.Update,
-    fuel: 50,
+    fuel: 833,
     rico: 5,
     bu: 1,
     wd: 1.4,
@@ -65917,9 +66495,9 @@ function RLRocket(a) {
   this.audio = RLRocket.Audio;
 }
 RLRocket.Update = (a, b) => {
-  if (0 === a.ref.fuel) (a.body.gs = 2.5), void 0 !== a.body._gs && (a.body._gs = 2.5);
+  if (0 >= a.ref.fuel) (a.body.gs = 2.5), void 0 !== a.body._gs && (a.body._gs = 2.5);
   else {
-    a.ref.fuel--;
+    a.ref.fuel -= b;
     var c = Math.atan2(a.body.vel.y, a.body.vel.x);
     a.body.vel.x += 80 * Math.cos(c) * b;
     a.body.vel.y += 80 * Math.sin(c) * b;
@@ -65974,50 +66552,61 @@ RPGRocket.Audio = { onRemove: [AudioEffects.ExplosionNadeLauncher], checkAltCont
 function ShockRifleBullet(a) {
   this.id = a.id;
   this.type = PrefabList.ShockRifleBullet;
-  this.contact = { damage: 10, constant: !0 };
+  this.contact = { damage: 26, constant: !0 };
   this.p = {
-    ttl: 120,
+    ttl: 180,
+    fuel: 3,
     prefab: ShapeOptions.CIRCLE,
     type: Box2D.b2BodyType.b2_dynamicBody,
-    bullet: !0,
     fixedRotation: !0,
     allowSleep: !1,
+    tracking: !0,
     update: ShockRifleBullet.Update,
-    ld: 0,
+    ld: 2,
+    re: 1,
+    fr: 1,
     gs: 0,
-    wd: 5,
+    wd: 1,
     bu: 0,
-    ricoAngle: 65,
-    rico: 2,
-    pen: 3,
+    ricoAngle: 1,
+    rico: 1,
     noUpdate: !1,
     decay: 1,
     knockback: 4,
     id: this.id,
     contact: [this.id],
-    sh: [{ c: EntityCategory.BULLET, radius: 5 }],
+    sh: [{ c: EntityCategory.BULLET, radius: 10 }],
   };
   Prefab.call(this, a);
-  a = new ParticleEmitter(null, [ParticleEffects.Electricity1]);
-  const b = new ParticleEmitter(null, [ParticleEffects.Electricity2]);
-  b.probability = 1;
+  a = new ParticleEmitter(null, [ParticleEffects.Electricity3]);
+  a.probability = 1;
   this.g = {
     type: PrefabList.ShockRifleBullet,
     onContact: [new ParticleEmitter(null, [ParticleEffects.Electricity1], null, 1, 1, 200, 0.2)],
     onImpact: [new ParticleEmitter(null, [ParticleEffects.Electricity1], null, 1, 1, 200, 0.2)],
     onRemove: [ParticleEffects.ShockRifleOrbImpact],
-    emitters: [a, b],
+    emitters: [a],
   };
   this.audio = ShockRifleBullet.Audio;
 }
 ShockRifleBullet.Update = (a, b) => {
-  var c = a.body.GetLinearVelocity();
-  b = a.ref.sub ? 30 : 55;
-  c.x * c.x + c.y * c.y < b * b &&
-    ((c = Math.atan2(c.y, c.x)),
-    a.body.SetLinearVelocity({ x: b * Math.cos(c), y: b * Math.sin(c) }));
+  a.ref.fuel -= (a.ref.sub ? 2 : 1) * b;
+  var c = a.ref.actor;
+  if (c) {
+    var d = a.body.GetPosition();
+    c.isBot &&
+      ((c.pointer.x = d.x + 200 * Math.cos(c.facing + Math.PI)),
+      (c.pointer.y = d.y + 200 * Math.sin(c.facing + Math.PI)));
+    b = c.pointer.x - d.x;
+    var e = c.pointer.y - d.y;
+    c = Math.sqrt(b * b + e * e);
+    c = 2 < c ? 2 : 1 > c ? 1 : c;
+    d = a.body.GetLinearVelocity();
+    b = Math.atan2(e, b);
+    a.body.SetLinearVelocity({ x: d.x + c * Math.cos(b), y: d.y + c * Math.sin(b) });
+  }
 };
-ShockRifleBullet.Audio = { onContact: [AudioEffects.LaserImpact1] };
+ShockRifleBullet.Audio = { onRemove: [AudioEffects.ShockrifleRemove] };
 function ShotgunPellet(a) {
   this.type = PrefabList.ShotgunPellet;
   this.id = a.id;
@@ -66037,7 +66626,7 @@ function ShotgunPellet(a) {
     id: this.id,
     contact: [this.id],
     d: 0.4,
-    fr: 0.1,
+    fr: 1,
     re: 1,
   };
   Prefab.call(this, a);
@@ -66068,7 +66657,7 @@ function SubmachineGunBullet(a) {
     rico: 1,
     contact: [this.id],
     d: 0.3,
-    fr: 0.99,
+    fr: 1,
     re: 1,
   };
   Prefab.call(this, a);
@@ -66083,6 +66672,38 @@ function SubmachineGunBullet(a) {
   this.audio = SubmachineGunBullet.Audio;
 }
 SubmachineGunBullet.Audio = { onContact: [AudioEffects.Rico], checkAltContact: !0 };
+function UziBullet(a) {
+  this.id = a.id;
+  this.type = PrefabList.UziBullet;
+  this.contact = { damage: 0.05, absDamage: 3 };
+  this.p = {
+    ttl: 40,
+    prefab: ShapeOptions.PARTICLE,
+    ld: 3,
+    gs: 0,
+    wd: 5,
+    bu: -0.25,
+    decay: 1,
+    id: this.id,
+    ricoAngle: 80,
+    rico: 1,
+    contact: [this.id],
+    d: 0.3,
+    fr: 1,
+    re: 1,
+  };
+  Prefab.call(this, a);
+  a = new ParticleEmitter(null, [ParticleEffects.TinyBulletTrail]);
+  this.g = {
+    type: PrefabList.UziBullet,
+    onContact: [ParticleEffects.TinyRicochet, ParticleEffects.SparkTrail2],
+    onAgentContact: [ParticleEffects.Bloodsplat1, ParticleEffects.Bloodsplat3],
+    onAgentContactSubmerged: [ParticleEffects.GoreTrailWater],
+    emitters: [a],
+  };
+  this.audio = UziBullet.Audio;
+}
+UziBullet.Audio = { onContact: [AudioEffects.Rico], checkAltContact: !0 };
 function X75Nade(a) {
   this.id = a.id;
   this.prefab = PrefabList.X75Nade;
@@ -66608,7 +67229,7 @@ class Manager extends PIXI.utils.EventEmitter {
         var f = this.bodies[b.o];
         f && ((b.o = f), (b.tr = d));
       }
-      b.rem && !a.p.explosive && (c = { id: a.id });
+      b.rem && (a.p.explosive ? (a.p.ttl = 0) : (c = { id: a.id }));
     } else if (void 0 !== a.p.ricoAngle)
       if (
         ((f = Math.abs(Math.atan2(b.normal.y, b.normal.x) - Math.atan2(a.p.vy, a.p.vx))),
@@ -66641,7 +67262,7 @@ class Manager extends PIXI.utils.EventEmitter {
         if (b.s) (b = this.applyStateChange(b)) && this.p.update(b);
         else {
           var c = this.instantiate(b);
-          if (null !== c && (this.p.add(c.p), b.sharedState))
+          if (null !== c && (this.p.add(c), b.sharedState))
             for (c = b.sharedState.length; 0 < c--; ) this.applyStateChange(b.sharedState[c]);
         }
       else if (0 === b[""]) {
@@ -66732,7 +67353,9 @@ class Manager extends PIXI.utils.EventEmitter {
       b.p.cid = a.pr;
       a.p.s && (b.p.s = 1);
       void 0 !== a.p.j && (b.p.j = a.p.j);
-      void 0 !== a.p.o && (a = this.players[a.p.o]) && (b.p.origin = a.id);
+      void 0 !== a.p.o &&
+        (a = this.players[a.p.o]) &&
+        ((b.p.origin = a.id), b.p.tracking && (b.p.actor = a));
       return this.createGameObject(b);
     }
     return a.player
@@ -66811,7 +67434,7 @@ class Manager extends PIXI.utils.EventEmitter {
     else {
       a.id = "_" + this.localUidPool.get();
       let b = this.instantiate(a);
-      null !== b && ((b.p.ttl = a.ttl), (b.p.local = a.p.l), (b.p.id = a.id), this.p.add(b.p));
+      null !== b && ((b.p.ttl = a.ttl), (b.p.local = a.p.l), (b.p.id = a.id), this.p.add(b));
     }
   }
   applyStateChange(a) {
@@ -66942,6 +67565,7 @@ class Manager extends PIXI.utils.EventEmitter {
         if (void 0 !== a.ax || void 0 !== a.ay) (b.p.ax = a.ax || 0), (b.p.ay = a.ay || 0);
         b.isPlayer &&
           (a.a && b.setAnimations(a.a),
+          void 0 !== a.px && ((b.pointer.x = a.px), (b.pointer.y = a.py)),
           b.p.ax || b.p.ay
             ? 0.01 !== b.p.fr &&
               ((b.p.fr = 0.01), this.p.update({ i: b.id, fr: b.p.fr, type: b.p.type, local: !0 }))
@@ -67023,7 +67647,7 @@ var shapeoptions = {};
 ShapeOptions = { CIRCLE: 1, RECTANGLE: 2, ROUNDED_RECT: 3, PLAYER: 4, COMPOUND: 5, PARTICLE: 6 };
 var rayparticle = {};
 class RayParticle {
-  constructor(a, b = 0, c = 0, d = 0, e = 0, f = 1, g = 0, h = 1, k = 0, n = 1, m = 2, l = 0) {
+  constructor(a, b = 0, c = 0, d = 0, e = 0, f = 1, g = 0, h = 1, k = 0, n = 1, m = 2, l = 0, p) {
     this.m_type = b2BodyType.b2_particleBody;
     this.cat = EntityCategory.BULLET;
     this.mask = MaskBits[EntityCategory.BULLET];
@@ -67037,6 +67661,7 @@ class RayParticle {
     this.gs = n;
     this.wd = m;
     this.gi = l;
+    this.r = 0;
   }
   free() {
     b2Vec2.Free(this.pos);
@@ -68926,169 +69551,173 @@ class PhysicsWorker {
     this.dynamics[a.idA] && delete this.dynamics[a.idA].connected;
   }
   add(a) {
-    var b = a.id.toString();
-    let c = BodyFactory.createBody(a),
-      d = (this.entities[b] = { body: c, ref: a });
-    b = { id: b };
-    if (c.m_type === b2BodyType.b2_particleBody)
-      (this.particles[b.id] = d),
-        (b.x = c.pos.x * PC.PM_RATIO),
-        (b.y = c.pos.y * PC.PM_RATIO),
-        (b.r = 0),
-        a.ttl && (d.ref.ttl = d.ref._ttl = a.ttl),
-        (this.particlesAdded[b.id] = d);
+    let b = BodyFactory.createBody(a.p),
+      c = (this.entities[a.id] = { body: b, ref: a.p }),
+      d = { id: a.id };
+    if (b.m_type === b2BodyType.b2_particleBody)
+      (this.particles[d.id] = c),
+        (d.x = b.pos.x * PC.PM_RATIO),
+        (d.y = b.pos.y * PC.PM_RATIO),
+        (d.r = 0),
+        a.p.ttl && (c.ref.ttl = c.ref._ttl = a.p.ttl),
+        (this.particlesAdded[d.id] = c);
     else {
-      var e = c.GetPosition();
-      b.x = e.x * PC.PM_RATIO;
-      b.y = e.y * PC.PM_RATIO;
-      b.r = c.GetAngle();
-      if (a.anchors)
-        for (let k = 0, n = a.anchors.length; k < n; k++)
-          if (((e = a.anchors[k]), (e.owner = c), (this.anchors[e.id] = e), this.joints[e.id])) {
+      var e = b.GetPosition();
+      d.x = e.x * PC.PM_RATIO;
+      d.y = e.y * PC.PM_RATIO;
+      d.r = b.GetAngle();
+      if (a.p.anchors)
+        for (let k = 0, n = a.p.anchors.length; k < n; k++)
+          if (((e = a.p.anchors[k]), (e.owner = b), (this.anchors[e.id] = e), this.joints[e.id])) {
             var f = this.anchors[this.joints[e.id].attr.anchorA],
               g = this.anchors[this.joints[e.id].attr.anchorB];
             f && g && BodyFactory.createJoint(this.joints[e.id].attr, f, g);
           }
-      if (c.m_type === b2BodyType.b2_dynamicBody) {
-        this.dynamics[b.id] = d;
-        a.ttl && (d.ref.ttl = a.ttl);
-        a.ignoreExp && (d.ignoreExp = a.ignoreExp);
-        a.contact &&
-          ((this.contact[b.id] = { body: c, fixtures: a.contact }),
-          void 0 !== a.origin && (this.contact[b.id].origin = a.origin));
-        a.continuous && (this.continuous[b.id] = { body: c, f: { x: 0, y: 0 }, changed: !1 });
-        1 === a.local && ((d.local = 1), (d.ttl = a.ttl));
-        if (a.ragdoll) {
-          this.continuous[b.id].isPlayer = !0;
-          d.facing = a.z / 10;
-          d.active = 1;
-          d.ragdoll = BodyFactory.createRagdoll(a.ragdoll.id, a.gi);
-          d.animating = {};
-          d.animate = a.a || { 0: 0, 8: 0 };
-          b.anims = d.animate;
-          if (void 0 !== a.fr) for (e = c.m_fixtureList; e; e = e.m_next) e.m_friction = a.fr;
-          d.newAnims = !0;
-          for (var h in a.ragdoll.id)
-            (e = d.ragdoll[h]),
-              (e._parent = b.id),
-              e.SetPosition(d.body.GetPosition(), !1),
+      if (b.m_type === b2BodyType.b2_dynamicBody) {
+        this.dynamics[d.id] = c;
+        a.p.ttl && (c.ref.ttl = a.p.ttl);
+        a.p.ignoreExp && (c.ignoreExp = a.p.ignoreExp);
+        a.p.contact &&
+          ((this.contact[d.id] = { body: b, fixtures: a.p.contact }),
+          void 0 !== a.p.origin && (this.contact[d.id].origin = a.p.origin));
+        a.p.continuous && (this.continuous[d.id] = { body: b, f: { x: 0, y: 0 }, changed: !1 });
+        1 === a.p.local && ((c.local = 1), (c.ttl = a.p.ttl));
+        if (a.p.ragdoll) {
+          this.continuous[d.id].isPlayer = !0;
+          c.facing = a.p.z / 10;
+          c.active = 1;
+          c.ragdoll = BodyFactory.createRagdoll(a.p.ragdoll.id, a.p.gi);
+          c.animating = {};
+          c.animate = a.p.a || { 0: 0, 8: 0 };
+          c.pointer = { x: 0, y: 0, updated: !1 };
+          d.anims = c.animate;
+          if (void 0 !== a.p.fr) for (e = b.m_fixtureList; e; e = e.m_next) e.m_friction = a.p.fr;
+          c.newAnims = !0;
+          for (var h in a.p.ragdoll.id)
+            (e = c.ragdoll[h]),
+              (e._parent = d.id),
+              e.SetPosition(c.body.GetPosition(), !1),
               (f = e.GetUserData()),
               e.contact
                 ? ((g = { pen: -1 }), (this.contact[f] = { body: e, fixtures: [f] }))
                 : (g = { wd: 6, bu: 0, id: h }),
               (this.entities[f] = this.dynamics[f] = { body: e, ref: g });
         }
-        a.smooth && (d.smooth = !0);
-        a.s ? c.SetAwake(!1) : c.SetAwake(!0);
-      } else c.m_type === b2BodyType.b2_kinematicBody && (this.kinematics[b.id] = d);
-      if (a.attr)
-        for (h = 0; h < a.attr.length; h++)
-          switch (((e = a.attr[h]), e.type)) {
+        a.p.smooth && (c.smooth = !0);
+        a.p.s ? b.SetAwake(!1) : b.SetAwake(!0);
+      } else b.m_type === b2BodyType.b2_kinematicBody && (this.kinematics[d.id] = c);
+      if (a.p.attr)
+        for (h = 0; h < a.p.attr.length; h++)
+          switch (((e = a.p.attr[h]), e.type)) {
             case GameAttribute.GRAVITY_SCALE:
-              d.gOffset = parseFloat(e.offset) / PC.PM_RATIO;
-              d.gRatio = parseFloat(e.ratio);
-              d.gScale = c.GetGravityScale();
+              c.gOffset = parseFloat(e.offset) / PC.PM_RATIO;
+              c.gRatio = parseFloat(e.ratio);
+              c.gScale = b.GetGravityScale();
               break;
             case GameAttribute.FLUID:
-              this.fluids[b.id] = d;
-              d.density = e.d;
-              d.ref.wa = parseFloat(e.w);
+              this.fluids[d.id] = c;
+              c.density = e.d;
+              c.ref.wa = parseFloat(e.w);
               this.containsFluid || (this.containsFluid = !0);
               break;
             default:
-              (f = { owner: c, attr: e }),
+              (f = { owner: b, attr: e }),
                 (this.joints[e.anchorA] = this.joints[e.anchorB] = f),
                 this.anchors[e.anchorA] &&
                   this.anchors[e.anchorB] &&
                   BodyFactory.createJoint(f.attr, this.anchors[e.anchorA], this.anchors[e.anchorB]);
           }
     }
-    this.onMessage({ type: PhysicsMessage.ADDED, data: b });
+    this.onMessage({ type: PhysicsMessage.ADDED, data: d });
   }
   update(a) {
-    if (a.decay) {
-      var b = this.particles[a.i];
-      if (b) {
+    var b = this.particles[a.i];
+    if (b) {
+      if (a.decay) {
         var c = this.dynamics[a.aid];
-        c &&
-          !c.active &&
-          b.ref.lastHit !== a.aid &&
-          ((b.ref.lastHit = a.aid),
-          (b.body.vel.x *= b.ref.decay),
-          (b.body.vel.y *= b.ref.decay),
-          (a = b.body),
-          (a = b2Vec2.Alloc(
-            a.d * a.vel.x * PhysicsWorker.TimeDelta,
-            a.d * a.vel.y * PhysicsWorker.TimeDelta
-          )),
-          c.ragdoll.torsoupper.ApplyImpulse(a, c.ragdoll.torsoupper.GetWorldCenter()),
-          b2Vec2.Free(a));
+        if (c && !c.active && b.ref.lastHit !== a.aid) {
+          b.ref.lastHit = a.aid;
+          b.body.vel.x *= b.ref.decay;
+          b.body.vel.y *= b.ref.decay;
+          var d = b.body;
+          d = b2Vec2.Alloc(
+            d.d * d.vel.x * PhysicsWorker.TimeDelta,
+            d.d * d.vel.y * PhysicsWorker.TimeDelta
+          );
+          c.ragdoll.torsoupper.ApplyImpulse(d, c.ragdoll.torsoupper.GetWorldCenter());
+          b2Vec2.Free(d);
+        }
       }
+      void 0 !== a.x && (b.body.pos.x = a.x);
+      void 0 !== a.y && (b.body.pos.y = a.y);
+      void 0 !== a.u && (b.body.vel.x = a.u);
+      void 0 !== a.v && (b.body.vel.y = a.v);
     } else {
-      if ((b = this.dynamics[a.i])) {
-        c = b.body;
-        if (void 0 !== a.x && void 0 !== a.y && !b.slave) {
-          var d = c.GetPosition();
-          var e = a.x - d.x,
-            f = a.y - d.y,
+      if ((d = this.dynamics[a.i])) {
+        b = d.body;
+        if (void 0 !== a.x && void 0 !== a.y && !d.slave) {
+          c = b.GetPosition();
+          var e = a.x - c.x,
+            f = a.y - c.y,
             g = Math.sqrt(e * e + f * f);
-          if (b.smooth && b.local)
+          if (d.smooth && d.local)
             if (2.5 < g) {
               if (
-                ((d = { x: d.x + e, y: d.y + f }),
-                void 0 !== b.connected && this.dynamics[b.connected].body.SetPosition(d, !1),
-                b.ragdoll)
+                ((c = { x: c.x + e, y: c.y + f }),
+                void 0 !== d.connected && this.dynamics[d.connected].body.SetPosition(c, !1),
+                d.ragdoll)
               )
-                for (g = b.ragdoll.bodies.length; 0 < g--; ) {
-                  var h = b.ragdoll.bodies[g].GetPosition();
-                  b.ragdoll.bodies[g].SetPosition({ x: h.x + e, y: h.y + f }, !1);
+                for (g = d.ragdoll.bodies.length; 0 < g--; ) {
+                  var h = d.ragdoll.bodies[g].GetPosition();
+                  d.ragdoll.bodies[g].SetPosition({ x: h.x + e, y: h.y + f }, !1);
                 }
             } else
               (g = 1 - Clamp(0.85, 0.98, Math.sqrt(e * e + f * f))),
-                (d = { x: d.x + e * g, y: d.y + f * g }),
-                b.ragdoll &&
-                  ((h = b.ragdoll.head.GetPosition()),
-                  b.ragdoll.head.SetPosition({ x: h.x + e * g, y: h.y + f * g }, !1));
+                (c = { x: c.x + e * g, y: c.y + f * g }),
+                d.ragdoll &&
+                  ((h = d.ragdoll.head.GetPosition()),
+                  d.ragdoll.head.SetPosition({ x: h.x + e * g, y: h.y + f * g }, !1));
           else if (1 < g) {
             if (
-              ((d = { x: d.x + e, y: d.y + f }),
-              void 0 !== b.connected && this.dynamics[b.connected].body.SetPosition(d, !1),
-              b.ragdoll)
+              ((c = { x: c.x + e, y: c.y + f }),
+              void 0 !== d.connected && this.dynamics[d.connected].body.SetPosition(c, !1),
+              d.ragdoll)
             )
-              for (g = b.ragdoll.bodies.length; 0 < g--; )
-                (h = b.ragdoll.bodies[g].GetPosition()),
-                  b.ragdoll.bodies[g].SetPosition({ x: h.x + e, y: h.y + f }, !1);
-          } else d = { x: d.x + 0.4 * e, y: d.y + 0.4 * f };
+              for (g = d.ragdoll.bodies.length; 0 < g--; )
+                (h = d.ragdoll.bodies[g].GetPosition()),
+                  d.ragdoll.bodies[g].SetPosition({ x: h.x + e, y: h.y + f }, !1);
+          } else c = { x: c.x + 0.4 * e, y: c.y + 0.4 * f };
         }
-        if (void 0 !== b.ragdoll) {
-          void 0 !== a.z && (b.facing = a.z / 10);
+        if (void 0 !== d.ragdoll) {
+          void 0 !== a.z && (d.facing = a.z / 10);
           if (void 0 !== a.fr)
-            for (e = c.m_fixtureList; e; e = e.m_next)
-              if ("-u" !== e.m_userData || b.prone || b.flipping) e.m_friction = a.fr;
-          !a.local && b.animate && (b.newAnims = !1);
-          if (void 0 !== a.active && ((b.active = a.active), !b.active)) {
-            c.SetActive(!1);
+            for (e = b.m_fixtureList; e; e = e.m_next)
+              if ("-u" !== e.m_userData || d.prone || d.flipping) e.m_friction = a.fr;
+          !a.local && d.animate && (d.newAnims = !1);
+          void 0 !== a.px && ((d.pointer.x = a.px), (d.pointer.y = a.py), (d.pointer.updated = !0));
+          if (void 0 !== a.active && ((d.active = a.active), !d.active)) {
+            b.SetActive(!1);
             e = { x: 0, y: 0 };
             f = 0;
             if (void 0 !== a.bid) {
-              if (((b.ref.killId = a.bid), (g = this.dynamics[a.bid])))
+              if (((d.ref.killId = a.bid), (g = this.dynamics[a.bid])))
                 (e = g.body.m_linearVelocity.Copy()),
                   (e.x *= 0.1),
                   (e.y *= 0.1),
                   g.ref.knockback && ((e.x *= g.ref.knockback), (e.y *= g.ref.knockback)),
                   (f = g.body.GetPosition()),
                   (g = { x: f.x + g.ref.vx, y: f.y + g.ref.vy }),
-                  (f = Math.sqrt(e.x * e.x + e.y * e.y) * getDir(c.GetPosition(), f, g));
+                  (f = Math.sqrt(e.x * e.x + e.y * e.y) * getDir(b.GetPosition(), f, g));
             } else
               a.exp
-                ? ((e = c.m_linearVelocity),
+                ? ((e = b.m_linearVelocity),
                   (e.x *= -0.5),
                   (e.y *= -0.5),
                   (f = -0.3 + 0.6 * Math.random()))
-                : ((e = c.m_linearVelocity), (e.x *= 0.1), (e.y *= 0.1), (f = 0));
+                : ((e = b.m_linearVelocity), (e.x *= 0.1), (e.y *= 0.1), (f = 0));
             if (void 0 !== a.detach)
               for (let k = 0, n = a.detach.length; k < n; k++) {
-                g = b.ragdoll[a.detach[k]];
+                g = d.ragdoll[a.detach[k]];
                 h = g.GetBodyA();
                 let m = g.GetBodyB();
                 this.world.DestroyJoint(g);
@@ -69099,11 +69728,11 @@ class PhysicsWorker {
                 h.SetAngularVelocity(f);
                 m.SetAngularVelocity(f);
               }
-            for (g = b.ragdoll.joints.length; 0 < g--; ) b.ragdoll.joints[g].EnableMotor(!1);
-            b.ragdoll.leftelbowjoint.EnableLimit(!0);
-            b.ragdoll.rightelbowjoint.EnableLimit(!0);
-            for (g = b.ragdoll.bodies.length; 0 < g--; )
-              (h = b.ragdoll.bodies[g]),
+            for (g = d.ragdoll.joints.length; 0 < g--; ) d.ragdoll.joints[g].EnableMotor(!1);
+            d.ragdoll.leftelbowjoint.EnableLimit(!0);
+            d.ragdoll.rightelbowjoint.EnableLimit(!0);
+            for (g = d.ragdoll.bodies.length; 0 < g--; )
+              (h = d.ragdoll.bodies[g]),
                 (h.m_linearVelocity.x += e.x),
                 (h.m_linearVelocity.y += e.y),
                 h.SetAngularVelocity(f),
@@ -69117,64 +69746,64 @@ class PhysicsWorker {
                 h.m_fixtureList.SyncFilterData(),
                 (h._local = !0);
           }
-        } else a.j || c.IsAwake() || c.SetAwake(!0);
-        a.a && ((b.animate = a.a), (b.newAnims = !0));
+        } else a.j || b.IsAwake() || b.SetAwake(!0);
+        a.a && ((d.animate = a.a), (d.newAnims = !0));
         a.local ||
-          ((b = this.continuous[a.i]) &&
+          ((d = this.continuous[a.i]) &&
             (void 0 !== a.n ||
               void 0 !== a.m ||
-              (void 0 === a.n && b.f.x) ||
-              (void 0 === a.m && b.f.y)) &&
-            b.f.x !== a.n &&
-            b.f.y !== a.m &&
-            ((b.changed = !0), (b.f.x = a.n || 0), (b.f.y = a.m || 0), (b.count = 3)));
+              (void 0 === a.n && d.f.x) ||
+              (void 0 === a.m && d.f.y)) &&
+            d.f.x !== a.n &&
+            d.f.y !== a.m &&
+            ((d.changed = !0), (d.f.x = a.n || 0), (d.f.y = a.m || 0), (d.count = 3)));
       } else {
-        b = this.kinematics[a.i];
-        if (!b) return;
-        c = b.body;
-        void 0 !== a.x && void 0 !== a.y && (d = a);
+        d = this.kinematics[a.i];
+        if (!d) return;
+        b = d.body;
+        void 0 !== a.x && void 0 !== a.y && (c = a);
       }
-      void 0 !== d
+      void 0 !== c
         ? void 0 !== a.r
-          ? c.SetPositionAndAngle(d, a.r, !1)
-          : c.SetPosition(d, !1)
-        : void 0 !== a.r && c.SetAngle(a.r, !1);
+          ? b.SetPositionAndAngle(c, a.r, !1)
+          : b.SetPosition(c, !1)
+        : void 0 !== a.r && b.SetAngle(a.r, !1);
       void 0 !== a.u
-        ? c.SetLinearVelocity({ x: a.u, y: void 0 === a.v ? 0 : a.v })
+        ? b.SetLinearVelocity({ x: a.u, y: void 0 === a.v ? 0 : a.v })
         : void 0 !== a.v
-        ? c.SetLinearVelocity({ x: 0, y: a.v })
-        : c.m_linearVelocity.x && c.m_linearVelocity.y && c.SetLinearVelocity({ x: 0, y: 0 });
-      void 0 !== a.w && c.SetAngularVelocity(a.w);
+        ? b.SetLinearVelocity({ x: 0, y: a.v })
+        : b.m_linearVelocity.x && b.m_linearVelocity.y && b.SetLinearVelocity({ x: 0, y: 0 });
+      void 0 !== a.w && b.SetAngularVelocity(a.w);
     }
   }
   updateFacing(a, b) {
     void 0 !== this.dynamics[a] && (this.dynamics[a].facing = b);
   }
-  remove(a, b = !1) {
-    let c = a.id;
-    if (this.particles[c]) {
-      var d = this.particles[c];
-      b
-        ? (d.ref.ttl = 1)
-        : (this.onMessage({ type: PhysicsMessage.REMOVED, data: a }),
-          delete this.particles[c],
-          delete this.entities[c],
-          d.body.free());
-    } else if (((b = this.entities[c]), void 0 !== b)) {
-      if (b.ragdoll)
-        for (d = b.ragdoll.bodies.length; 0 < d--; ) {
-          let e = b.ragdoll.bodies[d].GetUserData();
+  remove(a, b) {
+    b = a.id;
+    if (this.particles[b]) {
+      var c = this.particles[b];
+      this.onMessage({ type: PhysicsMessage.REMOVED, data: a });
+      delete this.particles[b];
+      delete this.entities[b];
+      c.body.free();
+    } else if (((c = this.entities[b]), void 0 !== c)) {
+      if (c.ragdoll) {
+        let d = c.ragdoll.bodies.length;
+        for (; 0 < d--; ) {
+          let e = c.ragdoll.bodies[d].GetUserData();
           delete this.entities[e];
           delete this.dynamics[e];
-          this.world.DestroyBody(b.ragdoll.bodies[d]);
+          this.world.DestroyBody(c.ragdoll.bodies[d]);
           this.submerged[e] && delete this.submerged[e];
         }
-      delete this.entities[c];
-      this.continuous[c] && delete this.continuous[c];
-      this.contact[c] && delete this.contact[c];
-      this.dynamics[c] ? delete this.dynamics[c] : this.kinematics[c] && delete this.kinematics[c];
-      this.submerged[c] && delete this.submerged[c];
-      BodyFactory.free(b.body);
+      }
+      delete this.entities[b];
+      this.continuous[b] && delete this.continuous[b];
+      this.contact[b] && delete this.contact[b];
+      this.dynamics[b] ? delete this.dynamics[b] : this.kinematics[b] && delete this.kinematics[b];
+      this.submerged[b] && delete this.submerged[b];
+      BodyFactory.free(c.body);
       this.onMessage({ type: PhysicsMessage.REMOVED, data: a });
     }
   }
@@ -69313,11 +69942,11 @@ class PhysicsWorker {
                   ) >=
                 (Math.PI / 180) * m.ref.ricoAngle
                 ? ((d = norm(h)),
-                  (e = 2 * dp(l.vel, d)),
+                  (e = 2 * dp(l.vel, d) * m.ref.fr),
                   (l.pos.x = k.x + 0.01 * d.x),
                   (l.pos.y = k.y + 0.01 * d.y),
-                  (l.vel.x = (l.vel.x - e * d.x) * m.ref.re),
-                  (l.vel.y = (l.vel.y - e * d.y) * m.ref.re),
+                  (l.vel.x -= e * d.x * m.ref.re),
+                  (l.vel.y -= e * d.y * m.ref.re),
                   (d = Math.min(Math.max(1 - a * l.ld, 0), 1)),
                   (l.vel.x *= d),
                   (l.vel.y = (l.vel.y + 20 * l.gs * a) * d),
@@ -69390,7 +70019,7 @@ class PhysicsWorker {
           vx: l.vel.x,
           vy: l.vel.y,
           ttl: m.ref.ttl,
-          r: 0,
+          r: l.r,
         }),
         this.solved[n] && (c.c = this.solved[n]),
         this.onMessage({ type: PhysicsMessage.UPDATE_OBJECT, data: c }));
@@ -69542,7 +70171,11 @@ class PhysicsWorker {
         f.gRatio && e.SetGravityScale(f.gScale - (d.y - f.gOffset) * f.gRatio);
         void 0 !== f.facing &&
           f.active &&
-          (this.animate(f), f.animate && f.newAnims && (b.a = f.animate), (b.z = f.facing));
+          (this.animate(f),
+          f.animate && f.newAnims && (b.a = f.animate),
+          (b.z = f.facing),
+          f.pointer.updated &&
+            ((b.px = f.pointer.x), (b.py = f.pointer.y), (f.pointer.updated = !1)));
         this.solved[g] && (b.c = this.solved[g]);
         this.contact[g] && this.contact[g].fr && (b.fr = this.contact[g].fr);
         this.onMessage({ type: PhysicsMessage.UPDATE_OBJECT, data: b });
@@ -70780,6 +71413,7 @@ class GraphicsTab extends PIXI.Container {
     });
     this.graphicsTitle.x = this.marginLeft - 5;
     this.graphicsTitle.y = this.marginTop + 6;
+    this.graphicsTitle.resolution = 1.5;
     this.addChild(this.graphicsTitle);
     this.reticleLine = new Checkbox("reticle", "Display reticle line", !0);
     this.reticleLine.x = this.marginLeft;
@@ -71885,7 +72519,7 @@ class Menu extends PIXI.Container {
     this.darkNewsBackground.drawRect(20, 20, 400, 100);
     this.darkNewsBackground.endFill();
     this.container.addChild(this.darkNewsBackground);
-    this.infoText = new PIXI.Text("Version 0.3.0 beta released", {
+    this.infoText = new PIXI.Text("Version 0.3.1 beta released - 10/10/22", {
       fontSize: 14,
       fontFamily: "Arial",
       fill: 16777215,
@@ -71900,7 +72534,7 @@ class Menu extends PIXI.Container {
     this.infoText.interactive = !0;
     this.container.addChild(this.infoText);
     this.infoTextDisc = new PIXI.Text(
-      "- Training mode added\n- New damage model\n- Graphics & UI quality improved\n- Performance optimizations",
+      "- 3 new weapons: Boomerang, M60 and Uzi\n- Completely revamped Shock Rifle\n- Improved projectile ballistics and ricochet\n- Preparations for upcoming Zombie Survival release..",
       {
         fontSize: 12,
         fontFamily: "Arial",
