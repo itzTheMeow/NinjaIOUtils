@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.27
+// @version      1.28
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.27",
+    ver: "1.28",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -1249,6 +1249,7 @@ ${name}`);
 
   // src/onlineStatus.ts
   var failedOnline = false;
+  var wentOnline = false;
   var onlineSocket;
   function goOnline() {
     if (app.credential.accounttype == "guest") {
@@ -1261,17 +1262,21 @@ ${name}`);
     if (onlineSocket)
       onlineSocket.disconnect();
     onlineSocket = io(config_default.api);
-    onlineSocket.on("connect", () => onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
+    onlineSocket.on("connect", () => onlineSocket && onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
     onlineSocket.on("success", () => {
       App.Console.log("Successfully went online!");
+      wentOnline = true;
     });
     onlineSocket.on("fail", (msg) => {
+      wentOnline = false;
       failedOnline = true;
       App.Console.log(`Failed to go online: ${msg}`);
     });
     onlineSocket.on("disconnect", () => {
       onlineSocket = null;
-      App.Console.log("Went offline.");
+      if (wentOnline)
+        App.Console.log("Went offline.");
+      wentOnline = false;
     });
     onlineSocket.on("needsLink", async (requestID) => {
       const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;

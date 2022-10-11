@@ -8,6 +8,7 @@ import { commPackets, decodeUserCommunication } from "./userCommunicationProtoco
 import { inGame, io } from "./utils";
 
 let failedOnline = false;
+let wentOnline = false;
 let onlineSocket: Socket;
 export function goOnline() {
   if (app.credential.accounttype == "guest") {
@@ -18,19 +19,23 @@ export function goOnline() {
   failedOnline = false;
   if (onlineSocket) onlineSocket.disconnect();
   onlineSocket = io(config.api);
-  onlineSocket.on("connect", () =>
-    onlineSocket.emit("init", SocketTypes.online, app.credential.playerid)
+  onlineSocket.on(
+    "connect",
+    () => onlineSocket && onlineSocket.emit("init", SocketTypes.online, app.credential.playerid)
   );
   onlineSocket.on("success", () => {
     App.Console.log("Successfully went online!");
+    wentOnline = true;
   });
   onlineSocket.on("fail", (msg) => {
+    wentOnline = false;
     failedOnline = true;
     App.Console.log(`Failed to go online: ${msg}`);
   });
   onlineSocket.on("disconnect", () => {
     onlineSocket = null;
-    App.Console.log("Went offline.");
+    if (wentOnline) App.Console.log("Went offline.");
+    wentOnline = false;
   });
   onlineSocket.on("needsLink", async (requestID) => {
     const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages as {

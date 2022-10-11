@@ -1,5 +1,9 @@
 # Changelog
 
+v1.28
+
+- Fixed some online socket issues.
+
 v1.27
 
 - Added experimental NinjaIOUtils tab.
