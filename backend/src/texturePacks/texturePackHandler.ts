@@ -5,6 +5,22 @@ import { getTextureURLs } from "./textureURLs";
 
 export default function texturePackHandler(app: Application) {
   app.get(
+    "/pack_meta",
+    cors({
+      origin: "*",
+    }),
+    async (req, res) => {
+      try {
+        const texurls = { ...(await getTextureURLs()) };
+        delete texurls.combined;
+        delete texurls.seamless;
+        res.json(texurls);
+      } catch {
+        res.json({});
+      }
+    }
+  );
+  app.get(
     "/packs",
     cors({
       origin: "*",
