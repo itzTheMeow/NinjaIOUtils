@@ -338,7 +338,18 @@ declare var Client: {
     onMessage(data: { data: any }): void;
   };
 };
+declare var HealthBar: Container & {
+  new (): HealthBar;
+  getValue(): number;
+  setValue(val: number): void;
+};
 declare var Canvas: {
+  prototype: {
+    update(): void;
+    _update(): void;
+  };
+};
+declare var Player: {
   prototype: {
     update(): void;
     _update(): void;

@@ -1975,6 +1975,24 @@ ${name}`);
     App.Layer.features.push(App.Layer.utilsMenu);
   }
 
+  // src/playerDataHook.ts
+  function hookPlayerData() {
+    Player.prototype._update = Player.prototype.update;
+    Player.prototype.update = function(...d) {
+      const upd = this._update(...d);
+      const hpbar = this.hpbar || (this.hpbar = new HealthBar());
+      if (!hpbar.parent) {
+        this.visual.addChild(hpbar);
+        hpbar.scale.x = hpbar.scale.y = 0.25;
+        hpbar.x = -hpbar.width / 2;
+        hpbar.y = -50;
+      }
+      if (hpbar.getValue() !== this.health)
+        hpbar.setValue(this.health);
+      return upd;
+    };
+  }
+
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
@@ -2051,6 +2069,7 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     setInterval(() => updateFriendList(), 6e4);
     checkUpdate();
     hookUtilsMenu();
+    hookPlayerData();
     app.onResize = window.eval(`(function ${app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`)})`);
     App.NUIScale = SETTINGS.uiScale;
     app.onResize();
