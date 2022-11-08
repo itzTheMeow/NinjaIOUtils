@@ -29,6 +29,7 @@ interface Container extends EventDispatcher {
   children: Container[];
   setText(txt: string): void;
   addChild(child: Container): Container;
+  addChildAt(child: Container, index: number): Container;
   removeChild(...child: Container[]): void;
   removeChildren(): void;
   destroy(): void;
@@ -50,13 +51,14 @@ interface Text extends Container {
 declare interface Rectangle {}
 declare interface Graphics extends Container {
   clear(): void;
-  beginFill(arg0: number, arg1: number): void;
+  beginFill(color: number, alpha: number): void;
   drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
   endFill(): void;
   drawCircle(arg0: number, arg1: number, arg2: number): void;
   interactive: boolean;
   lineStyle(arg0: number, arg1: number, arg2: number, arg3: number): void;
   drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
+  drawPolygon(pts: { x: number; y: number }[]): void;
   hitArea: Rectangle;
 }
 declare interface Sprite extends Container {}
@@ -336,6 +338,12 @@ declare var Client: {
     onMessage(data: { data: any }): void;
   };
 };
+declare var Canvas: {
+  prototype: {
+    update(): void;
+    _update(): void;
+  };
+};
 declare var app: {
   menu: Container & {
     backgroundImage: Container;
@@ -382,6 +390,9 @@ declare var app: {
     socket?: WebSocket;
     mapID: string;
     server: { id: string };
+  };
+  game: {
+    hud: Container;
   };
   showMenu(): void;
   _showMenu(): void;
@@ -456,6 +467,8 @@ declare var App: {
   };
   RemovePreloader(): void;
   Scale: number;
+  ClientWidth: number;
+  ClientHeight: number;
   prototype: {
     initGameMode(data: any): any;
     realInitGameMode(data: any): any;

@@ -21,6 +21,7 @@ import initHashManager from "./hashManager";
 import hookSocialMenu from "./socialMenuHook";
 import { handleKeyDown } from "./hotkeyMessages";
 import hookUtilsMenu from "./hookUtilsMenu";
+import hookRenderer from "./rendererHook";
 
 config; // ensures config is at the top of the compiled file
 
@@ -118,6 +119,7 @@ No support will be provided to logged out users experiencing issues, sorry.`
   setInterval(() => updateFriendList(), 60000);
   checkUpdate();
   hookUtilsMenu();
+  //hookRenderer();
 
   // replace the app scale setter function
   app.onResize = window.eval(
