@@ -46,7 +46,7 @@ export default function getTexturePack(pack: string) {
       } else {
         combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
         for (const img of images.filter((i) => i.startsWith("c_"))) {
-          const id = img.match(/.*?_(.*?).png/)[1];
+          const id = img.match(/.*?_(.*?).png/)?.[1];
           const tex = textures.combined.frames[id];
           if (!tex) continue;
           const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
@@ -81,7 +81,7 @@ export default function getTexturePack(pack: string) {
       } else {
         seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
         for (const img of images.filter((i) => i.startsWith("s_"))) {
-          const id = img.match(/.*?_(.*?).png/)[1];
+          const id = img.match(/.*?_(.*?).png/)?.[1];
           const tex = textures.seamless.frames[id];
           if (!tex) continue;
           const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
