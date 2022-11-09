@@ -13,7 +13,7 @@ export default function hookGraphicsSettingsTab() {
   app.menu.settingsPanel.graphicsTab.fpsDisplay.y =
     app.menu.settingsPanel.graphicsTab.enableAA.y +
     app.menu.settingsPanel.graphicsTab.enableAA.height +
-    14;
+    12;
   app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function (b) {
     SETTINGS.showFPS = b;
     saveSettings();
@@ -35,7 +35,7 @@ export default function hookGraphicsSettingsTab() {
   app.menu.settingsPanel.graphicsTab.uiScaler.y =
     app.menu.settingsPanel.graphicsTab.fpsDisplay.y +
     app.menu.settingsPanel.graphicsTab.fpsDisplay.height +
-    14;
+    10;
   app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b: number) => {
     b = Math.round(b * 10) / 10;
     if (b == 0.4) {
@@ -70,4 +70,22 @@ export default function hookGraphicsSettingsTab() {
     conf.style.padding = "0.5rem";
     document.body.appendChild(conf);
   });
+
+  app.menu.settingsPanel.graphicsTab.addChild(
+    (app.menu.settingsPanel.graphicsTab.helpfulBox = new Checkbox(
+      "helpful",
+      "Enable Helpful UI (healthbars)",
+      true
+    ))
+  );
+  app.menu.settingsPanel.graphicsTab.helpfulBox.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
+  app.menu.settingsPanel.graphicsTab.helpfulBox.y =
+    app.menu.settingsPanel.graphicsTab.uiScaler.y +
+    app.menu.settingsPanel.graphicsTab.uiScaler.height +
+    12;
+  app.menu.settingsPanel.graphicsTab.helpfulBox.on(Checkbox.CHANGE, function (b) {
+    SETTINGS.helpfulUI = b;
+    saveSettings();
+  });
+  app.menu.settingsPanel.graphicsTab.helpfulBox.setChecked(SETTINGS.helpfulUI);
 }

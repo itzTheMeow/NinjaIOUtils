@@ -379,6 +379,7 @@ declare var app: {
         enableAA: Container;
         uiScaler: Slider;
         fpsDisplay: Checkbox;
+        helpfulBox: Checkbox;
       };
       graphicsTabButtonBackground: Container;
       controlsTabButtonBackground: Container;

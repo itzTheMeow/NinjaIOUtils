@@ -1,5 +1,9 @@
 # Changelog
 
+v1.29
+
+- Added setting for healthbars above players.
+
 v1.28
 
 - Fixed some online socket issues.

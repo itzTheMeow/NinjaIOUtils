@@ -10,6 +10,7 @@ interface Settings {
   appearOnline: boolean;
   enableHotkeyMessages: boolean;
   hotkeyMessages: Array<hotkeyMessage>;
+  helpfulUI: boolean;
 }
 const settingsKey = "ninjaioutils";
 
@@ -23,6 +24,7 @@ export const SETTINGS: Settings = {
     appearOnline: true,
     enableHotkeyMessages: true,
     hotkeyMessages: [],
+    helpfulUI: true,
   },
   ...JSON.parse(localStorage.getItem(settingsKey) || "{}"),
 };

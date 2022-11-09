@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.28
+// @version      1.29
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.28",
+    ver: "1.29",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -108,7 +108,8 @@
       apiKey: "",
       appearOnline: true,
       enableHotkeyMessages: true,
-      hotkeyMessages: []
+      hotkeyMessages: [],
+      helpfulUI: true
     },
     ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
   };
@@ -120,7 +121,7 @@
   function hookGraphicsSettingsTab() {
     app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox("showFPS", "Show FPS Display", true));
     app.menu.settingsPanel.graphicsTab.fpsDisplay.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
-    app.menu.settingsPanel.graphicsTab.fpsDisplay.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 14;
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 12;
     app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function(b) {
       SETTINGS.showFPS = b;
       saveSettings();
@@ -132,7 +133,7 @@
     if (!SETTINGS.uiScale)
       app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
     app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
-    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.fpsDisplay.y + app.menu.settingsPanel.graphicsTab.fpsDisplay.height + 14;
+    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.fpsDisplay.y + app.menu.settingsPanel.graphicsTab.fpsDisplay.height + 10;
     app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b) => {
       b = Math.round(b * 10) / 10;
       if (b == 0.4) {
@@ -167,6 +168,14 @@
       conf.style.padding = "0.5rem";
       document.body.appendChild(conf);
     });
+    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.helpfulBox = new Checkbox("helpful", "Enable Helpful UI (healthbars)", true));
+    app.menu.settingsPanel.graphicsTab.helpfulBox.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
+    app.menu.settingsPanel.graphicsTab.helpfulBox.y = app.menu.settingsPanel.graphicsTab.uiScaler.y + app.menu.settingsPanel.graphicsTab.uiScaler.height + 12;
+    app.menu.settingsPanel.graphicsTab.helpfulBox.on(Checkbox.CHANGE, function(b) {
+      SETTINGS.helpfulUI = b;
+      saveSettings();
+    });
+    app.menu.settingsPanel.graphicsTab.helpfulBox.setChecked(SETTINGS.helpfulUI);
   }
 
   // src/settings/settingsTabSound.ts
@@ -1980,15 +1989,17 @@ ${name}`);
     Player.prototype._update = Player.prototype.update;
     Player.prototype.update = function(...d) {
       const upd = this._update(...d);
-      const hpbar = this.hpbar || (this.hpbar = new HealthBar());
-      if (!hpbar.parent) {
-        this.visual.addChild(hpbar);
-        hpbar.scale.x = hpbar.scale.y = 0.25;
-        hpbar.x = -hpbar.width / 2;
-        hpbar.y = -50;
+      if (SETTINGS.helpfulUI) {
+        const hpbar = this.hpbar || (this.hpbar = new HealthBar());
+        if (!hpbar.parent) {
+          this.visual.addChild(hpbar);
+          hpbar.scale.x = hpbar.scale.y = 0.25;
+          hpbar.x = -hpbar.width / 2;
+          hpbar.y = -50;
+        }
+        if (hpbar.getValue() !== this.health)
+          hpbar.setValue(this.health);
       }
-      if (hpbar.getValue() !== this.health)
-        hpbar.setValue(this.health);
       return upd;
     };
   }
