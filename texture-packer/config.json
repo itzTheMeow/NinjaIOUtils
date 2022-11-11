@@ -1,7 +1,0 @@
-{
-  "//": "If these URLs change, update them here.",
-  "///": "You may need to change assets to assets-dev and vice-versa.",
-  "verbose": true,
-  "replace": false,
-  "meta": "https://nutils.itsmeow.cat/pack_meta"
-}

@@ -8,7 +8,7 @@ There are no specific rules for packs, just don't make it NSFW.
 
 ### Editing Files
 
-Use the [texture unpacker](https://github.com/itzTheMeow/NinjaIOUtils#texture-unpacking) to get the image files to edit. Once you're finished, put the files you changed somewhere and continue below. Don't upload any files that you didnt change.
+[You can download the textures here](https://nutils.itsmeow.cat/pack_meta/textures.zip) and edit the ones you want. Once you're finished, put the files you changed somewhere and continue below. **Don't upload any files that you didnt change.**
 
 ### Uploading Your Pack
 

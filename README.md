@@ -52,7 +52,7 @@ Other people can not join your games if you do not appear online or your game ha
 
 ### Texture Packs
 
-You can use a texture pack via the in-game texture pack browser. If you have created a texture pack and would like to use it, DM me on discord or follow the instructions below:
+You can use a texture pack via the in-game texture pack browser. If you have created a texture pack and would like to use it, DM me on discord/revolt or follow the instructions below:
 
 #### [How to Add a Texture Pack](https://github.com/itzTheMeow/NinjaIOUtils/blob/master/docs/Texture%20Packs.md#texture-packs)
 
@@ -63,31 +63,6 @@ This script is used for my [stat tracker](https://itsmeow.cat/ninja). In order t
 Now go [here](https://itsmeow.cat/addninja) and link your account. (the account you are using this script with) You can view linked accounts [here](https://itsmeow.cat/myninja).
 
 Now whenever you finish a game, the script will upload your score to the tracker. You can view your match history by clicking 'View' on your account.
-
-## Texture (Un)packing
-
-These instructions assume windows as your operating system. If you are using linux, you shouldn't have a hard time adapting them.
-
-#### Details
-
-- The unpacker automatically downloads the image file from ninja.io
-- The unpacker automatically downloads the image metadata from ninja.io
-- If the URLs are incorrect, you can change it in config.json
-- You can change `replace` to `true` in config.json in order to replace existing files. (change it to false to keep files and not overwrite them)
-- Replacing files WILL overwrite them, so save your texture pack elsewhere if you don't want to have to re-edit the old files.
-- You can change `verbose` to `false` in config.json to disable the extra output from the commands.
-- This will (un)pack both game and terrain textures. (you dont have to edit or distribute both)
-- **The texture packer is depreciated and doesn't need to be used to make a texture pack. Just unpack your files and edit them, then follow [the instructions](#how-to-add-a-texture-pack) to add your pack.**
-
-#### Setup
-
-- [Download](https://github.com/itzTheMeow/NinjaIOUtils/archive/refs/heads/master.zip) the latest version of the repository.
-- [Install node.js](https://nodejs.org/en/) if you havent already. (just pick 'current') (you shouldnt need the extra chocolatey utilities)
-
-#### Usage
-
-- To unpack the image files, run `unpack.bat`.
-- You can then edit your files in the `split_textures` and `split_terrain` folders.
 
 ## Credits
 
