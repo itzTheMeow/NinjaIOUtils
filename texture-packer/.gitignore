@@ -1,4 +1,4 @@
-!node_modules
+node_modules
 split_textures
 split_terrain
 textures.png
