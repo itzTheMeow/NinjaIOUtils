@@ -29,7 +29,11 @@ export default function texturePackHandler(app: Application) {
     async (req, res) => {
       try {
         const zip = await unpackZip();
-        res.contentType("zip").end(zip);
+        res
+          .setHeader("Content-Length", zip.length)
+          .setHeader("Cache-Control", "no-store")
+          .contentType("zip")
+          .end(zip);
       } catch {
         res.json({ error: "Failed to unpack textures. Please try again or contact Meow." });
       }
