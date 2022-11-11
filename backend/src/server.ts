@@ -7,7 +7,6 @@ import onlineUserConn, { onlineUsers } from "./onlineUserManager";
 import partyManagerConnection from "./party/partyManager";
 import initStatTracker from "./statTracker";
 import initLinkSharer from "./linkSharer";
-import { getTextureURLs } from "./texturePacks/textureURLs";
 import texturePackHandler from "./texturePacks/texturePackHandler";
 
 const config = {

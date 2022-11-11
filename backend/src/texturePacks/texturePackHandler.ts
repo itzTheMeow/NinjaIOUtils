@@ -2,6 +2,7 @@ import { Application } from "express";
 import cors from "cors";
 import getTexturePack, { getAllTexturePacks } from "./getTexturePack";
 import { getTextureURLs } from "./textureURLs";
+import unpackZip from "./unpackZip";
 
 export default function texturePackHandler(app: Application) {
   app.get(
@@ -17,6 +18,20 @@ export default function texturePackHandler(app: Application) {
         res.json(texurls);
       } catch {
         res.json({});
+      }
+    }
+  );
+  app.get(
+    "/pack_meta/textures.zip",
+    cors({
+      origin: "*",
+    }),
+    async (req, res) => {
+      try {
+        const zip = await unpackZip();
+        res.contentType("zip").end(zip);
+      } catch {
+        res.json({ error: "Failed to unpack textures. Please try again or contact Meow." });
       }
     }
   );
