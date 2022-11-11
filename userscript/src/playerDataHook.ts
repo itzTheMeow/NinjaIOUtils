@@ -5,7 +5,8 @@ export default function hookPlayerData() {
   Player.prototype.update = function (...d) {
     const upd = this._update(...d);
     if (SETTINGS.helpfulUI) {
-      const isLocal = this.id == app.game.manager.getLocalPlayer()?.id;
+      const isLocal = this.id == app.game.manager.getLocalPlayer()?.id,
+        hideHUD = this.alive && (isLocal || !this.prone);
       const hpbar: typeof HealthBar = this.hpbar || (this.hpbar = new HealthBar());
       if (!hpbar.parent) {
         this.visual.addChild(hpbar);
@@ -15,7 +16,7 @@ export default function hookPlayerData() {
         hpbar.background.visible = false;
       }
       if (hpbar.getValue() !== this.health) hpbar.setValue(this.health);
-      hpbar.visible = this.alive && (isLocal || !this.prone);
+      hpbar.visible = hideHUD;
       if (isLocal) {
         const jetbar: typeof JetBar = this.jetbar || (this.jetbar = new JetBar());
         if (!jetbar.parent) {
@@ -27,6 +28,7 @@ export default function hookPlayerData() {
         }
         this.jetLeft = app.game.hud.jetBar.getValue();
         if (jetbar.getValue() !== this.jetLeft) jetbar.setValue(this.jetLeft);
+        jetbar.visible = hideHUD;
       }
     }
     return upd;

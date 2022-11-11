@@ -1990,7 +1990,7 @@ ${name}`);
     Player.prototype.update = function(...d) {
       const upd = this._update(...d);
       if (SETTINGS.helpfulUI) {
-        const isLocal = this.id == app.game.manager.getLocalPlayer()?.id;
+        const isLocal = this.id == app.game.manager.getLocalPlayer()?.id, hideHUD = this.alive && (isLocal || !this.prone);
         const hpbar = this.hpbar || (this.hpbar = new HealthBar());
         if (!hpbar.parent) {
           this.visual.addChild(hpbar);
@@ -2001,7 +2001,7 @@ ${name}`);
         }
         if (hpbar.getValue() !== this.health)
           hpbar.setValue(this.health);
-        hpbar.visible = this.alive && (isLocal || !this.prone);
+        hpbar.visible = hideHUD;
         if (isLocal) {
           const jetbar = this.jetbar || (this.jetbar = new JetBar());
           if (!jetbar.parent) {
@@ -2014,6 +2014,7 @@ ${name}`);
           this.jetLeft = app.game.hud.jetBar.getValue();
           if (jetbar.getValue() !== this.jetLeft)
             jetbar.setValue(this.jetLeft);
+          jetbar.visible = hideHUD;
         }
       }
       return upd;
