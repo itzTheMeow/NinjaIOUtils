@@ -2014,6 +2014,15 @@ ${name}`);
           this.jetLeft = app.game.hud.jetBar.getValue();
           if (jetbar.getValue() !== this.jetLeft)
             jetbar.setValue(this.jetLeft);
+          if (!app.game.hud.jetBar._setValue) {
+            app.game.hud.jetBar._setValue = app.game.hud.jetBar.setValue;
+            app.game.hud.jetBar.setValue = (v) => {
+              if (jetbar.maxValue !== app.game.hud.jetBar.maxValue)
+                jetbar.setMaxValue(app.game.hud.jetBar.maxValue);
+              jetbar.setValue(v);
+              return app.game.hud.jetBar._setValue(v);
+            };
+          }
           jetbar.visible = hideHUD;
         }
       }

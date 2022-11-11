@@ -342,6 +342,9 @@ interface StatBar extends Container {
   new (): HealthBar;
   getValue(): number;
   setValue(val: number): void;
+  _setValue(val: number): void;
+  setMaxValue(val: number): void;
+  maxValue: number;
   background: PIXI.Graphics;
 }
 declare var HealthBar: StatBar;
