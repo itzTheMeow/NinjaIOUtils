@@ -1,5 +1,11 @@
 # Changelog
 
+v1.30
+
+- Added flight time bar above your own player.
+- Bars are now hidden right when a player dies.
+- Bars are hidden when other players prone.
+
 v1.29
 
 - Added setting for healthbars above players.
