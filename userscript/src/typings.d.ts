@@ -338,11 +338,14 @@ declare var Client: {
     onMessage(data: { data: any }): void;
   };
 };
-declare var HealthBar: Container & {
+interface StatBar extends Container {
   new (): HealthBar;
   getValue(): number;
   setValue(val: number): void;
-};
+  background: PIXI.Graphics;
+}
+declare var HealthBar: StatBar;
+declare var JetBar: StatBar;
 declare var Canvas: {
   prototype: {
     update(): void;
@@ -404,7 +407,12 @@ declare var app: {
     server: { id: string };
   };
   game: {
-    hud: Container;
+    manager: {
+      getLocalPlayer(): { id: string };
+    };
+    hud: Container & {
+      jetBar: JetBar;
+    };
   };
   showMenu(): void;
   _showMenu(): void;
