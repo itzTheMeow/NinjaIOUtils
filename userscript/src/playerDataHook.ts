@@ -56,12 +56,15 @@ export default function hookPlayerData() {
           ammobar.x = -18;
           ammobar.y = 26;
           ammobar.scale.x = ammobar.scale.y = 0.3;
+          ammobar.rotation = -Math.PI / 2;
         }
         this.ammoLeft = app.game.hud.ammoBar.getValue();
         if (ammobar.value !== this.ammoLeft) ammobar.value = this.ammoLeft;
         (ammobar.update =
           ammobar.update ||
           (() => {
+            ammobar.value = app.game.hud.ammoBar.getValue();
+            ammobar.max = app.game.hud.ammoBar.maxValue;
             const w = 12,
               r = 30;
             ammobar.clear();
@@ -73,19 +76,22 @@ export default function hookPlayerData() {
               0,
               r,
               0,
-              Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1),
-              true
+              Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1)
             );
             ammobar.endFill();
           }))();
+        if (!app.game.hud.ammoBar._update) {
+          app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
+          app.game.hud.ammoBar.update = () => {
+            app.game.hud.ammoBar._update();
+            ammobar.update();
+          };
+        }
         if (!app.game.hud.ammoBar._setValue) {
           app.game.hud.ammoBar._setValue = app.game.hud.ammoBar.setValue;
           app.game.hud.ammoBar.setValue = (v: number) => {
-            if (ammobar.max !== app.game.hud.ammoBar.maxValue)
-              ammobar.max = app.game.hud.ammoBar.maxValue;
-            ammobar.value = v;
+            app.game.hud.ammoBar._setValue(v);
             ammobar.update();
-            return app.game.hud.ammoBar._setValue(v);
           };
         }
         app.game.reticle.children.forEach((c) => (c.visible = doForce || hideHUD));

@@ -26,6 +26,7 @@ interface Container extends EventDispatcher {
   text: string;
   tint: number;
   alpha: number;
+  rotation: number;
   children: Container[];
   setText(txt: string): void;
   addChild(child: Container): Container;
@@ -363,6 +364,8 @@ declare var AmmoBar: StatBar & {
   beltItemTitle: Container;
   beltAmmoCount: Container;
   beltIcon: Container;
+  update(): void;
+  _update(): void;
 };
 declare var Canvas: {
   prototype: {
