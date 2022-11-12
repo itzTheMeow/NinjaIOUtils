@@ -7,6 +7,7 @@ v1.30
 - Bars are hidden when other players prone.
 - Added ammo indicator next to your cursor.
 - Added throwables next to your cursor.
+- Added reload timer in the ammo indicator.
 
 v1.29
 

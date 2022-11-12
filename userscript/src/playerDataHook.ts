@@ -49,6 +49,9 @@ export default function hookPlayerData() {
           value: number;
           max: number;
           update(): void;
+          lastUpdate: number;
+          reloadTime: number;
+          item: string | null;
         } = this.ammobar || (this.ammobar = new PIXI.Graphics());
         if (!ammobar.parent) {
           app.game.reticle.addChild(ammobar);
@@ -62,22 +65,39 @@ export default function hookPlayerData() {
         (ammobar.update =
           ammobar.update ||
           (() => {
+            const delta = Date.now() - ammobar.lastUpdate,
+              maxReload =
+                config.WeaponReloadTimes[
+                  Object.entries(ItemList).find((e) => e[1] == ammobar.item)?.[0]
+                ] || 0;
+            if (ammobar.reloadTime) ammobar.reloadTime = ammobar.reloadTime - delta || -1;
+            else ammobar.reloadTime = maxReload;
+            ammobar.lastUpdate = Date.now();
             ammobar.value = app.game.hud.ammoBar.getValue();
             ammobar.max = app.game.hud.ammoBar.maxValue;
+            if (!maxReload || ammobar.value > 0) ammobar.reloadTime = 0;
             const w = 12,
-              r = 30;
+              r = 30,
+              clr = ammobar.value > 0 ? config.Colors.yellow : config.Colors.red;
             ammobar.clear();
-            ammobar.lineStyle(w, config.Colors.yellow, 0.2);
+            ammobar.lineStyle(w, clr, 0.2);
             ammobar.arc(0, 0, r, 0, Math.PI * 2);
-            ammobar.lineStyle(w, ammobar.value > 0 ? config.Colors.yellow : config.Colors.red);
+            ammobar.lineStyle(w, clr);
             ammobar.arc(
               0,
               0,
               r,
               0,
-              Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1)
+              Math.PI *
+                2 *
+                (ammobar.value > 0
+                  ? ammobar.value / ammobar.max
+                  : ammobar.reloadTime > 0
+                  ? ammobar.reloadTime / Math.max(0, maxReload) || ammobar.reloadTime
+                  : 1)
             );
             ammobar.endFill();
+            if (ammobar.reloadTime > 0) setTimeout(() => ammobar.update(), 10);
           }))();
         if (!app.game.hud.ammoBar._update) {
           app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
@@ -91,6 +111,13 @@ export default function hookPlayerData() {
           app.game.hud.ammoBar.setValue = (v: number) => {
             app.game.hud.ammoBar._setValue(v);
             ammobar.update();
+          };
+        }
+        if (!app.game.hud.ammoBar._setItem) {
+          app.game.hud.ammoBar._setItem = app.game.hud.ammoBar.setItem;
+          app.game.hud.ammoBar.setItem = (i) => {
+            app.game.hud.ammoBar._setItem(i);
+            ammobar.item = i ? i.t : null;
           };
         }
         const beltbar: Container & {

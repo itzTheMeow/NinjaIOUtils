@@ -368,6 +368,8 @@ declare var AmmoBar: StatBar & {
   setBeltItem(i: { t: string }): void;
   decrementBeltValue(): void;
   _decrementBeltValue(): void;
+  _setItem(i: { t: string }): void;
+  setItem(i: { t: string }): void;
 };
 declare var Canvas: {
   prototype: {
@@ -376,6 +378,7 @@ declare var Canvas: {
   };
 };
 declare var SpriteMap: { [key: string]: { new (): Container } };
+declare var ItemList: { [key: string]: string };
 declare var Player: {
   prototype: {
     update(): void;

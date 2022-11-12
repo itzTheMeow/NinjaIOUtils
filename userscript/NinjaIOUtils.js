@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.29
+// @version      1.30
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -26,7 +26,7 @@
 (() => {
   // src/config.ts
   var config_default = {
-    ver: "1.29",
+    ver: "1.30",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -90,13 +90,13 @@
       Fists: 0,
       Shotgun: 0,
       SubmachineGun: 0,
-      NadeLauncher: 0,
+      NadeLauncher: 2e3,
       Barrett: 2500,
       ShockRifle: 0,
       PulseGun: 0,
       FlameThrower: 0,
-      RPG: 0,
-      Rifle: 0,
+      RPG: 4e3,
+      Rifle: 2e3,
       LaserGun: 0,
       LinkGun: 0,
       AK47: 0,
@@ -105,11 +105,11 @@
       Minigun: 0,
       X75: 0,
       MAC10: 0,
-      Bow: 0,
+      Bow: 300,
       RocketLauncher: 0,
       Carbine: 0,
       BoomerangGun: 0,
-      M60: 0,
+      M60: 4e3,
       Uzi: 0,
       Bouncyball: 0
     }
@@ -2052,8 +2052,7 @@ ${name}`);
           if (!app.game.hud.jetBar._setValue) {
             app.game.hud.jetBar._setValue = app.game.hud.jetBar.setValue;
             app.game.hud.jetBar.setValue = (v) => {
-              if (jetbar.maxValue !== app.game.hud.jetBar.maxValue)
-                jetbar.setMaxValue(app.game.hud.jetBar.maxValue);
+              jetbar.maxValue = app.game.hud.jetBar.maxValue;
               jetbar.setValue(v);
               return app.game.hud.jetBar._setValue(v);
             };
@@ -2071,15 +2070,25 @@ ${name}`);
           if (ammobar.value !== this.ammoLeft)
             ammobar.value = this.ammoLeft;
           (ammobar.update = ammobar.update || (() => {
+            const delta = Date.now() - ammobar.lastUpdate, maxReload = config_default.WeaponReloadTimes[Object.entries(ItemList).find((e) => e[1] == ammobar.item)?.[0]] || 0;
+            if (ammobar.reloadTime)
+              ammobar.reloadTime = ammobar.reloadTime - delta || -1;
+            else
+              ammobar.reloadTime = maxReload;
+            ammobar.lastUpdate = Date.now();
             ammobar.value = app.game.hud.ammoBar.getValue();
             ammobar.max = app.game.hud.ammoBar.maxValue;
-            const w = 12, r = 30;
+            if (!maxReload || ammobar.value > 0)
+              ammobar.reloadTime = 0;
+            const w = 12, r = 30, clr = ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red;
             ammobar.clear();
-            ammobar.lineStyle(w, config_default.Colors.yellow, 0.2);
+            ammobar.lineStyle(w, clr, 0.2);
             ammobar.arc(0, 0, r, 0, Math.PI * 2);
-            ammobar.lineStyle(w, ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red);
-            ammobar.arc(0, 0, r, 0, Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1));
+            ammobar.lineStyle(w, clr);
+            ammobar.arc(0, 0, r, 0, Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : ammobar.reloadTime > 0 ? ammobar.reloadTime / Math.max(0, maxReload) || ammobar.reloadTime : 1));
             ammobar.endFill();
+            if (ammobar.reloadTime > 0)
+              setTimeout(() => ammobar.update(), 10);
           }))();
           if (!app.game.hud.ammoBar._update) {
             app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
@@ -2093,6 +2102,13 @@ ${name}`);
             app.game.hud.ammoBar.setValue = (v) => {
               app.game.hud.ammoBar._setValue(v);
               ammobar.update();
+            };
+          }
+          if (!app.game.hud.ammoBar._setItem) {
+            app.game.hud.ammoBar._setItem = app.game.hud.ammoBar.setItem;
+            app.game.hud.ammoBar.setItem = (i) => {
+              app.game.hud.ammoBar._setItem(i);
+              ammobar.item = i ? i.t : null;
             };
           }
           const beltbar = this.beltbar || (this.beltbar = new PIXI.Container());
