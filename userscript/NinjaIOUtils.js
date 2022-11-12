@@ -85,6 +85,33 @@
       Sinkhole: 29,
       LonelyIsland: 30,
       dm_Nexus: 31
+    },
+    WeaponReloadTimes: {
+      Fists: 0,
+      Shotgun: 0,
+      SubmachineGun: 0,
+      NadeLauncher: 0,
+      Barrett: 2500,
+      ShockRifle: 0,
+      PulseGun: 0,
+      FlameThrower: 0,
+      RPG: 0,
+      Rifle: 0,
+      LaserGun: 0,
+      LinkGun: 0,
+      AK47: 0,
+      Chainsaw: 0,
+      DesertEagle: 0,
+      Minigun: 0,
+      X75: 0,
+      MAC10: 0,
+      Bow: 0,
+      RocketLauncher: 0,
+      Carbine: 0,
+      BoomerangGun: 0,
+      M60: 0,
+      Uzi: 0,
+      Bouncyball: 0
     }
   };
 
@@ -2123,13 +2150,23 @@ ${name}`);
   window.NIOUCheckReload = () => {
     if (!app.game)
       return "Enter a game...";
-    let reloadTime = 0;
-    app.game.hud.ammoBar.__setValue = app.game.hud.ammoBar.setValue;
+    let reloadTime = 0, times = [];
+    if (!app.game.hud.ammoBar.__setValue)
+      app.game.hud.ammoBar.__setValue = app.game.hud.ammoBar.setValue;
     app.game.hud.ammoBar.setValue = (v) => {
       if (v <= 0 && !reloadTime)
         reloadTime = Date.now();
       if (reloadTime && v > 0) {
-        console.log(`Time to reload: ${Date.now() - reloadTime}ms`);
+        const t = Date.now() - reloadTime;
+        times.push(t);
+        const avg = (num) => {
+          const total = times.slice(-num);
+          return Math.round(total.reduce((t2, c) => t2 + c, 0) / total.length);
+        };
+        console.log(`Time to reload: ${t}ms
+Last 5 avg: ${avg(5)}ms
+Last 10 avg: ${avg(10)}ms
+Last 15 avg: ${avg(15)}ms`);
         reloadTime = 0;
       }
       app.game.hud.ammoBar.__setValue(v);

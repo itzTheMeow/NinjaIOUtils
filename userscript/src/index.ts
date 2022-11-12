@@ -35,13 +35,25 @@ hookPreloader();
 
 (window as any).NIOUCheckReload = () => {
   if (!app.game) return "Enter a game...";
-  let reloadTime = 0;
+  let reloadTime = 0,
+    times = [];
   //@ts-ignore
-  app.game.hud.ammoBar.__setValue = app.game.hud.ammoBar.setValue;
+  if (!app.game.hud.ammoBar.__setValue)
+    //@ts-ignore
+    app.game.hud.ammoBar.__setValue = app.game.hud.ammoBar.setValue;
   app.game.hud.ammoBar.setValue = (v) => {
     if (v <= 0 && !reloadTime) reloadTime = Date.now();
     if (reloadTime && v > 0) {
-      console.log(`Time to reload: ${Date.now() - reloadTime}ms`);
+      const t = Date.now() - reloadTime;
+      times.push(t);
+      const avg = (num: number) => {
+        const total = times.slice(-num);
+        return Math.round(total.reduce((t, c) => t + c, 0) / total.length);
+      };
+      console.log(`Time to reload: ${t}ms
+Last 5 avg: ${avg(5)}ms
+Last 10 avg: ${avg(10)}ms
+Last 15 avg: ${avg(15)}ms`);
       reloadTime = 0;
     }
     //@ts-ignore
