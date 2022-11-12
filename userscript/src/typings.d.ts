@@ -46,17 +46,25 @@ interface Text extends Container {
       strokeThickness: number;
       lineJoin: "round";
     }>
-  ): Container;
+  ): Container & Text;
 }
 declare interface Rectangle {}
 declare interface Graphics extends Container {
+  arc(
+    cx: number,
+    cy: number,
+    radius: number,
+    startAngle: number,
+    endAngle: number,
+    counterclockwise?: boolean
+  ): void;
   clear(): void;
   beginFill(color: number, alpha: number): void;
   drawRoundedRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4: number): void;
   endFill(): void;
-  drawCircle(arg0: number, arg1: number, arg2: number): void;
+  drawCircle(x: number, y: number, rad: number): void;
   interactive: boolean;
-  lineStyle(arg0: number, arg1: number, arg2: number, arg3: number): void;
+  lineStyle(width?: number, color?: number, alpha?: number, alignment?: number): void;
   drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
   drawPolygon(pts: { x: number; y: number }[]): void;
   hitArea: Rectangle;
@@ -241,6 +249,8 @@ declare var Manager: {
   prototype: {
     applySettings(data: any): any;
     _applySettings(data: any): any;
+    createLocalPlayer(data: any): any;
+    _createLocalPlayer(data: any): any;
   };
 };
 declare var Layer: {
@@ -349,6 +359,11 @@ interface StatBar extends Container {
 }
 declare var HealthBar: StatBar;
 declare var JetBar: StatBar;
+declare var AmmoBar: StatBar & {
+  beltItemTitle: Container;
+  beltAmmoCount: Container;
+  beltIcon: Container;
+};
 declare var Canvas: {
   prototype: {
     update(): void;
@@ -410,11 +425,16 @@ declare var app: {
     server: { id: string };
   };
   game: {
+    gameover: boolean;
+    reticle: Container & {
+      ammo: AmmoBar;
+    };
     manager: {
       getLocalPlayer(): { id: string };
     };
     hud: Container & {
       jetBar: JetBar;
+      ammoBar: AmmoBar;
     };
   };
   showMenu(): void;

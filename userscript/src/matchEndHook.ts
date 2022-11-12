@@ -77,6 +77,8 @@ export default function matchEndHook() {
       }
     }
 
+    app.game.reticle.children.forEach((c) => (c.visible = false));
+
     (async () => {
       const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
       if (xp && startingLevel.l) {
