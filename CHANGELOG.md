@@ -5,6 +5,8 @@ v1.30
 - Added flight time bar above your own player.
 - Bars are now hidden right when a player dies.
 - Bars are hidden when other players prone.
+- Added ammo indicator next to your cursor.
+- Added throwables next to your cursor.
 
 v1.29
 
