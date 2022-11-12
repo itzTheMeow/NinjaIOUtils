@@ -94,6 +94,48 @@ export default function hookPlayerData() {
             ammobar.update();
           };
         }
+        const beltbar: Container & {
+          item: string | null;
+          value: number;
+          update(): void;
+        } = this.beltbar || (this.beltbar = new PIXI.Container());
+        if (!beltbar.parent) {
+          app.game.reticle.addChild(beltbar);
+          beltbar.x = 10;
+          beltbar.y = 26;
+        }
+        (beltbar.update =
+          beltbar.update ||
+          (() => {
+            beltbar.removeChildren();
+            beltbar.value = app.game.hud.ammoBar.beltAmmoAmount;
+            if (beltbar.value <= 0) beltbar.item = null;
+            if (beltbar.item) {
+              for (let i = beltbar.value; i--; i > 0) {
+                const beltIcon = new SpriteMap[beltbar.item]();
+                beltIcon.anchor.x = beltIcon.anchor.y = 0;
+                beltIcon.x = i * 16;
+                beltIcon.y = 0;
+                beltIcon.width = beltIcon.height = 0.15;
+                beltbar.addChild(beltIcon);
+              }
+            }
+          }))();
+        if (!app.game.hud.ammoBar._setBeltItem) {
+          app.game.hud.ammoBar._setBeltItem = app.game.hud.ammoBar.setBeltItem;
+          app.game.hud.ammoBar.setBeltItem = (i) => {
+            app.game.hud.ammoBar._setBeltItem(i);
+            beltbar.item = i ? i.t.substring(1) : null;
+            beltbar.update();
+          };
+        }
+        if (!app.game.hud.ammoBar._decrementBeltValue) {
+          app.game.hud.ammoBar._decrementBeltValue = app.game.hud.ammoBar.decrementBeltValue;
+          app.game.hud.ammoBar.decrementBeltValue = () => {
+            app.game.hud.ammoBar._decrementBeltValue();
+            beltbar.update();
+          };
+        }
         app.game.reticle.children.forEach((c) => (c.visible = doForce || hideHUD));
       }
     }

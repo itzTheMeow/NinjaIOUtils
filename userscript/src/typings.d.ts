@@ -361,11 +361,13 @@ interface StatBar extends Container {
 declare var HealthBar: StatBar;
 declare var JetBar: StatBar;
 declare var AmmoBar: StatBar & {
-  beltItemTitle: Container;
-  beltAmmoCount: Container;
-  beltIcon: Container;
+  beltAmmoAmount: number;
   update(): void;
   _update(): void;
+  _setBeltItem(i: { t: string }): void;
+  setBeltItem(i: { t: string }): void;
+  decrementBeltValue(): void;
+  _decrementBeltValue(): void;
 };
 declare var Canvas: {
   prototype: {
@@ -373,6 +375,7 @@ declare var Canvas: {
     _update(): void;
   };
 };
+declare var SpriteMap: { [key: string]: { new (): Container } };
 declare var Player: {
   prototype: {
     update(): void;
@@ -430,14 +433,14 @@ declare var app: {
   game: {
     gameover: boolean;
     reticle: Container & {
-      ammo: AmmoBar;
+      ammo: Omit<typeof AmmoBar, "new">;
     };
     manager: {
       getLocalPlayer(): { id: string };
     };
     hud: Container & {
       jetBar: JetBar;
-      ammoBar: AmmoBar;
+      ammoBar: Omit<typeof AmmoBar, "new">;
     };
   };
   showMenu(): void;

@@ -29,13 +29,15 @@
     ver: "1.29",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
-    actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
-      try {
-        return App.ClientVersion;
-      } catch {
-        return "unknown";
-      }
-    })(),
+    actualGameVersion:
+      document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] ||
+      (() => {
+        try {
+          return App.ClientVersion;
+        } catch {
+          return "unknown";
+        }
+      })(),
     PacketTypeMap: {
       systemMessage: "w",
       chatSend: "x",
@@ -43,7 +45,7 @@
       joinMatch: "j",
       data: "d",
       data2: "p",
-      joinedMessage: "i"
+      joinedMessage: "i",
     },
     Colors: {
       green: 8978312,
@@ -52,7 +54,7 @@
       white: 13421772,
       dotGreen: 65280,
       dotOrange: 16757012,
-      dotGrey: 8947848
+      dotGrey: 8947848,
     },
     MapIDs: {
       Hull: 1,
@@ -84,14 +86,14 @@
       SpaceStation: 28,
       Sinkhole: 29,
       LonelyIsland: 30,
-      dm_Nexus: 31
-    }
+      dm_Nexus: 31,
+    },
   };
 
   // src/applySettingsHook.ts
   function applySettingsHook() {
     Manager.prototype._applySettings = Manager.prototype.applySettings;
-    Manager.prototype.applySettings = function(s) {
+    Manager.prototype.applySettings = function (s) {
       this.isRanked = s.ranked;
       return this._applySettings(s);
     };
@@ -109,9 +111,9 @@
       appearOnline: true,
       enableHotkeyMessages: true,
       hotkeyMessages: [],
-      helpfulUI: true
+      helpfulUI: true,
     },
-    ...JSON.parse(localStorage.getItem(settingsKey) || "{}")
+    ...JSON.parse(localStorage.getItem(settingsKey) || "{}"),
   };
   var saveSettings = () => {
     localStorage.setItem(settingsKey, JSON.stringify(SETTINGS));
@@ -119,29 +121,46 @@
 
   // src/settings/settingsTabGraphics.ts
   function hookGraphicsSettingsTab() {
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox("showFPS", "Show FPS Display", true));
+    app.menu.settingsPanel.graphicsTab.addChild(
+      (app.menu.settingsPanel.graphicsTab.fpsDisplay = new Checkbox(
+        "showFPS",
+        "Show FPS Display",
+        true
+      ))
+    );
     app.menu.settingsPanel.graphicsTab.fpsDisplay.x = app.menu.settingsPanel.graphicsTab.enableAA.x;
-    app.menu.settingsPanel.graphicsTab.fpsDisplay.y = app.menu.settingsPanel.graphicsTab.enableAA.y + app.menu.settingsPanel.graphicsTab.enableAA.height + 12;
-    app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function(b) {
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.y =
+      app.menu.settingsPanel.graphicsTab.enableAA.y +
+      app.menu.settingsPanel.graphicsTab.enableAA.height +
+      12;
+    app.menu.settingsPanel.graphicsTab.fpsDisplay.on(Checkbox.CHANGE, function (b) {
       SETTINGS.showFPS = b;
       saveSettings();
-      if (frameDisplay.style.display == "none" && SETTINGS.showFPS)
-        showFPS();
+      if (frameDisplay.style.display == "none" && SETTINGS.showFPS) showFPS();
     });
     app.menu.settingsPanel.graphicsTab.fpsDisplay.setChecked(SETTINGS.showFPS);
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.uiScaler = new Slider("chatOpacity", "UI scale", SETTINGS.uiScale || 0.4, 2, 0.4));
-    if (!SETTINGS.uiScale)
-      app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
+    app.menu.settingsPanel.graphicsTab.addChild(
+      (app.menu.settingsPanel.graphicsTab.uiScaler = new Slider(
+        "chatOpacity",
+        "UI scale",
+        SETTINGS.uiScale || 0.4,
+        2,
+        0.4
+      ))
+    );
+    if (!SETTINGS.uiScale) app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
     app.menu.settingsPanel.graphicsTab.uiScaler.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
-    app.menu.settingsPanel.graphicsTab.uiScaler.y = app.menu.settingsPanel.graphicsTab.fpsDisplay.y + app.menu.settingsPanel.graphicsTab.fpsDisplay.height + 10;
+    app.menu.settingsPanel.graphicsTab.uiScaler.y =
+      app.menu.settingsPanel.graphicsTab.fpsDisplay.y +
+      app.menu.settingsPanel.graphicsTab.fpsDisplay.height +
+      10;
     app.menu.settingsPanel.graphicsTab.uiScaler.on(Slider.CHANGE, (b) => {
       b = Math.round(b * 10) / 10;
       if (b == 0.4) {
         app.menu.settingsPanel.graphicsTab.uiScaler.valueLabel.text = "default";
         b = 0;
       }
-      if (b == SETTINGS.uiScale)
-        return;
+      if (b == SETTINGS.uiScale) return;
       App.NUIScale = SETTINGS.uiScale = b;
       saveSettings();
       app.onResize();
@@ -168,10 +187,20 @@
       conf.style.padding = "0.5rem";
       document.body.appendChild(conf);
     });
-    app.menu.settingsPanel.graphicsTab.addChild(app.menu.settingsPanel.graphicsTab.helpfulBox = new Checkbox("helpful", "Enable Helpful UI (healthbars)", true));
-    app.menu.settingsPanel.graphicsTab.helpfulBox.x = app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
-    app.menu.settingsPanel.graphicsTab.helpfulBox.y = app.menu.settingsPanel.graphicsTab.uiScaler.y + app.menu.settingsPanel.graphicsTab.uiScaler.height + 12;
-    app.menu.settingsPanel.graphicsTab.helpfulBox.on(Checkbox.CHANGE, function(b) {
+    app.menu.settingsPanel.graphicsTab.addChild(
+      (app.menu.settingsPanel.graphicsTab.helpfulBox = new Checkbox(
+        "helpful",
+        "Enable Helpful UI (healthbars)",
+        true
+      ))
+    );
+    app.menu.settingsPanel.graphicsTab.helpfulBox.x =
+      app.menu.settingsPanel.graphicsTab.fpsDisplay.x;
+    app.menu.settingsPanel.graphicsTab.helpfulBox.y =
+      app.menu.settingsPanel.graphicsTab.uiScaler.y +
+      app.menu.settingsPanel.graphicsTab.uiScaler.height +
+      12;
+    app.menu.settingsPanel.graphicsTab.helpfulBox.on(Checkbox.CHANGE, function (b) {
       SETTINGS.helpfulUI = b;
       saveSettings();
     });
@@ -180,10 +209,19 @@
 
   // src/settings/settingsTabSound.ts
   function hookSoundSettingsTab() {
-    app.menu.settingsPanel.soundTab.addChild(app.menu.settingsPanel.soundTab.typewriter = new Checkbox("typewriter", "Enable Typing Noise", true));
+    app.menu.settingsPanel.soundTab.addChild(
+      (app.menu.settingsPanel.soundTab.typewriter = new Checkbox(
+        "typewriter",
+        "Enable Typing Noise",
+        true
+      ))
+    );
     app.menu.settingsPanel.soundTab.typewriter.x = app.menu.settingsPanel.soundTab.volumeSlider.x;
-    app.menu.settingsPanel.soundTab.typewriter.y = app.menu.settingsPanel.soundTab.volumeSlider.y + app.menu.settingsPanel.soundTab.volumeSlider.height + 14;
-    app.menu.settingsPanel.soundTab.typewriter.on(Checkbox.CHANGE, function(b) {
+    app.menu.settingsPanel.soundTab.typewriter.y =
+      app.menu.settingsPanel.soundTab.volumeSlider.y +
+      app.menu.settingsPanel.soundTab.volumeSlider.height +
+      14;
+    app.menu.settingsPanel.soundTab.typewriter.on(Checkbox.CHANGE, function (b) {
       SETTINGS.typewriter = b;
       saveSettings();
     });
@@ -263,7 +301,8 @@
       scrollButton;
       wheelListener;
       enableWheel() {
-        UserInput.hasListener(UserInput.WHEEL, this.wheelListener) || UserInput.addListener(UserInput.WHEEL, this.wheelListener);
+        UserInput.hasListener(UserInput.WHEEL, this.wheelListener) ||
+          UserInput.addListener(UserInput.WHEEL, this.wheelListener);
       }
       disableWheel() {
         UserInput.removeListener(UserInput.WHEEL, this.wheelListener);
@@ -271,11 +310,11 @@
       scroll(a) {
         if (this.scrolling) {
           let b = this.scrollButton.y + (a - this.oy);
-          -3 > b ? b = -3 : b > this.h - 39 && (b = this.h - 39);
+          -3 > b ? (b = -3) : b > this.h - 39 && (b = this.h - 39);
           let c = this.h / (this.h - 39);
           this.scrollButton.y = b;
           this.oy = a;
-          this.emit(Scrollbar.SCROLL, 1 / this.h * (b + 3) * c);
+          this.emit(Scrollbar.SCROLL, (1 / this.h) * (b + 3) * c);
         }
       }
       reset() {
@@ -310,7 +349,7 @@
           lineHeight: 18,
           fill: config_default.Colors.yellow,
           strokeThickness: 3,
-          lineJoin: "round"
+          lineJoin: "round",
         });
         this.texTitle.x = this.marginLeft - 5;
         this.texTitle.y = this.off;
@@ -320,7 +359,7 @@
           fontSize: 14,
           fill: config_default.Colors.white,
           strokeThickness: 2,
-          lineJoin: "round"
+          lineJoin: "round",
         });
         this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
         this.texHint.y = this.off + 2;
@@ -330,58 +369,68 @@
         this.packIndex = 0;
         !(this.runPacks = async () => {
           this.off = off;
-          if (this.hadPacks)
-            this.hadPacks.map((p) => p.destroy());
+          if (this.hadPacks) this.hadPacks.map((p) => p.destroy());
           this.hadPacks = [];
-          const packs = this.packList || (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r.json()));
-          packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks).forEach((pak) => {
-            const hasPack = SETTINGS.texturePack == pak.id;
-            const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-              fontName: "Arial",
-              fontSize: 16,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
+          const packs =
+            this.packList ||
+            (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r.json()));
+          packs
+            .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+            .slice(this.packIndex, this.packIndex + maxPacks)
+            .forEach((pak) => {
+              const hasPack = SETTINGS.texturePack == pak.id;
+              const packName = new PIXI.Text(
+                `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
+                {
+                  fontName: "Arial",
+                  fontSize: 16,
+                  fill: config_default.Colors.white,
+                  strokeThickness: 2,
+                  lineJoin: "round",
+                }
+              );
+              packName.x = this.marginLeft;
+              packName.y = this.off += 28;
+              this.hadPacks.push(this.addChild(packName));
+              const flags = [];
+              if (pak.hasCombined) flags.push("textures");
+              if (pak.hasSeamless) flags.push("terrain");
+              const packDescription = new PIXI.Text(
+                `${pak.description || "No Description."} (${flags.join(", ")})`,
+                {
+                  fontName: "Arial",
+                  fontSize: 14,
+                  fill: config_default.Colors.white,
+                  strokeThickness: 2,
+                  lineJoin: "round",
+                }
+              );
+              packDescription.x = this.marginLeft;
+              packDescription.y = this.off += packName.height + 2;
+              this.hadPacks.push(this.addChild(packDescription));
+              const packButton = new Button(`pack_btn_${pak.id}`);
+              packButton.x = packName.x + packName.width + 12;
+              packButton.y = this.off - packName.height;
+              packButton.setText(hasPack ? "Remove" : "Use");
+              packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
+              packButton.scale.x = packButton.scale.y = 0.5;
+              packButton.addListener(Button.BUTTON_RELEASED, async () => {
+                SETTINGS.texturePack = hasPack ? null : pak.id;
+                app.menu.settingsPanel.controlsTab.forceRefresh = true;
+                saveSettings();
+                this.runPacks();
+              });
+              this.hadPacks.push(this.addChild(packButton));
             });
-            packName.x = this.marginLeft;
-            packName.y = this.off += 28;
-            this.hadPacks.push(this.addChild(packName));
-            const flags = [];
-            if (pak.hasCombined)
-              flags.push("textures");
-            if (pak.hasSeamless)
-              flags.push("terrain");
-            const packDescription = new PIXI.Text(`${pak.description || "No Description."} (${flags.join(", ")})`, {
-              fontName: "Arial",
-              fontSize: 14,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
-            });
-            packDescription.x = this.marginLeft;
-            packDescription.y = this.off += packName.height + 2;
-            this.hadPacks.push(this.addChild(packDescription));
-            const packButton = new Button(`pack_btn_${pak.id}`);
-            packButton.x = packName.x + packName.width + 12;
-            packButton.y = this.off - packName.height;
-            packButton.setText(hasPack ? "Remove" : "Use");
-            packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
-            packButton.scale.x = packButton.scale.y = 0.5;
-            packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              SETTINGS.texturePack = hasPack ? null : pak.id;
-              app.menu.settingsPanel.controlsTab.forceRefresh = true;
-              saveSettings();
-              this.runPacks();
-            });
-            this.hadPacks.push(this.addChild(packButton));
-          });
         })();
       }
     }
-    TexTab.prototype.onShow = function() {
+    TexTab.prototype.onShow = function () {
       if (!this.scroller) {
         const off = this.parent.texTabButton.height + 32;
-        this.scroller = new (getScrollbar())(this.parent.height - off - 12 - this.parent.applyButton.height);
+        this.scroller = new (getScrollbar())(
+          this.parent.height - off - 12 - this.parent.applyButton.height
+        );
         this.scroller.x = this.parent.width - this.scroller.width * 1.75;
         this.scroller.y = off;
         this.scroller.on(getScrollbar().SCROLL, (prog) => {
@@ -392,7 +441,7 @@
       }
       this.scroller.enableWheel();
     };
-    TexTab.prototype.onHide = function() {
+    TexTab.prototype.onHide = function () {
       this.scroller.disableWheel();
     };
     return TexTab;
@@ -402,23 +451,20 @@
   var isRateLimited = false;
   var registeredHotkeyMessages = new Map(SETTINGS.hotkeyMessages);
   async function handleKeyDown(e) {
-    if (e.repeat)
-      return;
+    if (e.repeat) return;
     const isAltPressed = UserInput.pressed[18];
     const message = registeredHotkeyMessages.get(e.key);
-    if (message && isAltPressed && SETTINGS.enableHotkeyMessages)
-      sendChatMessage(message);
+    if (message && isAltPressed && SETTINGS.enableHotkeyMessages) sendChatMessage(message);
   }
   async function sendChatMessage(message) {
-    if (!app.client.socket || isRateLimited)
-      return;
+    if (!app.client.socket || isRateLimited) return;
     const binaryChatMessage = Client.compress({
       t: config_default.PacketTypeMap.chatSend,
-      msg: message
+      msg: message,
     });
     app.client.socket.send(binaryChatMessage);
     isRateLimited = true;
-    setTimeout(() => isRateLimited = false, 1e3 * 1.4);
+    setTimeout(() => (isRateLimited = false), 1e3 * 1.4);
   }
 
   // src/settings/settingsTabHotkeyMsgs.ts
@@ -437,7 +483,7 @@
           lineHeight: 18,
           fill: config_default.Colors.yellow,
           strokeThickness: 3,
-          lineJoin: "round"
+          lineJoin: "round",
         });
         this.hkmTitle.x = this.marginLeft - 5;
         this.hkmTitle.y = this.off;
@@ -447,7 +493,7 @@
           fontSize: 14,
           fill: config_default.Colors.white,
           strokeThickness: 2,
-          lineJoin: "round"
+          lineJoin: "round",
         });
         this.hkmHint.x = this.hkmTitle.x + this.hkmTitle.width + 3;
         this.hkmHint.y = this.off + 2;
@@ -455,7 +501,7 @@
         this.enableHKM = new Checkbox("enableHKM", "Enable Hotkey Messages", true);
         this.enableHKM.x = this.marginLeft;
         this.enableHKM.y = this.off += 34;
-        this.enableHKM.on(Checkbox.CHANGE, function(b) {
+        this.enableHKM.on(Checkbox.CHANGE, function (b) {
           SETTINGS.enableHotkeyMessages = b;
           saveSettings();
         });
@@ -467,7 +513,7 @@
             fontSize: 16,
             fill: config_default.Colors.yellow,
             strokeThickness: 3,
-            lineJoin: "round"
+            lineJoin: "round",
           });
           keyLabel.x = this.marginLeft;
           keyLabel.y = this.off += 55;
@@ -476,12 +522,13 @@
           keyText.setDimensions(370, 35);
           keyText.forceLowerCase = false;
           keyText.setMaxChars(40);
-          if (registeredHotkeyMessages.get(key))
-            keyText.setText(registeredHotkeyMessages.get(key));
+          if (registeredHotkeyMessages.get(key)) keyText.setText(registeredHotkeyMessages.get(key));
           keyText.x = 125;
           keyText.y = this.off - 6;
-          keyText.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.");
-          keyText.addListener(InputField.CHANGE, function(d) {
+          keyText.setFilter(
+            "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/."
+          );
+          keyText.addListener(InputField.CHANGE, function (d) {
             const message = d.data.value || "";
             registeredHotkeyMessages.set(key, message);
             SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
@@ -498,8 +545,7 @@
   // src/settings/settingsTab.ts
   function settingsTab() {
     SettingsPanel.OPEN_TAB = "opened_settings_tab";
-    if (!app.menu?.settingsPanel)
-      return setTimeout(() => settingsTab(), 500);
+    if (!app.menu?.settingsPanel) return setTimeout(() => settingsTab(), 500);
     function SettingsPanelNew(w, h) {
       const pan = new SettingsPanel(w, h);
       function newTab(title, name, x, tab) {
@@ -511,7 +557,7 @@
           lineHeight: 18,
           fill: config_default.Colors.yellow,
           strokeThickness: 3,
-          lineJoin: "round"
+          lineJoin: "round",
         });
         pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
         pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
@@ -525,12 +571,18 @@
         pan[`${name}ButtonBackground`].x = x;
         pan[`${name}ButtonBackground`].y = 12;
         pan[`${name}ButtonBackground`].interactive = true;
-        pan[`${name}ButtonBackground`].on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
-        pan[`${name}ButtonBackground`].on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL));
-        pan[`${name}ButtonBackground`].on("mouseover", function() {
+        pan[`${name}ButtonBackground`].on(
+          "touchstart",
+          pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL)
+        );
+        pan[`${name}ButtonBackground`].on(
+          "mousedown",
+          pan.displayTab.bind(pan, SettingsPanel.Tabs.UTIL)
+        );
+        pan[`${name}ButtonBackground`].on("mouseover", function () {
           pan[`${name}ButtonBackground`].tint = 11184810;
         });
-        pan[`${name}ButtonBackground`].on("mouseout", function() {
+        pan[`${name}ButtonBackground`].on("mouseout", function () {
           pan[`${name}ButtonBackground`].tint = 16777215;
         });
         pan.addChild(pan[`${name}ButtonBackground`]);
@@ -541,29 +593,30 @@
     }
     SettingsPanel.Tabs.TEX = "tex";
     SettingsPanel.Tabs.HKM = "hkm";
-    const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
+    const oldX = app.menu.settingsPanel.x,
+      oldY = app.menu.settingsPanel.y;
     app.menu.settingsPanel.destroy();
     app.menu.settingsPanel = SettingsPanelNew(660, 524);
     app.menu.settingsPanel.x = oldX;
     app.menu.settingsPanel.y = oldY;
     app.menu.resize();
-    app.menu.settingsPanel.displayTab = function(name) {
+    app.menu.settingsPanel.displayTab = function (name) {
       AudioEffects.ButtonClick.audio.play();
       saveSettings();
-      Object.values(SettingsPanel.Tabs).filter((t2) => t2 !== name).forEach((i) => {
-        const t2 = this[`${i}Tab`];
-        if (t2.parent) {
-          if (t2.onHide)
-            t2.onHide();
-          this.removeChild(t2);
-        }
-        this[`${i}TabButtonBackground`].alpha = 1;
-      });
+      Object.values(SettingsPanel.Tabs)
+        .filter((t2) => t2 !== name)
+        .forEach((i) => {
+          const t2 = this[`${i}Tab`];
+          if (t2.parent) {
+            if (t2.onHide) t2.onHide();
+            this.removeChild(t2);
+          }
+          this[`${i}TabButtonBackground`].alpha = 1;
+        });
       const t = this[`${name}Tab`];
       this[`${name}TabButtonBackground`].alpha = 0;
       this.addChild(t);
-      if (t.onShow)
-        t.onShow();
+      if (t.onShow) t.onShow();
       app.menu.settingsPanel.selectedTab = name;
       App.Layer.memberMenu.emit(SettingsPanel.OPEN_TAB, name);
     };
@@ -591,15 +644,33 @@
       settingsTab();
     });
     APIClient.realPostCreateGame = APIClient.postCreateGame;
-    APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
+    APIClient.postCreateGame = function (
+      serverID,
+      settings,
+      mode,
+      time,
+      serverName,
+      serverPass,
+      customData,
+      auth
+    ) {
       setHash(serverID, serverName, serverPass);
-      return APIClient.realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
+      return APIClient.realPostCreateGame(
+        serverID,
+        settings,
+        mode,
+        time,
+        serverName,
+        serverPass,
+        customData,
+        auth
+      );
     };
   }
   function tryJoinLink(args) {
-    const [id, name, pass] = args || window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
-    if (!id || !name)
-      return;
+    const [id, name, pass] =
+      args || window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
+    if (!id || !name) return;
     App.Console.log(`Attempting to join room ${name}...`);
     const loadingMenu = App.Layer.loadingMenu;
     App.Layer.addChild(loadingMenu);
@@ -611,19 +682,20 @@ ${name}`);
     loadingMenu.joinButton.selected = true;
     loadingMenu.joinButton.setText("Join");
     loadingMenu.joinButton.scale.x = loadingMenu.joinButton.scale.y = 0.8;
-    loadingMenu.joinButton.addListener(Button.BUTTON_RELEASED, function() {
+    loadingMenu.joinButton.addListener(Button.BUTTON_RELEASED, function () {
       removeJoinStuff();
       loadingMenu.show();
       App.Layer.emit("join_game", name, id, pass || "");
     });
-    loadingMenu.joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - loadingMenu.joinButton.width);
+    loadingMenu.joinButton.x =
+      loadingMenu.title.x + 0.5 * (loadingMenu.title.width - loadingMenu.joinButton.width);
     loadingMenu.joinButton.y = loadingMenu.title.y + 40;
     loadingMenu.joinButton.setTint(config_default.Colors.green);
     loadingMenu.container.addChild(loadingMenu.joinButton);
     loadingMenu.cancelButton2 = new Button("cancel2");
     loadingMenu.cancelButton2.setText("Cancel");
     loadingMenu.cancelButton2.scale.x = loadingMenu.cancelButton2.scale.y = 0.8;
-    loadingMenu.cancelButton2.addListener(Button.BUTTON_RELEASED, function() {
+    loadingMenu.cancelButton2.addListener(Button.BUTTON_RELEASED, function () {
       removeJoinStuff();
       clearSaved();
       return loadingMenu.emit(Layer.Events.LOADING_CANCEL);
@@ -641,12 +713,15 @@ ${name}`);
   }
 
   // src/utils.ts
-  var inGame = () => app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
+  var inGame = () =>
+    app.matchStarted && app.client.socket && app.client.socket.readyState == WebSocket.OPEN;
   function setHash(id, name, pass) {
     gameLinkData.id = id;
     gameLinkData.name = name;
     gameLinkData.pass = pass || "";
-    window.location.hash = pass ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}` : `${id}&${encodeURIComponent(name)}`;
+    window.location.hash = pass
+      ? `${id}&${encodeURIComponent(name)}&${encodeURIComponent(pass)}`
+      : `${id}&${encodeURIComponent(name)}`;
   }
   function io(url) {
     return window.io(url);
@@ -666,35 +741,33 @@ ${name}`);
     borderBottomLeftRadius: "6px",
     borderBottomRightRadius: "6px",
     pointerEvents: "none",
-    userSelect: "none"
+    userSelect: "none",
   }).forEach((e) => {
     frameDisplay.style[e[0]] = e[1];
   });
   frameDisplay.textContent = "...";
   document.body.appendChild(frameDisplay);
   function showFPS() {
-    let lastUpdate = Date.now(), frames = 0;
-    if (SETTINGS.showFPS)
-      frameDisplay.style.display = "block";
+    let lastUpdate = Date.now(),
+      frames = 0;
+    if (SETTINGS.showFPS) frameDisplay.style.display = "block";
     function updateCounter() {
-      const now = Date.now(), elapsed = now - lastUpdate;
+      const now = Date.now(),
+        elapsed = now - lastUpdate;
       if (elapsed < 500) {
         frames++;
       } else {
         let fps = `${Math.round(frames / (elapsed / 1e3))} FPS`;
-        if (inGame())
-          fps += ` - ${App.Stats.ping || 0}ms`;
-        if (frameDisplay.innerText !== fps)
-          frameDisplay.innerText = fps;
+        if (inGame()) fps += ` - ${App.Stats.ping || 0}ms`;
+        if (frameDisplay.innerText !== fps) frameDisplay.innerText = fps;
         frames = 0;
         lastUpdate = now;
         frameDisplay.style.display = "block";
       }
-      if (!SETTINGS.showFPS)
-        return frameDisplay.style.display = "none";
+      if (!SETTINGS.showFPS) return (frameDisplay.style.display = "none");
     }
     app._stepCallback = app._stepCallback || app.stepCallback;
-    app.stepCallback = function(...d) {
+    app.stepCallback = function (...d) {
       try {
         updateCounter();
       } catch (err) {
@@ -706,7 +779,7 @@ ${name}`);
 
   // src/friendSearch.ts
   function socialMenuHook() {
-    SocialMenu.prototype.maskInvitationList = function(scrollDist) {
+    SocialMenu.prototype.maskInvitationList = function (scrollDist) {
       const pl = "Type to search.";
       const pad = 8;
       if (!this.listSearch) {
@@ -714,12 +787,14 @@ ${name}`);
         this.listSearch.setDimensions(this.listContainer.width, SocialMenu.ItemHeight);
         this.listSearch.forceLowerCase = false;
         this.listSearch.setMaxChars(128);
-        this.listSearch.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ ");
+        this.listSearch.setFilter(
+          "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890:/?.#-_ "
+        );
         this.listSearch.x = pad;
         this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
         this.listSearch.setText(pl);
         const ls = this;
-        this.listSearch.addListener(InputField.CHANGE, function(d2) {
+        this.listSearch.addListener(InputField.CHANGE, function (d2) {
           d2 = d2.data.value || "";
           if (d2.startsWith(pl) || d2 == pl.slice(0, pl.length - 1)) {
             d2 = d2.substring(pl.length);
@@ -733,35 +808,48 @@ ${name}`);
         this.container.removeChild(this.listSearch);
       };
       const searchTerm = this.listSearch.getText() || "";
-      const filtered = searchTerm && searchTerm !== pl ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase())) : null;
+      const filtered =
+        searchTerm && searchTerm !== pl
+          ? this.invites.filter((i) => i.name.toLowerCase().includes(searchTerm.toLowerCase()))
+          : null;
       this.invites.forEach((i) => {
         i.alpha = 1;
         i.isRed = false;
         if (!i.redReady) {
           i.redReady = true;
-          i.on("mouseout", function() {
+          i.on("mouseout", function () {
             i.tint = i.isRed ? config_default.Colors.red : 12303291;
           });
         }
       });
-      if (!this.listSearch.parent)
-        this.container.addChild(this.listSearch);
+      if (!this.listSearch.parent) this.container.addChild(this.listSearch);
       const listHeight = SocialMenu.ListHeight - this.listSearch.height - pad / 2;
       const itemDisplayCount = Math.floor(listHeight / SocialMenu.ItemHeight);
       if (this.invites.length <= itemDisplayCount) {
         this.listContainer.y = 0;
       } else {
         this.invites.forEach((i) => this.listContainer.removeChild(i));
-        this.listContainer.y = -(scrollDist * (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight)));
-        for (var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)), displayOffset = 0; displayOffset < itemDisplayCount; displayOffset++) {
+        this.listContainer.y = -(
+          scrollDist *
+          (this.invites.length * SocialMenu.ItemHeight - (listHeight - SocialMenu.ItemHeight))
+        );
+        for (
+          var d = Math.round(Math.abs(this.listContainer.y / SocialMenu.ItemHeight)),
+            displayOffset = 0;
+          displayOffset < itemDisplayCount;
+          displayOffset++
+        ) {
           const inv = this.invites[d + displayOffset];
           this.listContainer.addChild(inv);
           let g;
           if (0 === displayOffset) {
             g = d * SocialMenu.ItemHeight + this.listContainer.y;
-            inv.alpha = 0 <= g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g);
+            inv.alpha = 0 <= g ? 1 : 1 - (1 / (0.5 * SocialMenu.ItemHeight)) * Math.abs(g);
           } else {
-            displayOffset === itemDisplayCount - 1 ? (g = d * SocialMenu.ItemHeight + this.listContainer.y, inv.alpha = 0 > g ? 1 : 1 - 1 / (0.5 * SocialMenu.ItemHeight) * Math.abs(g)) : inv.alpha = 1;
+            displayOffset === itemDisplayCount - 1
+              ? ((g = d * SocialMenu.ItemHeight + this.listContainer.y),
+                (inv.alpha = 0 > g ? 1 : 1 - (1 / (0.5 * SocialMenu.ItemHeight)) * Math.abs(g)))
+              : (inv.alpha = 1);
           }
         }
         this.inviteScrollRatio = scrollDist;
@@ -769,8 +857,7 @@ ${name}`);
       this.listSearch.y = this.height - this.listSearch.height - pad / 2 - this.infoText.height;
       this.invites.forEach((i) => {
         i.tint = 12303291;
-        if (!filtered)
-          return;
+        if (!filtered) return;
         if (filtered.includes(i)) {
           i.tint = 12603201;
           i.alpha = 1;
@@ -786,11 +873,13 @@ ${name}`);
   var startingLevel = { l: 0 };
   function matchStartHook() {
     App.prototype.realInitGameMode = App.prototype.initGameMode;
-    App.prototype.initGameMode = function(data) {
+    App.prototype.initGameMode = function (data) {
       this.realInitGameMode(data);
-      this.game.on(Game.MATCH_START, async function() {
+      this.game.on(Game.MATCH_START, async function () {
         startingLevel.l = 0;
-        startingLevel.l = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+        startingLevel.l = Number(
+          (await APIClient.getUserProfile(app.credential.playerid)).experience
+        );
       });
     };
   }
@@ -798,7 +887,7 @@ ${name}`);
   // src/matchEndHook.ts
   function matchEndHook() {
     Game.prototype._endGame = Game.prototype.endGame;
-    Game.prototype.endGame = function(data) {
+    Game.prototype.endGame = function (data) {
       if (SETTINGS.apiKey) {
         App.Console.log("Attempting to upload match score...");
         if (this.manager.isRanked) {
@@ -810,25 +899,28 @@ ${name}`);
               mode: this.mode,
               kills: data.leaderboard.kills[leaderIndex],
               deaths: data.leaderboard.deaths[leaderIndex],
-              caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
+              caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0,
             };
             fetch(`${config_default.api}/submit?key=${SETTINGS.apiKey}`, {
               method: "POST",
               body: JSON.stringify(statModel),
               headers: {
-                "Content-Type": "application/json"
-              }
-            }).then((res) => res.json()).then((res) => {
-              if (res.err) {
-                App.Console.log(`Failed to upload match score! ERR_${res.err}`);
-                App.Console.log(`Error: ${res.message}`);
-              } else {
-                App.Console.log("Successfully uploaded match score!");
-              }
-            }).catch((err) => {
-              App.Console.log("Failed to upload match score! (check console for errors)");
-              console.error(err);
-            });
+                "Content-Type": "application/json",
+              },
+            })
+              .then((res) => res.json())
+              .then((res) => {
+                if (res.err) {
+                  App.Console.log(`Failed to upload match score! ERR_${res.err}`);
+                  App.Console.log(`Error: ${res.message}`);
+                } else {
+                  App.Console.log("Successfully uploaded match score!");
+                }
+              })
+              .catch((err) => {
+                App.Console.log("Failed to upload match score! (check console for errors)");
+                console.error(err);
+              });
           } catch (err) {
             App.Console.log("Failed to upload match score! (check console for errors)");
             console.error(err);
@@ -837,17 +929,31 @@ ${name}`);
           App.Console.log("Match is unranked or custom, scores not uploaded.");
         }
       }
-      app.game.reticle.children.forEach((c) => c.visible = false);
+      app.game.reticle.children.forEach((c) => (c.visible = false));
       (async () => {
-        const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+        const xp =
+          Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
         if (xp && startingLevel.l) {
-          const plevel = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1), 160);
+          const plevel = Math.min(
+            Math.max(Math.floor(0.2 * Math.sqrt(startingLevel.l / 15.625)), 1),
+            160
+          );
           const level = Math.min(Math.max(Math.floor(0.2 * Math.sqrt(xp / 15.625)), 1), 160);
-          const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+          const xpNeeded =
+            15.625 * Math.pow((level + 1) / 0.2, 2) -
+            (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
           const gain = xp - startingLevel.l;
-          App.Console.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
+          App.Console.log(
+            `You gained ${gain.toLocaleString()} (${
+              Math.round((gain / xpNeeded) * 1e3) / 10
+            }%) experience this round!`,
+            config_default.Colors.green
+          );
           if (level > plevel)
-            App.Console.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
+            App.Console.log(
+              `You leveled up! You are now level ${level}.`,
+              config_default.Colors.yellow
+            );
         }
         startingLevel.l = 0;
       })();
@@ -866,19 +972,36 @@ ${name}`);
       }
       newPostMessage(data, ...args) {
         if (SETTINGS.texturePack && !window.SKIP_TEX_LOAD && !data?.bypass) {
-          fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`).then((r) => r.json()).then((pack) => {
-            if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && SETTINGS.texturePack) {
-              if (pack.hasCombined && data.data[0].includes("ninja.io") && data.data[0].includes("combined") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
-              if (pack.hasSeamless && data.data[0].includes("ninja.io") && data.data[0].includes("seamless") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
-            }
-            this._postMessage(data, ...args);
-          }).catch(() => {
-            this._postMessage(data, ...args);
-          });
-        } else
-          this._postMessage(data, ...args);
+          fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`)
+            .then((r) => r.json())
+            .then((pack) => {
+              if (
+                pack &&
+                data.id == "loadImageBitmap" &&
+                typeof data.data[0] == "string" &&
+                SETTINGS.texturePack
+              ) {
+                if (
+                  pack.hasCombined &&
+                  data.data[0].includes("ninja.io") &&
+                  data.data[0].includes("combined") &&
+                  data.data[0].endsWith(".png")
+                )
+                  data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
+                if (
+                  pack.hasSeamless &&
+                  data.data[0].includes("ninja.io") &&
+                  data.data[0].includes("seamless") &&
+                  data.data[0].endsWith(".png")
+                )
+                  data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
+              }
+              this._postMessage(data, ...args);
+            })
+            .catch(() => {
+              this._postMessage(data, ...args);
+            });
+        } else this._postMessage(data, ...args);
       }
     }
     window.Worker = Worker = WorkerNew;
@@ -886,21 +1009,29 @@ ${name}`);
 
   // src/repositionItems.ts
   function reposItems() {
-    if (!app.menu)
-      return;
+    if (!app.menu) return;
     try {
       App.Layer.partyMenu.reposition();
       app.menu.joinButton.x = app.menu.backgroundImage.x + 28;
       app.menu.serverListButton.x = app.menu.joinButton.x + app.menu.joinButton.width + 26;
       app.menu.serverListButton.y = app.menu.joinButton.y;
-      app.menu.serverCreateButton.x = app.menu.serverListButton.x - (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
-      app.menu.serverCreateButton.y = app.menu.serverListButton.y + app.menu.serverListButton.height + 14;
-      app.menu.partyButton.x = app.menu.serverCreateButton.x - (app.menu.partyButton.backgroundEnabled.width - 10);
+      app.menu.serverCreateButton.x =
+        app.menu.serverListButton.x -
+        (app.menu.serverCreateButton.width - app.menu.serverListButton.width);
+      app.menu.serverCreateButton.y =
+        app.menu.serverListButton.y + app.menu.serverListButton.height + 14;
+      app.menu.partyButton.x =
+        app.menu.serverCreateButton.x - (app.menu.partyButton.backgroundEnabled.width - 10);
       app.menu.partyButton.y = app.menu.serverCreateButton.y - 4;
-      app.menu.onlineOption.x = app.menu.joinButton.x + (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
-      app.menu.onlineOption.y = app.menu.serverCreateButton.y + app.menu.serverCreateButton.height / 2 - app.menu.onlineOption.height / 2 + 2;
-    } catch {
-    }
+      app.menu.onlineOption.x =
+        app.menu.joinButton.x +
+        (app.menu.partyButton.x - app.menu.joinButton.x - app.menu.onlineOption.width) * 0.75;
+      app.menu.onlineOption.y =
+        app.menu.serverCreateButton.y +
+        app.menu.serverCreateButton.height / 2 -
+        app.menu.onlineOption.height / 2 +
+        2;
+    } catch {}
   }
   function reindexItems() {
     app.menu.modeContainer.parent.addChild(app.menu.modeContainer);
@@ -912,10 +1043,8 @@ ${name}`);
     window.addEventListener("keydown", (e) => {
       if (e.key == "F11") {
         e.preventDefault();
-        if (document.fullscreenElement)
-          document.exitFullscreen();
-        else
-          document.querySelector("html").requestFullscreen();
+        if (document.fullscreenElement) document.exitFullscreen();
+        else document.querySelector("html").requestFullscreen();
       }
     });
   }
@@ -939,7 +1068,7 @@ ${name}`);
         lineHeight: 16,
         fill: config_default.Colors.yellow,
         strokeThickness: 3,
-        lineJoin: "round"
+        lineJoin: "round",
       });
       startContainer = new PIXI.Container();
       partyCodeText = new PIXI.Text("Enter a party code:", {
@@ -947,7 +1076,7 @@ ${name}`);
         fontSize: 16,
         fill: config_default.Colors.yellow,
         strokeThickness: 2,
-        lineJoin: "round"
+        lineJoin: "round",
       });
       codeInput = new InputField("code_input", false, 24);
       joinPartyButton = new Button("join_party");
@@ -957,7 +1086,7 @@ ${name}`);
         fontSize: 16,
         fill: config_default.Colors.yellow,
         strokeThickness: 2,
-        lineJoin: "round"
+        lineJoin: "round",
       });
       preGameContainer = new PIXI.Container();
       preGameMemberList = new PIXI.Container();
@@ -966,7 +1095,7 @@ ${name}`);
         fontSize: 18,
         fill: config_default.Colors.yellow,
         strokeThickness: 2,
-        lineJoin: "round"
+        lineJoin: "round",
       });
       readyButton = new Button("join_party");
       leaveButton = new Button("leave_party");
@@ -989,7 +1118,9 @@ ${name}`);
         this.closeButton.x = this.background.width - 40;
         this.closeButton.y = this.oy - 6;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
-        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.closeButton.on(ImgButton.CLICK, () =>
+          App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS)
+        );
         this.container.addChild(this.closeButton);
         this.pmTitle.x = 0.5 * this.width - 20;
         this.pmTitle.y = this.oy - 4;
@@ -1018,7 +1149,9 @@ ${name}`);
         this.readyButton.setText("Ready");
         this.readyButton.setTint(config_default.Colors.green);
         this.readyButton.scale.x = this.readyButton.scale.y = 0.75;
-        this.readyButton.addListener(Button.BUTTON_RELEASED, () => this.socket.emit("isReady", !this.readyState));
+        this.readyButton.addListener(Button.BUTTON_RELEASED, () =>
+          this.socket.emit("isReady", !this.readyState)
+        );
         this.preGameContainer.addChild(this.readyButton);
         this.leaveButton.setText("Leave Party");
         this.leaveButton.setTint(config_default.Colors.red);
@@ -1035,7 +1168,8 @@ ${name}`);
         this.partyCodeText.y = this.off = this.oy;
         this.codeInput.x = this.marginLeft;
         this.codeInput.y = this.off += 24;
-        this.joinPartyButton.x = this.marginLeft + this.codeInput.width + this.joinPartyButton.width / 6;
+        this.joinPartyButton.x =
+          this.marginLeft + this.codeInput.width + this.joinPartyButton.width / 6;
         this.joinPartyButton.y = this.off + 4;
         this.off = 0;
         this.loadingContainer.x = this.ox;
@@ -1063,14 +1197,15 @@ ${name}`);
         this.loadingText.text = text;
       }
       hideAllWindows() {
-        this.startContainer.visible = this.loadingContainer.visible = this.preGameContainer.visible = false;
+        this.startContainer.visible =
+          this.loadingContainer.visible =
+          this.preGameContainer.visible =
+            false;
       }
-      show() {
-      }
+      show() {}
       joinParty() {
         const code = this.codeInput.getText();
-        if (!code.trim())
-          return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
+        if (!code.trim()) return this.codeInput.markInvalid(), this.codeInput.setFocus(true);
         this.startLoading("Joining party...");
         this.socket = io(config_default.api);
         this.socket.once("connect", () => {
@@ -1118,7 +1253,9 @@ ${name}`);
           if (m.me) {
             this.readyState = m.ready;
             this.readyButton.setText(this.readyState ? "Not Ready" : "Ready");
-            this.readyButton.setTint(this.readyState ? config_default.Colors.red : config_default.Colors.green);
+            this.readyButton.setTint(
+              this.readyState ? config_default.Colors.red : config_default.Colors.green
+            );
             this.reposition();
           }
           const text = new PIXI.Text(m.name + (m.ready ? " (Ready)" : " (Not Ready)"), {
@@ -1126,7 +1263,7 @@ ${name}`);
             fontSize: 16,
             fill: m.ready ? config_default.Colors.green : config_default.Colors.white,
             strokeThickness: 2,
-            lineJoin: "round"
+            lineJoin: "round",
           });
           text.x = this.preGameMemberList.x;
           text.y = this.preGameMemberList.y + 14 + 18 * (i || -0.5);
@@ -1145,7 +1282,7 @@ ${name}`);
       }
     }
     function doPartyButton() {
-      App.Layer.mainMenuHides.push(App.Layer.partyMenu = new PartyMenu());
+      App.Layer.mainMenuHides.push((App.Layer.partyMenu = new PartyMenu()));
       [
         "loginMenu",
         "memberBrowserMenu",
@@ -1162,12 +1299,18 @@ ${name}`);
         "serverCreationMenu",
         "renameMenu",
         "logoutMenu",
-        "guestProfileMenu"
+        "guestProfileMenu",
       ].forEach((e) => App.Layer[e].hides.push(App.Layer.partyMenu));
       App.Layer.features.push(App.Layer.partyMenu);
-      app.menu.partyButton = new MemberMenuButton("Party", config_default.Colors.yellow, 18, "head_alpha", false);
-      app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function() {
-        App.Layer.mainMenuHides.forEach(function(c) {
+      app.menu.partyButton = new MemberMenuButton(
+        "Party",
+        config_default.Colors.yellow,
+        18,
+        "head_alpha",
+        false
+      );
+      app.menu.partyButton.on(MemberMenuButton.BUTTON_PRESSED, function () {
+        App.Layer.mainMenuHides.forEach(function (c) {
           return App.Layer.hideFeature(c);
         });
         App.Layer.memberMenu.playButton.setActive(0);
@@ -1192,16 +1335,25 @@ ${name}`);
 
   // src/mapIdentifier.ts
   function initMapIdentifier() {
-    Client.prototype.onMessage = function(_a) {
+    Client.prototype.onMessage = function (_a) {
       const a = Client.decompress(_a.data);
       try {
-        if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
+        if (
+          a.type == config_default.PacketTypeMap.data &&
+          a.data.type == config_default.PacketTypeMap.joinedMessage &&
+          a.data.info.startsWith("You joined ")
+        ) {
           let roomName = a.data.info.substring("You joined ".length);
           setHash(app.client.server.id, roomName, gameLinkData.pass);
         }
         const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
-        const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
-        if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
+        const repSuccess = (id, name) =>
+          App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
+        if (
+          a.type == config_default.PacketTypeMap.data2 &&
+          a.data.t == config_default.PacketTypeMap.systemMessage &&
+          a.data.msg.startsWith("Joining ")
+        ) {
           const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
           this.mapID = 0;
           if (mapName) {
@@ -1209,11 +1361,13 @@ ${name}`);
             if (mapID) {
               repSuccess(mapID, mapName);
               this.mapID = mapID;
-            } else
-              repFail();
-          } else
-            repFail();
-        } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
+            } else repFail();
+          } else repFail();
+        } else if (
+          a.type == config_default.PacketTypeMap.data2 &&
+          a.data.t == config_default.PacketTypeMap.systemMessage &&
+          a.data.msg.startsWith("loading map: ")
+        ) {
           const mapName = a.data.msg.substring("loading map: ".length);
           this.mapID = 0;
           if (mapName) {
@@ -1221,10 +1375,8 @@ ${name}`);
             if (mapID) {
               repSuccess(mapID, mapName);
               this.mapID = mapID;
-            } else
-              repFail();
-          } else
-            repFail();
+            } else repFail();
+          } else repFail();
         }
       } catch (err) {
         console.error(err);
@@ -1236,24 +1388,26 @@ ${name}`);
   // src/userCommunicationProtocol.ts
   var commConfig = {
     prefix: "$NIOU",
-    sep: "|"
+    sep: "|",
   };
   var commPackets = {
-    gameLink: "requestGameLink"
+    gameLink: "requestGameLink",
   };
   function decodeUserCommunication(message) {
-    if (!message.startsWith(commConfig.prefix))
-      return null;
+    if (!message.startsWith(commConfig.prefix)) return null;
     const args = message.split(commConfig.sep);
-    if (!Object.values(commPackets).includes(args[1]))
-      return null;
+    if (!Object.values(commPackets).includes(args[1])) return null;
     return {
       packet: args[1],
-      args: args.slice(2)
+      args: args.slice(2),
     };
   }
   async function communicateUser(id, packetID, args) {
-    await APIClient.postFriendMessage(id, [commConfig.prefix, packetID, ...args].join(commConfig.sep), app.credential.id);
+    await APIClient.postFriendMessage(
+      id,
+      [commConfig.prefix, packetID, ...args].join(commConfig.sep),
+      app.credential.id
+    );
     return true;
   }
 
@@ -1263,16 +1417,17 @@ ${name}`);
   var onlineSocket;
   function goOnline() {
     if (app.credential.accounttype == "guest") {
-      if (failedOnline)
-        return;
+      if (failedOnline) return;
       failedOnline = true;
       return App.Console.log("Failed to go online: You are not logged in!");
     }
     failedOnline = false;
-    if (onlineSocket)
-      onlineSocket.disconnect();
+    if (onlineSocket) onlineSocket.disconnect();
     onlineSocket = io(config_default.api);
-    onlineSocket.on("connect", () => onlineSocket && onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
+    onlineSocket.on(
+      "connect",
+      () => onlineSocket && onlineSocket.emit("init", 0 /* online */, app.credential.playerid)
+    );
     onlineSocket.on("success", () => {
       App.Console.log("Successfully went online!");
       wentOnline = true;
@@ -1284,26 +1439,24 @@ ${name}`);
     });
     onlineSocket.on("disconnect", () => {
       onlineSocket = null;
-      if (wentOnline)
-        App.Console.log("Went offline.");
+      if (wentOnline) App.Console.log("Went offline.");
       wentOnline = false;
     });
     onlineSocket.on("needsLink", async (requestID) => {
       const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;
-      const msg = messages?.find((m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink);
+      const msg = messages?.find(
+        (m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink
+      );
       if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
-        if (!inGame())
-          onlineSocket.emit("gotLink", requestID, false);
-        else if (gameLinkData.pass)
-          onlineSocket.emit("gotLink", requestID, true);
+        if (!inGame()) onlineSocket.emit("gotLink", requestID, false);
+        else if (gameLinkData.pass) onlineSocket.emit("gotLink", requestID, true);
         else
           onlineSocket.emit("gotLink", requestID, [
             gameLinkData.id,
             gameLinkData.name,
-            gameLinkData.pass
+            gameLinkData.pass,
           ]);
-      } else
-        onlineSocket.emit("gotLink", requestID, null);
+      } else onlineSocket.emit("gotLink", requestID, null);
     });
   }
   function goOffline() {
@@ -1316,13 +1469,11 @@ ${name}`);
     function doOnlineStatusOption() {
       app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
       app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
-      app.menu.onlineOption.on(Checkbox.CHANGE, function(b) {
+      app.menu.onlineOption.on(Checkbox.CHANGE, function (b) {
         SETTINGS.appearOnline = b;
         saveSettings();
-        if (SETTINGS.appearOnline)
-          goOnline();
-        else
-          goOffline();
+        if (SETTINGS.appearOnline) goOnline();
+        else goOffline();
       });
       app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
       app.menu.container.addChild(app.menu.onlineOption);
@@ -1331,16 +1482,17 @@ ${name}`);
     }
     doOnlineStatusOption();
     app.onShowMenu(() => doOnlineStatusOption());
-    if (SETTINGS.appearOnline)
-      goOnline();
+    if (SETTINGS.appearOnline) goOnline();
     setInterval(() => SETTINGS.appearOnline && !onlineSocket && !failedOnline && goOnline(), 1e3);
   }
 
   // src/friendOnlineHook.ts
   function initFriendOnlineHook() {
     SocialMenu.prototype._maskFriendList = SocialMenu.prototype.maskFriendList;
-    SocialMenu.prototype.maskFriendList = function(scrollDist) {
-      this.friends.sort((f1, f2) => f2.seen.getTime() - f1.seen.getTime()).forEach((f, fi) => f.y = 47 + fi * SocialMenu.ItemHeight);
+    SocialMenu.prototype.maskFriendList = function (scrollDist) {
+      this.friends
+        .sort((f1, f2) => f2.seen.getTime() - f1.seen.getTime())
+        .forEach((f, fi) => (f.y = 47 + fi * SocialMenu.ItemHeight));
       this._maskFriendList(scrollDist);
     };
     FriendItem = class FriendItem extends PIXI.Graphics {
@@ -1356,8 +1508,7 @@ ${name}`);
         this.name = name;
         this.seen = new Date(Date.parse(seen) - 6e4 * new Date().getTimezoneOffset());
         this.onlineNow = !!App.Layer.socialMenu.onlineFriends?.includes(this.id);
-        if (this.onlineNow)
-          this.seen = new Date();
+        if (this.onlineNow) this.seen = new Date();
         this.clan = clan;
         this.beginFill(16777215, 0.15);
         this.drawRoundedRect(0, 0, 340, 26, 4);
@@ -1372,7 +1523,14 @@ ${name}`);
         });
         this.on("mousedown", () => this.emit(SocialMenu.ACCESS_PROFILE, this.id));
         this.on("rightdown", () => this.emit(SocialMenu.SHOW_FRIEND_DROPDOWN, this.id));
-        this.beginFill(this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey, 1);
+        this.beginFill(
+          this.onlineNow
+            ? config_default.Colors.dotGreen
+            : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3)
+            ? config_default.Colors.dotOrange
+            : config_default.Colors.dotGrey,
+          1
+        );
         this.drawCircle(320, 13, 8);
         this.endFill();
         this.nameLabel = new PIXI.BitmapText(this.name, { fontName: "Open Sans", fontSize: 22 });
@@ -1385,13 +1543,15 @@ ${name}`);
   async function updateFriendList(reload = true) {
     if (App.Layer.socialMenu.mode == "friends") {
       try {
-        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) => res.json());
-        App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
+        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) =>
+          res.json()
+        );
+        App.Layer.socialMenu.onlineFriends =
+          friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
       } catch {
         App.Layer.socialMenu.onlineFriends = [];
       }
-      if (reload)
-        await App.Layer.socialMenu.loadFriends();
+      if (reload) await App.Layer.socialMenu.loadFriends();
     }
   }
 
@@ -1401,29 +1561,31 @@ ${name}`);
       const newest = await fetch(`${config_default.api}/ver`).then((r) => r.text());
       const num = (str) => Number(str.replace(/\./, ""));
       if (num(newest) > num(config_default.ver)) {
-        App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
+        App.Console.log(
+          `Hey! A new version of NinjaIOUtils is available. (${newest})`,
+          config_default.Colors.red
+        );
       }
-    } catch {
-    }
+    } catch {}
   }
 
   // src/preloaderHook.ts
   function hookPreloader() {
     const preloader = document.getElementById("preloader");
-    if (!preloader)
-      return;
-    const tst = setInterval(function() {
+    if (!preloader) return;
+    const tst = setInterval(function () {
       try {
-        App.RemovePreloader = function() {
+        App.RemovePreloader = function () {
           let b = 1;
           preloader.style.pointerEvents = "none";
           const c = setInterval(() => {
-            0 < b - 0.05 ? (preloader.style.opacity = String(b), b -= 0.05) : (preloader.remove(), clearInterval(c));
+            0 < b - 0.05
+              ? ((preloader.style.opacity = String(b)), (b -= 0.05))
+              : (preloader.remove(), clearInterval(c));
           }, 1e3 / 60);
         };
         clearInterval(tst);
-      } catch {
-      }
+      } catch {}
     }, 10);
     const st = document.createElement("style");
     st.innerHTML = "#preloader{cursor:default!important;}#texresetbtn{cursor:pointer!important;}";
@@ -1440,7 +1602,7 @@ ${name}`);
       opacity: "0.5",
       borderRadius: "6px",
       padding: "2px",
-      color: "white"
+      color: "white",
     }).forEach((s) => {
       reset.style[s[0]] = s[1];
     });
@@ -1458,7 +1620,7 @@ ${name}`);
     const btn = new Button("usr_join");
     btn.setText("Join Game");
     btn.scale.x = btn.scale.y = 0.75;
-    const repos = () => btn.x = App.Layer.userMenu.ox + App.Layer.userMenu.w - btn.width - 30;
+    const repos = () => (btn.x = App.Layer.userMenu.ox + App.Layer.userMenu.w - btn.width - 30);
     repos();
     btn.y = App.Layer.userMenu.h - 10;
     btn.visible = false;
@@ -1472,18 +1634,19 @@ ${name}`);
       };
       const req = String(Date.now());
       await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
-      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
-      if (res == false)
-        rej("User not in game.");
-      else if (res == true)
-        rej("User in private game.");
+      const res = (
+        await fetch(
+          `${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`
+        ).then((r) => r.json())
+      )?.[0];
+      if (res == false) rej("User not in game.");
+      else if (res == true) rej("User in private game.");
       else if (Array.isArray(res)) {
         btn.setText("Join Game");
         repos();
         App.Layer.userMenu.onCloseButtonReleased();
         tryJoinLink([res[0], res[1], res[2]]);
-      } else
-        return rej("User not online.");
+      } else return rej("User not online.");
     });
     App.Layer.userMenu.container.addChild(btn);
     App.Layer.userMenu._load = App.Layer.userMenu.load;
@@ -1536,7 +1699,8 @@ ${name}`);
           if (this.down) {
             let b = a.data.global.x;
             a = a.data.global.y;
-            let c = b - this.ox, d = a - this.oy;
+            let c = b - this.ox,
+              d = a - this.oy;
             this.x += c;
             this.y += d;
             this.ox = b;
@@ -1546,7 +1710,7 @@ ${name}`);
         });
         this.title = new PIXI.BitmapText("Screen Recorder", {
           fontName: "Open Sans",
-          fontSize: 28
+          fontSize: 28,
         });
         this.title.x = this.mx = 8;
         this.title.y = this.my = 6;
@@ -1572,8 +1736,8 @@ ${name}`);
           this.closeButton.alpha = 0.5;
         });
         this.container.addChild(this.closeButton);
-        this.container.addChild(this.preContainer = new PIXI.Container());
-        this.container.addChild(this.postContainer = new PIXI.Container());
+        this.container.addChild((this.preContainer = new PIXI.Container()));
+        this.container.addChild((this.postContainer = new PIXI.Container()));
         this.postContainer.visible = false;
         this.startButton = new Button("start_rec");
         this.setupStartButton();
@@ -1581,10 +1745,8 @@ ${name}`);
         this.startButton.x = this.mx + 10;
         this.startButton.y = this.my += this.title.height + 10;
         this.startButton.addListener(Button.BUTTON_RELEASED, () => {
-          if (this.recordingSince && this.recorder)
-            this.recorder.stop();
-          else
-            this.onRecStart();
+          if (this.recordingSince && this.recorder) this.recorder.stop();
+          else this.onRecStart();
         });
         this.preContainer.addChild(this.startButton);
         this.mx = 18;
@@ -1607,7 +1769,12 @@ ${name}`);
         this.previd.scale.x = this.previd.scale.y = 0.7;
         this.previd.x = this.donedl.x + this.donedl.width + 6;
         this.previd.y = this.my;
-        this.previd.addListener(Button.BUTTON_RELEASED, () => window.open(URL.createObjectURL(new Blob(this.recordedChunks, { type: "video/webm" })), "_blank"));
+        this.previd.addListener(Button.BUTTON_RELEASED, () =>
+          window.open(
+            URL.createObjectURL(new Blob(this.recordedChunks, { type: "video/webm" })),
+            "_blank"
+          )
+        );
         this.postContainer.addChild(this.previd);
         this.dlWEBM = new Button("dl_webm");
         this.dlWEBM.setText("Download WEBM");
@@ -1626,9 +1793,13 @@ ${name}`);
         this.dlMP4.addListener(Button.BUTTON_RELEASED, async () => {
           try {
             this.dlMP4.setText("Starting...");
-            const worker = new Worker(URL.createObjectURL(new Blob([await fetch(`${config_default.api}/ffmpeg.js`).then((r) => r.text())], {
-              type: "application/javascript"
-            })));
+            const worker = new Worker(
+              URL.createObjectURL(
+                new Blob([await fetch(`${config_default.api}/ffmpeg.js`).then((r) => r.text())], {
+                  type: "application/javascript",
+                })
+              )
+            );
             worker.onmessage = async (e) => {
               try {
                 const msg = e.data;
@@ -1646,16 +1817,16 @@ ${name}`);
                         "crop=trunc(iw/2)*2:trunc(ih/2)*2",
                         "-preset",
                         "ultrafast",
-                        "vid.mp4"
+                        "vid.mp4",
                       ],
                       MEMFS: [
                         {
                           name: "video.webm",
                           data: await new Blob(this.recordedChunks, {
-                            type: "video/webm"
-                          }).arrayBuffer()
-                        }
-                      ]
+                            type: "video/webm",
+                          }).arrayBuffer(),
+                        },
+                      ],
                     });
                     break;
                   case "stdout":
@@ -1684,7 +1855,13 @@ ${name}`);
       }
       updateTitle() {
         const timeRec = Math.floor((Date.now() - this.recordingSince) / 1e3);
-        this.title.text = this.recordingSince ? `Recording... (${Math.floor(timeRec / 60).toString().padStart(2, "0")}:${Math.floor(timeRec % 60).toString().padStart(2, "0")})` : `Screen Recorder`;
+        this.title.text = this.recordingSince
+          ? `Recording... (${Math.floor(timeRec / 60)
+              .toString()
+              .padStart(2, "0")}:${Math.floor(timeRec % 60)
+              .toString()
+              .padStart(2, "0")})`
+          : `Screen Recorder`;
       }
       setupStartButton() {
         this.startButton.setText("Start Recording");
@@ -1725,7 +1902,11 @@ ${name}`);
       dlBlob(blob) {
         const link = document.createElement("a");
         link.href = URL.createObjectURL(blob);
-        link.download = `NinjaRecording-${new Date().toISOString().split(".")[0].replace("T", "-").replace(/:/g, ".")}.${blob.type.split("/").pop()}`;
+        link.download = `NinjaRecording-${new Date()
+          .toISOString()
+          .split(".")[0]
+          .replace("T", "-")
+          .replace(/:/g, ".")}.${blob.type.split("/").pop()}`;
         document.body.appendChild(link);
         link.click();
         link.remove();
@@ -1742,12 +1923,20 @@ ${name}`);
         this.background.drawRoundedRect(0, 0, 110, 64, 4);
         this.background.endFill();
         this.addChild(this.background);
-        const clanChatBtn = new SocialMenuDropdownActionRow("Clan Chat", () => menu.onClanChatButtonReleased.bind(menu)(), config_default.Colors.white);
-        const recordBtn = new SocialMenuDropdownActionRow("Record", () => {
-          menu.addChild(menu.recMenu);
-          menu.recMenu.x = -Math.abs(menu.width - menu.recMenu.width) / 2;
-          menu.recMenu.y = -Math.abs(menu.height - menu.recMenu.height) / 2;
-        }, config_default.Colors.red);
+        const clanChatBtn = new SocialMenuDropdownActionRow(
+          "Clan Chat",
+          () => menu.onClanChatButtonReleased.bind(menu)(),
+          config_default.Colors.white
+        );
+        const recordBtn = new SocialMenuDropdownActionRow(
+          "Record",
+          () => {
+            menu.addChild(menu.recMenu);
+            menu.recMenu.x = -Math.abs(menu.width - menu.recMenu.width) / 2;
+            menu.recMenu.y = -Math.abs(menu.height - menu.recMenu.height) / 2;
+          },
+          config_default.Colors.red
+        );
         clanChatBtn.x = 10;
         clanChatBtn.y = 4;
         recordBtn.x = 10;
@@ -1766,8 +1955,8 @@ ${name}`);
         this.actionText.tint = color;
         this.actionText.alpha = 0.7;
         this.interactive = true;
-        this.on("mouseover", () => this.actionText.alpha = 1);
-        this.on("mouseout", () => this.actionText.alpha = 0.7);
+        this.on("mouseover", () => (this.actionText.alpha = 1));
+        this.on("mouseout", () => (this.actionText.alpha = 0.7));
         this.on("mousedown", (e) => {
           e.stopPropagation();
           onclick();
@@ -1782,11 +1971,11 @@ ${name}`);
     menu.dropdownButton.setText("V");
     menu.dropdownButton.scale.x = menu.dropdownButton.scale.y = 0.7;
     menu.dropdownButton.addListener(Button.BUTTON_RELEASED, () => {
-      if (dropdownMenu.parent)
-        return menu.container.removeChild(dropdownMenu);
+      if (dropdownMenu.parent) return menu.container.removeChild(dropdownMenu);
       menu.container.addChild(dropdownMenu);
       dropdownMenu.x = menu.dropdownButton.x - dropdownMenu.width + menu.dropdownButton.width;
-      dropdownMenu.y = menu.dropdownButton.y + menu.dropdownButton.parent.y + menu.dropdownButton.height;
+      dropdownMenu.y =
+        menu.dropdownButton.y + menu.dropdownButton.parent.y + menu.dropdownButton.height;
     });
     menu.dropdownButton.x = menu.clanButton.x + menu.clanButton.width + 6;
     menu.dropdownButton.y = 8;
@@ -1803,11 +1992,9 @@ ${name}`);
     menu.memberclanButton.x = 0;
     menu.memberclanButton.y = menu.rankingButton.y + 70;
     menu.memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
-      if (!["member", "clan"].includes(App.Layer.memberMenu.mode))
-        menuClanState = 0;
+      if (!["member", "clan"].includes(App.Layer.memberMenu.mode)) menuClanState = 0;
       menuClanState++;
-      if (menuClanState == 3)
-        menuClanState = 0;
+      if (menuClanState == 3) menuClanState = 0;
       title1.tint = title2.tint = config_default.Colors.yellow;
       switch (menuClanState) {
         case 0:
@@ -1824,17 +2011,15 @@ ${name}`);
       }
     });
     menu.memberButton.setActive = (n) => {
-      if (menuClanState == 1 || !menuClanState && !n) {
+      if (menuClanState == 1 || (!menuClanState && !n)) {
         menu.memberclanButton.setActive(n);
-        if (!n)
-          title1.tint = config_default.Colors.yellow;
+        if (!n) title1.tint = config_default.Colors.yellow;
       }
     };
     menu.clanButton.setActive = (n) => {
-      if (menuClanState == 2 || !menuClanState && !n) {
+      if (menuClanState == 2 || (!menuClanState && !n)) {
         menu.memberclanButton.setActive(n);
-        if (!n)
-          title2.tint = config_default.Colors.yellow;
+        if (!n) title2.tint = config_default.Colors.yellow;
       }
     };
     const ico1 = new PIXI.Sprite(App.CombinedTextures["menu_icon_players"]);
@@ -1852,7 +2037,7 @@ ${name}`);
       fontName: "Arial",
       fill: config_default.Colors.white,
       lineJoin: "round",
-      strokeThickness: 3
+      strokeThickness: 3,
     });
     icosep.x = 0.5 * menu.memberclanButton.rectWidth;
     icosep.y = 0.37 * menu.memberclanButton.rectHeight;
@@ -1863,7 +2048,7 @@ ${name}`);
       fontName: "Arial",
       fill: config_default.Colors.white,
       lineJoin: "round",
-      strokeThickness: 2
+      strokeThickness: 2,
     });
     title1.x = 0.25 * menu.memberclanButton.rectWidth;
     menu.memberclanButton.addChild(title1);
@@ -1872,7 +2057,7 @@ ${name}`);
       fontName: "Arial",
       fill: config_default.Colors.white,
       lineJoin: "round",
-      strokeThickness: 2
+      strokeThickness: 2,
     });
     title2.x = 0.75 * menu.memberclanButton.rectWidth;
     menu.memberclanButton.addChild(title2);
@@ -1881,19 +2066,24 @@ ${name}`);
       fontName: "Arial",
       fill: config_default.Colors.white,
       lineJoin: "round",
-      strokeThickness: 3
+      strokeThickness: 3,
     });
     titlesep.x = 0.5 * menu.memberclanButton.rectWidth;
     menu.memberclanButton.addChild(titlesep);
     title1.y = title2.y = titlesep.y = 0.7 * menu.memberclanButton.rectHeight;
-    title1.anchor.x = title1.anchor.y = title2.anchor.x = title2.anchor.y = titlesep.anchor.x = titlesep.anchor.y = 0.5;
+    title1.anchor.x =
+      title1.anchor.y =
+      title2.anchor.x =
+      title2.anchor.y =
+      titlesep.anchor.x =
+      titlesep.anchor.y =
+        0.5;
     title1.tint = title2.tint = config_default.Colors.yellow;
     menu.container.addChild(menu.memberclanButton);
     const setActive = menu.clanButton.setActive.bind(menu.clanButton);
     menu.clanButton.setActive = (n) => {
       setActive(n);
-      if (!n)
-        menu.utilsButton.setActive(0);
+      if (!n) menu.utilsButton.setActive(0);
     };
     menu.utilsButton = new MemberMenuButton("NinjaIOUtils", 16763904, 15, "gears_icon");
     menu.utilsButton.x = 0;
@@ -1927,7 +2117,7 @@ ${name}`);
         lineHeight: 16,
         fill: config_default.Colors.yellow,
         strokeThickness: 3,
-        lineJoin: "round"
+        lineJoin: "round",
       });
       constructor() {
         super();
@@ -1948,7 +2138,9 @@ ${name}`);
         this.closeButton.x = this.background.width - 40;
         this.closeButton.y = this.oy - 6;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
-        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.closeButton.on(ImgButton.CLICK, () =>
+          App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS)
+        );
         this.container.addChild(this.closeButton);
         this.pmTitle.x = 0.5 * this.width - 20;
         this.pmTitle.y = this.oy - 4;
@@ -1960,10 +2152,9 @@ ${name}`);
       reposition() {
         this.off = 0;
       }
-      show() {
-      }
+      show() {}
     }
-    App.Layer.mainMenuHides.push(App.Layer.utilsMenu = new UtilsMenu());
+    App.Layer.mainMenuHides.push((App.Layer.utilsMenu = new UtilsMenu()));
     [
       "loginMenu",
       "memberBrowserMenu",
@@ -1980,7 +2171,7 @@ ${name}`);
       "serverCreationMenu",
       "renameMenu",
       "logoutMenu",
-      "guestProfileMenu"
+      "guestProfileMenu",
     ].forEach((e) => App.Layer[e].hides.push(App.Layer.utilsMenu));
     App.Layer.features.push(App.Layer.utilsMenu);
   }
@@ -1988,17 +2179,18 @@ ${name}`);
   // src/playerDataHook.ts
   function hookPlayerData() {
     Manager.prototype._createLocalPlayer = Manager.prototype.createLocalPlayer;
-    Manager.prototype.createLocalPlayer = function(...d) {
+    Manager.prototype.createLocalPlayer = function (...d) {
       const plr = this._createLocalPlayer(...d);
       this.localPlayer.update(null, null, null, true);
       return plr;
     };
     Player.prototype._update = Player.prototype.update;
-    Player.prototype.update = function(...d) {
+    Player.prototype.update = function (...d) {
       const doForce = d[3] == true;
       const upd = !doForce ? this._update(...d) : null;
       if (SETTINGS.helpfulUI) {
-        const isLocal = doForce || this.id == app.game.manager.getLocalPlayer()?.id, hideHUD = this.alive && (isLocal || !this.prone) && !app.game.gameover;
+        const isLocal = doForce || this.id == app.game.manager.getLocalPlayer()?.id,
+          hideHUD = this.alive && (isLocal || !this.prone) && !app.game.gameover;
         const hpbar = this.hpbar || (this.hpbar = new HealthBar());
         if (!hpbar.parent) {
           this.visual.addChild(hpbar);
@@ -2007,8 +2199,7 @@ ${name}`);
           hpbar.y = isLocal ? -65 : -50;
           hpbar.background.visible = false;
         }
-        if (hpbar.getValue() !== this.health)
-          hpbar.setValue(this.health);
+        if (hpbar.getValue() !== this.health) hpbar.setValue(this.health);
         hpbar.visible = hideHUD;
         if (isLocal) {
           const jetbar = this.jetbar || (this.jetbar = new JetBar());
@@ -2020,8 +2211,7 @@ ${name}`);
             jetbar.background.visible = false;
           }
           this.jetLeft = app.game.hud.jetBar.getValue();
-          if (jetbar.getValue() !== this.jetLeft)
-            jetbar.setValue(this.jetLeft);
+          if (jetbar.getValue() !== this.jetLeft) jetbar.setValue(this.jetLeft);
           if (!app.game.hud.jetBar._setValue) {
             app.game.hud.jetBar._setValue = app.game.hud.jetBar.setValue;
             app.game.hud.jetBar.setValue = (v) => {
@@ -2041,19 +2231,30 @@ ${name}`);
             ammobar.rotation = -Math.PI / 2;
           }
           this.ammoLeft = app.game.hud.ammoBar.getValue();
-          if (ammobar.value !== this.ammoLeft)
-            ammobar.value = this.ammoLeft;
-          (ammobar.update = ammobar.update || (() => {
-            ammobar.value = app.game.hud.ammoBar.getValue();
-            ammobar.max = app.game.hud.ammoBar.maxValue;
-            const w = 12, r = 30;
-            ammobar.clear();
-            ammobar.lineStyle(w, config_default.Colors.yellow, 0.2);
-            ammobar.arc(0, 0, r, 0, Math.PI * 2);
-            ammobar.lineStyle(w, ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red);
-            ammobar.arc(0, 0, r, 0, Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1));
-            ammobar.endFill();
-          }))();
+          if (ammobar.value !== this.ammoLeft) ammobar.value = this.ammoLeft;
+          (ammobar.update =
+            ammobar.update ||
+            (() => {
+              ammobar.value = app.game.hud.ammoBar.getValue();
+              ammobar.max = app.game.hud.ammoBar.maxValue;
+              const w = 12,
+                r = 30;
+              ammobar.clear();
+              ammobar.lineStyle(w, config_default.Colors.yellow, 0.2);
+              ammobar.arc(0, 0, r, 0, Math.PI * 2);
+              ammobar.lineStyle(
+                w,
+                ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red
+              );
+              ammobar.arc(
+                0,
+                0,
+                r,
+                0,
+                Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : 1)
+              );
+              ammobar.endFill();
+            }))();
           if (!app.game.hud.ammoBar._update) {
             app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
             app.game.hud.ammoBar.update = () => {
@@ -2068,7 +2269,45 @@ ${name}`);
               ammobar.update();
             };
           }
-          app.game.reticle.children.forEach((c) => c.visible = doForce || hideHUD);
+          const beltbar = this.beltbar || (this.beltbar = new PIXI.Container());
+          if (!beltbar.parent) {
+            app.game.reticle.addChild(beltbar);
+            beltbar.x = 10;
+            beltbar.y = 26;
+          }
+          (beltbar.update =
+            beltbar.update ||
+            (() => {
+              beltbar.removeChildren();
+              beltbar.value = app.game.hud.ammoBar.beltAmmoAmount;
+              if (beltbar.value <= 0) beltbar.item = null;
+              if (beltbar.item) {
+                for (let i = beltbar.value; i--; i > 0) {
+                  const beltIcon = new SpriteMap[beltbar.item]();
+                  beltIcon.anchor.x = beltIcon.anchor.y = 0;
+                  beltIcon.x = i * 12;
+                  beltIcon.y = 0;
+                  beltIcon.width = beltIcon.height = 0.15;
+                  beltbar.addChild(beltIcon);
+                }
+              }
+            }))();
+          if (!app.game.hud.ammoBar._setBeltItem) {
+            app.game.hud.ammoBar._setBeltItem = app.game.hud.ammoBar.setBeltItem;
+            app.game.hud.ammoBar.setBeltItem = (i) => {
+              app.game.hud.ammoBar._setBeltItem(i);
+              beltbar.item = i ? i.t.substring(1) : null;
+              beltbar.update();
+            };
+          }
+          if (!app.game.hud.ammoBar._decrementBeltValue) {
+            app.game.hud.ammoBar._decrementBeltValue = app.game.hud.ammoBar.decrementBeltValue;
+            app.game.hud.ammoBar.decrementBeltValue = () => {
+              app.game.hud.ammoBar._decrementBeltValue();
+              beltbar.update();
+            };
+          }
+          app.game.reticle.children.forEach((c) => (c.visible = doForce || hideHUD));
         }
       }
       return upd;
@@ -2078,7 +2317,7 @@ ${name}`);
   // src/index.ts
   hookTextureLoader();
   if (!navigator.clipboard.readText) {
-    navigator.clipboard.readText = function() {
+    navigator.clipboard.readText = function () {
       return new Promise((res) => res(prompt("Paste text now.") || ""));
     };
   }
@@ -2091,14 +2330,20 @@ ${name}`);
           socialMenuHook();
           initFriendOnlineHook();
           socialMenuDone = true;
-        } else
-          return;
+        } else return;
       } catch {
         return;
       }
     }
     try {
-      if (!app || !app.menu || !app.menu.joinButton || typeof app.status.updating !== "boolean" || !APIClient || !APIClient.postCreateGame)
+      if (
+        !app ||
+        !app.menu ||
+        !app.menu.joinButton ||
+        typeof app.status.updating !== "boolean" ||
+        !APIClient ||
+        !APIClient.postCreateGame
+      )
         return;
     } catch {
       return;
@@ -2113,7 +2358,7 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     app.onShowMenu = (cb) => {
       menuListeners.push(cb);
     };
-    app.showMenu = function() {
+    app.showMenu = function () {
       app._showMenu();
       menuListeners.forEach((l) => l());
       reposItems();
@@ -2124,13 +2369,12 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     applySettingsHook();
     initShareURLHook();
     App.Stats.realSetPing = App.Stats.setPing;
-    App.Stats.setPing = function(ping) {
+    App.Stats.setPing = function (ping) {
       App.Stats.ping = ping;
       return App.Stats.realSetPing(ping);
     };
     App.Console.consoleInput.addListener(InputField.CHANGE, () => {
-      if (SETTINGS.typewriter)
-        AudioEffects.ButtonHover.audio.play();
+      if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
     });
     initOnlineOptionHook();
     initPartyMenu();
@@ -2152,7 +2396,11 @@ No support will be provided to logged out users experiencing issues, sorry.`);
     checkUpdate();
     hookUtilsMenu();
     hookPlayerData();
-    app.onResize = window.eval(`(function ${app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`)})`);
+    app.onResize = window.eval(
+      `(function ${app.onResize
+        .toString()
+        .replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`)})`
+    );
     App.NUIScale = SETTINGS.uiScale;
     app.onResize();
     App.Console.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
