@@ -17,11 +17,9 @@ import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import checkUpdate from "./updateChecker";
 import hookPreloader from "./preloaderHook";
 import hookJoinGameButton from "./joinGameHook";
-import initHashManager from "./hashManager";
 import hookSocialMenu from "./socialMenuHook";
 import { handleKeyDown } from "./hotkeyMessages";
 import hookUtilsMenu from "./hookUtilsMenu";
-import hookRenderer from "./rendererHook";
 import hookPlayerData from "./playerDataHook";
 
 config; // ensures config is at the top of the compiled file
@@ -34,6 +32,23 @@ if (!navigator.clipboard.readText) {
   };
 }
 hookPreloader();
+
+(window as any).NIOUCheckReload = () => {
+  if (!app.game) return "Enter a game...";
+  let reloadTime = 0;
+  //@ts-ignore
+  app.game.hud.ammoBar.__setValue = app.game.hud.ammoBar.setValue;
+  app.game.hud.ammoBar.setValue = (v) => {
+    if (v <= 0 && !reloadTime) reloadTime = Date.now();
+    if (reloadTime && v > 0) {
+      console.log(`Time to reload: ${Date.now() - reloadTime}ms`);
+      reloadTime = 0;
+    }
+    //@ts-ignore
+    app.game.hud.ammoBar.__setValue(v);
+  };
+  return "Shoot gun till reload. Reload the page to disable this logging.";
+};
 
 let socialMenuDone = false;
 /* Test to make sure game is fully loaded. */
