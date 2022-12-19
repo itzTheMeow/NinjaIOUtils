@@ -14,6 +14,8 @@
 // @match        http://*.ninja.io
 // @icon         https://www.google.com/s2/favicons?domain=ninja.io
 // @require      https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js
+// @homepageURL  https://nutils.itsmeow.cat
+// @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
 // ==/UserScript==
 
