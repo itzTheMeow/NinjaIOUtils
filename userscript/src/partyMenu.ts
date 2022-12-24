@@ -1,8 +1,8 @@
+import type { Socket } from "socket.io-client";
+import { SocketTypes } from "../../shared";
 import config from "./config";
 import reposItems, { reindexItems } from "./repositionItems";
-import type { Socket } from "socket.io-client";
 import { io } from "./utils";
-import { SocketTypes } from "../../shared";
 
 export default function initPartyMenu() {
   class PartyMenu extends Feature {

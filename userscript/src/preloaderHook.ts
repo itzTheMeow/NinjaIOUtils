@@ -1,5 +1,3 @@
-import config from "./config";
-
 export default function hookPreloader() {
   const preloader = document.getElementById("preloader");
   if (!preloader) return;

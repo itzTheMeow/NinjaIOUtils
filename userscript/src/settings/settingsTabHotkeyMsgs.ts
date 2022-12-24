@@ -1,6 +1,6 @@
 import config from "../config";
-import { saveSettings, SETTINGS } from "./settings";
 import { registeredHotkeyMessages } from "../hotkeyMessages";
+import { saveSettings, SETTINGS } from "./settings";
 
 export default function getHotkeyMsgsTab() {
   class HotkeyMessagesTab extends (PIXI.Container as any) {

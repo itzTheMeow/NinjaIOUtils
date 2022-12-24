@@ -26,6 +26,15 @@
 */
 
 (() => {
+  // src/applySettingsHook.ts
+  function applySettingsHook() {
+    Manager.prototype._applySettings = Manager.prototype.applySettings;
+    Manager.prototype.applySettings = function(s) {
+      this.isRanked = s.ranked;
+      return this._applySettings(s);
+    };
+  }
+
   // src/config.ts
   var config_default = {
     ver: "1.30",
@@ -117,15 +126,6 @@
     }
   };
 
-  // src/applySettingsHook.ts
-  function applySettingsHook() {
-    Manager.prototype._applySettings = Manager.prototype.applySettings;
-    Manager.prototype.applySettings = function(s) {
-      this.isRanked = s.ranked;
-      return this._applySettings(s);
-    };
-  }
-
   // src/settings/settings.ts
   var settingsKey = "ninjaioutils";
   var SETTINGS = {
@@ -205,6 +205,103 @@
       saveSettings();
     });
     app.menu.settingsPanel.graphicsTab.helpfulBox.setChecked(SETTINGS.helpfulUI);
+  }
+
+  // src/hotkeyMessages.ts
+  var isRateLimited = false;
+  var registeredHotkeyMessages = new Map(SETTINGS.hotkeyMessages);
+  async function handleKeyDown(e) {
+    if (e.repeat)
+      return;
+    const isAltPressed = UserInput.pressed[18];
+    const message = registeredHotkeyMessages.get(e.key);
+    if (message && isAltPressed && SETTINGS.enableHotkeyMessages)
+      sendChatMessage(message);
+  }
+  async function sendChatMessage(message) {
+    if (!app.client.socket || isRateLimited)
+      return;
+    const binaryChatMessage = Client.compress({
+      t: config_default.PacketTypeMap.chatSend,
+      msg: message
+    });
+    app.client.socket.send(binaryChatMessage);
+    isRateLimited = true;
+    setTimeout(() => isRateLimited = false, 1e3 * 1.4);
+  }
+
+  // src/settings/settingsTabHotkeyMsgs.ts
+  function getHotkeyMsgsTab() {
+    class HotkeyMessagesTab extends PIXI.Container {
+      constructor() {
+        super();
+        const tab = this;
+        EventDispatcher.call(this);
+        this.marginLeft = 40;
+        this.marginTop = 52;
+        this.off = this.marginTop + 6;
+        this.hkmTitle = new PIXI.Text("Hotkey Messages", {
+          fontName: "Arial",
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config_default.Colors.yellow,
+          strokeThickness: 3,
+          lineJoin: "round"
+        });
+        this.hkmTitle.x = this.marginLeft - 5;
+        this.hkmTitle.y = this.off;
+        this.addChild(this.hkmTitle);
+        this.hkmHint = new PIXI.Text("(Use fullscreen to avoid conflics with browser hotkeys)", {
+          fontName: "Arial",
+          fontSize: 14,
+          fill: config_default.Colors.white,
+          strokeThickness: 2,
+          lineJoin: "round"
+        });
+        this.hkmHint.x = this.hkmTitle.x + this.hkmTitle.width + 3;
+        this.hkmHint.y = this.off + 2;
+        this.addChild(this.hkmHint);
+        this.enableHKM = new Checkbox("enableHKM", "Enable Hotkey Messages", true);
+        this.enableHKM.x = this.marginLeft;
+        this.enableHKM.y = this.off += 34;
+        this.enableHKM.on(Checkbox.CHANGE, function(b) {
+          SETTINGS.enableHotkeyMessages = b;
+          saveSettings();
+        });
+        this.addChild(this.enableHKM);
+        this.enableHKM.setChecked(SETTINGS.enableHotkeyMessages);
+        const doHotkey = (key) => {
+          const keyLabel = new PIXI.Text(`ALT + ${key.toUpperCase()}`, {
+            fontName: "Arial",
+            fontSize: 16,
+            fill: config_default.Colors.yellow,
+            strokeThickness: 3,
+            lineJoin: "round"
+          });
+          keyLabel.x = this.marginLeft;
+          keyLabel.y = this.off += 55;
+          this.addChild(keyLabel);
+          const keyText = new InputField(`${key}_hotkey`, false, 24);
+          keyText.setDimensions(370, 35);
+          keyText.forceLowerCase = false;
+          keyText.setMaxChars(40);
+          if (registeredHotkeyMessages.get(key))
+            keyText.setText(registeredHotkeyMessages.get(key));
+          keyText.x = 125;
+          keyText.y = this.off - 6;
+          keyText.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.");
+          keyText.addListener(InputField.CHANGE, function(d) {
+            const message = d.data.value || "";
+            registeredHotkeyMessages.set(key, message);
+            SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
+            saveSettings();
+          });
+          this.addChild(keyText);
+        };
+        ["a", "s", "d", "q", "w", "e"].forEach((k) => doHotkey(k));
+      }
+    }
+    return HotkeyMessagesTab;
   }
 
   // src/settings/settingsTabSound.ts
@@ -427,103 +524,6 @@
     return TexTab;
   }
 
-  // src/hotkeyMessages.ts
-  var isRateLimited = false;
-  var registeredHotkeyMessages = new Map(SETTINGS.hotkeyMessages);
-  async function handleKeyDown(e) {
-    if (e.repeat)
-      return;
-    const isAltPressed = UserInput.pressed[18];
-    const message = registeredHotkeyMessages.get(e.key);
-    if (message && isAltPressed && SETTINGS.enableHotkeyMessages)
-      sendChatMessage(message);
-  }
-  async function sendChatMessage(message) {
-    if (!app.client.socket || isRateLimited)
-      return;
-    const binaryChatMessage = Client.compress({
-      t: config_default.PacketTypeMap.chatSend,
-      msg: message
-    });
-    app.client.socket.send(binaryChatMessage);
-    isRateLimited = true;
-    setTimeout(() => isRateLimited = false, 1e3 * 1.4);
-  }
-
-  // src/settings/settingsTabHotkeyMsgs.ts
-  function getHotkeyMsgsTab() {
-    class HotkeyMessagesTab extends PIXI.Container {
-      constructor() {
-        super();
-        const tab = this;
-        EventDispatcher.call(this);
-        this.marginLeft = 40;
-        this.marginTop = 52;
-        this.off = this.marginTop + 6;
-        this.hkmTitle = new PIXI.Text("Hotkey Messages", {
-          fontName: "Arial",
-          fontSize: 18,
-          lineHeight: 18,
-          fill: config_default.Colors.yellow,
-          strokeThickness: 3,
-          lineJoin: "round"
-        });
-        this.hkmTitle.x = this.marginLeft - 5;
-        this.hkmTitle.y = this.off;
-        this.addChild(this.hkmTitle);
-        this.hkmHint = new PIXI.Text("(Use fullscreen to avoid conflics with browser hotkeys)", {
-          fontName: "Arial",
-          fontSize: 14,
-          fill: config_default.Colors.white,
-          strokeThickness: 2,
-          lineJoin: "round"
-        });
-        this.hkmHint.x = this.hkmTitle.x + this.hkmTitle.width + 3;
-        this.hkmHint.y = this.off + 2;
-        this.addChild(this.hkmHint);
-        this.enableHKM = new Checkbox("enableHKM", "Enable Hotkey Messages", true);
-        this.enableHKM.x = this.marginLeft;
-        this.enableHKM.y = this.off += 34;
-        this.enableHKM.on(Checkbox.CHANGE, function(b) {
-          SETTINGS.enableHotkeyMessages = b;
-          saveSettings();
-        });
-        this.addChild(this.enableHKM);
-        this.enableHKM.setChecked(SETTINGS.enableHotkeyMessages);
-        const doHotkey = (key) => {
-          const keyLabel = new PIXI.Text(`ALT + ${key.toUpperCase()}`, {
-            fontName: "Arial",
-            fontSize: 16,
-            fill: config_default.Colors.yellow,
-            strokeThickness: 3,
-            lineJoin: "round"
-          });
-          keyLabel.x = this.marginLeft;
-          keyLabel.y = this.off += 55;
-          this.addChild(keyLabel);
-          const keyText = new InputField(`${key}_hotkey`, false, 24);
-          keyText.setDimensions(370, 35);
-          keyText.forceLowerCase = false;
-          keyText.setMaxChars(40);
-          if (registeredHotkeyMessages.get(key))
-            keyText.setText(registeredHotkeyMessages.get(key));
-          keyText.x = 125;
-          keyText.y = this.off - 6;
-          keyText.setFilter("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.");
-          keyText.addListener(InputField.CHANGE, function(d) {
-            const message = d.data.value || "";
-            registeredHotkeyMessages.set(key, message);
-            SETTINGS.hotkeyMessages = [...registeredHotkeyMessages];
-            saveSettings();
-          });
-          this.addChild(keyText);
-        };
-        ["a", "s", "d", "q", "w", "e"].forEach((k) => doHotkey(k));
-      }
-    }
-    return HotkeyMessagesTab;
-  }
-
   // src/settings/settingsTab.ts
   function settingsTab() {
     SettingsPanel.OPEN_TAB = "opened_settings_tab";
@@ -733,6 +733,65 @@ ${name}`);
     };
   }
 
+  // src/friendOnlineHook.ts
+  function initFriendOnlineHook() {
+    SocialMenu.prototype._maskFriendList = SocialMenu.prototype.maskFriendList;
+    SocialMenu.prototype.maskFriendList = function(scrollDist) {
+      this.friends.sort((f1, f2) => f2.seen.getTime() - f1.seen.getTime()).forEach((f, fi) => f.y = 47 + fi * SocialMenu.ItemHeight);
+      this._maskFriendList(scrollDist);
+    };
+    FriendItem = class FriendItem extends PIXI.Graphics {
+      id;
+      name;
+      seen;
+      clan;
+      nameLabel;
+      onlineNow;
+      constructor(id, name, seen, clan) {
+        super();
+        this.id = id;
+        this.name = name;
+        this.seen = new Date(Date.parse(seen) - 6e4 * new Date().getTimezoneOffset());
+        this.onlineNow = !!App.Layer.socialMenu.onlineFriends?.includes(this.id);
+        if (this.onlineNow)
+          this.seen = new Date();
+        this.clan = clan;
+        this.beginFill(16777215, 0.15);
+        this.drawRoundedRect(0, 0, 340, 26, 4);
+        this.endFill();
+        this.interactive = true;
+        this.tint = 12303291;
+        this.on("mouseover", () => {
+          this.tint = 16777215;
+        });
+        this.on("mouseout", () => {
+          this.tint = 12303291;
+        });
+        this.on("mousedown", () => this.emit(SocialMenu.ACCESS_PROFILE, this.id));
+        this.on("rightdown", () => this.emit(SocialMenu.SHOW_FRIEND_DROPDOWN, this.id));
+        this.beginFill(this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey, 1);
+        this.drawCircle(320, 13, 8);
+        this.endFill();
+        this.nameLabel = new PIXI.BitmapText(this.name, { fontName: "Open Sans", fontSize: 22 });
+        this.nameLabel.x = 8;
+        this.nameLabel.y = 2;
+        this.addChild(this.nameLabel);
+      }
+    };
+  }
+  async function updateFriendList(reload = true) {
+    if (App.Layer.socialMenu.mode == "friends") {
+      try {
+        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) => res.json());
+        App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
+      } catch {
+        App.Layer.socialMenu.onlineFriends = [];
+      }
+      if (reload)
+        await App.Layer.socialMenu.loadFriends();
+    }
+  }
+
   // src/friendSearch.ts
   function socialMenuHook() {
     SocialMenu.prototype.maskInvitationList = function(scrollDist) {
@@ -811,6 +870,320 @@ ${name}`);
     };
   }
 
+  // src/fullscreenHook.ts
+  function hookFullscreen() {
+    window.addEventListener("keydown", (e) => {
+      if (e.key == "F11") {
+        e.preventDefault();
+        if (document.fullscreenElement)
+          document.exitFullscreen();
+        else
+          document.querySelector("html").requestFullscreen();
+      }
+    });
+  }
+
+  // src/hookUtilsMenu.ts
+  function hookUtilsMenu() {
+    const menu = App.Layer.memberMenu;
+    menu.memberButton.parent.removeChild(menu.memberButton);
+    menu.clanButton.parent.removeChild(menu.clanButton);
+    let menuClanState = 0;
+    menu.memberclanButton = new MemberMenuButton("", 16763904, 18);
+    menu.memberclanButton.x = 0;
+    menu.memberclanButton.y = menu.rankingButton.y + 70;
+    menu.memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+      if (!["member", "clan"].includes(App.Layer.memberMenu.mode))
+        menuClanState = 0;
+      menuClanState++;
+      if (menuClanState == 3)
+        menuClanState = 0;
+      title1.tint = title2.tint = config_default.Colors.yellow;
+      switch (menuClanState) {
+        case 0:
+          menu.emit(Layer.Events.MENU_ACCESS);
+          break;
+        case 1:
+          menu.emit(Layer.Events.MEMBER_ACCESS);
+          title1.tint = config_default.Colors.green;
+          break;
+        case 2:
+          menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
+          title2.tint = config_default.Colors.green;
+          break;
+      }
+    });
+    menu.memberButton.setActive = (n) => {
+      if (menuClanState == 1 || !menuClanState && !n) {
+        menu.memberclanButton.setActive(n);
+        if (!n)
+          title1.tint = config_default.Colors.yellow;
+      }
+    };
+    menu.clanButton.setActive = (n) => {
+      if (menuClanState == 2 || !menuClanState && !n) {
+        menu.memberclanButton.setActive(n);
+        if (!n)
+          title2.tint = config_default.Colors.yellow;
+      }
+    };
+    const ico1 = new PIXI.Sprite(App.CombinedTextures["menu_icon_players"]);
+    ico1.x = 0.25 * menu.memberclanButton.rectWidth;
+    menu.memberclanButton.addChild(ico1);
+    const ico2 = new PIXI.Sprite(App.CombinedTextures["menu_icon_clans"]);
+    ico2.x = 0.75 * menu.memberclanButton.rectWidth;
+    menu.memberclanButton.addChild(ico2);
+    ico1.scale.x = ico1.scale.y = ico2.scale.x = ico2.scale.y = 0.25;
+    ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
+    ico1.tint = ico2.tint = config_default.Colors.white;
+    ico1.y = ico2.y = 0.37 * menu.memberclanButton.rectHeight;
+    const icosep = new PIXI.Text("/", {
+      fontSize: 16,
+      fontName: "Arial",
+      fill: config_default.Colors.white,
+      lineJoin: "round",
+      strokeThickness: 3
+    });
+    icosep.x = 0.5 * menu.memberclanButton.rectWidth;
+    icosep.y = 0.37 * menu.memberclanButton.rectHeight;
+    icosep.anchor.x = icosep.anchor.y = 0.5;
+    menu.memberclanButton.addChild(icosep);
+    const title1 = new PIXI.Text("Players", {
+      fontSize: 11,
+      fontName: "Arial",
+      fill: config_default.Colors.white,
+      lineJoin: "round",
+      strokeThickness: 2
+    });
+    title1.x = 0.25 * menu.memberclanButton.rectWidth;
+    menu.memberclanButton.addChild(title1);
+    const title2 = new PIXI.Text("Clans", {
+      fontSize: 14,
+      fontName: "Arial",
+      fill: config_default.Colors.white,
+      lineJoin: "round",
+      strokeThickness: 2
+    });
+    title2.x = 0.75 * menu.memberclanButton.rectWidth;
+    menu.memberclanButton.addChild(title2);
+    const titlesep = new PIXI.Text("/", {
+      fontSize: 16,
+      fontName: "Arial",
+      fill: config_default.Colors.white,
+      lineJoin: "round",
+      strokeThickness: 3
+    });
+    titlesep.x = 0.5 * menu.memberclanButton.rectWidth;
+    menu.memberclanButton.addChild(titlesep);
+    title1.y = title2.y = titlesep.y = 0.7 * menu.memberclanButton.rectHeight;
+    title1.anchor.x = title1.anchor.y = title2.anchor.x = title2.anchor.y = titlesep.anchor.x = titlesep.anchor.y = 0.5;
+    title1.tint = title2.tint = config_default.Colors.yellow;
+    menu.container.addChild(menu.memberclanButton);
+    const setActive = menu.clanButton.setActive.bind(menu.clanButton);
+    menu.clanButton.setActive = (n) => {
+      setActive(n);
+      if (!n)
+        menu.utilsButton.setActive(0);
+    };
+    menu.utilsButton = new MemberMenuButton("NinjaIOUtils", 16763904, 15, "gears_icon");
+    menu.utilsButton.x = 0;
+    menu.utilsButton.y = menu.memberButton.y + 70;
+    menu.utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+      if (menu.utilsButton.active) {
+        menu.utilsButton.setActive(0);
+        menu.emit(Layer.Events.MENU_ACCESS);
+        return;
+      }
+      menu.emit(Layer.Events.MENU_ACCESS);
+      menu.playButton.setActive(0);
+      menu.utilsButton.setActive(1);
+      App.Layer.utilsMenu.show();
+      App.Layer.addChild(App.Layer.utilsMenu);
+      App.Layer.emit(Layer.Events.HIDE_MENU);
+      app.onResize();
+    });
+    menu.utilsButton.icon.scale.x = menu.utilsButton.icon.scale.y = 0.7;
+    menu.container.addChild(menu.utilsButton);
+    class UtilsMenu extends Feature {
+      ox = 0;
+      oy = 0;
+      off = 0;
+      marginLeft = 0;
+      background = new PIXI.Graphics();
+      closeButton = new ImgButton();
+      pmTitle = new PIXI.Text("NinjaIOUtils", {
+        fontName: "Arial",
+        fontSize: 19,
+        lineHeight: 16,
+        fill: config_default.Colors.yellow,
+        strokeThickness: 3,
+        lineJoin: "round"
+      });
+      constructor() {
+        super();
+        this.background.interactive = true;
+        this.background.x = 0;
+        this.background.y = 40;
+        this.background.lineStyle(1, 16777215, 0.1, 0);
+        this.background.beginFill(3355443, 0.9);
+        this.background.drawRect(0, 0, 660, 524);
+        this.background.endFill();
+        this.background.beginFill(0, 0.3);
+        this.background.drawRect(10, 10, 640, 504);
+        this.background.endFill();
+        this.background.drawRect(15, 42, 630, 2);
+        this.container.addChild(this.background);
+        this.ox = 10;
+        this.oy = 60;
+        this.closeButton.x = this.background.width - 40;
+        this.closeButton.y = this.oy - 6;
+        this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
+        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.container.addChild(this.closeButton);
+        this.pmTitle.x = 0.5 * this.width - 20;
+        this.pmTitle.y = this.oy - 4;
+        this.pmTitle.anchor.x = 0.5;
+        this.container.addChild(this.pmTitle);
+        this.container.x = 0.5 * -this.width;
+        this.reposition();
+      }
+      reposition() {
+        this.off = 0;
+      }
+      show() {
+      }
+    }
+    App.Layer.mainMenuHides.push(App.Layer.utilsMenu = new UtilsMenu());
+    [
+      "loginMenu",
+      "memberBrowserMenu",
+      "clanBrowserMenu",
+      "registerMenu",
+      "upResetMenu",
+      "profileMenu",
+      "userMenu",
+      "rankingMenu",
+      "newsMenu",
+      "partnerMenu",
+      "serverListMenu",
+      "clanMenu",
+      "serverCreationMenu",
+      "renameMenu",
+      "logoutMenu",
+      "guestProfileMenu"
+    ].forEach((e) => App.Layer[e].hides.push(App.Layer.utilsMenu));
+    App.Layer.features.push(App.Layer.utilsMenu);
+  }
+
+  // src/userCommunicationProtocol.ts
+  var commConfig = {
+    prefix: "$NIOU",
+    sep: "|"
+  };
+  var commPackets = {
+    gameLink: "requestGameLink"
+  };
+  function decodeUserCommunication(message) {
+    if (!message.startsWith(commConfig.prefix))
+      return null;
+    const args = message.split(commConfig.sep);
+    if (!Object.values(commPackets).includes(args[1]))
+      return null;
+    return {
+      packet: args[1],
+      args: args.slice(2)
+    };
+  }
+  async function communicateUser(id, packetID, args) {
+    await APIClient.postFriendMessage(id, [commConfig.prefix, packetID, ...args].join(commConfig.sep), app.credential.id);
+    return true;
+  }
+
+  // src/joinGameHook.ts
+  function hookJoinGameButton() {
+    const btn = new Button("usr_join");
+    btn.setText("Join Game");
+    btn.scale.x = btn.scale.y = 0.75;
+    const repos = () => btn.x = App.Layer.userMenu.ox + App.Layer.userMenu.w - btn.width - 30;
+    repos();
+    btn.y = App.Layer.userMenu.h - 10;
+    btn.visible = false;
+    btn.addListener(Button.BUTTON_PRESSED, async () => {
+      btn.setText("Requesting link...");
+      repos();
+      const rej = (msg) => {
+        btn.setText(msg);
+        repos();
+        setTimeout(() => (btn.setText("Join Game"), repos()), 4e3);
+      };
+      const req = String(Date.now());
+      await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
+      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
+      if (res == false)
+        rej("User not in game.");
+      else if (res == true)
+        rej("User in private game.");
+      else if (Array.isArray(res)) {
+        btn.setText("Join Game");
+        repos();
+        App.Layer.userMenu.onCloseButtonReleased();
+        tryJoinLink([res[0], res[1], res[2]]);
+      } else
+        return rej("User not online.");
+    });
+    App.Layer.userMenu.container.addChild(btn);
+    App.Layer.userMenu._load = App.Layer.userMenu.load;
+    App.Layer.userMenu.load = async (id, type) => {
+      btn.visible = false;
+      await App.Layer.userMenu._load(id, type);
+      await updateFriendList(false);
+      btn.visible = App.Layer.socialMenu.onlineFriends.includes(App.Layer.userMenu.id);
+    };
+  }
+
+  // src/mapIdentifier.ts
+  function initMapIdentifier() {
+    Client.prototype.onMessage = function(_a) {
+      const a = Client.decompress(_a.data);
+      try {
+        if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
+          let roomName = a.data.info.substring("You joined ".length);
+          setHash(app.client.server.id, roomName, gameLinkData.pass);
+        }
+        const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
+        const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
+        if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
+          const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
+          this.mapID = 0;
+          if (mapName) {
+            const mapID = config_default.MapIDs[mapName];
+            if (mapID) {
+              repSuccess(mapID, mapName);
+              this.mapID = mapID;
+            } else
+              repFail();
+          } else
+            repFail();
+        } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
+          const mapName = a.data.msg.substring("loading map: ".length);
+          this.mapID = 0;
+          if (mapName) {
+            const mapID = config_default.MapIDs[mapName];
+            if (mapID) {
+              repSuccess(mapID, mapName);
+              this.mapID = mapID;
+            } else
+              repFail();
+          } else
+            repFail();
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      this.dispatchEvent(a);
+    };
+  }
+
   // src/matchStartHook.ts
   var startingLevel = { l: 0 };
   function matchStartHook() {
@@ -884,35 +1257,6 @@ ${name}`);
     };
   }
 
-  // src/texturePack.ts
-  function hookTextureLoader() {
-    class WorkerNew extends Worker {
-      _postMessage;
-      constructor(url, opts) {
-        super(url, opts);
-        this._postMessage = this.postMessage;
-        this.postMessage = this.newPostMessage;
-      }
-      newPostMessage(data, ...args) {
-        if (SETTINGS.texturePack && !window.SKIP_TEX_LOAD && !data?.bypass) {
-          fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`).then((r) => r.json()).then((pack) => {
-            if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && SETTINGS.texturePack) {
-              if (pack.hasCombined && data.data[0].includes("ninja.io") && data.data[0].includes("combined") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
-              if (pack.hasSeamless && data.data[0].includes("ninja.io") && data.data[0].includes("seamless") && data.data[0].endsWith(".png"))
-                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
-            }
-            this._postMessage(data, ...args);
-          }).catch(() => {
-            this._postMessage(data, ...args);
-          });
-        } else
-          this._postMessage(data, ...args);
-      }
-    }
-    window.Worker = Worker = WorkerNew;
-  }
-
   // src/repositionItems.ts
   function reposItems() {
     if (!app.menu)
@@ -936,17 +1280,83 @@ ${name}`);
     app.menu.serverContainer.parent.addChild(app.menu.serverContainer);
   }
 
-  // src/fullscreenHook.ts
-  function hookFullscreen() {
-    window.addEventListener("keydown", (e) => {
-      if (e.key == "F11") {
-        e.preventDefault();
-        if (document.fullscreenElement)
-          document.exitFullscreen();
-        else
-          document.querySelector("html").requestFullscreen();
-      }
+  // src/onlineStatus.ts
+  var failedOnline = false;
+  var wentOnline = false;
+  var onlineSocket;
+  function goOnline() {
+    if (app.credential.accounttype == "guest") {
+      if (failedOnline)
+        return;
+      failedOnline = true;
+      return App.Console.log("Failed to go online: You are not logged in!");
+    }
+    failedOnline = false;
+    if (onlineSocket)
+      onlineSocket.disconnect();
+    onlineSocket = io(config_default.api);
+    onlineSocket.on("connect", () => onlineSocket && onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
+    onlineSocket.on("success", () => {
+      App.Console.log("Successfully went online!");
+      wentOnline = true;
     });
+    onlineSocket.on("fail", (msg) => {
+      wentOnline = false;
+      failedOnline = true;
+      App.Console.log(`Failed to go online: ${msg}`);
+    });
+    onlineSocket.on("disconnect", () => {
+      onlineSocket = null;
+      if (wentOnline)
+        App.Console.log("Went offline.");
+      wentOnline = false;
+    });
+    onlineSocket.on("needsLink", async (requestID) => {
+      const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;
+      const msg = messages?.find((m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink);
+      if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
+        if (!inGame())
+          onlineSocket.emit("gotLink", requestID, false);
+        else if (gameLinkData.pass)
+          onlineSocket.emit("gotLink", requestID, true);
+        else
+          onlineSocket.emit("gotLink", requestID, [
+            gameLinkData.id,
+            gameLinkData.name,
+            gameLinkData.pass
+          ]);
+      } else
+        onlineSocket.emit("gotLink", requestID, null);
+    });
+  }
+  function goOffline() {
+    if (onlineSocket) {
+      onlineSocket.emit("dc");
+      onlineSocket.disconnect();
+    }
+  }
+  function initOnlineOptionHook() {
+    function doOnlineStatusOption() {
+      app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
+      app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
+      app.menu.onlineOption.on(Checkbox.CHANGE, function(b) {
+        SETTINGS.appearOnline = b;
+        saveSettings();
+        if (SETTINGS.appearOnline)
+          goOnline();
+        else
+          goOffline();
+      });
+      app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
+      app.menu.container.addChild(app.menu.onlineOption);
+      reindexItems();
+      reposItems();
+    }
+    doOnlineStatusOption();
+    app.onShowMenu(() => doOnlineStatusOption());
+    if (SETTINGS.appearOnline)
+      goOnline();
+    setInterval(() => SETTINGS.appearOnline && !onlineSocket && !failedOnline && goOnline(), 1e3);
   }
 
   // src/partyMenu.ts
@@ -1219,221 +1629,147 @@ ${name}`);
     };
   }
 
-  // src/mapIdentifier.ts
-  function initMapIdentifier() {
-    Client.prototype.onMessage = function(_a) {
-      const a = Client.decompress(_a.data);
-      try {
-        if (a.type == config_default.PacketTypeMap.data && a.data.type == config_default.PacketTypeMap.joinedMessage && a.data.info.startsWith("You joined ")) {
-          let roomName = a.data.info.substring("You joined ".length);
-          setHash(app.client.server.id, roomName, gameLinkData.pass);
+  // src/playerDataHook.ts
+  function hookPlayerData() {
+    Manager.prototype._createLocalPlayer = Manager.prototype.createLocalPlayer;
+    Manager.prototype.createLocalPlayer = function(...d) {
+      const plr = this._createLocalPlayer(...d);
+      this.localPlayer.update(null, null, null, true);
+      return plr;
+    };
+    Player.prototype._update = Player.prototype.update;
+    Player.prototype.update = function(...d) {
+      const doForce = d[3] == true;
+      const upd = !doForce ? this._update(...d) : null;
+      if (SETTINGS.helpfulUI) {
+        const isLocal = doForce || this.id == app.game.manager.getLocalPlayer()?.id, hideHUD = this.alive && (isLocal || !this.prone) && !app.game.gameover;
+        const hpbar = this.hpbar || (this.hpbar = new HealthBar());
+        if (!hpbar.parent) {
+          this.visual.addChild(hpbar);
+          hpbar.scale.x = hpbar.scale.y = 0.25;
+          hpbar.x = -hpbar.width / 2;
+          hpbar.y = isLocal ? -65 : -50;
+          hpbar.background.visible = false;
         }
-        const repFail = () => App.Console.log(`# Failed to identify map. Please report to Meow.`);
-        const repSuccess = (id, name) => App.Console.log(`# Identified map as ${name} (ID: ${id}).`);
-        if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("Joining ")) {
-          const mapName = (a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1];
-          this.mapID = 0;
-          if (mapName) {
-            const mapID = config_default.MapIDs[mapName];
-            if (mapID) {
-              repSuccess(mapID, mapName);
-              this.mapID = mapID;
-            } else
-              repFail();
-          } else
-            repFail();
-        } else if (a.type == config_default.PacketTypeMap.data2 && a.data.t == config_default.PacketTypeMap.systemMessage && a.data.msg.startsWith("loading map: ")) {
-          const mapName = a.data.msg.substring("loading map: ".length);
-          this.mapID = 0;
-          if (mapName) {
-            const mapID = config_default.MapIDs[mapName];
-            if (mapID) {
-              repSuccess(mapID, mapName);
-              this.mapID = mapID;
-            } else
-              repFail();
-          } else
-            repFail();
+        if (hpbar.getValue() !== this.health)
+          hpbar.setValue(this.health);
+        hpbar.visible = hideHUD;
+        if (isLocal) {
+          const jetbar = this.jetbar || (this.jetbar = new JetBar());
+          if (!jetbar.parent) {
+            this.visual.addChild(jetbar);
+            jetbar.scale.x = jetbar.scale.y = 0.25;
+            jetbar.x = -jetbar.width / 2;
+            jetbar.y = -50;
+            jetbar.background.visible = false;
+          }
+          this.jetLeft = app.game.hud.jetBar.getValue();
+          if (jetbar.getValue() !== this.jetLeft)
+            jetbar.setValue(this.jetLeft);
+          if (!app.game.hud.jetBar._setValue) {
+            app.game.hud.jetBar._setValue = app.game.hud.jetBar.setValue;
+            app.game.hud.jetBar.setValue = (v) => {
+              jetbar.maxValue = app.game.hud.jetBar.maxValue;
+              jetbar.setValue(v);
+              return app.game.hud.jetBar._setValue(v);
+            };
+          }
+          jetbar.visible = hideHUD;
+          const ammobar = this.ammobar || (this.ammobar = new PIXI.Graphics());
+          if (!ammobar.parent) {
+            app.game.reticle.addChild(ammobar);
+            ammobar.x = -18;
+            ammobar.y = 26;
+            ammobar.scale.x = ammobar.scale.y = 0.3;
+            ammobar.rotation = -Math.PI / 2;
+          }
+          this.ammoLeft = app.game.hud.ammoBar.getValue();
+          if (ammobar.value !== this.ammoLeft)
+            ammobar.value = this.ammoLeft;
+          (ammobar.update = ammobar.update || (() => {
+            const delta = Date.now() - ammobar.lastUpdate, maxReload = config_default.WeaponReloadTimes[Object.entries(ItemList).find((e) => e[1] == ammobar.item)?.[0]] || 0;
+            if (ammobar.reloadTime)
+              ammobar.reloadTime = ammobar.reloadTime - delta || -1;
+            else
+              ammobar.reloadTime = maxReload;
+            ammobar.lastUpdate = Date.now();
+            ammobar.value = app.game.hud.ammoBar.getValue();
+            ammobar.max = app.game.hud.ammoBar.maxValue;
+            if (!maxReload || ammobar.value > 0)
+              ammobar.reloadTime = 0;
+            const w = 12, r = 30, clr = ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red;
+            ammobar.clear();
+            ammobar.lineStyle(w, clr, 0.2);
+            ammobar.arc(0, 0, r, 0, Math.PI * 2);
+            ammobar.lineStyle(w, clr);
+            ammobar.arc(0, 0, r, 0, Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : ammobar.reloadTime > 0 ? ammobar.reloadTime / Math.max(0, maxReload) || ammobar.reloadTime : 1));
+            ammobar.endFill();
+            if (ammobar.reloadTime > 0)
+              setTimeout(() => ammobar.update(), 10);
+          }))();
+          if (!app.game.hud.ammoBar._update) {
+            app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
+            app.game.hud.ammoBar.update = () => {
+              app.game.hud.ammoBar._update();
+              ammobar.update();
+            };
+          }
+          if (!app.game.hud.ammoBar._setValue) {
+            app.game.hud.ammoBar._setValue = app.game.hud.ammoBar.setValue;
+            app.game.hud.ammoBar.setValue = (v) => {
+              app.game.hud.ammoBar._setValue(v);
+              ammobar.update();
+            };
+          }
+          if (!app.game.hud.ammoBar._setItem) {
+            app.game.hud.ammoBar._setItem = app.game.hud.ammoBar.setItem;
+            app.game.hud.ammoBar.setItem = (i) => {
+              app.game.hud.ammoBar._setItem(i);
+              ammobar.item = i ? i.t : null;
+            };
+          }
+          const beltbar = this.beltbar || (this.beltbar = new PIXI.Container());
+          if (!beltbar.parent) {
+            app.game.reticle.addChild(beltbar);
+            beltbar.x = 10;
+            beltbar.y = 26;
+          }
+          (beltbar.update = beltbar.update || (() => {
+            beltbar.removeChildren();
+            beltbar.value = app.game.hud.ammoBar.beltAmmoAmount;
+            if (beltbar.value <= 0)
+              beltbar.item = null;
+            if (beltbar.item) {
+              for (let i = beltbar.value; i--; i > 0) {
+                const beltIcon = new SpriteMap[beltbar.item]();
+                beltIcon.anchor.x = beltIcon.anchor.y = 0;
+                beltIcon.x = i * 16;
+                beltIcon.y = 0;
+                beltIcon.width = beltIcon.height = 0.15;
+                beltbar.addChild(beltIcon);
+              }
+            }
+          }))();
+          if (!app.game.hud.ammoBar._setBeltItem) {
+            app.game.hud.ammoBar._setBeltItem = app.game.hud.ammoBar.setBeltItem;
+            app.game.hud.ammoBar.setBeltItem = (i) => {
+              app.game.hud.ammoBar._setBeltItem(i);
+              beltbar.item = i ? i.t.substring(1) : null;
+              beltbar.update();
+            };
+          }
+          if (!app.game.hud.ammoBar._decrementBeltValue) {
+            app.game.hud.ammoBar._decrementBeltValue = app.game.hud.ammoBar.decrementBeltValue;
+            app.game.hud.ammoBar.decrementBeltValue = () => {
+              app.game.hud.ammoBar._decrementBeltValue();
+              beltbar.update();
+            };
+          }
+          app.game.reticle.children.forEach((c) => c.visible = doForce || hideHUD);
         }
-      } catch (err) {
-        console.error(err);
       }
-      this.dispatchEvent(a);
+      return upd;
     };
-  }
-
-  // src/userCommunicationProtocol.ts
-  var commConfig = {
-    prefix: "$NIOU",
-    sep: "|"
-  };
-  var commPackets = {
-    gameLink: "requestGameLink"
-  };
-  function decodeUserCommunication(message) {
-    if (!message.startsWith(commConfig.prefix))
-      return null;
-    const args = message.split(commConfig.sep);
-    if (!Object.values(commPackets).includes(args[1]))
-      return null;
-    return {
-      packet: args[1],
-      args: args.slice(2)
-    };
-  }
-  async function communicateUser(id, packetID, args) {
-    await APIClient.postFriendMessage(id, [commConfig.prefix, packetID, ...args].join(commConfig.sep), app.credential.id);
-    return true;
-  }
-
-  // src/onlineStatus.ts
-  var failedOnline = false;
-  var wentOnline = false;
-  var onlineSocket;
-  function goOnline() {
-    if (app.credential.accounttype == "guest") {
-      if (failedOnline)
-        return;
-      failedOnline = true;
-      return App.Console.log("Failed to go online: You are not logged in!");
-    }
-    failedOnline = false;
-    if (onlineSocket)
-      onlineSocket.disconnect();
-    onlineSocket = io(config_default.api);
-    onlineSocket.on("connect", () => onlineSocket && onlineSocket.emit("init", 0 /* online */, app.credential.playerid));
-    onlineSocket.on("success", () => {
-      App.Console.log("Successfully went online!");
-      wentOnline = true;
-    });
-    onlineSocket.on("fail", (msg) => {
-      wentOnline = false;
-      failedOnline = true;
-      App.Console.log(`Failed to go online: ${msg}`);
-    });
-    onlineSocket.on("disconnect", () => {
-      onlineSocket = null;
-      if (wentOnline)
-        App.Console.log("Went offline.");
-      wentOnline = false;
-    });
-    onlineSocket.on("needsLink", async (requestID) => {
-      const messages = JSON.parse(await APIClient.getMessages(app.credential.id))?.messages;
-      const msg = messages?.find((m) => decodeUserCommunication(m.message)?.packet == commPackets.gameLink);
-      if (msg && decodeUserCommunication(msg.message)?.args[0] == requestID) {
-        if (!inGame())
-          onlineSocket.emit("gotLink", requestID, false);
-        else if (gameLinkData.pass)
-          onlineSocket.emit("gotLink", requestID, true);
-        else
-          onlineSocket.emit("gotLink", requestID, [
-            gameLinkData.id,
-            gameLinkData.name,
-            gameLinkData.pass
-          ]);
-      } else
-        onlineSocket.emit("gotLink", requestID, null);
-    });
-  }
-  function goOffline() {
-    if (onlineSocket) {
-      onlineSocket.emit("dc");
-      onlineSocket.disconnect();
-    }
-  }
-  function initOnlineOptionHook() {
-    function doOnlineStatusOption() {
-      app.menu.onlineOption = new Checkbox("appearOnline", "Appear Online", true);
-      app.menu.onlineOption.setChecked(SETTINGS.appearOnline);
-      app.menu.onlineOption.on(Checkbox.CHANGE, function(b) {
-        SETTINGS.appearOnline = b;
-        saveSettings();
-        if (SETTINGS.appearOnline)
-          goOnline();
-        else
-          goOffline();
-      });
-      app.menu.onlineOption.scale.x = app.menu.onlineOption.scale.y = 1.1;
-      app.menu.container.addChild(app.menu.onlineOption);
-      reindexItems();
-      reposItems();
-    }
-    doOnlineStatusOption();
-    app.onShowMenu(() => doOnlineStatusOption());
-    if (SETTINGS.appearOnline)
-      goOnline();
-    setInterval(() => SETTINGS.appearOnline && !onlineSocket && !failedOnline && goOnline(), 1e3);
-  }
-
-  // src/friendOnlineHook.ts
-  function initFriendOnlineHook() {
-    SocialMenu.prototype._maskFriendList = SocialMenu.prototype.maskFriendList;
-    SocialMenu.prototype.maskFriendList = function(scrollDist) {
-      this.friends.sort((f1, f2) => f2.seen.getTime() - f1.seen.getTime()).forEach((f, fi) => f.y = 47 + fi * SocialMenu.ItemHeight);
-      this._maskFriendList(scrollDist);
-    };
-    FriendItem = class FriendItem extends PIXI.Graphics {
-      id;
-      name;
-      seen;
-      clan;
-      nameLabel;
-      onlineNow;
-      constructor(id, name, seen, clan) {
-        super();
-        this.id = id;
-        this.name = name;
-        this.seen = new Date(Date.parse(seen) - 6e4 * new Date().getTimezoneOffset());
-        this.onlineNow = !!App.Layer.socialMenu.onlineFriends?.includes(this.id);
-        if (this.onlineNow)
-          this.seen = new Date();
-        this.clan = clan;
-        this.beginFill(16777215, 0.15);
-        this.drawRoundedRect(0, 0, 340, 26, 4);
-        this.endFill();
-        this.interactive = true;
-        this.tint = 12303291;
-        this.on("mouseover", () => {
-          this.tint = 16777215;
-        });
-        this.on("mouseout", () => {
-          this.tint = 12303291;
-        });
-        this.on("mousedown", () => this.emit(SocialMenu.ACCESS_PROFILE, this.id));
-        this.on("rightdown", () => this.emit(SocialMenu.SHOW_FRIEND_DROPDOWN, this.id));
-        this.beginFill(this.onlineNow ? config_default.Colors.dotGreen : 30 > Math.round((Date.now() - this.seen.getTime()) / 1e3) ? config_default.Colors.dotOrange : config_default.Colors.dotGrey, 1);
-        this.drawCircle(320, 13, 8);
-        this.endFill();
-        this.nameLabel = new PIXI.BitmapText(this.name, { fontName: "Open Sans", fontSize: 22 });
-        this.nameLabel.x = 8;
-        this.nameLabel.y = 2;
-        this.addChild(this.nameLabel);
-      }
-    };
-  }
-  async function updateFriendList(reload = true) {
-    if (App.Layer.socialMenu.mode == "friends") {
-      try {
-        const friendsOnline = await fetch(`${config_default.api}/onlineplayers`).then((res) => res.json());
-        App.Layer.socialMenu.onlineFriends = friendsOnline?.filter((f) => App.Layer.socialMenu.friends.find((fr) => fr.id == f)) || [];
-      } catch {
-        App.Layer.socialMenu.onlineFriends = [];
-      }
-      if (reload)
-        await App.Layer.socialMenu.loadFriends();
-    }
-  }
-
-  // src/updateChecker.ts
-  async function checkUpdate() {
-    try {
-      const newest = await fetch(`${config_default.api}/ver`).then((r) => r.text());
-      const num = (str) => Number(str.replace(/\./, ""));
-      if (num(newest) > num(config_default.ver)) {
-        App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
-      }
-    } catch {
-    }
   }
 
   // src/preloaderHook.ts
@@ -1480,48 +1816,6 @@ ${name}`);
       reset.remove();
     };
     preloader.appendChild(reset);
-  }
-
-  // src/joinGameHook.ts
-  function hookJoinGameButton() {
-    const btn = new Button("usr_join");
-    btn.setText("Join Game");
-    btn.scale.x = btn.scale.y = 0.75;
-    const repos = () => btn.x = App.Layer.userMenu.ox + App.Layer.userMenu.w - btn.width - 30;
-    repos();
-    btn.y = App.Layer.userMenu.h - 10;
-    btn.visible = false;
-    btn.addListener(Button.BUTTON_PRESSED, async () => {
-      btn.setText("Requesting link...");
-      repos();
-      const rej = (msg) => {
-        btn.setText(msg);
-        repos();
-        setTimeout(() => (btn.setText("Join Game"), repos()), 4e3);
-      };
-      const req = String(Date.now());
-      await communicateUser(App.Layer.userMenu.id, commPackets.gameLink, [req]);
-      const res = (await fetch(`${config_default.api}/requestlink?id=${req}&userid=${App.Layer.userMenu.id}`).then((r) => r.json()))?.[0];
-      if (res == false)
-        rej("User not in game.");
-      else if (res == true)
-        rej("User in private game.");
-      else if (Array.isArray(res)) {
-        btn.setText("Join Game");
-        repos();
-        App.Layer.userMenu.onCloseButtonReleased();
-        tryJoinLink([res[0], res[1], res[2]]);
-      } else
-        return rej("User not online.");
-    });
-    App.Layer.userMenu.container.addChild(btn);
-    App.Layer.userMenu._load = App.Layer.userMenu.load;
-    App.Layer.userMenu.load = async (id, type) => {
-      btn.visible = false;
-      await App.Layer.userMenu._load(id, type);
-      await updateFriendList(false);
-      btn.visible = App.Layer.socialMenu.onlineFriends.includes(App.Layer.userMenu.id);
-    };
   }
 
   // src/socialMenuHook.ts
@@ -1822,339 +2116,45 @@ ${name}`);
     menu.container.addChild(menu.dropdownButton);
   }
 
-  // src/hookUtilsMenu.ts
-  function hookUtilsMenu() {
-    const menu = App.Layer.memberMenu;
-    menu.memberButton.parent.removeChild(menu.memberButton);
-    menu.clanButton.parent.removeChild(menu.clanButton);
-    let menuClanState = 0;
-    menu.memberclanButton = new MemberMenuButton("", 16763904, 18);
-    menu.memberclanButton.x = 0;
-    menu.memberclanButton.y = menu.rankingButton.y + 70;
-    menu.memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
-      if (!["member", "clan"].includes(App.Layer.memberMenu.mode))
-        menuClanState = 0;
-      menuClanState++;
-      if (menuClanState == 3)
-        menuClanState = 0;
-      title1.tint = title2.tint = config_default.Colors.yellow;
-      switch (menuClanState) {
-        case 0:
-          menu.emit(Layer.Events.MENU_ACCESS);
-          break;
-        case 1:
-          menu.emit(Layer.Events.MEMBER_ACCESS);
-          title1.tint = config_default.Colors.green;
-          break;
-        case 2:
-          menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
-          title2.tint = config_default.Colors.green;
-          break;
+  // src/texturePack.ts
+  function hookTextureLoader() {
+    class WorkerNew extends Worker {
+      _postMessage;
+      constructor(url, opts) {
+        super(url, opts);
+        this._postMessage = this.postMessage;
+        this.postMessage = this.newPostMessage;
       }
-    });
-    menu.memberButton.setActive = (n) => {
-      if (menuClanState == 1 || !menuClanState && !n) {
-        menu.memberclanButton.setActive(n);
-        if (!n)
-          title1.tint = config_default.Colors.yellow;
-      }
-    };
-    menu.clanButton.setActive = (n) => {
-      if (menuClanState == 2 || !menuClanState && !n) {
-        menu.memberclanButton.setActive(n);
-        if (!n)
-          title2.tint = config_default.Colors.yellow;
-      }
-    };
-    const ico1 = new PIXI.Sprite(App.CombinedTextures["menu_icon_players"]);
-    ico1.x = 0.25 * menu.memberclanButton.rectWidth;
-    menu.memberclanButton.addChild(ico1);
-    const ico2 = new PIXI.Sprite(App.CombinedTextures["menu_icon_clans"]);
-    ico2.x = 0.75 * menu.memberclanButton.rectWidth;
-    menu.memberclanButton.addChild(ico2);
-    ico1.scale.x = ico1.scale.y = ico2.scale.x = ico2.scale.y = 0.25;
-    ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
-    ico1.tint = ico2.tint = config_default.Colors.white;
-    ico1.y = ico2.y = 0.37 * menu.memberclanButton.rectHeight;
-    const icosep = new PIXI.Text("/", {
-      fontSize: 16,
-      fontName: "Arial",
-      fill: config_default.Colors.white,
-      lineJoin: "round",
-      strokeThickness: 3
-    });
-    icosep.x = 0.5 * menu.memberclanButton.rectWidth;
-    icosep.y = 0.37 * menu.memberclanButton.rectHeight;
-    icosep.anchor.x = icosep.anchor.y = 0.5;
-    menu.memberclanButton.addChild(icosep);
-    const title1 = new PIXI.Text("Players", {
-      fontSize: 11,
-      fontName: "Arial",
-      fill: config_default.Colors.white,
-      lineJoin: "round",
-      strokeThickness: 2
-    });
-    title1.x = 0.25 * menu.memberclanButton.rectWidth;
-    menu.memberclanButton.addChild(title1);
-    const title2 = new PIXI.Text("Clans", {
-      fontSize: 14,
-      fontName: "Arial",
-      fill: config_default.Colors.white,
-      lineJoin: "round",
-      strokeThickness: 2
-    });
-    title2.x = 0.75 * menu.memberclanButton.rectWidth;
-    menu.memberclanButton.addChild(title2);
-    const titlesep = new PIXI.Text("/", {
-      fontSize: 16,
-      fontName: "Arial",
-      fill: config_default.Colors.white,
-      lineJoin: "round",
-      strokeThickness: 3
-    });
-    titlesep.x = 0.5 * menu.memberclanButton.rectWidth;
-    menu.memberclanButton.addChild(titlesep);
-    title1.y = title2.y = titlesep.y = 0.7 * menu.memberclanButton.rectHeight;
-    title1.anchor.x = title1.anchor.y = title2.anchor.x = title2.anchor.y = titlesep.anchor.x = titlesep.anchor.y = 0.5;
-    title1.tint = title2.tint = config_default.Colors.yellow;
-    menu.container.addChild(menu.memberclanButton);
-    const setActive = menu.clanButton.setActive.bind(menu.clanButton);
-    menu.clanButton.setActive = (n) => {
-      setActive(n);
-      if (!n)
-        menu.utilsButton.setActive(0);
-    };
-    menu.utilsButton = new MemberMenuButton("NinjaIOUtils", 16763904, 15, "gears_icon");
-    menu.utilsButton.x = 0;
-    menu.utilsButton.y = menu.memberButton.y + 70;
-    menu.utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
-      if (menu.utilsButton.active) {
-        menu.utilsButton.setActive(0);
-        menu.emit(Layer.Events.MENU_ACCESS);
-        return;
-      }
-      menu.emit(Layer.Events.MENU_ACCESS);
-      menu.playButton.setActive(0);
-      menu.utilsButton.setActive(1);
-      App.Layer.utilsMenu.show();
-      App.Layer.addChild(App.Layer.utilsMenu);
-      App.Layer.emit(Layer.Events.HIDE_MENU);
-      app.onResize();
-    });
-    menu.utilsButton.icon.scale.x = menu.utilsButton.icon.scale.y = 0.7;
-    menu.container.addChild(menu.utilsButton);
-    class UtilsMenu extends Feature {
-      ox = 0;
-      oy = 0;
-      off = 0;
-      marginLeft = 0;
-      background = new PIXI.Graphics();
-      closeButton = new ImgButton();
-      pmTitle = new PIXI.Text("NinjaIOUtils", {
-        fontName: "Arial",
-        fontSize: 19,
-        lineHeight: 16,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
-      constructor() {
-        super();
-        this.background.interactive = true;
-        this.background.x = 0;
-        this.background.y = 40;
-        this.background.lineStyle(1, 16777215, 0.1, 0);
-        this.background.beginFill(3355443, 0.9);
-        this.background.drawRect(0, 0, 660, 524);
-        this.background.endFill();
-        this.background.beginFill(0, 0.3);
-        this.background.drawRect(10, 10, 640, 504);
-        this.background.endFill();
-        this.background.drawRect(15, 42, 630, 2);
-        this.container.addChild(this.background);
-        this.ox = 10;
-        this.oy = 60;
-        this.closeButton.x = this.background.width - 40;
-        this.closeButton.y = this.oy - 6;
-        this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
-        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
-        this.container.addChild(this.closeButton);
-        this.pmTitle.x = 0.5 * this.width - 20;
-        this.pmTitle.y = this.oy - 4;
-        this.pmTitle.anchor.x = 0.5;
-        this.container.addChild(this.pmTitle);
-        this.container.x = 0.5 * -this.width;
-        this.reposition();
-      }
-      reposition() {
-        this.off = 0;
-      }
-      show() {
+      newPostMessage(data, ...args) {
+        if (SETTINGS.texturePack && !window.SKIP_TEX_LOAD && !data?.bypass) {
+          fetch(`${config_default.api}/packs/${SETTINGS.texturePack}`).then((r) => r.json()).then((pack) => {
+            if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && SETTINGS.texturePack) {
+              if (pack.hasCombined && data.data[0].includes("ninja.io") && data.data[0].includes("combined") && data.data[0].endsWith(".png"))
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
+              if (pack.hasSeamless && data.data[0].includes("ninja.io") && data.data[0].includes("seamless") && data.data[0].endsWith(".png"))
+                data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
+            }
+            this._postMessage(data, ...args);
+          }).catch(() => {
+            this._postMessage(data, ...args);
+          });
+        } else
+          this._postMessage(data, ...args);
       }
     }
-    App.Layer.mainMenuHides.push(App.Layer.utilsMenu = new UtilsMenu());
-    [
-      "loginMenu",
-      "memberBrowserMenu",
-      "clanBrowserMenu",
-      "registerMenu",
-      "upResetMenu",
-      "profileMenu",
-      "userMenu",
-      "rankingMenu",
-      "newsMenu",
-      "partnerMenu",
-      "serverListMenu",
-      "clanMenu",
-      "serverCreationMenu",
-      "renameMenu",
-      "logoutMenu",
-      "guestProfileMenu"
-    ].forEach((e) => App.Layer[e].hides.push(App.Layer.utilsMenu));
-    App.Layer.features.push(App.Layer.utilsMenu);
+    window.Worker = Worker = WorkerNew;
   }
 
-  // src/playerDataHook.ts
-  function hookPlayerData() {
-    Manager.prototype._createLocalPlayer = Manager.prototype.createLocalPlayer;
-    Manager.prototype.createLocalPlayer = function(...d) {
-      const plr = this._createLocalPlayer(...d);
-      this.localPlayer.update(null, null, null, true);
-      return plr;
-    };
-    Player.prototype._update = Player.prototype.update;
-    Player.prototype.update = function(...d) {
-      const doForce = d[3] == true;
-      const upd = !doForce ? this._update(...d) : null;
-      if (SETTINGS.helpfulUI) {
-        const isLocal = doForce || this.id == app.game.manager.getLocalPlayer()?.id, hideHUD = this.alive && (isLocal || !this.prone) && !app.game.gameover;
-        const hpbar = this.hpbar || (this.hpbar = new HealthBar());
-        if (!hpbar.parent) {
-          this.visual.addChild(hpbar);
-          hpbar.scale.x = hpbar.scale.y = 0.25;
-          hpbar.x = -hpbar.width / 2;
-          hpbar.y = isLocal ? -65 : -50;
-          hpbar.background.visible = false;
-        }
-        if (hpbar.getValue() !== this.health)
-          hpbar.setValue(this.health);
-        hpbar.visible = hideHUD;
-        if (isLocal) {
-          const jetbar = this.jetbar || (this.jetbar = new JetBar());
-          if (!jetbar.parent) {
-            this.visual.addChild(jetbar);
-            jetbar.scale.x = jetbar.scale.y = 0.25;
-            jetbar.x = -jetbar.width / 2;
-            jetbar.y = -50;
-            jetbar.background.visible = false;
-          }
-          this.jetLeft = app.game.hud.jetBar.getValue();
-          if (jetbar.getValue() !== this.jetLeft)
-            jetbar.setValue(this.jetLeft);
-          if (!app.game.hud.jetBar._setValue) {
-            app.game.hud.jetBar._setValue = app.game.hud.jetBar.setValue;
-            app.game.hud.jetBar.setValue = (v) => {
-              jetbar.maxValue = app.game.hud.jetBar.maxValue;
-              jetbar.setValue(v);
-              return app.game.hud.jetBar._setValue(v);
-            };
-          }
-          jetbar.visible = hideHUD;
-          const ammobar = this.ammobar || (this.ammobar = new PIXI.Graphics());
-          if (!ammobar.parent) {
-            app.game.reticle.addChild(ammobar);
-            ammobar.x = -18;
-            ammobar.y = 26;
-            ammobar.scale.x = ammobar.scale.y = 0.3;
-            ammobar.rotation = -Math.PI / 2;
-          }
-          this.ammoLeft = app.game.hud.ammoBar.getValue();
-          if (ammobar.value !== this.ammoLeft)
-            ammobar.value = this.ammoLeft;
-          (ammobar.update = ammobar.update || (() => {
-            const delta = Date.now() - ammobar.lastUpdate, maxReload = config_default.WeaponReloadTimes[Object.entries(ItemList).find((e) => e[1] == ammobar.item)?.[0]] || 0;
-            if (ammobar.reloadTime)
-              ammobar.reloadTime = ammobar.reloadTime - delta || -1;
-            else
-              ammobar.reloadTime = maxReload;
-            ammobar.lastUpdate = Date.now();
-            ammobar.value = app.game.hud.ammoBar.getValue();
-            ammobar.max = app.game.hud.ammoBar.maxValue;
-            if (!maxReload || ammobar.value > 0)
-              ammobar.reloadTime = 0;
-            const w = 12, r = 30, clr = ammobar.value > 0 ? config_default.Colors.yellow : config_default.Colors.red;
-            ammobar.clear();
-            ammobar.lineStyle(w, clr, 0.2);
-            ammobar.arc(0, 0, r, 0, Math.PI * 2);
-            ammobar.lineStyle(w, clr);
-            ammobar.arc(0, 0, r, 0, Math.PI * 2 * (ammobar.value > 0 ? ammobar.value / ammobar.max : ammobar.reloadTime > 0 ? ammobar.reloadTime / Math.max(0, maxReload) || ammobar.reloadTime : 1));
-            ammobar.endFill();
-            if (ammobar.reloadTime > 0)
-              setTimeout(() => ammobar.update(), 10);
-          }))();
-          if (!app.game.hud.ammoBar._update) {
-            app.game.hud.ammoBar._update = app.game.hud.ammoBar.update;
-            app.game.hud.ammoBar.update = () => {
-              app.game.hud.ammoBar._update();
-              ammobar.update();
-            };
-          }
-          if (!app.game.hud.ammoBar._setValue) {
-            app.game.hud.ammoBar._setValue = app.game.hud.ammoBar.setValue;
-            app.game.hud.ammoBar.setValue = (v) => {
-              app.game.hud.ammoBar._setValue(v);
-              ammobar.update();
-            };
-          }
-          if (!app.game.hud.ammoBar._setItem) {
-            app.game.hud.ammoBar._setItem = app.game.hud.ammoBar.setItem;
-            app.game.hud.ammoBar.setItem = (i) => {
-              app.game.hud.ammoBar._setItem(i);
-              ammobar.item = i ? i.t : null;
-            };
-          }
-          const beltbar = this.beltbar || (this.beltbar = new PIXI.Container());
-          if (!beltbar.parent) {
-            app.game.reticle.addChild(beltbar);
-            beltbar.x = 10;
-            beltbar.y = 26;
-          }
-          (beltbar.update = beltbar.update || (() => {
-            beltbar.removeChildren();
-            beltbar.value = app.game.hud.ammoBar.beltAmmoAmount;
-            if (beltbar.value <= 0)
-              beltbar.item = null;
-            if (beltbar.item) {
-              for (let i = beltbar.value; i--; i > 0) {
-                const beltIcon = new SpriteMap[beltbar.item]();
-                beltIcon.anchor.x = beltIcon.anchor.y = 0;
-                beltIcon.x = i * 16;
-                beltIcon.y = 0;
-                beltIcon.width = beltIcon.height = 0.15;
-                beltbar.addChild(beltIcon);
-              }
-            }
-          }))();
-          if (!app.game.hud.ammoBar._setBeltItem) {
-            app.game.hud.ammoBar._setBeltItem = app.game.hud.ammoBar.setBeltItem;
-            app.game.hud.ammoBar.setBeltItem = (i) => {
-              app.game.hud.ammoBar._setBeltItem(i);
-              beltbar.item = i ? i.t.substring(1) : null;
-              beltbar.update();
-            };
-          }
-          if (!app.game.hud.ammoBar._decrementBeltValue) {
-            app.game.hud.ammoBar._decrementBeltValue = app.game.hud.ammoBar.decrementBeltValue;
-            app.game.hud.ammoBar.decrementBeltValue = () => {
-              app.game.hud.ammoBar._decrementBeltValue();
-              beltbar.update();
-            };
-          }
-          app.game.reticle.children.forEach((c) => c.visible = doForce || hideHUD);
-        }
+  // src/updateChecker.ts
+  async function checkUpdate() {
+    try {
+      const newest = await fetch(`${config_default.api}/ver`).then((r) => r.text());
+      const num = (str) => Number(str.replace(/\./, ""));
+      if (num(newest) > num(config_default.ver)) {
+        App.Console.log(`Hey! A new version of NinjaIOUtils is available. (${newest})`, config_default.Colors.red);
       }
-      return upd;
-    };
+    } catch {
+    }
   }
 
   // src/index.ts

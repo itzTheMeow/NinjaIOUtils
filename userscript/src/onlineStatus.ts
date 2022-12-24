@@ -1,9 +1,9 @@
 import { Socket } from "socket.io-client";
+import { SocketTypes } from "../../shared";
 import config from "./config";
 import reposItems, { reindexItems } from "./repositionItems";
 import { saveSettings, SETTINGS } from "./settings/settings";
 import { gameLinkData } from "./shareURLs";
-import { SocketTypes } from "../../shared";
 import { commPackets, decodeUserCommunication } from "./userCommunicationProtocol";
 import { inGame, io } from "./utils";
 

@@ -1,9 +1,9 @@
-import { lineIntersection } from "./line-intersection";
-import { endpointCompare } from "./endpoint-compare";
-import { segmentInFrontOf } from "./segment-in-front-of";
-import { Segment } from "./segment";
 import Vec2 from "vec2";
+import { endpointCompare } from "./endpoint-compare";
+import { lineIntersection } from "./line-intersection";
 import { EndPoint } from "./Polygon";
+import { Segment } from "./segment";
+import { segmentInFrontOf } from "./segment-in-front-of";
 
 function getTrianglePoints(origin: Vec2, angle1: number, angle2: number, segment: Segment): Vec2[] {
   const p1 = origin;

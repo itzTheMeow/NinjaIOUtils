@@ -1,7 +1,7 @@
-import { Segment } from "./segment";
-import { Rectangle } from "./rectangle";
 import Vec2 from "vec2";
 import { EndPoint } from "./Polygon";
+import { Rectangle } from "./rectangle";
+import { Segment } from "./segment";
 
 const calculateEndPointAngles = (lightSource: Vec2, segment: Segment) => {
   const { x, y } = lightSource;

@@ -11,8 +11,7 @@ export async function handleKeyDown(e: KeyboardEvent) {
   const isAltPressed = UserInput.pressed[18];
   const message = registeredHotkeyMessages.get(e.key);
 
-  if (message && isAltPressed && SETTINGS.enableHotkeyMessages)
-    sendChatMessage(message);
+  if (message && isAltPressed && SETTINGS.enableHotkeyMessages) sendChatMessage(message);
 }
 
 async function sendChatMessage(message: string) {

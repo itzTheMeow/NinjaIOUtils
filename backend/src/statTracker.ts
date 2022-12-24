@@ -1,5 +1,4 @@
 import { Application } from "express";
-import { onlineUsers } from "./onlineUserManager";
 
 export default function initStatTracker(app: Application) {
   app.post("/submit", async (req, res) => {

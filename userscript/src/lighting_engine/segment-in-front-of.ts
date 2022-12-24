@@ -9,17 +9,10 @@ const leftOf = (segment: Segment, point: Vec2) => {
 };
 
 const interpolate = (pointA: Vec2, pointB: Vec2, f: number) => {
-  return new Vec2(
-    pointA.x * (1 - f) + pointB.x * f,
-    pointA.y * (1 - f) + pointB.y * f
-  );
+  return new Vec2(pointA.x * (1 - f) + pointB.x * f, pointA.y * (1 - f) + pointB.y * f);
 };
 
-export const segmentInFrontOf = (
-  segmentA: Segment,
-  segmentB: Segment,
-  relativePoint: Vec2
-) => {
+export const segmentInFrontOf = (segmentA: Segment, segmentB: Segment, relativePoint: Vec2) => {
   const A1 = leftOf(segmentA, interpolate(segmentB.p1, segmentB.p2, 0.01));
   const A2 = leftOf(segmentA, interpolate(segmentB.p2, segmentB.p1, 0.01));
   const A3 = leftOf(segmentA, relativePoint);

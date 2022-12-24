@@ -1,6 +1,6 @@
-import { getTextureURLs } from "./textureURLs";
-import { Canvas, loadImage } from "canvas";
 import AdmZip from "adm-zip";
+import { Canvas, loadImage } from "canvas";
+import { getTextureURLs } from "./textureURLs";
 
 async function unpackTextures(
   arg: "textures" | "terrain",

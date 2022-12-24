@@ -1,8 +1,8 @@
-import path from "path";
-import fs from "fs";
 import canvas from "canvas";
-import { getTextureURLs } from "./textureURLs";
+import fs from "fs";
+import path from "path";
 import { TexturePack } from "../../../shared";
+import { getTextureURLs } from "./textureURLs";
 
 export function getAllTexturePacks() {
   return fs

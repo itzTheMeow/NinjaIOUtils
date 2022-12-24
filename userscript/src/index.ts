@@ -1,26 +1,26 @@
-import config from "./config";
 import applySettingsHook from "./applySettingsHook";
+import config from "./config";
 import { showFPS } from "./fpsCounter";
+import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import { socialMenuHook } from "./friendSearch";
+import hookFullscreen from "./fullscreenHook";
+import hookUtilsMenu from "./hookUtilsMenu";
+import { handleKeyDown } from "./hotkeyMessages";
+import hookJoinGameButton from "./joinGameHook";
+import initMapIdentifier from "./mapIdentifier";
 import matchEndHook from "./matchEndHook";
 import matchStartHook from "./matchStartHook";
-import { SETTINGS } from "./settings/settings";
-import { initShareURLHook, tryJoinLink } from "./shareURLs";
-import { hookTextureLoader } from "./texturePack";
-import reposItems from "./repositionItems";
-import settingsTab from "./settings/settingsTab";
-import hookFullscreen from "./fullscreenHook";
-import initPartyMenu from "./partyMenu";
-import initMapIdentifier from "./mapIdentifier";
 import initOnlineOptionHook from "./onlineStatus";
-import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
-import checkUpdate from "./updateChecker";
-import hookPreloader from "./preloaderHook";
-import hookJoinGameButton from "./joinGameHook";
-import hookSocialMenu from "./socialMenuHook";
-import { handleKeyDown } from "./hotkeyMessages";
-import hookUtilsMenu from "./hookUtilsMenu";
+import initPartyMenu from "./partyMenu";
 import hookPlayerData from "./playerDataHook";
+import hookPreloader from "./preloaderHook";
+import reposItems from "./repositionItems";
+import { SETTINGS } from "./settings/settings";
+import settingsTab from "./settings/settingsTab";
+import { initShareURLHook, tryJoinLink } from "./shareURLs";
+import hookSocialMenu from "./socialMenuHook";
+import { hookTextureLoader } from "./texturePack";
+import checkUpdate from "./updateChecker";
 
 config; // ensures config is at the top of the compiled file
 

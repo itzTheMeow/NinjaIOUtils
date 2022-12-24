@@ -1,12 +1,12 @@
+import cors from "cors";
 import express from "express";
 import { readFileSync } from "fs";
-import cors from "cors";
 import { Server } from "socket.io";
 import { SocketTypes } from "../../shared";
+import initLinkSharer from "./linkSharer";
 import onlineUserConn, { onlineUsers } from "./onlineUserManager";
 import partyManagerConnection from "./party/partyManager";
 import initStatTracker from "./statTracker";
-import initLinkSharer from "./linkSharer";
 import texturePackHandler from "./texturePacks/texturePackHandler";
 
 const config = {
