@@ -1,10 +1,18 @@
+import AdmZip from "adm-zip";
 import cors from "cors";
 import { Application } from "express";
+import fs from "fs";
+import multer from "multer";
+import path from "path";
+import { config } from "../server";
 import getTexturePack, { getAllTexturePacks } from "./getTexturePack";
 import { getTextureURLs } from "./textureURLs";
 import unpackZip from "./unpackZip";
 
 export default function texturePackHandler(app: Application) {
+  const custom_packs = path.join(process.cwd(), "custom_packs");
+  if (fs.existsSync(custom_packs)) fs.rmSync(custom_packs, { recursive: true, force: true });
+
   app.get(
     "/pack_meta",
     cors({
@@ -83,6 +91,67 @@ export default function texturePackHandler(app: Application) {
       const pack = getTexturePack(req.params.id);
       if (!pack || !pack.meta.hasSeamless) return res.send("DOES_NOT_EXIST");
       res.contentType("png").end(await pack.seamless());
+    }
+  );
+
+  const upload = multer();
+  async function custom(file: Buffer) {
+    try {
+      if (!fs.existsSync(custom_packs)) fs.mkdirSync(custom_packs);
+      const location = path.join(custom_packs, String(Math.floor(Date.now() * Math.random())));
+      const zip = new AdmZip(file);
+      zip.extractAllTo(location);
+      const pak = getTexturePack("::" + location);
+      if (!pak) return null;
+      return {
+        ...pak,
+        delete() {
+          fs.rmSync(location, { recursive: true, force: true });
+        },
+      };
+    } catch (err) {
+      console.error(err);
+      return null;
+    }
+  }
+  app.post(
+    `/packs/${config.customDelimiter}/combined.png`,
+    cors({
+      origin: "*",
+    }),
+    upload.single("zip"),
+    async (req, res) => {
+      res.set("Cache-Control", "no-store");
+      if (
+        !req.file ||
+        !req.file.mimetype.startsWith("application/") ||
+        !req.file.mimetype.includes("zip")
+      )
+        return res.send("NO_ZIP");
+      const pack = await custom(req.file.buffer);
+      if (!pack) return res.send("ERR");
+      res.contentType("png").end(await pack.combined());
+      pack.delete();
+    }
+  );
+  app.post(
+    `/packs/${config.customDelimiter}/seamless.png`,
+    cors({
+      origin: "*",
+    }),
+    upload.single("zip"),
+    async (req, res) => {
+      res.set("Cache-Control", "no-store");
+      if (
+        !req.file ||
+        !req.file.mimetype.startsWith("application/") ||
+        !req.file.mimetype.includes("zip")
+      )
+        return res.send("NO_ZIP");
+      const pack = await custom(req.file.buffer);
+      if (!pack) return res.send("ERR");
+      res.contentType("png").end(await pack.seamless());
+      pack.delete();
     }
   );
 }

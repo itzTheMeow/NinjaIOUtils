@@ -9,10 +9,11 @@ import partyManagerConnection from "./party/partyManager";
 import initStatTracker from "./statTracker";
 import texturePackHandler from "./texturePacks/texturePackHandler";
 
-const config = {
+export const config = {
   port: 8907,
   home: "https://github.com/itzTheMeow/NinjaIOUtils",
   ver: readFileSync("../version.json").toString().replace(/"/g, "").trim(),
+  customDelimiter: "__custom",
 };
 
 const app = express();

@@ -12,7 +12,9 @@ export function getAllTexturePacks() {
 }
 
 export default function getTexturePack(pack: string) {
-  const packFolder = path.join(process.cwd(), "../texturepacks", pack);
+  const packFolder = pack.startsWith("::")
+    ? pack.substring(2)
+    : path.join(process.cwd(), "../texturepacks", pack);
   if (!fs.existsSync(packFolder)) return null;
   const images = fs.readdirSync(packFolder);
   if (!images.includes("_meta.json")) return null;

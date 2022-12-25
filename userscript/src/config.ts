@@ -1,6 +1,6 @@
 export default {
   ver: "$$version",
-  api: "https://nutils.itsmeow.cat",
+  api: "http://localhost:8907",
   customDelimiter: "__custom",
   actualGameVersion:
     document
@@ -25,13 +25,14 @@ export default {
     joinedMessage: "i",
   },
   Colors: {
-    green: 8978312,
-    red: 12603201,
-    yellow: 16763904,
-    white: 13421772,
     dotGreen: 65280,
-    dotOrange: 16757012,
     dotGrey: 8947848,
+    dotOrange: 16757012,
+    green: 8978312,
+    grey: 16777215,
+    red: 12603201,
+    white: 13421772,
+    yellow: 16763904,
   },
   MapIDs: {
     Hull: 1,

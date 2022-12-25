@@ -1,10 +1,18 @@
+import localForage from "localforage";
 import { TexturePack } from "../../../shared";
 import config from "../config";
 import getScrollbar from "../Scrollbar";
 import { saveSettings, SETTINGS } from "./settings";
 
 export default function getTexTab() {
-  const maxPacks = 5;
+  const maxPacks = 6;
+
+  const FileUploader = document.createElement("input");
+  FileUploader.type = "file";
+  FileUploader.accept = "application/zip";
+  FileUploader.multiple = false;
+  FileUploader.style.display = "none";
+  document.body.appendChild(FileUploader);
 
   class TexTab extends (PIXI.Container as any) {
     constructor() {
@@ -16,7 +24,7 @@ export default function getTexTab() {
       this.off = this.marginTop + 6;
 
       /* ============= Title ============= */
-      this.texTitle = new PIXI.Text("Texture packs", {
+      this.texTitle = new PIXI.Text("Texture Packs", {
         fontName: "Arial",
         fontSize: 18,
         lineHeight: 18,
@@ -38,8 +46,48 @@ export default function getTexTab() {
       this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
       this.texHint.y = this.off + 2;
       this.addChild(this.texHint);
+      this.off += 30;
 
-      this.off += 4;
+      const customTitle = new PIXI.Text("Custom Pack (read docs for tutorial)", {
+        fontName: "Arial",
+        fontSize: 16,
+        fill: config.Colors.white,
+        strokeThickness: 2,
+        lineJoin: "round",
+      });
+      customTitle.x = this.marginLeft;
+      customTitle.y = this.off;
+      this.addChild(customTitle);
+      this.off += 20;
+
+      const customDesc = new PIXI.Text("Upload a zip file containing your textures.", {
+        fontName: "Arial",
+        fontSize: 14,
+        fill: config.Colors.yellow,
+        strokeThickness: 2,
+        lineJoin: "round",
+      });
+      customDesc.x = this.marginLeft;
+      customDesc.y = this.off;
+      this.addChild(customDesc);
+      this.off += 24;
+
+      const uploader = new Button("uploader");
+      uploader.addListener(Button.BUTTON_RELEASED, async () => {
+        if (await localForage.getItem("custom_pack")) {
+          await localForage.removeItem("custom_pack");
+          delete this.hasCust;
+          this.runPacks();
+        } else {
+          FileUploader.click();
+        }
+      });
+      uploader.x = this.marginLeft + 8;
+      uploader.y = this.off;
+      uploader.scale.x = uploader.scale.y = 0.75;
+      this.addChild(uploader);
+      this.off += 12;
+
       const off = this.off;
       this.packIndex = 0;
       !(this.runPacks = async () => {
@@ -49,54 +97,75 @@ export default function getTexTab() {
         const packs: TexturePack[] =
           this.packList ||
           (this.packList = await fetch(`${config.api}/packs`).then((r) => r.json()));
-        packs
+        const custom: File | true =
+          this.hasCust || (this.hasCust = (await localForage.getItem("custom_pack")) || true);
+        const packList = packs
           .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
-          .slice(this.packIndex, this.packIndex + maxPacks)
-          .forEach((pak) => {
-            const hasPack = SETTINGS.texturePack == pak.id;
-            const packName = new PIXI.Text(
-              `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
-              {
-                fontName: "Arial",
-                fontSize: 16,
-                fill: config.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round",
-              }
-            );
-            packName.x = this.marginLeft;
-            packName.y = this.off += 28;
-            this.hadPacks.push(this.addChild(packName));
-            const flags = [];
-            if (pak.hasCombined) flags.push("textures");
-            if (pak.hasSeamless) flags.push("terrain");
-            const packDescription = new PIXI.Text(
-              `${pak.description || "No Description."} (${flags.join(", ")})`,
-              {
-                fontName: "Arial",
-                fontSize: 14,
-                fill: config.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round",
-              }
-            );
-            packDescription.x = this.marginLeft;
-            packDescription.y = this.off += packName.height + 2;
-            this.hadPacks.push(this.addChild(packDescription));
-            const packButton = new Button(`pack_btn_${pak.id}`);
-            packButton.x = packName.x + packName.width + 12;
-            packButton.y = this.off - packName.height;
-            packButton.setText(hasPack ? "Remove" : "Use");
-            packButton.setTint(hasPack ? config.Colors.red : config.Colors.green);
-            packButton.scale.x = packButton.scale.y = 0.5;
-            packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              SETTINGS.texturePack = hasPack ? null : pak.id;
-              app.menu.settingsPanel.controlsTab.forceRefresh = true;
-              saveSettings();
-              this.runPacks();
-            });
-            this.hadPacks.push(this.addChild(packButton));
+          .slice(this.packIndex, this.packIndex + maxPacks);
+
+        if (custom && custom !== true) {
+          packList.unshift({
+            id: config.customDelimiter,
+            name: "Custom Pack",
+            description: "Custom texture pack: " + custom.name,
+            author: "You!",
+            hasCombined: false,
+            hasSeamless: false,
           });
+          uploader.setText("Delete");
+          uploader.setTint(config.Colors.red);
+        } else {
+          uploader.setText("Upload");
+          uploader.setTint(config.Colors.grey);
+        }
+
+        packList.forEach((pak) => {
+          const hasPack = SETTINGS.texturePack == pak.id;
+          const packName = new PIXI.Text(
+            `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
+            {
+              fontName: "Arial",
+              fontSize: 16,
+              fill: config.Colors.white,
+              strokeThickness: 2,
+              lineJoin: "round",
+            }
+          );
+          packName.x = this.marginLeft;
+          packName.y = this.off += 28;
+          this.hadPacks.push(this.addChild(packName));
+          const flags = [];
+          if (pak.hasCombined) flags.push("textures");
+          if (pak.hasSeamless) flags.push("terrain");
+          const packDescription = new PIXI.Text(
+            `${pak.description || "No Description."}${
+              flags.length ? ` (${flags.join(", ")})` : ""
+            }`,
+            {
+              fontName: "Arial",
+              fontSize: 14,
+              fill: config.Colors.white,
+              strokeThickness: 2,
+              lineJoin: "round",
+            }
+          );
+          packDescription.x = this.marginLeft;
+          packDescription.y = this.off += packName.height + 2;
+          this.hadPacks.push(this.addChild(packDescription));
+          const packButton = new Button(`pack_btn_${pak.id}`);
+          packButton.x = packName.x + packName.width + 12;
+          packButton.y = this.off - packName.height;
+          packButton.setText(hasPack ? "Remove" : "Use");
+          packButton.setTint(hasPack ? config.Colors.red : config.Colors.green);
+          packButton.scale.x = packButton.scale.y = 0.5;
+          packButton.addListener(Button.BUTTON_RELEASED, async () => {
+            SETTINGS.texturePack = hasPack ? null : pak.id;
+            app.menu.settingsPanel.controlsTab.forceRefresh = true;
+            saveSettings();
+            this.runPacks();
+          });
+          this.hadPacks.push(this.addChild(packButton));
+        });
       })();
     }
   }
@@ -115,6 +184,17 @@ export default function getTexTab() {
       this.addChild(this.scroller);
     }
     this.scroller.enableWheel();
+    const tab = this;
+    FileUploader.onchange = () => {
+      [...FileUploader.files].forEach(async (f) => {
+        if (f.type.startsWith("application/") && f.type.includes("zip")) {
+          await localForage.setItem("custom_pack", f);
+          delete tab.hasCust;
+          tab.runPacks();
+          app.menu.settingsPanel.controlsTab.forceRefresh = true;
+        }
+      });
+    };
   };
   TexTab.prototype.onHide = function () {
     this.scroller.disableWheel();

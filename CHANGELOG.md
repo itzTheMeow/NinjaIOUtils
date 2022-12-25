@@ -1,5 +1,9 @@
 # Changelog
 
+v1.31
+
+- Added custom personal texture packs from .zip files.
+
 v1.30
 
 - Added flight time bar above your own player.
