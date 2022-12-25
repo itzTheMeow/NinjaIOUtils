@@ -36,7 +36,15 @@ You can then right click your folder you created and create a new file called `_
 
 You can now drag and drop your images into your folder! Main texture images should start with `c_` and terrain start with `s_`, this makes sure they will load properly.
 
-When you're done, click the "Source Control" button on the left.
+### Testing Your Pack
+
+If you would like to test your pack, you can put all of the images and (download) the .json file onto your computer. Put them in a zip folder like so:
+
+You can then upload your zip to the settings page (make sure you've updated the script) and click Use on the custom pack, then click Save. Please note that **the game will load SLOWER with a custom zip pack installed**, especially with bigger packs as the backend has to unzip your textures before assembling them.
+
+---
+
+When you're done testing, go back to Code and click the "Source Control" button on the left.
 
 ![image](https://user-images.githubusercontent.com/50887230/191046784-bd748d18-43ce-4fd1-b610-533c8223fe8a.png)
 
