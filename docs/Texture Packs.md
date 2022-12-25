@@ -39,8 +39,10 @@ You can now drag and drop your images into your folder! Main texture images shou
 ### Testing Your Pack
 
 If you would like to test your pack, you can put all of the images and (download) the .json file onto your computer. Put them in a zip folder like so:
+![image](https://user-images.githubusercontent.com/50887230/209454065-a7ae1338-a426-4254-b7a4-08cf51e0be86.png)
 
-You can then upload your zip to the settings page (make sure you've updated the script) and click Use on the custom pack, then click Save. Please note that **the game will load SLOWER with a custom zip pack installed**, especially with bigger packs as the backend has to unzip your textures before assembling them.
+
+You can then upload your zip to the settings page (make sure you've updated the script) and click Use on the custom pack, then click Save. Please note that ***the game will load SLOWER with a custom zip pack installed***, especially with bigger packs as the backend has to unzip your textures before assembling them.
 
 ---
 
