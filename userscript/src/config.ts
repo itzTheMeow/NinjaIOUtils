@@ -1,6 +1,6 @@
 export default {
   ver: "$$version",
-  api: "http://localhost:8907",
+  api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
   actualGameVersion:
     document

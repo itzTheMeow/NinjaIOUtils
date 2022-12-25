@@ -2201,7 +2201,7 @@
   // src/config.ts
   var config_default = {
     ver: "1.31",
-    api: "http://localhost:8907",
+    api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
       try {
