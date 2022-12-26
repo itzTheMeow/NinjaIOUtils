@@ -44,8 +44,8 @@ export function hookTextureLoader() {
               )
                 data.data[0] = `${config.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config.actualGameVersion}`;
 
-              if (data.data[0].startsWith(config.api)) {
-                const zip: File | null = isCustom ? await localForage.getItem("custom_pack") : null;
+              if (data.data[0].startsWith(config.api) && isCustom) {
+                const zip: File = await localForage.getItem("custom_pack");
                 if (zip) {
                   const form = new FormData();
                   form.append("zip", zip);

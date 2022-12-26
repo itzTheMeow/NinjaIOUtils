@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Ninja.io Utils
 // @namespace    https://itsmeow.cat
-// @version      1.31
+// @version      1.32
 // @description  Some small QOL improvements to ninja.io!
 // @author       Meow
 // @match        https://ninja.io/*
@@ -2200,7 +2200,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "1.31",
+    ver: "1.32",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     actualGameVersion: document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -4374,8 +4374,8 @@ ${name}`);
                 data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/combined.png?v=${config_default.actualGameVersion}`;
               if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.endsWith(".png"))
                 data.data[0] = `${config_default.api}/packs/${SETTINGS.texturePack}/seamless.png?v=${config_default.actualGameVersion}`;
-              if (data.data[0].startsWith(config_default.api)) {
-                const zip = isCustom ? await import_localforage2.default.getItem("custom_pack") : null;
+              if (data.data[0].startsWith(config_default.api) && isCustom) {
+                const zip = await import_localforage2.default.getItem("custom_pack");
                 if (zip) {
                   const form = new FormData();
                   form.append("zip", zip);

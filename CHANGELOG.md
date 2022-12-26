@@ -1,5 +1,9 @@
 # Changelog
 
+v1.32
+
+- Fixed texture pack loading.
+
 v1.31
 
 - Added custom personal texture packs from .zip files.
