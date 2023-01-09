@@ -1,3 +1,4 @@
+import { App } from "../typings";
 import Mod from "./Mod";
 
 export default new (class Ninja {
@@ -28,7 +29,7 @@ export default new (class Ninja {
   }
   public loadMod(id: string) {
     const mod = this.mods.find((m) => m.id == id);
-    if (!mod) return;
+    if (!mod || mod.loaded) return;
     if (this.ready && mod.loadon == "appstart") mod.load();
     else if (mod.loadon == "pagestart") mod.load();
   }

@@ -1,4 +1,8 @@
+import Mod from "./api/Mod";
+import Ninja from "./api/Ninja";
 import config from "./config";
+import { PIXI } from "./pixi";
+import { app, App, Feature, FontStyle, ImgButton, MemberMenuButton } from "./typings";
 
 export default function hookModMenu() {
   const menu = App.Layer.memberMenu;
@@ -126,6 +130,11 @@ export default function hookModMenu() {
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
     titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
+    modContainer = new PIXI.Container();
+    modItemContainer = new PIXI.Container();
+    modItemTitle = new PIXI.Text("Mod Title", { ...FontStyle.MediumOrangeText, fontSize: 32 });
+    modItemAuthor = new PIXI.Text("By Author", FontStyle.ButtonTitle);
+    modItemDescription = new PIXI.Text("Long description text.", FontStyle.SmallMenuTextWhite);
 
     constructor() {
       super();
@@ -152,14 +161,51 @@ export default function hookModMenu() {
       this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
       this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
       this.container.addChild(this.closeButton);
+      this.container.x = 0.5 * -this.width;
+
+      this.marginLeft += 6;
+      this.off = this.titleText.height * 4;
+
+      this.modContainer.x = this.marginLeft;
+      this.modContainer.y = this.off;
+      this.container.addChild(this.modContainer);
+      this.modItemContainer.x = this.marginLeft;
+      this.modItemContainer.y = this.off;
+      this.modItemContainer.visible = false;
+      this.container.addChild(this.modItemContainer);
+      this.container.addChild(this.modItemTitle);
+      this.container.addChild(this.modItemAuthor);
+      this.container.addChild(this.modItemDescription);
 
       this.reposition();
-      this.container.x = 0.5 * -this.width;
     }
     reposition() {
       this.off = 0;
     }
-    show() {}
+    constructModItem(mod: Mod) {
+      const container = new PIXI.Graphics();
+      container.beginFill(config.Colors.white, 0.1);
+      container.drawRect();
+      container.endFill();
+
+      const label = new PIXI.Text(mod.name, FontStyle.ProfileTabText);
+      container.addChild(label);
+
+      return container;
+    }
+    show() {
+      this.modContainer.visible = true;
+      this.modItemContainer.visible = false;
+      this.modContainer.removeChildren();
+      Ninja.mods.forEach((m) => this.modContainer.addChild(this.constructModItem(m)));
+    }
+    showMod(mod: Mod) {
+      this.modItemContainer.visible = true;
+      this.modContainer.visible = false;
+      this.modItemTitle.text = mod.name + (mod.details.core ? " (Built-In)" : "");
+      this.modItemDescription.text = mod.details.description;
+      this.modItemAuthor.text = `By ${mod.details.author}`;
+    }
   }
 
   App.Layer.mainMenuHides.push((App.Layer.modsMenu = new ModsMenu()));

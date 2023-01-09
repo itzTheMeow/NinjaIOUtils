@@ -22,12 +22,14 @@ export default class Mod {
   public get name() {
     return this.details.name;
   }
+  public loaded = false;
   public loadon: "pagestart" | "appstart" = "appstart";
 
   constructor(public readonly details: ModDetails) {}
 
   public load() {
     this.log(`Loaded successfully!`);
+    this.loaded = true;
   }
   public log(text: string, color?: number) {
     Ninja.log(`[${this.id}] ${text}`, color);

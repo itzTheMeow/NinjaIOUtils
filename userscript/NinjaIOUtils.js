@@ -54,7 +54,7 @@
     }
     loadMod(id) {
       const mod = this.mods.find((m) => m.id == id);
-      if (!mod)
+      if (!mod || mod.loaded)
         return;
       if (this.ready && mod.loadon == "appstart")
         mod.load();
@@ -86,9 +86,11 @@
     get name() {
       return this.details.name;
     }
+    loaded = false;
     loadon = "appstart";
     load() {
       this.log(`Loaded successfully!`);
+      this.loaded = true;
     }
     log(text, color) {
       Ninja_default.log(`[${this.id}] ${text}`, color);
@@ -303,6 +305,7 @@
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
+      modContainer = new PIXI.Container();
       constructor() {
         super();
         this.background.x = 0;
@@ -327,13 +330,26 @@
         this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
         this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
         this.container.addChild(this.closeButton);
-        this.reposition();
         this.container.x = 0.5 * -this.width;
+        this.off = this.titleText.height * 2;
+        this.modContainer.x = this.marginLeft;
+        this.modContainer.y = this.off;
+        this.container.addChild(this.modContainer);
+        this.reposition();
       }
       reposition() {
         this.off = 0;
       }
+      constructModItem(mod) {
+        const container = new PIXI.Container();
+        const label = new PIXI.Text(mod.name, FontStyle.ProfileTabText);
+        label.x = label.y = 0;
+        container.addChild(label);
+        return container;
+      }
       show() {
+        this.modContainer.removeChildren();
+        Ninja_default.mods.forEach((m) => this.modContainer.addChild(this.constructModItem(m)));
       }
     }
     App.Layer.mainMenuHides.push(App.Layer.modsMenu = new ModsMenu());

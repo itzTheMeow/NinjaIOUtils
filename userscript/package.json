@@ -12,6 +12,7 @@
     "@types/vec2": "^1.6.1",
     "esbuild": "^0.14.49",
     "localforage": "^1.10.0",
+    "pixi.js": "^7.0.5",
     "socket.io-client": "^4.5.1",
     "vec2": "^1.6.1"
   }
