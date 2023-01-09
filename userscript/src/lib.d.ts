@@ -454,7 +454,7 @@ declare module "lib" {
         displayErrorMessage(a: any): void;
     }
     export class Checkbox extends PIXI.Container<PIXI.DisplayObject> {
-        constructor(a: any, b: any, c: any);
+        constructor(id: any, label: any, checked: any);
         id: any;
         labelText: any;
         checked: any;

@@ -1,4 +1,4 @@
-import { Feature, ImgButton, MemberMenuButton } from "lib";
+import { Checkbox, Feature, ImgButton, MemberMenuButton } from "lib";
 import { app, App, FontStyle, Layer, PIXI } from "typings";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
@@ -125,11 +125,13 @@ export default function hookModMenu() {
     oy = 20;
     marginTop = 0;
     marginLeft = 0;
+    showInstalled = false;
 
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
     titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
     modContainer = new PIXI.Container();
+    filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
 
     constructor() {
       super();
@@ -145,26 +147,32 @@ export default function hookModMenu() {
       this.background.endFill();
       this.background.drawRect(15, 42, 630, 2);
       this.container.addChild(this.background);
+
       this.titleText.x = 0.5 * this.width - 20;
       this.titleText.y = this.oy + 36;
       this.titleText.anchor.x = 0.5;
       this.titleText.resolution = 2;
       this.container.addChild(this.titleText);
+
       this.closeButton = new ImgButton();
       this.closeButton.x = this.background.width - 40;
       this.closeButton.y = this.oy + 34;
       this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
       this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
       this.container.addChild(this.closeButton);
-      this.container.x = 0.5 * -this.width;
 
       this.marginLeft += 20;
-      this.marginTop = this.titleText.height * 4;
+      this.marginTop = this.titleText.height * 3.25;
+      this.filterBox.x = this.marginLeft + 6;
+      this.filterBox.y = this.marginTop;
+      this.container.addChild(this.filterBox);
 
+      this.marginTop += this.filterBox.height + 8;
       this.modContainer.x = this.marginLeft;
       this.modContainer.y = this.marginTop;
       this.container.addChild(this.modContainer);
 
+      this.container.x = 0.5 * -this.width;
       this.reposition();
     }
     reposition() {
@@ -183,7 +191,7 @@ export default function hookModMenu() {
 
       const icon = new PIXI.Graphics();
       icon.beginFill(config.Colors.black, 0.2);
-      icon.drawRoundedRect((pl += 10), (pt = pl), iconSize, iconSize, 10);
+      icon.drawRoundedRect((pl += 10), (pt = pl), iconSize, iconSize, 8);
       icon.endFill();
       const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
       iconSprite.width = iconSprite.height = iconSize - 10;
@@ -194,8 +202,8 @@ export default function hookModMenu() {
       container.addChild(icon);
 
       const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
-      label.x = pl += iconSize + 2;
-      label.y = pt += 6;
+      label.x = pl += iconSize + 4;
+      label.y = pt += 8;
       container.addChild(label);
       const authorLabel = new PIXI.Text(
         mod.details.author == "builtin" ? "(Built-In)" : "by " + mod.details.author,

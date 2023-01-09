@@ -319,10 +319,12 @@
       oy = 20;
       marginTop = 0;
       marginLeft = 0;
+      showInstalled = false;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
       modContainer = new PIXI.Container();
+      filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
       constructor() {
         super();
         this.background.x = 0;
@@ -347,12 +349,16 @@
         this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
         this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
         this.container.addChild(this.closeButton);
-        this.container.x = 0.5 * -this.width;
         this.marginLeft += 20;
-        this.marginTop = this.titleText.height * 4;
+        this.marginTop = this.titleText.height * 3.25;
+        this.filterBox.x = this.marginLeft + 6;
+        this.filterBox.y = this.marginTop;
+        this.container.addChild(this.filterBox);
+        this.marginTop += this.filterBox.height + 8;
         this.modContainer.x = this.marginLeft;
         this.modContainer.y = this.marginTop;
         this.container.addChild(this.modContainer);
+        this.container.x = 0.5 * -this.width;
         this.reposition();
       }
       reposition() {
@@ -366,7 +372,7 @@
         let pl = 0, pt = 0;
         const icon = new PIXI.Graphics();
         icon.beginFill(config_default.Colors.black, 0.2);
-        icon.drawRoundedRect(pl += 10, pt = pl, iconSize, iconSize, 10);
+        icon.drawRoundedRect(pl += 10, pt = pl, iconSize, iconSize, 8);
         icon.endFill();
         const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
         iconSprite.width = iconSprite.height = iconSize - 10;
@@ -376,8 +382,8 @@
         icon.addChild(iconSprite);
         container.addChild(icon);
         const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
-        label.x = pl += iconSize + 2;
-        label.y = pt += 6;
+        label.x = pl += iconSize + 4;
+        label.y = pt += 8;
         container.addChild(label);
         const authorLabel = new PIXI.Text(mod.details.author == "builtin" ? "(Built-In)" : "by " + mod.details.author, { ...FontStyle.SmallMenuTextYellow, fontSize: 20 });
         authorLabel.x = pl + label.width + 4;
