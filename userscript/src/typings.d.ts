@@ -1,5 +1,5 @@
+import type * as Lib from "lib";
 import type * as PixiJS from "pixi.js/lib/index";
-import { App, Layer } from "./lib";
 export var PIXI: typeof PixiJS;
 
 type func = (...args: any) => any;
@@ -31,6 +31,6 @@ declare var SettingsPanel: {
   };
 };
 
-export declare var app: App;
-export declare var App: typeof App & { Layer: Layer };
-export declare var Layer: typeof Layer;
+export declare var app: Lib.App;
+export declare var App: typeof Lib.App & { Layer: Lib.Layer };
+export declare var Layer: typeof Lib.Layer;

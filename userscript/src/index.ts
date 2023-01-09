@@ -1,3 +1,4 @@
+import { APIClient } from "lib";
 import Ninja from "./api/Ninja";
 import * as CoreMods from "./coremods/index";
 import hookModMenu from "./hookModMenu";
@@ -13,7 +14,7 @@ const tester = setInterval(() => {
       !app ||
       !app.menu ||
       !app.menu.joinButton ||
-      typeof app.status.updating !== "boolean" ||
+      JSON.stringify(app.status) == "{}" ||
       !APIClient ||
       !APIClient.postCreateGame
     )
