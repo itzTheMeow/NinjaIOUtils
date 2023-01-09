@@ -26,6 +26,12 @@
 */
 
 (() => {
+  var __defProp = Object.defineProperty;
+  var __export = (target, all) => {
+    for (var name in all)
+      __defProp(target, name, { get: all[name], enumerable: true });
+  };
+
   // src/api/Ninja.ts
   var Ninja_default = new class Ninja {
     constructor() {
@@ -41,7 +47,67 @@
       })();
     }
     mods = [];
+    registerMod(mod) {
+      this.mods.push(mod);
+      if (mod.details.core)
+        this.loadMod(mod.id);
+    }
+    loadMod(id) {
+      const mod = this.mods.find((m) => m.id == id);
+      if (!mod)
+        return;
+      if (this.ready && mod.loadon == "appstart")
+        mod.load();
+      else if (mod.loadon == "pagestart")
+        mod.load();
+    }
+    log(text, color) {
+      if (this.ready)
+        App.Console.log(text, color);
+      else
+        console.log(text);
+    }
   }();
+
+  // src/coremods/index.ts
+  var coremods_exports = {};
+  __export(coremods_exports, {
+    ShareURLMod: () => ShareURLMod
+  });
+
+  // src/api/Mod.ts
+  var Mod = class {
+    constructor(details) {
+      this.details = details;
+    }
+    get id() {
+      return this.details.id;
+    }
+    get name() {
+      return this.details.name;
+    }
+    loadon = "appstart";
+    load() {
+      this.log(`Loaded successfully!`);
+    }
+    log(text, color) {
+      Ninja_default.log(`[${this.id}] ${text}`, color);
+    }
+  };
+
+  // src/coremods/shareURLs.ts
+  var ShareURLMod = class extends Mod {
+    constructor() {
+      super({
+        id: "ShareURL",
+        name: "Share URLs",
+        description: "Allows other players to join your game by providing a link.",
+        author: "builtin",
+        icon: "menu_icon_players",
+        core: true
+      });
+    }
+  };
 
   // src/config.ts
   var config_default = {
@@ -293,6 +359,7 @@
   }
 
   // src/index.ts
+  Object.values(coremods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && m.load());
   var tester = setInterval(() => {
     try {

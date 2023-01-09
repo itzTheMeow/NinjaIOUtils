@@ -21,4 +21,20 @@ export default new (class Ninja {
     );
   }
   public mods: Mod[] = [];
+
+  public registerMod(mod: Mod) {
+    this.mods.push(mod);
+    if (mod.details.core) this.loadMod(mod.id);
+  }
+  public loadMod(id: string) {
+    const mod = this.mods.find((m) => m.id == id);
+    if (!mod) return;
+    if (this.ready && mod.loadon == "appstart") mod.load();
+    else if (mod.loadon == "pagestart") mod.load();
+  }
+
+  public log(text: string, color?: number) {
+    if (this.ready) App.Console.log(text, color);
+    else console.log(text);
+  }
 })();

@@ -1,5 +1,8 @@
 import Ninja from "./api/Ninja";
+import * as CoreMods from "./coremods/index";
 import hookModMenu from "./hookModMenu";
+
+Object.values(CoreMods).forEach((mod) => Ninja.registerMod(new mod()));
 
 Ninja.mods.forEach((m) => m.loadon == "pagestart" && m.load());
 
