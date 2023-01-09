@@ -415,9 +415,9 @@ declare module "lib" {
         setTint(a: any): void;
     }
     export namespace Button {
-        const BUTTON_PRESSED_2: string;
+        const BUTTON_PRESSED_2: any;
         export { BUTTON_PRESSED_2 as BUTTON_PRESSED };
-        export const BUTTON_RELEASED: string;
+        export const BUTTON_RELEASED: any;
     }
     export class LoginMenu extends Feature {
         storeCredentialFlag: boolean;
@@ -1666,7 +1666,7 @@ declare module "lib" {
     }
     export namespace ImgButton {
         const TYPE_CLOSE: string;
-        const CLICK: string;
+        const CLICK: any;
     }
     export class RankingMenu extends Feature {
         lastRefresh: number;
@@ -3358,6 +3358,7 @@ declare module "lib" {
         }
         export const DefaultCredential: any;
         export const DefaultServers: any;
+        export const CombinedTextures: any;
     }
     import * as PIXI from "pixi.js";
     function User(): void;

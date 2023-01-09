@@ -1,8 +1,8 @@
 import { Feature, ImgButton, MemberMenuButton } from "lib";
+import { app, App, FontStyle, Layer, PIXI } from "typings";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
-import { app, App, FontStyle, Layer, PIXI } from "./typings";
 
 export default function hookModMenu() {
   const menu = App.Layer.memberMenu;

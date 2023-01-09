@@ -1,6 +1,5 @@
 import { buildSync } from "esbuild";
 import fs, { readFileSync } from "fs";
-import meta from "./meta.json" assert { type: "json" };
 
 const ver = readFileSync("../version.json").toString().replace(/"/g, "").trim();
 const scriptPath = "NinjaIOUtils.js";
@@ -9,9 +8,10 @@ buildSync({
   bundle: true,
   entryPoints: ["src/index.ts"],
   outfile: scriptPath,
-  external: ["lib"],
+  external: ["lib", "typings"],
 });
 
+const meta = JSON.parse(readFileSync("./meta.json").toString());
 meta.version = ver;
 const metaString = `// ==UserScript==
 ${Object.entries(meta)
@@ -37,6 +37,15 @@ const scriptFile = fs
   .readFileSync(scriptPath)
   .toString()
   .replace(/\$\$version/g, ver);
-fs.writeFileSync(scriptPath, metaString + scriptFile);
+fs.writeFileSync(
+  scriptPath,
+  metaString +
+    scriptFile
+      // R E G E X - removes the imports for the .d.ts files so the script actually works
+      .replace(/import_lib\d*\.?/g, "")
+      .replace(/import_typings\d*\.?/g, "")
+      .replace(/var  ?= __require\("typings"\);/g, "")
+      .replace(/var  ?= __require\("lib"\);/g, "")
+);
 
 console.log(`NinjaIOUtils v${ver} built successfully!`);

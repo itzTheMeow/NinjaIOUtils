@@ -1,8 +1,8 @@
 import { APIClient } from "lib";
+import { app } from "typings";
 import Ninja from "./api/Ninja";
 import * as CoreMods from "./coremods/index";
 import hookModMenu from "./hookModMenu";
-import { app } from "./typings";
 
 Object.values(CoreMods).forEach((mod) => Ninja.registerMod(new mod()));
 

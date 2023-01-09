@@ -1,4 +1,4 @@
-import { App } from "../typings";
+import { App } from "typings";
 import Mod from "./Mod";
 
 export default new (class Ninja {
