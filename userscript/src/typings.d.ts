@@ -37,17 +37,7 @@ interface Container extends EventDispatcher {
   hitArea?: Rectangle;
 }
 interface Text extends Container {
-  new (
-    text: string,
-    options: Partial<{
-      fontName: string;
-      fontSize: number;
-      lineHeight: number;
-      fill: number;
-      strokeThickness: number;
-      lineJoin: "round";
-    }>
-  ): Container & Text;
+  new (text: string, options: Font): Container & Text & { style: Font };
 }
 declare interface Rectangle {}
 declare interface Graphics extends Container {
@@ -384,6 +374,89 @@ declare var Player: {
     update(): void;
     _update(): void;
   };
+};
+declare interface Font {
+  fontName?: string;
+  fontSize?: number;
+  lineHeight?: number;
+  fill?: number;
+  strokeThickness?: number;
+  lineJoin?: str;
+  padding?: number;
+  fontStyle?: string;
+  fontWeight?: string;
+}
+declare var FontStyle: {
+  LargeDefault: Font;
+  MediumBlack: Font;
+  LeaderboardColumn: Font;
+  LeaderboardData: Font;
+  LeaderboardFieldTitle: Font;
+  SmallMenuTextOrange: Font;
+  SmallMenuTextWhite: Font;
+  SmallMenuTextOrange2: Font;
+  LeaderboardPointText: Font;
+  MediumOrangeText: Font;
+  SmallRankingTextOrange: Font;
+  SmallClanBrowserText: Font;
+  SmallMenuTextOrange3: Font;
+  SmallMenuTextOrange4: Font;
+  SmallMenuTextWhite2: Font;
+  MediumMenuTextOrange: Font;
+  ServerListTitle: Font;
+  MenuTitle: Font;
+  SmallMenuTextYellow: Font;
+  SmallLabelText: Font;
+  MediumMenuTextOrange2: Font;
+  SmallLabelText2: Font;
+  SmallMenuTextOrange5: Font;
+  LeaderboardOptionsText: Font;
+  DropdownItemText: Font;
+  ButtonTitle: Font;
+  ChatMessage: Font;
+  MenuData1: Font;
+  InputFieldTitle1: Font;
+  ActivityText: Font;
+  CreatedText: Font;
+  OverviewTitle: Font;
+  LeaderboardTitle: Font;
+  WeaponMenuTitle: Font;
+  InputText: Font;
+  CustomizationItemTextSmall: Font;
+  SmallLabelText3: Font;
+  VSText: Font;
+  VSLoadingText: Font;
+  VSRulesText: Font;
+  VSRulesTextItalic: Font;
+  VSRulesDescText: Font;
+  VSStartingText: Font;
+  VSPlayerLabelText: Font;
+  VSCounterText: Font;
+  ReadyBarText: Font;
+  HudTitleBarText: Font;
+  HudMediumTextWhite: Font;
+  SmallLabelText4: Font;
+  HudMediumTextWhite2: Font;
+  HudComboText: Font;
+  ConsoleText: Font;
+  ActionTableText: Font;
+  AmmoBarText: Font;
+  InputFieldText: Font;
+  WeaponItem: Font;
+  ChatBubbleText: Font;
+  SocialDropdownText: Font;
+  SocialMenuItem: Font;
+  RankingItem: Font;
+  ProfileTabText: Font;
+  CustomizationItem: Font;
+  ClanTitle: Font;
+  PVPResultTitle: Font;
+  PVPResultTitle2: Font;
+  PVPResultData: Font;
+  PVPResultDataRank: Font;
+  PVPResultDataPromo: Font;
+  PVPVSTitle: Font;
+  GameoverCountdown: Font;
 };
 declare var app: {
   menu: Container & {

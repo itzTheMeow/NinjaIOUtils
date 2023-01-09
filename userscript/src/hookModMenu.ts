@@ -14,31 +14,31 @@ export default function hookModMenu() {
     if (!["member", "clan"].includes(App.Layer.memberMenu.mode)) menuClanState = 0;
     menuClanState++;
     if (menuClanState == 3) menuClanState = 0;
-    title1.tint = title2.tint = config.Colors.yellow;
+    title1.style.fill = title2.style.fill = FontStyle.MenuTitle.fill;
     switch (menuClanState) {
       case 0:
         menu.emit(Layer.Events.MENU_ACCESS);
         break;
       case 1:
         menu.emit(Layer.Events.MEMBER_ACCESS);
-        title1.tint = config.Colors.green;
+        title1.style.fill = config.Colors.white;
         break;
       case 2:
         menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
-        title2.tint = config.Colors.green;
+        title2.style.fill = config.Colors.white;
         break;
     }
   });
   menu.memberButton.setActive = (n) => {
     if (menuClanState == 1 || (!menuClanState && !n)) {
       menu.memberclanButton.setActive(n);
-      if (!n) title1.tint = config.Colors.yellow;
+      if (!n) title1.style.fill = FontStyle.MenuTitle.fill;
     }
   };
   menu.clanButton.setActive = (n) => {
     if (menuClanState == 2 || (!menuClanState && !n)) {
       menu.memberclanButton.setActive(n);
-      if (!n) title2.tint = config.Colors.yellow;
+      if (!n) title2.style.fill = FontStyle.MenuTitle.fill;
     }
   };
 
@@ -53,11 +53,9 @@ export default function hookModMenu() {
   ico1.tint = ico2.tint = config.Colors.white;
   ico1.y = ico2.y = 0.37 * menu.memberclanButton.rectHeight;
   const icosep = new PIXI.Text("/", {
+    ...FontStyle.MenuTitle,
     fontSize: 16,
-    fontName: "Arial",
     fill: config.Colors.white,
-    lineJoin: "round",
-    strokeThickness: 3,
   });
   icosep.x = 0.5 * menu.memberclanButton.rectWidth;
   icosep.y = 0.37 * menu.memberclanButton.rectHeight;
@@ -65,29 +63,21 @@ export default function hookModMenu() {
   menu.memberclanButton.addChild(icosep);
 
   const title1 = new PIXI.Text("Players", {
-    fontSize: 11,
-    fontName: "Arial",
-    fill: config.Colors.white,
-    lineJoin: "round",
-    strokeThickness: 2,
+    ...FontStyle.MenuTitle,
+    fontSize: 10,
   });
   title1.x = 0.25 * menu.memberclanButton.rectWidth;
   menu.memberclanButton.addChild(title1);
   const title2 = new PIXI.Text("Clans", {
+    ...FontStyle.MenuTitle,
     fontSize: 14,
-    fontName: "Arial",
-    fill: config.Colors.white,
-    lineJoin: "round",
-    strokeThickness: 2,
   });
   title2.x = 0.75 * menu.memberclanButton.rectWidth;
   menu.memberclanButton.addChild(title2);
   const titlesep = new PIXI.Text("/", {
-    fontSize: 16,
-    fontName: "Arial",
+    ...FontStyle.MenuTitle,
+    fontSize: 14,
     fill: config.Colors.white,
-    lineJoin: "round",
-    strokeThickness: 3,
   });
   titlesep.x = 0.5 * menu.memberclanButton.rectWidth;
   menu.memberclanButton.addChild(titlesep);
@@ -99,7 +89,7 @@ export default function hookModMenu() {
     titlesep.anchor.x =
     titlesep.anchor.y =
       0.5;
-  title1.tint = title2.tint = config.Colors.yellow;
+  //title1.tint = title2.tint = config.Colors.yellow;
   menu.container.addChild(menu.memberclanButton);
 
   const setActive = menu.clanButton.setActive.bind(menu.clanButton);
