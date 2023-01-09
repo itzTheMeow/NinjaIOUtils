@@ -320,6 +320,7 @@
       marginTop = 0;
       marginLeft = 0;
       showInstalled = false;
+      modItemHeight = 110;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
@@ -367,7 +368,7 @@
       constructModItem(mod) {
         const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
         container.beginFill(config_default.Colors.white, 0.1);
-        container.drawRoundedRect(0, 0, 620, 110, 6);
+        container.drawRoundedRect(0, 0, 620, this.modItemHeight, 6);
         container.endFill();
         let pl = 0, pt = 0;
         const icon = new PIXI.Graphics();
@@ -395,9 +396,15 @@
         container.addChild(description);
         return container;
       }
+      scrollTop = 0;
       show() {
+        const perPage = 3;
         this.modContainer.removeChildren();
-        Ninja_default.mods.forEach((m) => this.modContainer.addChild(this.constructModItem(m)));
+        [...Ninja_default.mods].sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(this.scrollTop, this.scrollTop + perPage).forEach((m, i) => {
+          const item = this.constructModItem(m);
+          item.y = (this.modItemHeight + 8) * i;
+          this.modContainer.addChild(item);
+        });
       }
     }
     const modsMenu = new ModsMenu();
@@ -423,8 +430,42 @@
     App.Layer.features.push(modsMenu);
   }
 
+  // src/mods/index.ts
+  var mods_exports = {};
+  __export(mods_exports, {
+    FPSDisplayMod: () => FPSDisplayMod,
+    HotkeyMessagesMod: () => HotkeyMessagesMod
+  });
+
+  // src/mods/fpsDisplay.ts
+  var FPSDisplayMod = class extends Mod {
+    constructor() {
+      super({
+        id: "FPSDisplay",
+        name: "FPS Display",
+        author: "Meow",
+        description: "Displays your FPS and ping at the top of the screen.",
+        icon: "energy_icon"
+      });
+    }
+  };
+
+  // src/mods/hotkeyMessages.ts
+  var HotkeyMessagesMod = class extends Mod {
+    constructor() {
+      super({
+        id: "HotkeyMessages",
+        name: "Hotkey Messages",
+        author: "Anna",
+        description: "Lets you send pre-defined messages in chat using hotkeys.",
+        icon: "chat-ingame"
+      });
+    }
+  };
+
   // src/index.ts
   Object.values(coremods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
+  Object.values(mods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && m.load());
   var tester = setInterval(() => {
     try {

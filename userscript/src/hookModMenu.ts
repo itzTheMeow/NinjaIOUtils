@@ -126,6 +126,7 @@ export default function hookModMenu() {
     marginTop = 0;
     marginLeft = 0;
     showInstalled = false;
+    modItemHeight = 110;
 
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
@@ -183,7 +184,7 @@ export default function hookModMenu() {
         maxDesc = 150,
         container = new PIXI.Graphics();
       container.beginFill(config.Colors.white, 0.1);
-      container.drawRoundedRect(0, 0, 620, 110, 6);
+      container.drawRoundedRect(0, 0, 620, this.modItemHeight, 6);
       container.endFill();
 
       let pl = 0,
@@ -226,9 +227,19 @@ export default function hookModMenu() {
 
       return container;
     }
+
+    scrollTop = 0;
     show() {
+      const perPage = 3;
       this.modContainer.removeChildren();
-      Ninja.mods.forEach((m) => this.modContainer.addChild(this.constructModItem(m)));
+      [...Ninja.mods]
+        .sort((m1, m2) => (m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1))
+        .slice(this.scrollTop, this.scrollTop + perPage)
+        .forEach((m, i) => {
+          const item = this.constructModItem(m);
+          item.y = (this.modItemHeight + 8) * i;
+          this.modContainer.addChild(item);
+        });
     }
   }
 

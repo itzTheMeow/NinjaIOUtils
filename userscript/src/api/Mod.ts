@@ -7,7 +7,7 @@ export interface ModDetails {
   name: string;
   /** The longer, more descriptive description for the mod. */
   description: string;
-  /** The Ninja.io username of the mod's creator. */
+  /** The name of the mod's creator. */
   author: string;
   /** A ninja texture keyname used as an icon. */
   icon: string;
