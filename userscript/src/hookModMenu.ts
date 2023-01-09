@@ -1,6 +1,6 @@
 import config from "./config";
 
-export default function hookUtilsMenu() {
+export default function hookModMenu() {
   const menu = App.Layer.memberMenu;
 
   menu.memberButton.parent.removeChild(menu.memberButton);
@@ -107,7 +107,7 @@ export default function hookUtilsMenu() {
     setActive(n);
     if (!n) menu.utilsButton.setActive(0);
   };
-  menu.utilsButton = new MemberMenuButton("NinjaIOUtils", 16763904, 15, "gears_icon");
+  menu.utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
   menu.utilsButton.x = 0;
   menu.utilsButton.y = menu.memberButton.y + 70;
   menu.utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
@@ -119,15 +119,15 @@ export default function hookUtilsMenu() {
     menu.emit(Layer.Events.MENU_ACCESS);
     menu.playButton.setActive(0);
     menu.utilsButton.setActive(1);
-    App.Layer.utilsMenu.show();
-    App.Layer.addChild(App.Layer.utilsMenu);
+    App.Layer.modsMenu.show();
+    App.Layer.addChild(App.Layer.modsMenu);
     App.Layer.emit(Layer.Events.HIDE_MENU);
     app.onResize();
   });
   menu.utilsButton.icon.scale.x = menu.utilsButton.icon.scale.y = 0.7;
   menu.container.addChild(menu.utilsButton);
 
-  class UtilsMenu extends Feature {
+  class ModsMenu extends Feature {
     ox = 0;
     oy = 0;
     off = 0;
@@ -135,7 +135,7 @@ export default function hookUtilsMenu() {
 
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
-    pmTitle = new PIXI.Text("NinjaIOUtils", {
+    pmTitle = new PIXI.Text("Mods", {
       fontName: "Arial",
       fontSize: 19,
       lineHeight: 16,
@@ -183,7 +183,7 @@ export default function hookUtilsMenu() {
     show() {}
   }
 
-  App.Layer.mainMenuHides.push((App.Layer.utilsMenu = new UtilsMenu()));
+  App.Layer.mainMenuHides.push((App.Layer.modsMenu = new ModsMenu()));
   [
     "loginMenu",
     "memberBrowserMenu",
@@ -201,6 +201,6 @@ export default function hookUtilsMenu() {
     "renameMenu",
     "logoutMenu",
     "guestProfileMenu",
-  ].forEach((e) => App.Layer[e].hides.push(App.Layer.utilsMenu));
-  App.Layer.features.push(App.Layer.utilsMenu);
+  ].forEach((e) => App.Layer[e].hides.push(App.Layer.modsMenu));
+  App.Layer.features.push(App.Layer.modsMenu);
 }

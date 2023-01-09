@@ -2,19 +2,6 @@ export default {
   ver: "$$version",
   api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
-  actualGameVersion:
-    document
-      .querySelector<HTMLScriptElement>(`script[src*="game.js"]`)
-      ?.src.split("/")
-      .pop()
-      ?.split("?v=")?.[1] ||
-    (() => {
-      try {
-        return App.ClientVersion;
-      } catch {
-        return "unknown";
-      }
-    })(),
   Colors: {
     dotGreen: 65280,
     dotGrey: 8947848,

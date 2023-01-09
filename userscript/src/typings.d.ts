@@ -495,7 +495,7 @@ declare var App: {
       utilsButton: MemberMenuButton;
     };
     partyMenu: Container & { show(): void; reposition(): void };
-    utilsMenu: Container & { show(): void; reposition(): void };
+    modsMenu: Container & { show(): void; reposition(): void };
     loadingMenu: Container & {
       title: Container;
       container: Container;
