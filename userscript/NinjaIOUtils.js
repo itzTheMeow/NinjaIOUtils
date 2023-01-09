@@ -230,47 +230,39 @@
     menu.utilsButton.icon.scale.x = menu.utilsButton.icon.scale.y = 0.7;
     menu.container.addChild(menu.utilsButton);
     class ModsMenu extends Feature {
-      ox = 0;
-      oy = 0;
+      ox = 40;
+      oy = 20;
       off = 0;
       marginLeft = 0;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
-      pmTitle = new PIXI.Text("Mods", {
-        fontName: "Arial",
-        fontSize: 19,
-        lineHeight: 16,
-        fill: config_default.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round"
-      });
+      titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
       constructor() {
         super();
-        this.background.interactive = true;
         this.background.x = 0;
         this.background.y = 40;
         this.background.lineStyle(1, 16777215, 0.1, 0);
-        this.background.beginFill(3355443, 0.9);
-        this.background.drawRect(0, 0, 660, 524);
+        this.background.beginFill(3355443, 1);
+        this.background.drawRect(0, 0, 660, 524, 10);
         this.background.endFill();
         this.background.beginFill(0, 0.3);
-        this.background.drawRect(10, 10, 640, 504);
+        this.background.drawRect(10, 10, 640, 504, 10);
         this.background.endFill();
         this.background.drawRect(15, 42, 630, 2);
         this.container.addChild(this.background);
-        this.ox = 10;
-        this.oy = 60;
+        this.titleText.x = 0.5 * this.width - 20;
+        this.titleText.y = this.oy + 36;
+        this.titleText.anchor.x = 0.5;
+        this.titleText.resolution = 2;
+        this.container.addChild(this.titleText);
+        this.closeButton = new ImgButton();
         this.closeButton.x = this.background.width - 40;
-        this.closeButton.y = this.oy - 6;
-        this.closeButton.scale.x = this.closeButton.scale.y = 0.8;
-        this.closeButton.on(ImgButton.CLICK, () => App.Layer.memberMenu.emit(Layer.Events.MENU_ACCESS));
+        this.closeButton.y = this.oy + 34;
+        this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
+        this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
         this.container.addChild(this.closeButton);
-        this.pmTitle.x = 0.5 * this.width - 20;
-        this.pmTitle.y = this.oy - 4;
-        this.pmTitle.anchor.x = 0.5;
-        this.container.addChild(this.pmTitle);
-        this.container.x = 0.5 * -this.width;
         this.reposition();
+        this.container.x = 0.5 * -this.width;
       }
       reposition() {
         this.off = 0;

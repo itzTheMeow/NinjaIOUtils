@@ -37,7 +37,7 @@ interface Container extends EventDispatcher {
   hitArea?: Rectangle;
 }
 interface Text extends Container {
-  new (text: string, options: Font): Container & Text & { style: Font };
+  new (text: string, options: Font): Container & Text & { style: Font; resolution?: number };
 }
 declare interface Rectangle {}
 declare interface Graphics extends Container {
@@ -56,7 +56,7 @@ declare interface Graphics extends Container {
   drawCircle(x: number, y: number, rad: number): void;
   interactive: boolean;
   lineStyle(width?: number, color?: number, alpha?: number, alignment?: number): void;
-  drawRect(arg0: number, arg1: number, arg2: number, arg3: number): void;
+  drawRect(arg0: number, arg1: number, arg2: number, arg3: number, arg4?: number): void;
   drawPolygon(pts: { x: number; y: number }[]): void;
   hitArea: Rectangle;
 }
