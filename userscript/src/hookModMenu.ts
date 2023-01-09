@@ -162,7 +162,7 @@ export default function hookModMenu() {
       this.container.addChild(this.closeButton);
       this.container.x = 0.5 * -this.width;
 
-      this.marginLeft += 5;
+      this.marginLeft += 12;
       this.marginTop = this.titleText.height * 4;
 
       this.modContainer.x = this.marginLeft;
@@ -186,7 +186,7 @@ export default function hookModMenu() {
     constructModItem(mod: Mod) {
       const container = new PIXI.Graphics();
       container.beginFill(config.Colors.white, 0.1);
-      container.drawRect(0, 0, 650, 50);
+      container.drawRoundedRect(0, 0, 630, 50, 4);
       container.endFill();
 
       const label = new PIXI.Text(mod.name, FontStyle.ProfileTabText);

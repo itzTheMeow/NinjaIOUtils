@@ -4,7 +4,8 @@
   "description": "The userscript for NinjaIOUtils.",
   "main": "build.mjs",
   "scripts": {
-    "start": "node ."
+    "start": "node .",
+    "dev": "node . --dev"
   },
   "author": "Meow",
   "license": "ISC",
