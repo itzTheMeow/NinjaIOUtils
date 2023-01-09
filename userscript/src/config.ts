@@ -3,13 +3,14 @@ export default {
   api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
   Colors: {
+    black: 0x000000,
     dotGreen: 65280,
     dotGrey: 8947848,
     dotOrange: 16757012,
     green: 8978312,
     grey: 16777215,
     red: 12603201,
-    white: 13421772,
+    white: 0xcccccc,
     yellow: 16763904,
   },
   MapIDs: {

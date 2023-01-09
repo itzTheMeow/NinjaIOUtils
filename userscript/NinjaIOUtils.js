@@ -133,6 +133,7 @@
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     Colors: {
+      black: 0,
       dotGreen: 65280,
       dotGrey: 8947848,
       dotOrange: 16757012,
@@ -322,10 +323,6 @@
       closeButton = new ImgButton();
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
       modContainer = new PIXI.Container();
-      modItemContainer = new PIXI.Container();
-      modItemTitle = new PIXI.Text("Mod Title", { ...FontStyle.MediumOrangeText, fontSize: 32 });
-      modItemAuthor = new PIXI.Text("By Author", FontStyle.ButtonTitle);
-      modItemDescription = new PIXI.Text("Long description text.", FontStyle.SmallMenuTextWhite);
       constructor() {
         super();
         this.background.x = 0;
@@ -351,45 +348,50 @@
         this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
         this.container.addChild(this.closeButton);
         this.container.x = 0.5 * -this.width;
-        this.marginLeft += 12;
+        this.marginLeft += 20;
         this.marginTop = this.titleText.height * 4;
         this.modContainer.x = this.marginLeft;
         this.modContainer.y = this.marginTop;
         this.container.addChild(this.modContainer);
-        this.modItemContainer.x = this.marginLeft;
-        this.modItemContainer.y = this.marginTop;
-        this.modItemContainer.visible = false;
-        this.modItemContainer.x = this.marginLeft;
-        this.container.addChild(this.modItemContainer);
-        this.container.addChild(this.modItemTitle);
-        this.container.addChild(this.modItemAuthor);
-        this.container.addChild(this.modItemDescription);
         this.reposition();
       }
       reposition() {
         this.marginTop = 0;
       }
       constructModItem(mod) {
-        const container = new PIXI.Graphics();
+        const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
         container.beginFill(config_default.Colors.white, 0.1);
-        container.drawRoundedRect(0, 0, 630, 50, 4);
+        container.drawRoundedRect(0, 0, 620, 110, 6);
         container.endFill();
-        const label = new PIXI.Text(mod.name, FontStyle.ProfileTabText);
+        let pl = 0, pt = 0;
+        const icon = new PIXI.Graphics();
+        icon.beginFill(config_default.Colors.black, 0.2);
+        icon.drawRoundedRect(pl += 10, pt = pl, iconSize, iconSize, 10);
+        icon.endFill();
+        const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
+        iconSprite.width = iconSprite.height = iconSize - 10;
+        iconSprite.anchor.x = iconSprite.anchor.y = 0.5;
+        iconSprite.x = iconSize / 2 + pl;
+        iconSprite.y = iconSize / 2 + pt;
+        icon.addChild(iconSprite);
+        container.addChild(icon);
+        const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
+        label.x = pl += iconSize + 2;
+        label.y = pt += 6;
         container.addChild(label);
+        const authorLabel = new PIXI.Text(mod.details.author == "builtin" ? "(Built-In)" : "by " + mod.details.author, { ...FontStyle.SmallMenuTextYellow, fontSize: 20 });
+        authorLabel.x = pl + label.width + 4;
+        authorLabel.y = pt + 5;
+        container.addChild(authorLabel);
+        const description = new PIXI.Text((mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(), { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 });
+        description.x = pl = 12;
+        description.y = pt += iconSize - 2;
+        container.addChild(description);
         return container;
       }
       show() {
-        this.modContainer.visible = true;
-        this.modItemContainer.visible = false;
         this.modContainer.removeChildren();
         Ninja_default.mods.forEach((m) => this.modContainer.addChild(this.constructModItem(m)));
-      }
-      showMod(mod) {
-        this.modItemContainer.visible = true;
-        this.modContainer.visible = false;
-        this.modItemTitle.text = mod.name + (mod.details.core ? " (Built-In)" : "");
-        this.modItemDescription.text = mod.details.description;
-        this.modItemAuthor.text = `By ${mod.details.author}`;
       }
     }
     const modsMenu = new ModsMenu();
