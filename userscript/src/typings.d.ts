@@ -32,5 +32,5 @@ declare var SettingsPanel: {
 };
 
 export declare var app: Lib.App;
-export declare var App: typeof Lib.App & { Layer: Lib.Layer };
+export declare var App: typeof Lib.App;
 export declare var Layer: typeof Lib.Layer;
