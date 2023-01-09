@@ -1,8 +1,7 @@
 {
-  "name": "Ninja.io Utils",
+  "name": "NinjaIOUtils",
   "namespace": "https://itsmeow.cat",
-  "version": "0.22",
-  "description": "Some small QOL improvements to ninja.io!",
+  "description": "A modloader for Ninja.io.",
   "author": "Meow",
   "match": "https://ninja.io/*",
   "_match": "https://ninja.io",
