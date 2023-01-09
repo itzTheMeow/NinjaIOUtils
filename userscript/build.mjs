@@ -1,5 +1,5 @@
-import fs, { readFileSync } from "fs";
 import { buildSync } from "esbuild";
+import fs, { readFileSync } from "fs";
 import meta from "./meta.json" assert { type: "json" };
 
 const ver = readFileSync("../version.json").toString().replace(/"/g, "").trim();
@@ -9,6 +9,7 @@ buildSync({
   bundle: true,
   entryPoints: ["src/index.ts"],
   outfile: scriptPath,
+  external: ["lib"],
 });
 
 meta.version = ver;

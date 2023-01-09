@@ -1,8 +1,8 @@
+import { FontStyle, MemberMenuButton } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
-import { PIXI } from "./pixi";
-import { app, App, Feature, FontStyle, ImgButton, MemberMenuButton } from "./typings";
+import { App, Layer } from "./typings";
 
 export default function hookModMenu() {
   const menu = App.Layer.memberMenu;
@@ -11,10 +11,10 @@ export default function hookModMenu() {
   menu.clanButton.parent.removeChild(menu.clanButton);
 
   let menuClanState: 0 | 1 | 2 = 0;
-  menu.memberclanButton = new MemberMenuButton("", 16763904, 18);
-  menu.memberclanButton.x = 0;
-  menu.memberclanButton.y = menu.rankingButton.y + 70;
-  menu.memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+  const memberclanButton = new MemberMenuButton("", 16763904, 18);
+  memberclanButton.x = 0;
+  memberclanButton.y = menu.rankingButton.y + 70;
+  memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
     if (!["member", "clan"].includes(App.Layer.memberMenu.mode)) menuClanState = 0;
     menuClanState++;
     if (menuClanState == 3) menuClanState = 0;
@@ -35,57 +35,57 @@ export default function hookModMenu() {
   });
   menu.memberButton.setActive = (n) => {
     if (menuClanState == 1 || (!menuClanState && !n)) {
-      menu.memberclanButton.setActive(n);
+      memberclanButton.setActive(n);
       if (!n) title1.style.fill = FontStyle.MenuTitle.fill;
     }
   };
   menu.clanButton.setActive = (n) => {
     if (menuClanState == 2 || (!menuClanState && !n)) {
-      menu.memberclanButton.setActive(n);
+      memberclanButton.setActive(n);
       if (!n) title2.style.fill = FontStyle.MenuTitle.fill;
     }
   };
 
   const ico1 = new PIXI.Sprite(App.CombinedTextures["menu_icon_players"]);
-  ico1.x = 0.25 * menu.memberclanButton.rectWidth;
-  menu.memberclanButton.addChild(ico1);
+  ico1.x = 0.25 * memberclanButton.rectWidth;
+  memberclanButton.addChild(ico1);
   const ico2 = new PIXI.Sprite(App.CombinedTextures["menu_icon_clans"]);
-  ico2.x = 0.75 * menu.memberclanButton.rectWidth;
-  menu.memberclanButton.addChild(ico2);
+  ico2.x = 0.75 * memberclanButton.rectWidth;
+  memberclanButton.addChild(ico2);
   ico1.scale.x = ico1.scale.y = ico2.scale.x = ico2.scale.y = 0.25;
   ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
   ico1.tint = ico2.tint = config.Colors.white;
-  ico1.y = ico2.y = 0.37 * menu.memberclanButton.rectHeight;
+  ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
   const icosep = new PIXI.Text("/", {
     ...FontStyle.MenuTitle,
     fontSize: 16,
     fill: config.Colors.white,
   });
-  icosep.x = 0.5 * menu.memberclanButton.rectWidth;
-  icosep.y = 0.37 * menu.memberclanButton.rectHeight;
+  icosep.x = 0.5 * memberclanButton.rectWidth;
+  icosep.y = 0.37 * memberclanButton.rectHeight;
   icosep.anchor.x = icosep.anchor.y = 0.5;
-  menu.memberclanButton.addChild(icosep);
+  memberclanButton.addChild(icosep);
 
   const title1 = new PIXI.Text("Players", {
     ...FontStyle.MenuTitle,
     fontSize: 10,
   });
-  title1.x = 0.25 * menu.memberclanButton.rectWidth;
-  menu.memberclanButton.addChild(title1);
+  title1.x = 0.25 * memberclanButton.rectWidth;
+  memberclanButton.addChild(title1);
   const title2 = new PIXI.Text("Clans", {
     ...FontStyle.MenuTitle,
     fontSize: 14,
   });
-  title2.x = 0.75 * menu.memberclanButton.rectWidth;
-  menu.memberclanButton.addChild(title2);
+  title2.x = 0.75 * memberclanButton.rectWidth;
+  memberclanButton.addChild(title2);
   const titlesep = new PIXI.Text("/", {
     ...FontStyle.MenuTitle,
     fontSize: 14,
     fill: config.Colors.white,
   });
-  titlesep.x = 0.5 * menu.memberclanButton.rectWidth;
-  menu.memberclanButton.addChild(titlesep);
-  title1.y = title2.y = titlesep.y = 0.7 * menu.memberclanButton.rectHeight;
+  titlesep.x = 0.5 * memberclanButton.rectWidth;
+  memberclanButton.addChild(titlesep);
+  title1.y = title2.y = titlesep.y = 0.7 * memberclanButton.rectHeight;
   title1.anchor.x =
     title1.anchor.y =
     title2.anchor.x =
@@ -94,7 +94,7 @@ export default function hookModMenu() {
     titlesep.anchor.y =
       0.5;
   //title1.tint = title2.tint = config.Colors.yellow;
-  menu.container.addChild(menu.memberclanButton);
+  menu.container.addChild(memberclanButton);
 
   const setActive = menu.clanButton.setActive.bind(menu.clanButton);
   menu.clanButton.setActive = (n) => {
