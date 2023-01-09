@@ -1,36 +1,81 @@
 import type * as Lib from "lib";
-import type * as PixiJS from "pixi.js/lib/index";
+import type * as PixiJS from "pixi.js";
+
 export var PIXI: typeof PixiJS;
-
-type func = (...args: any) => any;
-
-interface EventDispatcher {
-  addListener(event: string, callback: func): void;
-  hasListener(event: string, callback: func): boolean;
-  removeListener(event: string, callback: func): void;
-  on(event: string, callback: func): void;
-  emit(event: string, ...args: any[]): void;
-  _events: {
-    mousedown: any[];
-  };
-}
-declare var EventDispatcher: EventDispatcher & {
-  new (): EventDispatcher;
-};
-
-declare var SettingsPanel: {
-  new (w: number, h: number): any;
-  OPEN_TAB: string;
-  Tabs: {
-    GRAPHICS: string;
-    CONTROLS: string;
-    SOUND: string;
-    UTIL: string;
-    TEX: string;
-    HKM: string;
-  };
-};
-
 export declare var app: Lib.App;
 export declare var App: typeof Lib.App;
 export declare var Layer: typeof Lib.Layer;
+
+type Font = Partial<PixiJS.ITextStyle>;
+export declare var FontStyle: {
+  LargeDefault: Font;
+  MediumBlack: Font;
+  LeaderboardColumn: Font;
+  LeaderboardData: Font;
+  LeaderboardFieldTitle: Font;
+  SmallMenuTextOrange: Font;
+  SmallMenuTextWhite: Font;
+  SmallMenuTextOrange2: Font;
+  LeaderboardPointText: Font;
+  MediumOrangeText: Font;
+  SmallRankingTextOrange: Font;
+  SmallClanBrowserText: Font;
+  SmallMenuTextOrange3: Font;
+  SmallMenuTextOrange4: Font;
+  SmallMenuTextWhite2: Font;
+  MediumMenuTextOrange: Font;
+  ServerListTitle: Font;
+  MenuTitle: Font;
+  SmallMenuTextYellow: Font;
+  SmallLabelText: Font;
+  MediumMenuTextOrange2: Font;
+  SmallLabelText2: Font;
+  SmallMenuTextOrange5: Font;
+  LeaderboardOptionsText: Font;
+  DropdownItemText: Font;
+  ButtonTitle: Font;
+  ChatMessage: Font;
+  MenuData1: Font;
+  InputFieldTitle1: Font;
+  ActivityText: Font;
+  CreatedText: Font;
+  OverviewTitle: Font;
+  LeaderboardTitle: Font;
+  WeaponMenuTitle: Font;
+  InputText: Font;
+  CustomizationItemTextSmall: Font;
+  SmallLabelText3: Font;
+  VSText: Font;
+  VSLoadingText: Font;
+  VSRulesText: Font;
+  VSRulesTextItalic: Font;
+  VSRulesDescText: Font;
+  VSStartingText: Font;
+  VSPlayerLabelText: Font;
+  VSCounterText: Font;
+  ReadyBarText: Font;
+  HudTitleBarText: Font;
+  HudMediumTextWhite: Font;
+  SmallLabelText4: Font;
+  HudMediumTextWhite2: Font;
+  HudComboText: Font;
+  ConsoleText: Font;
+  ActionTableText: Font;
+  AmmoBarText: Font;
+  InputFieldText: Font;
+  WeaponItem: Font;
+  ChatBubbleText: Font;
+  SocialDropdownText: Font;
+  SocialMenuItem: Font;
+  RankingItem: Font;
+  ProfileTabText: Font;
+  CustomizationItem: Font;
+  ClanTitle: Font;
+  PVPResultTitle: Font;
+  PVPResultTitle2: Font;
+  PVPResultData: Font;
+  PVPResultDataRank: Font;
+  PVPResultDataPromo: Font;
+  PVPVSTitle: Font;
+  GameoverCountdown: Font;
+};

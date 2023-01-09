@@ -1,8 +1,8 @@
-import { FontStyle, MemberMenuButton } from "lib";
+import { Feature, ImgButton, MemberMenuButton } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
-import { App, Layer } from "./typings";
+import { app, App, FontStyle, Layer, PIXI } from "./typings";
 
 export default function hookModMenu() {
   const menu = App.Layer.memberMenu;
@@ -93,38 +93,37 @@ export default function hookModMenu() {
     titlesep.anchor.x =
     titlesep.anchor.y =
       0.5;
-  //title1.tint = title2.tint = config.Colors.yellow;
   menu.container.addChild(memberclanButton);
 
   const setActive = menu.clanButton.setActive.bind(menu.clanButton);
   menu.clanButton.setActive = (n) => {
     setActive(n);
-    if (!n) menu.utilsButton.setActive(0);
+    if (!n) utilsButton.setActive(false);
   };
-  menu.utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
-  menu.utilsButton.x = 0;
-  menu.utilsButton.y = menu.memberButton.y + 70;
-  menu.utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
-    if (menu.utilsButton.active) {
-      menu.utilsButton.setActive(0);
+  const utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
+  utilsButton.x = 0;
+  utilsButton.y = menu.memberButton.y + 70;
+  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+    if (utilsButton.active) {
+      utilsButton.setActive(false);
       menu.emit(Layer.Events.MENU_ACCESS);
       return;
     }
     menu.emit(Layer.Events.MENU_ACCESS);
-    menu.playButton.setActive(0);
-    menu.utilsButton.setActive(1);
-    App.Layer.modsMenu.show();
-    App.Layer.addChild(App.Layer.modsMenu);
+    menu.playButton.setActive(false);
+    utilsButton.setActive(true);
+    modsMenu.show();
+    App.Layer.addChild(modsMenu);
     App.Layer.emit(Layer.Events.HIDE_MENU);
     app.onResize();
   });
-  menu.utilsButton.icon.scale.x = menu.utilsButton.icon.scale.y = 0.7;
-  menu.container.addChild(menu.utilsButton);
+  utilsButton.icon.scale.x = utilsButton.icon.scale.y = 0.7;
+  menu.container.addChild(utilsButton);
 
   class ModsMenu extends Feature {
     ox = 40;
     oy = 20;
-    off = 0;
+    marginTop = 0;
     marginLeft = 0;
 
     background = new PIXI.Graphics();
@@ -143,10 +142,10 @@ export default function hookModMenu() {
       this.background.y = 40;
       this.background.lineStyle(1, 16777215, 0.1, 0);
       this.background.beginFill(3355443, 1);
-      this.background.drawRect(0, 0, 660, 524, 10);
+      this.background.drawRect(0, 0, 660, 524);
       this.background.endFill();
       this.background.beginFill(0, 0.3);
-      this.background.drawRect(10, 10, 640, 504, 10);
+      this.background.drawRect(10, 10, 640, 504);
       this.background.endFill();
       this.background.drawRect(15, 42, 630, 2);
       this.container.addChild(this.background);
@@ -163,15 +162,17 @@ export default function hookModMenu() {
       this.container.addChild(this.closeButton);
       this.container.x = 0.5 * -this.width;
 
-      this.marginLeft += 6;
-      this.off = this.titleText.height * 4;
+      this.marginLeft += 5;
+      this.marginTop = this.titleText.height * 4;
 
       this.modContainer.x = this.marginLeft;
-      this.modContainer.y = this.off;
+      this.modContainer.y = this.marginTop;
       this.container.addChild(this.modContainer);
+
       this.modItemContainer.x = this.marginLeft;
-      this.modItemContainer.y = this.off;
+      this.modItemContainer.y = this.marginTop;
       this.modItemContainer.visible = false;
+      this.modItemContainer.x = this.marginLeft;
       this.container.addChild(this.modItemContainer);
       this.container.addChild(this.modItemTitle);
       this.container.addChild(this.modItemAuthor);
@@ -180,12 +181,12 @@ export default function hookModMenu() {
       this.reposition();
     }
     reposition() {
-      this.off = 0;
+      this.marginTop = 0;
     }
     constructModItem(mod: Mod) {
       const container = new PIXI.Graphics();
       container.beginFill(config.Colors.white, 0.1);
-      container.drawRect();
+      container.drawRect(0, 0, 650, 50);
       container.endFill();
 
       const label = new PIXI.Text(mod.name, FontStyle.ProfileTabText);
@@ -208,7 +209,8 @@ export default function hookModMenu() {
     }
   }
 
-  App.Layer.mainMenuHides.push((App.Layer.modsMenu = new ModsMenu()));
+  const modsMenu = new ModsMenu();
+  App.Layer.mainMenuHides.push(<any>modsMenu);
   [
     "loginMenu",
     "memberBrowserMenu",
@@ -226,6 +228,6 @@ export default function hookModMenu() {
     "renameMenu",
     "logoutMenu",
     "guestProfileMenu",
-  ].forEach((e) => App.Layer[e].hides.push(App.Layer.modsMenu));
-  App.Layer.features.push(App.Layer.modsMenu);
+  ].forEach((e) => App.Layer[e].hides.push(modsMenu));
+  App.Layer.features.push(<any>modsMenu);
 }
