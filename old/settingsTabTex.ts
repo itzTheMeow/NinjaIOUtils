@@ -1,8 +1,8 @@
 import localForage from "localforage";
-import { TexturePack } from "../../../shared";
-import config from "../config";
-import getScrollbar from "../Scrollbar";
-import { saveSettings, SETTINGS } from "./settings";
+import { TexturePack } from "../shared";
+import config from "../userscript/src/config";
+import getScrollbar from "./src/Scrollbar";
+import { saveSettings, SETTINGS } from "./src/settings/settings";
 
 export default function getTexTab() {
   const maxPacks = 6;

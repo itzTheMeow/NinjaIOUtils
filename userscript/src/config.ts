@@ -15,15 +15,6 @@ export default {
         return "unknown";
       }
     })(),
-  PacketTypeMap: {
-    systemMessage: "w",
-    chatSend: "x",
-    findMatch: "h",
-    joinMatch: "j",
-    data: "d",
-    data2: "p",
-    joinedMessage: "i",
-  },
   Colors: {
     dotGreen: 65280,
     dotGrey: 8947848,
