@@ -158,6 +158,39 @@ declare module "lib" {
             }
         }
     }
+    export class SettingsPanel extends PIXI.Container<PIXI.DisplayObject> {
+        constructor(a: any, b: any);
+        selectedTab: string;
+        settings: any;
+        panelWidth: any;
+        panelHeight: any;
+        background: PIXI.Graphics;
+        applyButton: Button;
+        closeButton: ImgButton;
+        controlsTab: any;
+        controlsTabButton: PIXI.Text;
+        controlsTabButtonBackground: PIXI.Graphics;
+        graphicsTab: any;
+        graphicsTabButton: PIXI.Text;
+        graphicsTabButtonBackground: PIXI.Graphics;
+        soundTab: any;
+        soundTabButton: PIXI.Text;
+        soundTabButtonBackground: PIXI.Graphics;
+        show(): void;
+        displayTab(a: any): void;
+        onApplyButtonReleased(): void;
+        applySettings(a: any): void;
+        onCloseButtonReleased(): void;
+    }
+    export namespace SettingsPanel {
+        namespace Tabs {
+            const GRAPHICS: string;
+            const CONTROLS: string;
+            const SOUND: string;
+            const TEXTURES: string;
+        }
+        const CLOSE: string;
+    }
     export class Feature extends PIXI.Graphics {
         constructor();
         hides: any[];
@@ -1648,11 +1681,12 @@ declare module "lib" {
         loadConversation(a: any): void;
     }
     export namespace ChatWindow {
-        const Conversations: {};
-        const CLOSE: string;
-        function PutMessage(a: any, b: any): void;
-        function UpdateConversations(a: any): void;
-        const MaxMessages: number;
+        export const Conversations: {};
+        const CLOSE_1: string;
+        export { CLOSE_1 as CLOSE };
+        export function PutMessage(a: any, b: any): void;
+        export function UpdateConversations(a: any): void;
+        export const MaxMessages: number;
     }
     export class ImgButton extends PIXI.Sprite {
         constructor(a?: string, b?: boolean);
@@ -3364,6 +3398,323 @@ declare module "lib" {
      * @type {EventDispatcher & typeof _UserInput}
      */
     export const UserInput: EventDispatcher & typeof _UserInput;
+    export const AudioFolder: string;
+    export namespace AudioEffects {
+        namespace Victory {
+            const audio: Howl;
+        }
+        namespace Match {
+            const audio_1: Howl;
+            export { audio_1 as audio };
+        }
+        namespace ButtonHover {
+            const audio_2: Howl;
+            export { audio_2 as audio };
+        }
+        namespace ButtonClick {
+            const audio_3: Howl;
+            export { audio_3 as audio };
+        }
+        namespace SMGFire {
+            const audio_4: Howl;
+            export { audio_4 as audio };
+        }
+        namespace MAC10Fire {
+            const audio_5: Howl;
+            export { audio_5 as audio };
+        }
+        namespace ShotgunFire {
+            const audio_6: Howl;
+            export { audio_6 as audio };
+        }
+        namespace ShotgunPump {
+            const audio_7: Howl;
+            export { audio_7 as audio };
+        }
+        namespace BarrettFire {
+            const audio_8: Howl;
+            export { audio_8 as audio };
+        }
+        namespace RifleFire {
+            const audio_9: Howl;
+            export { audio_9 as audio };
+        }
+        namespace AK47Fire {
+            const audio_10: Howl;
+            export { audio_10 as audio };
+        }
+        namespace BowFire {
+            const audio_11: Howl;
+            export { audio_11 as audio };
+        }
+        namespace CarbineFire {
+            const audio_12: Howl;
+            export { audio_12 as audio };
+        }
+        namespace ShockrifleFire {
+            const audio_13: Howl;
+            export { audio_13 as audio };
+        }
+        namespace ShockrifleRemove {
+            const audio_14: Howl;
+            export { audio_14 as audio };
+        }
+        namespace RLRocketFire {
+            const audio_15: Howl;
+            export { audio_15 as audio };
+        }
+        namespace DeagleFire {
+            const audio_16: Howl;
+            export { audio_16 as audio };
+        }
+        namespace UziFire {
+            const audio_17: Howl;
+            export { audio_17 as audio };
+        }
+        namespace M60Fire {
+            const audio_18: Howl;
+            export { audio_18 as audio };
+        }
+        namespace FlamethrowerFire {
+            const audio_19: Howl;
+            export { audio_19 as audio };
+            export const single: boolean;
+            export const sub_start: number;
+            export const sub_end: number;
+        }
+        namespace Boomerang {
+            const audio_20: Howl;
+            export { audio_20 as audio };
+            const single_1: boolean;
+            export { single_1 as single };
+            const sub_start_1: number;
+            export { sub_start_1 as sub_start };
+            const sub_end_1: number;
+            export { sub_end_1 as sub_end };
+        }
+        namespace BoomerangImpact {
+            const audio_21: Howl;
+            export { audio_21 as audio };
+        }
+        namespace BoomerangSlice {
+            const audio_22: Howl;
+            export { audio_22 as audio };
+        }
+        namespace EnergyJetFeet {
+            const audio_23: Howl;
+            export { audio_23 as audio };
+            const single_2: boolean;
+            export { single_2 as single };
+            const sub_start_2: number;
+            export { sub_start_2 as sub_start };
+            const sub_end_2: number;
+            export { sub_end_2 as sub_end };
+        }
+        const ArrowImpact: {
+            audio: Howl;
+        }[];
+        const RLImpact: {
+            audio: Howl;
+        }[];
+        namespace X75Fire {
+            const audio_24: Howl;
+            export { audio_24 as audio };
+        }
+        const X75Impact: {
+            audio: Howl;
+        }[];
+        namespace Walk {
+            const audio_25: Howl;
+            export { audio_25 as audio };
+        }
+        namespace Flip {
+            const audio_26: Howl;
+            export { audio_26 as audio };
+        }
+        namespace Tap {
+            const audio_27: Howl;
+            export { audio_27 as audio };
+            export const delta: number;
+        }
+        namespace ChainsawNeutral {
+            const audio_28: Howl;
+            export { audio_28 as audio };
+        }
+        namespace ChainsawEngaged {
+            const audio_29: Howl;
+            export { audio_29 as audio };
+            const single_3: boolean;
+            export { single_3 as single };
+            const sub_start_3: number;
+            export { sub_start_3 as sub_start };
+            const sub_end_3: number;
+            export { sub_end_3 as sub_end };
+        }
+        namespace MinigunEngaged {
+            const audio_30: Howl;
+            export { audio_30 as audio };
+            const single_4: boolean;
+            export { single_4 as single };
+            const sub_start_4: number;
+            export { sub_start_4 as sub_start };
+            const sub_end_4: number;
+            export { sub_end_4 as sub_end };
+            export const immediate: boolean;
+        }
+        namespace Fly {
+            const audio_31: Howl;
+            export { audio_31 as audio };
+            const single_5: boolean;
+            export { single_5 as single };
+            const sub_start_5: number;
+            export { sub_start_5 as sub_start };
+            const sub_end_5: number;
+            export { sub_end_5 as sub_end };
+        }
+        const ExplosionCluster: {
+            audio: Howl;
+        }[];
+        const ExplosionNade: {
+            audio: Howl;
+        }[];
+        const ExplosionNadeLauncher: {
+            audio: Howl;
+        }[];
+        namespace ShurikenDrop {
+            const audio_32: Howl;
+            export { audio_32 as audio };
+            const delta_1: number;
+            export { delta_1 as delta };
+            const single_6: boolean;
+            export { single_6 as single };
+        }
+        namespace LawLaunch {
+            const audio_33: Howl;
+            export { audio_33 as audio };
+        }
+        namespace NadeLauncher {
+            const audio_34: Howl;
+            export { audio_34 as audio };
+        }
+        namespace Reload {
+            const audio_35: Howl;
+            export { audio_35 as audio };
+        }
+        const AmmoPickup: {
+            audio: Howl;
+        }[];
+        namespace RicochetTiny {
+            const audio_36: Howl;
+            export { audio_36 as audio };
+        }
+        const Thud: {
+            audio: Howl;
+            delta: number;
+        }[];
+        namespace LightThud {
+            const audio_37: Howl;
+            export { audio_37 as audio };
+            const delta_2: number;
+            export { delta_2 as delta };
+        }
+        namespace HeavyThud {
+            const audio_38: Howl;
+            export { audio_38 as audio };
+            const delta_3: number;
+            export { delta_3 as delta };
+        }
+        namespace LaserGunShot1 {
+            const audio_39: Howl;
+            export { audio_39 as audio };
+        }
+        const LaserGunImpact: {
+            audio: Howl;
+        }[];
+        namespace LaserImpact1 {
+            const audio_40: Howl;
+            export { audio_40 as audio };
+        }
+        namespace PulseGunShot {
+            const audio_41: Howl;
+            export { audio_41 as audio };
+        }
+        namespace BotZap {
+            const audio_42: Howl;
+            export { audio_42 as audio };
+        }
+        namespace BotDeath {
+            const audio_43: Howl;
+            export { audio_43 as audio };
+        }
+        namespace LinkGunEngaged {
+            const audio_44: Howl;
+            export { audio_44 as audio };
+            const single_7: boolean;
+            export { single_7 as single };
+            const sub_start_6: number;
+            export { sub_start_6 as sub_start };
+            const sub_end_6: number;
+            export { sub_end_6 as sub_end };
+        }
+        namespace PulseGunImpact {
+            const audio_45: Howl;
+            export { audio_45 as audio };
+        }
+        const Rico: {
+            audio: Howl;
+        }[];
+        const BodyImpact: {
+            audio: Howl;
+        }[];
+        const Throw: {
+            audio: Howl;
+        }[];
+        const WaterSplash: {
+            audio: Howl;
+        }[];
+        const SnowballImpact: {
+            audio: Howl;
+        }[];
+        const GoldPickup: {
+            audio: Howl;
+        }[];
+        namespace GoldDrop {
+            const audio_46: Howl;
+            export { audio_46 as audio };
+        }
+        namespace Objective {
+            const audio_47: Howl;
+            export { audio_47 as audio };
+        }
+        namespace GrabObjective {
+            const audio_48: Howl;
+            export { audio_48 as audio };
+        }
+        namespace Powerup {
+            const audio_49: Howl;
+            export { audio_49 as audio };
+        }
+        namespace Teleport {
+            const audio_50: Howl;
+            export { audio_50 as audio };
+        }
+        namespace Spawn {
+            const audio_51: Howl;
+            export { audio_51 as audio };
+        }
+        namespace Jump {
+            const audio_52: Howl;
+            export { audio_52 as audio };
+        }
+        namespace ItemSpawn {
+            const audio_53: Howl;
+            export { audio_53 as audio };
+        }
+        namespace BallBounce {
+            const audio_54: Howl;
+            export { audio_54 as audio };
+        }
+    }
     import * as PIXI from "pixi.js";
     function User(): void;
     class User {
@@ -3386,7 +3737,7 @@ declare module "lib" {
         backgroundImage: PIXI.Graphics;
         backgroundGraphics: PIXI.Graphics;
         settingsBackgroundGraphics: PIXI.Graphics;
-        settingsPanel: any;
+        settingsPanel: SettingsPanel;
         backgroundNewsGraphics: PIXI.Graphics;
         snowman: PIXI.Sprite;
         poseImage: PIXI.Sprite;
@@ -3488,5 +3839,6 @@ declare module "lib" {
         const WHEEL: string;
         const ExclusiveWheel: any;
     }
+    import { Howl } from "howler";
     export {};
 }

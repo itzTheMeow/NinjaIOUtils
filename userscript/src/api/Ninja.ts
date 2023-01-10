@@ -9,8 +9,10 @@ export type Listener = () => any;
 export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
+    texturePack: string;
   }>(config.settingsKey, {
     enabledMods: [],
+    texturePack: "",
   });
 
   constructor() {}

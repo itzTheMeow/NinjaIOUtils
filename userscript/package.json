@@ -10,6 +10,7 @@
   "author": "Meow",
   "license": "ISC",
   "dependencies": {
+    "@types/howler": "^2.2.7",
     "@types/vec2": "^1.6.1",
     "esbuild": "^0.14.49",
     "localforage": "^1.10.0",
