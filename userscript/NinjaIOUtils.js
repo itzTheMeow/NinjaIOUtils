@@ -2804,6 +2804,11 @@
         }
         return stepper(...d);
       };
+      App.Stats.realSetPing = App.Stats.setPing;
+      App.Stats.setPing = function(ping) {
+        ninja.serverLatency = ping;
+        return App.Stats.realSetPing(ping);
+      };
       hookModMenu();
       this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
       this.readyListeners.forEach((l) => l());
