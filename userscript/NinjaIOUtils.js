@@ -45,93 +45,13 @@
 
   // src/api/Ninja.ts
   
-  var Ninja_default = new class Ninja {
-    constructor() {
-    }
-    ready = false;
-    get GameVersion() {
-      return document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
-        try {
-          return App.ClientVersion;
-        } catch {
-          return "unknown";
-        }
-      })();
-    }
-    mods = [];
-    registerMod(mod) {
-      this.mods.push(mod);
-      if (mod.details.core)
-        this.loadMod(mod.id);
-    }
-    loadMod(id) {
-      const mod = this.mods.find((m) => m.id == id);
-      if (!mod || mod.loaded)
-        return;
-      if (this.ready && mod.loadon == "appstart")
-        mod.load();
-      else if (mod.loadon == "pagestart")
-        mod.load();
-    }
-    log(text, color) {
-      if (this.ready)
-        App.Console.log(text, color);
-      else
-        console.log(text);
-    }
-  }();
-
-  // src/coremods/index.ts
-  var coremods_exports = {};
-  __export(coremods_exports, {
-    ShareURLMod: () => ShareURLMod
-  });
-
-  // src/api/Mod.ts
-  var Mod = class {
-    constructor(details) {
-      this.details = details;
-    }
-    get id() {
-      return this.details.id;
-    }
-    get name() {
-      return this.details.name;
-    }
-    loaded = false;
-    loadon = "appstart";
-    load() {
-      this.log(`Loaded successfully!`);
-      this.loaded = true;
-    }
-    log(text, color) {
-      Ninja_default.log(`[${this.id}] ${text}`, color);
-    }
-  };
-
-  // src/coremods/shareURLs.ts
-  var ShareURLMod = class extends Mod {
-    constructor() {
-      super({
-        id: "ShareURL",
-        name: "Share URLs",
-        description: "Allows other players to join your game by providing a link.",
-        author: "builtin",
-        icon: "menu_icon_players",
-        core: true
-      });
-    }
-  };
-
-  // src/hookModMenu.ts
-  
-  
 
   // src/config.ts
   var config_default = {
     ver: "2.0",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
+    settingsKey: "nutils_settings",
     Colors: {
       black: 0,
       dotGreen: 65280,
@@ -203,6 +123,112 @@
       Bouncyball: 0
     }
   };
+
+  // src/api/Settings.ts
+  var Settings = class {
+    constructor(key = "niou_settings", defaults) {
+      this.key = key;
+      this.defaults = defaults;
+    }
+    getStore() {
+      return JSON.parse(localStorage.getItem(this.key) || "{}");
+    }
+    get(key) {
+      return this.getStore()[key] ?? this.defaults[key];
+    }
+    set(key, value) {
+      return localStorage.setItem(this.key, JSON.stringify({ ...this.getStore(), [key]: value }));
+    }
+  };
+
+  // src/api/Ninja.ts
+  var Ninja_default = new class Ninja {
+    settings = new Settings(config_default.settingsKey, {
+      enabledMods: []
+    });
+    constructor() {
+    }
+    ready = false;
+    get GameVersion() {
+      return document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
+        try {
+          return App.ClientVersion;
+        } catch {
+          return "unknown";
+        }
+      })();
+    }
+    mods = [];
+    registerMod(mod) {
+      this.mods.push(mod);
+      if (mod.details.core)
+        this.loadMod(mod.id);
+    }
+    loadMod(id) {
+      const mod = this.mods.find((m) => m.id == id);
+      if (!mod || mod.loaded)
+        return;
+      if (this.ready && mod.loadon == "appstart")
+        mod.load();
+      else if (mod.loadon == "pagestart")
+        mod.load();
+    }
+    log(text, color) {
+      if (this.ready)
+        App.Console.log(text, color);
+      else
+        console.log(text);
+    }
+  }();
+
+  // src/coremods/index.ts
+  var coremods_exports = {};
+  __export(coremods_exports, {
+    ShareURLMod: () => ShareURLMod
+  });
+
+  // src/api/Mod.ts
+  var Mod = class {
+    constructor(details) {
+      this.details = details;
+    }
+    get id() {
+      return this.details.id;
+    }
+    get name() {
+      return this.details.name;
+    }
+    loaded = false;
+    loadon = "appstart";
+    isInstalled() {
+      return this.details.core || Ninja_default.settings.get("enabledMods").includes(this.id);
+    }
+    load() {
+      this.log(`Loaded successfully!`);
+      this.loaded = true;
+    }
+    log(text, color) {
+      Ninja_default.log(`[${this.id}] ${text}`, color);
+    }
+  };
+
+  // src/coremods/shareURLs.ts
+  var ShareURLMod = class extends Mod {
+    constructor() {
+      super({
+        id: "ShareURL",
+        name: "Share URLs",
+        description: "Allows other players to join your game by providing a link.",
+        author: "builtin",
+        icon: "menu_icon_players",
+        core: true
+      });
+    }
+  };
+
+  // src/hookModMenu.ts
+  
+  
 
   // src/ui/scrollbar.ts
   
@@ -456,6 +482,10 @@
         this.marginTop = this.titleText.height * 3.25;
         this.filterBox.x = this.marginLeft + 6;
         this.filterBox.y = this.marginTop;
+        this.filterBox.addEventListener(Checkbox.CHANGE, () => {
+          this.showInstalled = this.filterBox.checked;
+          this.indexList();
+        });
         this.container.addChild(this.filterBox);
         this.marginTop += this.filterBox.height + 8;
         this.modContainer.x = this.marginLeft;
@@ -464,7 +494,7 @@
         this.scroller.x = this.width - this.scroller.width * 1.75;
         this.scroller.y = this.titleText.height * 3 + 2;
         this.scroller.on(Scrollbar().SCROLL, (prog) => {
-          this.scrollTop = Math.round((Ninja_default.mods.length - this.maxMods) * prog);
+          this.scrollTop = prog;
           this.indexList();
         });
         this.container.addChild(this.scroller);
@@ -512,8 +542,9 @@
         this.indexList();
       }
       indexList() {
+        const mods = Ninja_default.mods.filter((m) => this.showInstalled ? m.isInstalled() : true), top = Math.round((mods.length - this.maxMods) * this.scrollTop);
         this.modContainer.removeChildren();
-        [...Ninja_default.mods].sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(this.scrollTop, this.scrollTop + this.maxMods).forEach((m, i) => {
+        mods.sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(top, top + this.maxMods).forEach((m, i) => {
           const item = this.constructModItem(m);
           item.y = (this.modItemHeight + 8) * i;
           this.modContainer.addChild(item);

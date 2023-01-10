@@ -1,7 +1,15 @@
 import { App } from "typings";
+import config from "../config";
 import Mod from "./Mod";
+import Settings from "./Settings";
 
 export default new (class Ninja {
+  public settings = new Settings<{
+    enabledMods: string[];
+  }>(config.settingsKey, {
+    enabledMods: [],
+  });
+
   constructor() {}
 
   public ready = false;

@@ -168,6 +168,10 @@ export default function hookModMenu() {
       this.marginTop = this.titleText.height * 3.25;
       this.filterBox.x = this.marginLeft + 6;
       this.filterBox.y = this.marginTop;
+      this.filterBox.addEventListener(Checkbox.CHANGE, () => {
+        this.showInstalled = this.filterBox.checked;
+        this.indexList();
+      });
       this.container.addChild(this.filterBox);
 
       this.marginTop += this.filterBox.height + 8;
@@ -178,7 +182,7 @@ export default function hookModMenu() {
       this.scroller.x = this.width - this.scroller.width * 1.75;
       this.scroller.y = this.titleText.height * 3 + 2;
       this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
-        this.scrollTop = Math.round((Ninja.mods.length - this.maxMods) * prog);
+        this.scrollTop = prog;
         this.indexList();
       });
       this.container.addChild(this.scroller);
@@ -245,10 +249,12 @@ export default function hookModMenu() {
       this.indexList();
     }
     indexList() {
+      const mods = Ninja.mods.filter((m) => (this.showInstalled ? m.isInstalled() : true)),
+        top = Math.round((mods.length - this.maxMods) * this.scrollTop);
       this.modContainer.removeChildren();
-      [...Ninja.mods]
+      mods
         .sort((m1, m2) => (m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1))
-        .slice(this.scrollTop, this.scrollTop + this.maxMods)
+        .slice(top, top + this.maxMods)
         .forEach((m, i) => {
           const item = this.constructModItem(m);
           item.y = (this.modItemHeight + 8) * i;

@@ -2,6 +2,7 @@ export default {
   ver: "$$version",
   api: "https://nutils.itsmeow.cat",
   customDelimiter: "__custom",
+  settingsKey: "nutils_settings",
   Colors: {
     black: 0x000000,
     dotGreen: 65280,

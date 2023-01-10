@@ -27,6 +27,9 @@ export default class Mod {
 
   constructor(public readonly details: ModDetails) {}
 
+  public isInstalled() {
+    return this.details.core || Ninja.settings.get("enabledMods").includes(this.id);
+  }
   public load() {
     this.log(`Loaded successfully!`);
     this.loaded = true;
