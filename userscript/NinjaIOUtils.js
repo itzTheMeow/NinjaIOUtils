@@ -3299,6 +3299,9 @@
       menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash("clans" /* clans */));
       menu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]));
       menu.on("open_tab", (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab]));
+      menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash("login" /* login */));
+      menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash("register" /* register */));
+      menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash("recovery" /* recover */));
       const curPath = window.location.hash.substring(2).split("/");
       switch (curPath[0]) {
         case "profile" /* profile */: {
@@ -3330,6 +3333,18 @@
           const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
           if (settPath)
             app.menu.settingsPanel.displayTab(settPath[0]);
+          break;
+        }
+        case "login" /* login */: {
+          menu.emit(Layer.Events.LOGIN_ACCESS);
+          break;
+        }
+        case "register" /* register */: {
+          menu.emit(Layer.Events.REGISTER_ACCESS);
+          break;
+        }
+        case "recovery" /* recover */: {
+          menu.emit(Layer.Events.RECOVER_ACCESS);
           break;
         }
       }

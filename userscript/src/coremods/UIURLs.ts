@@ -6,12 +6,15 @@ import { clickContainer } from "../utils";
 
 enum HashPaths {
   menu = "",
-  profile = "profile",
-  shop = "shop",
-  ranks = "ranks",
-  players = "players",
   clans = "clans",
+  login = "login",
+  players = "players",
+  profile = "profile",
+  ranks = "ranks",
+  recover = "recovery",
+  register = "register",
   settings = "settings",
+  shop = "shop",
 }
 
 export class UIURLMod extends Mod {
@@ -87,6 +90,10 @@ export class UIURLMod extends Mod {
     menu.on(<any>"open_tab", (tab: string) =>
       this.switchHash(HashPaths.settings, SettingsPaths[tab])
     );
+    // Login / Signup / Recovery
+    menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash(HashPaths.login));
+    menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash(HashPaths.register));
+    menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash(HashPaths.recover));
 
     const curPath = window.location.hash.substring(2).split("/");
     switch (curPath[0]) {
@@ -121,6 +128,18 @@ export class UIURLMod extends Mod {
         menu.emit(Layer.Events.SETTINGS_ACCESS);
         const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
         if (settPath) app.menu.settingsPanel.displayTab(settPath[0]);
+        break;
+      }
+      case HashPaths.login: {
+        menu.emit(Layer.Events.LOGIN_ACCESS);
+        break;
+      }
+      case HashPaths.register: {
+        menu.emit(Layer.Events.REGISTER_ACCESS);
+        break;
+      }
+      case HashPaths.recover: {
+        menu.emit(Layer.Events.RECOVER_ACCESS);
         break;
       }
     }
