@@ -1360,7 +1360,7 @@ declare module "lib" {
         export { WEAPONS_2 as WEAPONS };
     }
     export class InputField extends PIXI.Container<PIXI.DisplayObject> {
-        constructor(a: any, b?: boolean, c?: number, d?: boolean);
+        constructor(id: any, noMouse?: boolean, fontSize?: number, bitmap?: boolean);
         id: any;
         focus: boolean;
         marker: PIXI.Text;
@@ -1389,7 +1389,7 @@ declare module "lib" {
         applyInput(a: any, b: any, c: any, d: any): void;
         preProcessInput(a: any): string;
         isFiltered(a: any): boolean;
-        setFilter(a: any, b: any): void;
+        setFilter(filter: any, inversed: any): void;
         onMouseDown(a: any): void;
         onGlobalMouseDown(a: any): void;
         setFocus(a: any): void;
@@ -1406,9 +1406,9 @@ declare module "lib" {
         markInvalid(): void;
     }
     export namespace InputField {
-        export const SUBMIT: string;
-        export const FOCUS: string;
-        const CHANGE_1: string;
+        export const SUBMIT: any;
+        export const FOCUS: any;
+        const CHANGE_1: any;
         export { CHANGE_1 as CHANGE };
     }
     export class SocialMenu extends Feature {

@@ -27,7 +27,9 @@ export default class Mod<cfg = any> {
   /** Use pagestart for the mod to be loaded before the game does. */
   public loadon: "pagestart" | "appstart" = "appstart";
   public config: Settings<cfg> | null = null;
-  public configNames: Partial<{ [key in keyof cfg]: string | [string] }>;
+  public configNames: Partial<{
+    [key in keyof cfg]: string | { name: string; priority?: boolean; maxLength?: number };
+  }>;
 
   constructor(public readonly details: ModDetails) {}
 

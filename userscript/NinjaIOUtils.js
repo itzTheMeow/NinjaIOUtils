@@ -511,32 +511,68 @@
             else
               return Array.isArray(n) ? n[0] : n;
           };
-          store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach((e) => {
-            const item = mnu.constructConfigItem(mod, typeof e[1] == "boolean" ? {
+          store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach(([key, value]) => {
+            const cfgname = mod.configNames[key], item = mnu.constructConfigItem(mod, typeof value == "boolean" ? {
               type: "bool",
-              name: name(e[0]),
-              key: e[0],
-              value: e[1]
-            } : {});
-            item.x = off;
+              name: name(key),
+              key,
+              value
+            } : typeof value == "number" ? {
+              type: "num",
+              name: name(key),
+              key,
+              value
+            } : {
+              type: "str",
+              name: name(key),
+              key,
+              value,
+              maxLength: typeof cfgname == "object" ? cfgname.maxLength || 0 : 0
+            });
+            item.y = off;
             off += item.height;
             mnu.configContainer.addChild(item);
           });
         }
-        doKeys(Object.entries(mod.configNames).filter((e) => Array.isArray(e[1])).map(([k]) => [k, mod.config.get(k)]));
-        doKeys(Object.entries(mod.configNames).filter((e) => !Array.isArray(e[1])).map(([k]) => [k, mod.config.get(k)]));
+        doKeys(Object.entries(mod.configNames).filter((e) => typeof e[1] == "object").map(([k]) => [k, mod.config.get(k)]));
+        doKeys(Object.entries(mod.configNames).filter((e) => typeof e[1] !== "object").map(([k]) => [k, mod.config.get(k)]));
       }
       constructConfigItem(mod, data) {
         const container = new PIXI.Container();
         switch (data.type) {
           case "bool": {
-            const box = new Checkbox(`config_${data.name}`, data.name, data.value);
+            const box = new Checkbox(`config_${data.key}`, data.name, data.value);
             box.addEventListener(Checkbox.CHANGE, () => {
               mod.config.set(data.key, box.checked);
               mod.configChanged(data.key);
             });
             container.addChild(box);
             break;
+          }
+          case "str":
+          case "num": {
+            const isNum = data.type == "num";
+            const label = new PIXI.Text(data.name, {
+              fontSize: 18,
+              lineHeight: 16,
+              fill: 16763904,
+              strokeThickness: 2,
+              lineJoin: "round"
+            });
+            label.y = 6;
+            container.addChild(label);
+            const input = new InputField(`config${data.key}`);
+            input.x = Math.ceil(label.width / 15) * 15 + 4;
+            input.setDimensions(370, 34);
+            input.setMaxChars(data.maxLength || Infinity);
+            input.setText(String(data.value));
+            input.setFilter(isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.", false);
+            input.addListener(InputField.CHANGE, function(d) {
+              const val = d.data.value || "";
+              mod.config.set(data.key, isNum ? Number(val) : val);
+              mod.configChanged(data.key);
+            });
+            container.addChild(input);
           }
         }
         return container;
@@ -807,8 +843,23 @@
         id: "HotkeyMessages",
         name: "Hotkey Messages",
         author: "Anna",
-        description: "Lets you send pre-defined messages in chat using hotkeys.",
+        description: "Lets you send pre-defined messages in chat using hotkeys. Use fullscreen to avoid conflics with browser hotkeys.",
         icon: "chat-ingame"
+      });
+      this.implementConfig({
+        keyA: "",
+        keyS: "",
+        keyD: "",
+        keyQ: "",
+        keyW: "",
+        keyE: ""
+      }, {
+        keyA: "ALT + A",
+        keyS: "ALT + S",
+        keyD: "ALT + D",
+        keyQ: "ALT + Q",
+        keyW: "ALT + W",
+        keyE: "ALT + E"
       });
     }
   };

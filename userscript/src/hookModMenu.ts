@@ -1,4 +1,4 @@
-import { Button, Checkbox, Feature, ImgButton, MemberMenuButton } from "lib";
+import { Button, Checkbox, Feature, ImgButton, InputField, MemberMenuButton } from "lib";
 import { app, App, FontStyle, Layer, PIXI } from "typings";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
@@ -329,49 +329,97 @@ export default function hookModMenu() {
         };
         store
           .sort((e1, e2) => (name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1))
-          .forEach((e) => {
-            const item = mnu.constructConfigItem(
-              mod,
-              typeof e[1] == "boolean"
-                ? {
-                    type: "bool",
-                    name: name(e[0]),
-                    key: e[0],
-                    value: e[1],
-                  }
-                : <any>{}
-            );
-            item.x = off;
+          .forEach(([key, value]) => {
+            const cfgname = mod.configNames[key],
+              item = mnu.constructConfigItem(
+                mod,
+                typeof value == "boolean"
+                  ? {
+                      type: "bool",
+                      name: name(key),
+                      key,
+                      value,
+                    }
+                  : typeof value == "number"
+                  ? {
+                      type: "num",
+                      name: name(key),
+                      key,
+                      value,
+                    }
+                  : {
+                      type: "str",
+                      name: name(key),
+                      key,
+                      value,
+                      maxLength: typeof cfgname == "object" ? cfgname.maxLength || 0 : 0,
+                    }
+              );
+            item.y = off;
             off += item.height;
             mnu.configContainer.addChild(item);
           });
       }
       doKeys(
         Object.entries(mod.configNames)
-          .filter((e) => Array.isArray(e[1]))
+          .filter((e) => typeof e[1] == "object")
           .map(([k]) => [k, mod.config.get(k)])
       );
       doKeys(
         Object.entries(mod.configNames)
-          .filter((e) => !Array.isArray(e[1]))
+          .filter((e) => typeof e[1] !== "object")
           .map(([k]) => [k, mod.config.get(k)])
       );
     }
 
     constructConfigItem(
       mod: Mod,
-      data: { name: string; key: string } & { type: "bool"; value: boolean }
+      data: { name: string; key: string; maxLength?: number } & (
+        | { type: "bool"; value: boolean }
+        | { type: "num"; value: number }
+        | { type: "str"; value: string }
+      )
     ) {
       const container = new PIXI.Container();
       switch (data.type) {
         case "bool": {
-          const box = new Checkbox(`config_${data.name}`, data.name, data.value);
+          const box = new Checkbox(`config_${data.key}`, data.name, data.value);
           box.addEventListener(Checkbox.CHANGE, () => {
             mod.config.set(<any>data.key, box.checked);
             mod.configChanged(<any>data.key);
           });
           container.addChild(box);
           break;
+        }
+        case "str":
+        case "num": {
+          const isNum = data.type == "num";
+          const label = new PIXI.Text(data.name, {
+            fontSize: 18,
+            lineHeight: 16,
+            fill: 16763904,
+            strokeThickness: 2,
+            lineJoin: "round",
+          });
+          label.y = 6;
+          container.addChild(label);
+          const input = new InputField(`config${data.key}`);
+          input.x = Math.ceil(label.width / 15) * 15 + 4;
+          input.setDimensions(370, 34);
+          input.setMaxChars(data.maxLength || Infinity);
+          input.setText(String(data.value));
+          input.setFilter(
+            isNum
+              ? "0123456789-"
+              : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
+            false
+          );
+          input.addListener(InputField.CHANGE, function (d) {
+            const val = d.data.value || "";
+            mod.config.set(<any>data.key, isNum ? Number(val) : val);
+            mod.configChanged(<any>data.key);
+          });
+          container.addChild(input);
         }
       }
       return container;
