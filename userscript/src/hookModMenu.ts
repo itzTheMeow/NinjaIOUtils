@@ -3,6 +3,7 @@ import { app, App, FontStyle, Layer, PIXI } from "typings";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
+import Scrollbar from "./ui/scrollbar";
 
 export default function hookModMenu() {
   const menu = App.Layer.memberMenu;
@@ -133,6 +134,7 @@ export default function hookModMenu() {
     titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
     modContainer = new PIXI.Container();
     filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
+    scroller = new (Scrollbar())(460);
 
     constructor() {
       super();
@@ -173,6 +175,14 @@ export default function hookModMenu() {
       this.modContainer.y = this.marginTop;
       this.container.addChild(this.modContainer);
 
+      this.scroller.x = this.width - this.scroller.width * 1.75;
+      this.scroller.y = this.titleText.height * 3 + 2;
+      this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
+        this.scrollTop = Math.round((Ninja.mods.length - this.maxMods) * prog);
+        this.indexList();
+      });
+      this.container.addChild(this.scroller);
+
       this.container.x = 0.5 * -this.width;
       this.reposition();
     }
@@ -184,7 +194,7 @@ export default function hookModMenu() {
         maxDesc = 150,
         container = new PIXI.Graphics();
       container.beginFill(config.Colors.white, 0.1);
-      container.drawRoundedRect(0, 0, 620, this.modItemHeight, 6);
+      container.drawRoundedRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6);
       container.endFill();
 
       let pl = 0,
@@ -229,17 +239,24 @@ export default function hookModMenu() {
     }
 
     scrollTop = 0;
+    maxMods = 3;
     show() {
-      const perPage = 3;
+      this.scroller.enableWheel();
+      this.indexList();
+    }
+    indexList() {
       this.modContainer.removeChildren();
       [...Ninja.mods]
         .sort((m1, m2) => (m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1))
-        .slice(this.scrollTop, this.scrollTop + perPage)
+        .slice(this.scrollTop, this.scrollTop + this.maxMods)
         .forEach((m, i) => {
           const item = this.constructModItem(m);
           item.y = (this.modItemHeight + 8) * i;
           this.modContainer.addChild(item);
         });
+    }
+    hide() {
+      this.scroller.disableWheel();
     }
   }
 

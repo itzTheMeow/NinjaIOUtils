@@ -3360,6 +3360,10 @@ declare module "lib" {
         export const DefaultServers: any;
         export const CombinedTextures: any;
     }
+    /**
+     * @type {EventDispatcher & typeof _UserInput}
+     */
+    export const UserInput: EventDispatcher & typeof _UserInput;
     import * as PIXI from "pixi.js";
     function User(): void;
     class User {
@@ -3471,5 +3475,18 @@ declare module "lib" {
         export { PVP_ACCESS_1 as PVP_ACCESS };
     }
     let whitelabel: string | boolean;
+    namespace _UserInput {
+        const KEY_DOWN: string;
+        const KEY_UP: string;
+        const KEY_PRESS: string;
+        const BACKSPACE: number;
+        const ENTER: number;
+        const NUMERIC: string;
+        const ALPHANUMERIC: string;
+        const ALPHA_EXT: string;
+        const CHAT_SYMBOLS: string;
+        const WHEEL: string;
+        const ExclusiveWheel: any;
+    }
     export {};
 }

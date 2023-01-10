@@ -2,7 +2,7 @@ declare module "typings" {
   import type * as Lib from "lib";
   import type * as PixiJS from "pixi.js";
 
-  export var PIXI: typeof PixiJS;
+  export declare var PIXI: typeof PixiJS;
   export declare var app: Lib.App;
   export declare var App: typeof Lib.App;
   export declare var Layer: typeof Lib.Layer;

@@ -204,6 +204,107 @@
     }
   };
 
+  // src/ui/scrollbar.ts
+  
+  
+  function Scrollbar() {
+    class _Scrollbar extends PIXI.Container {
+      constructor(h, start = 0) {
+        super();
+        this.h = h;
+        this.start = start;
+        this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
+        this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
+        this.scrollBar.endFill();
+        this.scrollBar.x = 0;
+        this.scrollBar.y = 0;
+        this.scrollBar.interactive = true;
+        this.scrollBar.alpha = 0.5;
+        this.addChild(this.scrollBar);
+        this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
+        this.scrollButton.lineStyle(1, 16777215, 0.4, 0);
+        this.scrollButton.beginFill(16777215, 0.2);
+        this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
+        this.scrollButton.endFill();
+        this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
+        this.addChild(this.scrollButton);
+        this.scrollButton.x = 2;
+        this.scrollButton.y = -3 + (this.h - 39) * this.start;
+        this.scrollBar.on("mouseover", () => {
+          this.scrollBar.alpha = 1;
+        });
+        this.scrollBar.on("mouseout", () => {
+          this.scrollBar.alpha = 0.5;
+        });
+        this.scrollBar.on("mouseupoutside", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("mousedown", (c) => {
+          c.stopPropagation();
+          this.scrolling = true;
+          this.oy = c.data.global.y / App.Scale;
+        });
+        this.scrollBar.on("mouseup", (c) => {
+          c.stopPropagation();
+          this.scrolling = false;
+        });
+        this.scrollBar.on("mousemove", (c) => {
+          this.scroll(c.data.global.y / App.Scale);
+        });
+        this.scrollBar.on("pointerup", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("pointerupoutside", () => {
+          this.scrolling = false;
+        });
+        this.scrollBar.on("pointerdown", (c) => {
+          this.scrolling = true;
+          this.oy = c.data.global.y / App.Scale;
+          this.scroll(c.data.global.y / App.Scale);
+        });
+        this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y / App.Scale));
+        this.wheelListener = (c) => {
+          this.scrolling = true;
+          this.scroll(this.oy + 0.2 * c.data.delta);
+          this.scrolling = false;
+        };
+      }
+      scrolling = false;
+      oy = 0;
+      scrollBar = new PIXI.Graphics();
+      scrollButton = new PIXI.Graphics();
+      wheelListener;
+      enableWheel() {
+        UserInput.hasListener(UserInput.WHEEL, this.wheelListener) || UserInput.addListener(UserInput.WHEEL, this.wheelListener);
+      }
+      disableWheel() {
+        UserInput.removeListener(UserInput.WHEEL, this.wheelListener);
+      }
+      scroll(a) {
+        if (this.scrolling) {
+          let b = this.scrollButton.y + (a - this.oy);
+          -3 > b ? b = -3 : b > this.h - 39 && (b = this.h - 39);
+          let c = this.h / (this.h - 39);
+          this.scrollButton.y = b;
+          this.oy = a;
+          this.emit(Scrollbar2.SCROLL, 1 / this.h * (b + 3) * c);
+        }
+      }
+      reset() {
+        this.scrollButton.y = -3 + (this.h - 39) * this.start;
+      }
+      onMouseOver() {
+        this.scrollButton.alpha = 1;
+      }
+      onMouseOut() {
+        this.scrollButton.alpha = 0.5;
+      }
+    }
+    const Scrollbar2 = _Scrollbar;
+    Scrollbar2.SCROLL = "scroll";
+    return Scrollbar2;
+  }
+
   // src/hookModMenu.ts
   function hookModMenu() {
     const menu = App.Layer.memberMenu;
@@ -326,6 +427,7 @@
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
       modContainer = new PIXI.Container();
       filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
+      scroller = new (Scrollbar())(460);
       constructor() {
         super();
         this.background.x = 0;
@@ -359,6 +461,13 @@
         this.modContainer.x = this.marginLeft;
         this.modContainer.y = this.marginTop;
         this.container.addChild(this.modContainer);
+        this.scroller.x = this.width - this.scroller.width * 1.75;
+        this.scroller.y = this.titleText.height * 3 + 2;
+        this.scroller.on(Scrollbar().SCROLL, (prog) => {
+          this.scrollTop = Math.round((Ninja_default.mods.length - this.maxMods) * prog);
+          this.indexList();
+        });
+        this.container.addChild(this.scroller);
         this.container.x = 0.5 * -this.width;
         this.reposition();
       }
@@ -368,7 +477,7 @@
       constructModItem(mod) {
         const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
         container.beginFill(config_default.Colors.white, 0.1);
-        container.drawRoundedRect(0, 0, 620, this.modItemHeight, 6);
+        container.drawRoundedRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6);
         container.endFill();
         let pl = 0, pt = 0;
         const icon = new PIXI.Graphics();
@@ -397,14 +506,21 @@
         return container;
       }
       scrollTop = 0;
+      maxMods = 3;
       show() {
-        const perPage = 3;
+        this.scroller.enableWheel();
+        this.indexList();
+      }
+      indexList() {
         this.modContainer.removeChildren();
-        [...Ninja_default.mods].sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(this.scrollTop, this.scrollTop + perPage).forEach((m, i) => {
+        [...Ninja_default.mods].sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(this.scrollTop, this.scrollTop + this.maxMods).forEach((m, i) => {
           const item = this.constructModItem(m);
           item.y = (this.modItemHeight + 8) * i;
           this.modContainer.addChild(item);
         });
+      }
+      hide() {
+        this.scroller.disableWheel();
       }
     }
     const modsMenu = new ModsMenu();
