@@ -346,10 +346,12 @@
       marginLeft = 0;
       showInstalled = false;
       modItemHeight = 110;
+      shownConfig = null;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
       titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
       modContainer = new PIXI.Container();
+      configContainer = new PIXI.Container();
       filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
       scroller = new (Scrollbar())(460);
       constructor() {
@@ -374,7 +376,7 @@
         this.closeButton.x = this.background.width - 40;
         this.closeButton.y = this.oy + 34;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
-        this.closeButton.on(ImgButton.CLICK, () => this.emit(Layer.Events.RANKING_CANCEL));
+        this.closeButton.on("mousedown", () => this.shownConfig ? this.show() : App.Layer.onMenuAccess());
         this.container.addChild(this.closeButton);
         this.marginLeft += 20;
         this.marginTop = this.titleText.height * 3.25;
@@ -385,9 +387,12 @@
           this.indexList();
         });
         this.container.addChild(this.filterBox);
-        this.marginTop += this.filterBox.height + 8;
+        this.configContainer.x = this.marginLeft + 4;
+        this.configContainer.y = this.marginTop;
+        this.container.addChild(this.configContainer);
+        this.marginTop += 8;
         this.modContainer.x = this.marginLeft;
-        this.modContainer.y = this.marginTop;
+        this.modContainer.y = this.marginTop + this.filterBox.height;
         this.container.addChild(this.modContainer);
         this.scroller.x = this.width - this.scroller.width * 1.75;
         this.scroller.y = this.titleText.height * 3 + 2;
@@ -431,17 +436,38 @@
         description.x = pl = 12;
         description.y = pt += iconSize - 2;
         container.addChild(description);
+        pt = 12;
+        pl = container.width;
         if (!mod.details.core) {
           const button = new Button("installer");
           button.setText(mod.isInstalled() ? "Uninstall" : "Install");
           button.setTint(mod.isInstalled() ? config_default.Colors.red : config_default.Colors.green);
-          button.scale.x = button.scale.y = 0.75;
-          button.x = container.width - button.width;
-          button.y = 12;
+          button.scale.x = button.scale.y = 0.7;
+          button.x = pl -= button.width;
+          button.y = pt;
           button.addListener(Button.BUTTON_RELEASED, () => {
             mod.doInstall(!mod.isInstalled());
             this.indexList();
           });
+          container.addChild(button);
+        }
+        if (mod.isInstalled() && mod.config) {
+          const button = new Button("settings");
+          button.scale.x = button.scale.y = 0.7;
+          button.setText("");
+          button.x = pl -= button.width + 8;
+          button.y = pt;
+          button.width = button.height;
+          button.addListener(Button.BUTTON_RELEASED, () => {
+            this.showConfig(mod);
+          });
+          const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
+          ico.width = button.width - 4;
+          ico.height = button.height - 4;
+          ico.anchor.x = ico.anchor.y = 0.5;
+          ico.x = 6;
+          ico.y = button.height / 2 + 3;
+          button.addChild(ico);
           container.addChild(button);
         }
         return container;
@@ -449,6 +475,10 @@
       scrollTop = 0;
       maxMods = 3;
       show() {
+        this.shownConfig = null;
+        this.titleText.text = "Mods";
+        this.modContainer.visible = this.filterBox.visible = this.scroller.visible = true;
+        this.configContainer.visible = false;
         this.scroller.enableWheel();
         this.indexList();
       }
@@ -463,6 +493,53 @@
       }
       hide() {
         this.scroller.disableWheel();
+      }
+      showConfig(mod) {
+        this.shownConfig = mod;
+        this.scroller.disableWheel();
+        this.modContainer.visible = this.filterBox.visible = this.scroller.visible = false;
+        this.configContainer.visible = true;
+        this.titleText.text = mod.name + " Config";
+        this.configContainer.removeChildren();
+        let off = 0;
+        const mnu = this;
+        function doKeys(store) {
+          const name = (key) => {
+            const n = mod.configNames[key];
+            if (!n)
+              return key;
+            else
+              return Array.isArray(n) ? n[0] : n;
+          };
+          store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach((e) => {
+            const item = mnu.constructConfigItem(mod, typeof e[1] == "boolean" ? {
+              type: "bool",
+              name: name(e[0]),
+              key: e[0],
+              value: e[1]
+            } : {});
+            item.x = off;
+            off += item.height;
+            mnu.configContainer.addChild(item);
+          });
+        }
+        doKeys(Object.entries(mod.configNames).filter((e) => Array.isArray(e[1])).map(([k]) => [k, mod.config.get(k)]));
+        doKeys(Object.entries(mod.configNames).filter((e) => !Array.isArray(e[1])).map(([k]) => [k, mod.config.get(k)]));
+      }
+      constructConfigItem(mod, data) {
+        const container = new PIXI.Container();
+        switch (data.type) {
+          case "bool": {
+            const box = new Checkbox(`config_${data.name}`, data.name, data.value);
+            box.addEventListener(Checkbox.CHANGE, () => {
+              mod.config.set(data.key, box.checked);
+              mod.configChanged(data.key);
+            });
+            container.addChild(box);
+            break;
+          }
+        }
+        return container;
       }
     }
     const modsMenu = new ModsMenu();
@@ -494,8 +571,12 @@
       this.key = key;
       this.defaults = defaults;
     }
-    getStore() {
-      return JSON.parse(localStorage.getItem(this.key) || "{}");
+    getStore(fillDefaults = false) {
+      const store = JSON.parse(localStorage.getItem(this.key) || "{}");
+      if (fillDefaults)
+        return { ...this.defaults, ...store };
+      else
+        return store;
     }
     get(key) {
       return this.getStore()[key] ?? this.defaults[key];
@@ -594,6 +675,7 @@
     loaded = false;
     loadon = "appstart";
     config = null;
+    configNames;
     isInstalled() {
       return this.details.core || Ninja_default.settings.get("enabledMods").includes(this.id);
     }
@@ -615,6 +697,8 @@
       this.log(`Loaded successfully!`);
       this.loaded = true;
     }
+    configChanged(key) {
+    }
     unload() {
       this.log(`Unloaded mod.`);
       this.loaded = false;
@@ -622,8 +706,9 @@
     log(text, color) {
       Ninja_default.log(`[${this.id}] ${text}`, color);
     }
-    implementConfig(defaults) {
+    implementConfig(defaults, names) {
       this.config = new Settings(`modconfig_${this.id}`, defaults);
+      this.configNames = names;
     }
   };
 
@@ -664,6 +749,8 @@
       });
       this.implementConfig({
         showTime: false
+      }, {
+        showTime: "Show Current Time"
       });
     }
     load() {
@@ -700,6 +787,8 @@
         this.frames++;
       } else {
         let fps = `${Math.round(this.frames / (elapsed / 1e3))} FPS`;
+        if (this.config.get("showTime"))
+          fps = `${new Date().toLocaleTimeString()} - ` + fps;
         if (Ninja_default.inGame())
           fps += ` - ${Ninja_default.serverLatency || 0}ms`;
         if (this.frameDisplay.innerText !== fps)

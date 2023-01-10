@@ -17,9 +17,14 @@ export class FPSDisplayMod extends Mod<{
       description: "Displays your FPS and ping at the top of the screen.",
       icon: "energy_icon",
     });
-    this.implementConfig({
-      showTime: false,
-    });
+    this.implementConfig(
+      {
+        showTime: false,
+      },
+      {
+        showTime: "Show Current Time",
+      }
+    );
   }
   public load() {
     this.frameDisplay = document.createElement("div");
@@ -57,6 +62,7 @@ export class FPSDisplayMod extends Mod<{
       this.frames++;
     } else {
       let fps = `${Math.round(this.frames / (elapsed / 1000))} FPS`;
+      if (this.config.get("showTime")) fps = `${new Date().toLocaleTimeString()} - ` + fps;
       if (Ninja.inGame()) fps += ` - ${Ninja.serverLatency || 0}ms`;
       if (this.frameDisplay.innerText !== fps) this.frameDisplay.innerText = fps;
       this.frames = 0;

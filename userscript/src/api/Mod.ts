@@ -16,7 +16,7 @@ export interface ModDetails {
   core?: boolean;
 }
 
-export default class Mod<cfg = {}> {
+export default class Mod<cfg = any> {
   public get id() {
     return this.details.id;
   }
@@ -27,6 +27,7 @@ export default class Mod<cfg = {}> {
   /** Use pagestart for the mod to be loaded before the game does. */
   public loadon: "pagestart" | "appstart" = "appstart";
   public config: Settings<cfg> | null = null;
+  public configNames: Partial<{ [key in keyof cfg]: string | [string] }>;
 
   constructor(public readonly details: ModDetails) {}
 
@@ -49,6 +50,7 @@ export default class Mod<cfg = {}> {
     this.log(`Loaded successfully!`);
     this.loaded = true;
   }
+  public configChanged(key: string) {}
   public unload() {
     this.log(`Unloaded mod.`);
     this.loaded = false;
@@ -56,7 +58,8 @@ export default class Mod<cfg = {}> {
   public log(text: string, color?: number) {
     Ninja.log(`[${this.id}] ${text}`, color);
   }
-  public implementConfig(defaults: cfg) {
+  public implementConfig(defaults: cfg, names?: typeof this.configNames) {
     this.config = new Settings(`modconfig_${this.id}`, defaults);
+    this.configNames = names;
   }
 }
