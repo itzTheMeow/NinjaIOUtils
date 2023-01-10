@@ -110,11 +110,11 @@ export class UIURLMod extends Mod {
         break;
       }
       case HashPaths.players: {
-        menu.emit(Layer.Events.MEMBER_ACCESS);
+        menu.emit(<any>(Layer.Events.MEMBER_ACCESS + "f"));
         break;
       }
       case HashPaths.clans: {
-        menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
+        menu.emit(<any>(Layer.Events.CLAN_BROWSER_ACCESS + "f"));
         break;
       }
       case HashPaths.settings: {

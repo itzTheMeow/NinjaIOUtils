@@ -14,8 +14,18 @@ export default function hookModMenu() {
   const memberclanButton = new MemberMenuButton("", 16763904, 18);
   memberclanButton.x = 0;
   memberclanButton.y = menu.rankingButton.y + 70;
+  menu.on(<any>(Layer.Events.MEMBER_ACCESS + "f"), () => {
+    menuClanState = 0;
+    menu.mode = "member";
+    memberclanButton.emit(MemberMenuButton.BUTTON_PRESSED);
+  });
+  menu.on(<any>(Layer.Events.CLAN_BROWSER_ACCESS + "f"), () => {
+    menuClanState = 1;
+    menu.mode = "clan";
+    memberclanButton.emit(MemberMenuButton.BUTTON_PRESSED);
+  });
   memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
-    if (!["member", "clan"].includes(App.Layer.memberMenu.mode)) menuClanState = 0;
+    if (!["member", "clan"].includes(menu.mode)) menuClanState = 0;
     menuClanState++;
     if (menuClanState == 3) menuClanState = 0;
     title1.style.fill = title2.style.fill = FontStyle.MenuTitle.fill;

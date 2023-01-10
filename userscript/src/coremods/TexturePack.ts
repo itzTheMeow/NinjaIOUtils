@@ -177,7 +177,7 @@ export class TexturePackMod extends Mod {
       this.addChild(t);
       if (t.onShow) t.onShow();
       app.menu.settingsPanel.selectedTab = name;
-      App.Layer.memberMenu.emit(<any>"open_tab", name);
+      Ninja.activeMenu().emit(<any>"open_tab", name);
     };
     Object.values(SettingsPanel.Tabs).forEach((d) => {
       // add our new mousedown listener and remove the old one (because we removed the old settings panel)
