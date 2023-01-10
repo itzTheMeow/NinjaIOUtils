@@ -31,7 +31,7 @@ export default new (class Ninja {
   }
   public mods: Mod[] = [];
 
-  public registerMod(mod: Mod) {
+  public registerMod(mod: Mod<any>) {
     this.mods.push(mod);
     if (mod.details.core) this.loadMod(mod.id);
   }

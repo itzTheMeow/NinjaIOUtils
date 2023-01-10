@@ -200,6 +200,7 @@
     }
     loaded = false;
     loadon = "appstart";
+    config = null;
     isInstalled() {
       return this.details.core || Ninja_default.settings.get("enabledMods").includes(this.id);
     }
@@ -209,6 +210,9 @@
     }
     log(text, color) {
       Ninja_default.log(`[${this.id}] ${text}`, color);
+    }
+    implementConfig(defaults) {
+      this.config = new Settings(`modconfig_${this.id}`, defaults);
     }
   };
 
@@ -594,6 +598,12 @@
         description: "Displays your FPS and ping at the top of the screen.",
         icon: "energy_icon"
       });
+      this.implementConfig({
+        showTime: false
+      });
+    }
+    load() {
+      super.load();
     }
   };
 

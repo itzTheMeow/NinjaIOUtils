@@ -1,4 +1,4 @@
-export default class Settings<Store extends Record<string, any>> {
+export default class Settings<Store extends Record<string, any> = {}> {
   constructor(public key = "niou_settings", public defaults: Store) {}
 
   public getStore(): Store {

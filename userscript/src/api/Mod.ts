@@ -1,4 +1,5 @@
 import Ninja from "./Ninja";
+import Settings from "./Settings";
 
 export interface ModDetails {
   /** The mod name, abbreviated if needed and without spaces. (keep capitalization) */
@@ -15,7 +16,7 @@ export interface ModDetails {
   core?: boolean;
 }
 
-export default class Mod {
+export default class Mod<cfg = {}> {
   public get id() {
     return this.details.id;
   }
@@ -24,6 +25,7 @@ export default class Mod {
   }
   public loaded = false;
   public loadon: "pagestart" | "appstart" = "appstart";
+  public config: Settings<cfg> | null = null;
 
   constructor(public readonly details: ModDetails) {}
 
@@ -36,5 +38,8 @@ export default class Mod {
   }
   public log(text: string, color?: number) {
     Ninja.log(`[${this.id}] ${text}`, color);
+  }
+  public implementConfig(defaults: cfg) {
+    this.config = new Settings(`modconfig_${this.id}`, defaults);
   }
 }
