@@ -1,4 +1,4 @@
-import { app, App } from "typings";
+import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
 import Mod from "./Mod";
@@ -91,6 +91,12 @@ export default new (class Ninja {
     if (i >= 0) this.readyListeners.splice(i, 1);
   }
 
+  public isGuest() {
+    return App.Layer.setup == Layer.SETUP_GUEST;
+  }
+  public activeMenu() {
+    return this.isGuest() ? App.Layer.guestMenu : App.Layer.memberMenu;
+  }
   public activeClient() {
     return app.gameClient.socket ? app.gameClient : app.pvpClient.socket ? app.pvpClient : null;
   }

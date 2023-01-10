@@ -97,6 +97,8 @@ export class TexturePackMod extends Mod {
   public init() {
     // retry panel inject if failed
     if (!app.menu?.settingsPanel) return setTimeout(() => this.init(), 500);
+    //@ts-ignore
+    SettingsPanel.Tabs.TEXTURES = "tex";
     function SettingsPanelNew(w: number, h: number) {
       const pan = new SettingsPanel(w, h);
       function newTab(
@@ -148,8 +150,6 @@ export class TexturePackMod extends Mod {
       newTab("Texture Pack", "tex", 302, getTexTab());
       return pan;
     }
-    //@ts-ignore
-    SettingsPanel.Tabs.TEXTURES = "tex";
     const oldX = app.menu.settingsPanel.x,
       oldY = app.menu.settingsPanel.y;
     // remove the old settings panel and add our own

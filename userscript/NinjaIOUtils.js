@@ -2385,7 +2385,7 @@
 
   // src/hookModMenu.ts
   function hookModMenu() {
-    const menu = Layer.SETUP_GUEST ? App.Layer.guestMenu : App.Layer.memberMenu;
+    const menu = Ninja_default.activeMenu();
     menu.memberButton.parent.removeChild(menu.memberButton);
     menu.clanButton.parent.removeChild(menu.clanButton);
     let menuClanState = 0;
@@ -2850,6 +2850,12 @@
       if (i >= 0)
         this.readyListeners.splice(i, 1);
     }
+    isGuest() {
+      return App.Layer.setup == Layer.SETUP_GUEST;
+    }
+    activeMenu() {
+      return this.isGuest() ? App.Layer.guestMenu : App.Layer.memberMenu;
+    }
     activeClient() {
       return app.gameClient.socket ? app.gameClient : app.pvpClient.socket ? app.pvpClient : null;
     }
@@ -2988,6 +2994,7 @@
     init() {
       if (!app.menu?.settingsPanel)
         return setTimeout(() => this.init(), 500);
+      SettingsPanel.Tabs.TEXTURES = "tex";
       function SettingsPanelNew(w, h) {
         const pan = new SettingsPanel(w, h);
         function newTab(title, name, x, tab) {
@@ -3025,7 +3032,6 @@
         newTab("Texture Pack", "tex", 302, getTexTab());
         return pan;
       }
-      SettingsPanel.Tabs.TEXTURES = "tex";
       const oldX = app.menu.settingsPanel.x, oldY = app.menu.settingsPanel.y;
       app.menu.settingsPanel.destroy();
       app.menu.settingsPanel = SettingsPanelNew(660, 524);
@@ -3252,69 +3258,67 @@
       });
     }
     load() {
-      const ProfilePaths = {
+      const menu = Ninja_default.activeMenu(), ProfilePaths = {
         [ProfileMenu.TAB_OVERVIEW]: "",
         [ProfileMenu.TAB_CLAN]: "clan",
         [ProfileMenu.TAB_ACCOUNT]: "account",
         [ProfileMenu.TAB_SETTINGS]: "settings"
-      };
-      const ShopPaths = {
+      }, ShopPaths = {
         [CustomizationMenu.PLAYER]: "self",
         [CustomizationMenu.WEAPONS]: "weapons"
-      };
-      const SettingsPaths = {
+      }, SettingsPaths = {
         [SettingsPanel.Tabs.CONTROLS]: "controls",
         [SettingsPanel.Tabs.GRAPHICS]: "graphics",
         [SettingsPanel.Tabs.SOUND]: "sound",
-        [SettingsPanel.Tabs.TEXTURES]: "textures"
+        [SettingsPanel.Tabs.TEXTURES || "tex"]: "textures"
       };
       if (!window.location.hash.substring(1))
         window.location.hash = "/";
-      App.Layer.memberMenu.on(Layer.Events.MENU_ACCESS, () => this.switchHash("" /* menu */));
+      menu.addListener(Layer.Events.MENU_ACCESS, () => this.switchHash("" /* menu */));
       let profCurTab = "";
-      App.Layer.memberMenu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
+      menu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
       const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
       App.Layer.profileMenu.openTab = (tab, audio) => {
         openTab(tab, audio);
         profCurTab = tab;
         this.switchHash("profile" /* profile */, ProfilePaths[tab]);
       };
-      App.Layer.memberMenu.on(Layer.Events.CUSTOMIZATION_ACCESS, () => this.switchHash("shop" /* shop */, ShopPaths[App.Layer.customizationMenu.display]));
+      menu.on(Layer.Events.CUSTOMIZATION_ACCESS, () => this.switchHash("shop" /* shop */, ShopPaths[App.Layer.customizationMenu.display]));
       App.Layer.customizationMenu.playerCustomizationButton.on("mousedown", () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.PLAYER]));
       App.Layer.customizationMenu.weaponCustomizationButton.on("mousedown", () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.WEAPONS]));
-      App.Layer.memberMenu.on(Layer.Events.RANKING_ACCESS, () => this.switchHash("ranks" /* ranks */));
-      App.Layer.memberMenu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash("players" /* players */));
-      App.Layer.memberMenu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash("clans" /* clans */));
-      App.Layer.memberMenu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]));
-      App.Layer.memberMenu.on("open_tab", (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab]));
+      menu.on(Layer.Events.RANKING_ACCESS, () => this.switchHash("ranks" /* ranks */));
+      menu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash("players" /* players */));
+      menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash("clans" /* clans */));
+      menu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]));
+      menu.on("open_tab", (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab]));
       const curPath = window.location.hash.substring(2).split("/");
       switch (curPath[0]) {
         case "profile" /* profile */: {
-          App.Layer.memberMenu.emit(Layer.Events.PROFILE_ACCESS);
+          menu.emit(Layer.Events.PROFILE_ACCESS);
           const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
           if (profPath)
             App.Layer.profileMenu.openTab(profPath[0], false);
           break;
         }
         case "shop" /* shop */: {
-          App.Layer.memberMenu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
+          menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
           clickContainer(curPath[1] == ShopPaths[CustomizationMenu.WEAPONS] ? App.Layer.customizationMenu.weaponCustomizationButton : App.Layer.customizationMenu.playerCustomizationButton);
           break;
         }
         case "ranks" /* ranks */: {
-          App.Layer.memberMenu.emit(Layer.Events.RANKING_ACCESS);
+          menu.emit(Layer.Events.RANKING_ACCESS);
           break;
         }
         case "players" /* players */: {
-          App.Layer.memberMenu.emit(Layer.Events.MEMBER_ACCESS);
+          menu.emit(Layer.Events.MEMBER_ACCESS);
           break;
         }
         case "clans" /* clans */: {
-          App.Layer.memberMenu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
+          menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
           break;
         }
         case "settings" /* settings */: {
-          App.Layer.memberMenu.emit(Layer.Events.SETTINGS_ACCESS);
+          menu.emit(Layer.Events.SETTINGS_ACCESS);
           const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
           if (settPath)
             app.menu.settingsPanel.displayTab(settPath[0]);
