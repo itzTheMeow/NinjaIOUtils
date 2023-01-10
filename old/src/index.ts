@@ -91,13 +91,6 @@ const testing = setInterval(() => {
   }
   clearInterval(testing);
 
-  App.Console.log("Loading NinjaIOUtils...");
-  if (app.credential.accounttype == "guest")
-    alert(
-      `NinjaIOUtils works best when you are logged in!
-No support will be provided to logged out users experiencing issues, sorry.`
-    );
-
   app._showMenu = app.showMenu;
   const menuListeners: (() => any)[] = [];
   app.onShowMenu = (cb: () => any) => {
@@ -114,16 +107,6 @@ No support will be provided to logged out users experiencing issues, sorry.`
   matchEndHook();
   applySettingsHook();
   initShareURLHook();
-  /* Your ping is tracked in the upper right, but not accessible from any variables. */
-  App.Stats.realSetPing = App.Stats.setPing;
-  App.Stats.setPing = function (ping) {
-    App.Stats.ping = ping;
-    return App.Stats.realSetPing(ping);
-  };
-  /* Typing sounds. */
-  App.Console.consoleInput.addListener(InputField.CHANGE, () => {
-    if (SETTINGS.typewriter) AudioEffects.ButtonHover.audio.play();
-  });
   initOnlineOptionHook();
   initPartyMenu();
   App.Console.log("Successfully injected party menu button.");

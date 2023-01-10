@@ -3364,7 +3364,8 @@
   var mods_exports = {};
   __export(mods_exports, {
     FPSDisplayMod: () => FPSDisplayMod,
-    HotkeyMessagesMod: () => HotkeyMessagesMod
+    HotkeyMessagesMod: () => HotkeyMessagesMod,
+    SoundEffectsMod: () => SoundEffectsMod
   });
 
   // src/mods/fpsDisplay.ts
@@ -3493,6 +3494,33 @@
     }
   };
 
+  // src/mods/soundEffects.ts
+  
+  
+  var SoundEffectsMod = class extends Mod {
+    constructor() {
+      super({
+        id: "SoundEffects",
+        name: "Sounds++",
+        description: "Adds additional sound effects to the game.",
+        author: "Meow",
+        icon: "unmute_icon"
+      });
+    }
+    load() {
+      App.Console.consoleInput.addListener(InputField.CHANGE, this.consoleListener);
+      super.load();
+    }
+    unload() {
+      App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleListener);
+      super.unload();
+    }
+    consoleTyped() {
+      AudioEffects.ButtonHover.audio.play();
+    }
+    consoleListener = this.consoleTyped.bind(this);
+  };
+
   // src/index.ts
   window.Ninja = Ninja_default;
   window.addEventListener("keydown", (e) => {
@@ -3515,7 +3543,11 @@
       return;
     }
     clearInterval(tester);
+    Ninja_default.log("Loading NinjaIOUtils...");
     Ninja_default.init();
+    if (Ninja_default.isGuest())
+      alert(`NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`);
   });
 })();
 /*!

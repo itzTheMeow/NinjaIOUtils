@@ -36,5 +36,12 @@ const tester = setInterval(() => {
   }
   clearInterval(tester);
 
+  Ninja.log("Loading NinjaIOUtils...");
   Ninja.init();
+
+  if (Ninja.isGuest())
+    alert(
+      `NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`
+    );
 });
