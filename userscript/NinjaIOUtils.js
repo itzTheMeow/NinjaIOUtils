@@ -2385,7 +2385,7 @@
 
   // src/hookModMenu.ts
   function hookModMenu() {
-    const menu = App.Layer.memberMenu;
+    const menu = Layer.SETUP_GUEST ? App.Layer.guestMenu : App.Layer.memberMenu;
     menu.memberButton.parent.removeChild(menu.memberButton);
     menu.clanButton.parent.removeChild(menu.clanButton);
     let menuClanState = 0;
@@ -2946,32 +2946,37 @@
         }
         newPostMessage(data, ...args) {
           if (texturePack && !window.SKIP_TEX_LOAD && !data?.bypass) {
-            fetch(`${config_default.api}/packs/${texturePack}`).then((r) => r.json()).then(async (pack) => {
-              if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && texturePack) {
-                const orig = data.data[0];
-                const isCustom = texturePack == config_default.customDelimiter;
-                if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.endsWith(".png"))
-                  data.data[0] = `${config_default.api}/packs/${texturePack}/combined.png?v=${Ninja_default.GameVersion}`;
-                if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.endsWith(".png"))
-                  data.data[0] = `${config_default.api}/packs/${texturePack}/seamless.png?v=${Ninja_default.GameVersion}`;
-                if (data.data[0].startsWith(config_default.api) && isCustom) {
-                  const zip = await import_localforage.default.getItem("custom_pack");
-                  if (zip) {
-                    const form = new FormData();
-                    form.append("zip", zip);
-                    const res = await fetch(data.data[0], {
-                      method: "POST",
-                      body: form
-                    }).then((r) => r.blob());
-                    data.data[0] = URL.createObjectURL(res);
-                  } else
-                    data.data[0] = orig;
+            try {
+              fetch(`${config_default.api}/packs/${texturePack}`).then((r) => r.json()).then(async (pack) => {
+                if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && texturePack) {
+                  const orig = data.data[0];
+                  const isCustom = texturePack == config_default.customDelimiter;
+                  if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.endsWith(".png"))
+                    data.data[0] = `${config_default.api}/packs/${texturePack}/combined.png?v=${Ninja_default.GameVersion}`;
+                  if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.endsWith(".png"))
+                    data.data[0] = `${config_default.api}/packs/${texturePack}/seamless.png?v=${Ninja_default.GameVersion}`;
+                  if (data.data[0].startsWith(config_default.api) && isCustom) {
+                    const zip = await import_localforage.default.getItem("custom_pack");
+                    if (zip) {
+                      const form = new FormData();
+                      form.append("zip", zip);
+                      const res = await fetch(data.data[0], {
+                        method: "POST",
+                        body: form
+                      }).then((r) => r.blob());
+                      data.data[0] = URL.createObjectURL(res);
+                    } else
+                      data.data[0] = orig;
+                  }
                 }
-              }
+                this._postMessage(data, ...args);
+              }).catch(() => {
+                this._postMessage(data, ...args);
+              });
+            } catch (err) {
+              console.error(err);
               this._postMessage(data, ...args);
-            }).catch(() => {
-              this._postMessage(data, ...args);
-            });
+            }
           } else
             this._postMessage(data, ...args);
         }
@@ -3127,66 +3132,70 @@
         const off = this.off;
         this.packIndex = 0;
         !(this.runPacks = async () => {
-          this.off = off;
-          if (this.hadPacks)
-            this.hadPacks.map((p) => p.destroy());
-          this.hadPacks = [];
-          const packs = this.packList || (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r.json()));
-          const custom = this.hasCust || (this.hasCust = await import_localforage.default.getItem("custom_pack") || true);
-          const packList = packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks);
-          if (custom && custom !== true) {
-            packList.unshift({
-              id: config_default.customDelimiter,
-              name: "Custom Pack",
-              description: "Custom texture pack: " + custom.name,
-              author: "You!",
-              hasCombined: false,
-              hasSeamless: false
+          try {
+            this.off = off;
+            if (this.hadPacks)
+              this.hadPacks.map((p) => p.destroy());
+            this.hadPacks = [];
+            const packs = this.packList || (this.packList = await fetch(`${config_default.api}/packs`).then((r) => r && r.json()) || []);
+            const custom = this.hasCust || (this.hasCust = await import_localforage.default.getItem("custom_pack") || true);
+            const packList = packs.sort((a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1).slice(this.packIndex, this.packIndex + maxPacks);
+            if (custom && custom !== true) {
+              packList.unshift({
+                id: config_default.customDelimiter,
+                name: "Custom Pack",
+                description: "Custom texture pack: " + custom.name,
+                author: "You!",
+                hasCombined: false,
+                hasSeamless: false
+              });
+              uploader.setText("Delete");
+              uploader.setTint(config_default.Colors.red);
+            } else {
+              uploader.setText("Upload");
+              uploader.setTint(config_default.Colors.grey);
+            }
+            packList.forEach((pak) => {
+              const hasPack = Ninja_default.settings.get("texturePack") == pak.id;
+              const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
+                fontSize: 16,
+                fill: config_default.Colors.white,
+                strokeThickness: 2,
+                lineJoin: "round"
+              });
+              packName.x = this.marginLeft;
+              packName.y = this.off += 28;
+              this.hadPacks.push(this.addChild(packName));
+              const flags = [];
+              if (pak.hasCombined)
+                flags.push("textures");
+              if (pak.hasSeamless)
+                flags.push("terrain");
+              const packDescription = new PIXI.Text(`${pak.description || "No Description."}${flags.length ? ` (${flags.join(", ")})` : ""}`, {
+                fontSize: 14,
+                fill: config_default.Colors.white,
+                strokeThickness: 2,
+                lineJoin: "round"
+              });
+              packDescription.x = this.marginLeft;
+              packDescription.y = this.off += packName.height + 2;
+              this.hadPacks.push(this.addChild(packDescription));
+              const packButton = new Button(`pack_btn_${pak.id}`);
+              packButton.x = packName.x + packName.width + 12;
+              packButton.y = this.off - packName.height;
+              packButton.setText(hasPack ? "Remove" : "Use");
+              packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
+              packButton.scale.x = packButton.scale.y = 0.5;
+              packButton.addListener(Button.BUTTON_RELEASED, async () => {
+                Ninja_default.settings.set("texturePack", hasPack ? "" : pak.id);
+                app.menu.settingsPanel.controlsTab.forceRefresh = true;
+                this.runPacks();
+              });
+              this.hadPacks.push(this.addChild(packButton));
             });
-            uploader.setText("Delete");
-            uploader.setTint(config_default.Colors.red);
-          } else {
-            uploader.setText("Upload");
-            uploader.setTint(config_default.Colors.grey);
+          } catch (err) {
+            console.error(err);
           }
-          packList.forEach((pak) => {
-            const hasPack = Ninja_default.settings.get("texturePack") == pak.id;
-            const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-              fontSize: 16,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
-            });
-            packName.x = this.marginLeft;
-            packName.y = this.off += 28;
-            this.hadPacks.push(this.addChild(packName));
-            const flags = [];
-            if (pak.hasCombined)
-              flags.push("textures");
-            if (pak.hasSeamless)
-              flags.push("terrain");
-            const packDescription = new PIXI.Text(`${pak.description || "No Description."}${flags.length ? ` (${flags.join(", ")})` : ""}`, {
-              fontSize: 14,
-              fill: config_default.Colors.white,
-              strokeThickness: 2,
-              lineJoin: "round"
-            });
-            packDescription.x = this.marginLeft;
-            packDescription.y = this.off += packName.height + 2;
-            this.hadPacks.push(this.addChild(packDescription));
-            const packButton = new Button(`pack_btn_${pak.id}`);
-            packButton.x = packName.x + packName.width + 12;
-            packButton.y = this.off - packName.height;
-            packButton.setText(hasPack ? "Remove" : "Use");
-            packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
-            packButton.scale.x = packButton.scale.y = 0.5;
-            packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              Ninja_default.settings.set("texturePack", hasPack ? "" : pak.id);
-              app.menu.settingsPanel.controlsTab.forceRefresh = true;
-              this.runPacks();
-            });
-            this.hadPacks.push(this.addChild(packButton));
-          });
         })();
       }
     }
@@ -3264,7 +3273,7 @@
       App.Layer.memberMenu.on(Layer.Events.MENU_ACCESS, () => this.switchHash("" /* menu */));
       let profCurTab = "";
       App.Layer.memberMenu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
-      const openTab = App.Layer.profileMenu.openTab;
+      const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
       App.Layer.profileMenu.openTab = (tab, audio) => {
         openTab(tab, audio);
         profCurTab = tab;

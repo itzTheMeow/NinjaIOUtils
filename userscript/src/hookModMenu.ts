@@ -6,7 +6,7 @@ import config from "./config";
 import Scrollbar from "./ui/scrollbar";
 
 export default function hookModMenu() {
-  const menu = App.Layer.memberMenu;
+  const menu = Layer.SETUP_GUEST ? App.Layer.guestMenu : App.Layer.memberMenu;
 
   menu.memberButton.parent.removeChild(menu.memberButton);
   menu.clanButton.parent.removeChild(menu.clanButton);

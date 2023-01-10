@@ -53,7 +53,7 @@ export class UIURLMod extends Mod {
     App.Layer.memberMenu.on(Layer.Events.PROFILE_ACCESS, () =>
       this.switchHash(HashPaths.profile, ProfilePaths[profCurTab])
     );
-    const openTab = App.Layer.profileMenu.openTab;
+    const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
     App.Layer.profileMenu.openTab = (tab, audio) => {
       openTab(tab, audio);
       profCurTab = tab;

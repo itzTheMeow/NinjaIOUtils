@@ -2,6 +2,12 @@
 
 v2.0
 
+- Replaced unused NinjaIOUtils menu with Mods.
+- Added Mods to replace other utils functions.
+- Made utils work with the latest update.
+- Added time to FPS display settings.
+- Added url location saving.
+
 v1.32
 
 - Fixed texture pack loading.
