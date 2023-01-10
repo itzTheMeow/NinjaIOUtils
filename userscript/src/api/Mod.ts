@@ -24,6 +24,7 @@ export default class Mod<cfg = {}> {
     return this.details.name;
   }
   public loaded = false;
+  /** Use pagestart for the mod to be loaded before the game does. */
   public loadon: "pagestart" | "appstart" = "appstart";
   public config: Settings<cfg> | null = null;
 
@@ -35,6 +36,10 @@ export default class Mod<cfg = {}> {
   public load() {
     this.log(`Loaded successfully!`);
     this.loaded = true;
+  }
+  public unload() {
+    this.log(`Unloaded mod.`);
+    this.loaded = false;
   }
   public log(text: string, color?: number) {
     Ninja.log(`[${this.id}] ${text}`, color);

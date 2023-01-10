@@ -197,7 +197,7 @@ export default function hookModMenu() {
       const iconSize = 52,
         maxDesc = 150,
         container = new PIXI.Graphics();
-      container.beginFill(config.Colors.white, 0.1);
+      container.beginFill(mod.isInstalled() ? config.Colors.green : config.Colors.white, 0.1);
       container.drawRoundedRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6);
       container.endFill();
 

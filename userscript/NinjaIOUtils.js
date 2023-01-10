@@ -148,6 +148,19 @@
     });
     constructor() {
     }
+    init() {
+      const ninja = this;
+      this.ready = true;
+      const stepper = app.stepCallback;
+      app.stepCallback = function(...d) {
+        try {
+          ninja.stepListeners.forEach((l) => l());
+        } catch (err) {
+          console.error(err);
+        }
+        return stepper(...d);
+      };
+    }
     ready = false;
     get GameVersion() {
       return document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
@@ -158,10 +171,11 @@
         }
       })();
     }
+    serverLatency = 0;
     mods = [];
     registerMod(mod) {
       this.mods.push(mod);
-      if (mod.details.core)
+      if (mod.isInstalled())
         this.loadMod(mod.id);
     }
     loadMod(id) {
@@ -178,6 +192,19 @@
         App.Console.log(text, color);
       else
         console.log(text);
+    }
+    stepListeners = [];
+    onstep(l) {
+      this.stepListeners.push(l);
+      return l;
+    }
+    offstep(l) {
+      const i = this.stepListeners.indexOf(l);
+      if (i >= 0)
+        this.stepListeners.splice(i, 1);
+    }
+    inGame() {
+      return app.matchStarted && (app.gameClient.socket && app.gameClient.socket.readyState == WebSocket.OPEN || app.pvpClient.socket && app.pvpClient.socket.readyState == WebSocket.OPEN);
     }
   }();
 
@@ -207,6 +234,10 @@
     load() {
       this.log(`Loaded successfully!`);
       this.loaded = true;
+    }
+    unload() {
+      this.log(`Unloaded mod.`);
+      this.loaded = false;
     }
     log(text, color) {
       Ninja_default.log(`[${this.id}] ${text}`, color);
@@ -510,7 +541,7 @@
       }
       constructModItem(mod) {
         const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
-        container.beginFill(config_default.Colors.white, 0.1);
+        container.beginFill(mod.isInstalled() ? config_default.Colors.green : config_default.Colors.white, 0.1);
         container.drawRoundedRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6);
         container.endFill();
         let pl = 0, pt = 0;
@@ -590,6 +621,10 @@
 
   // src/mods/fpsDisplay.ts
   var FPSDisplayMod = class extends Mod {
+    frameDisplay = document.createElement("div");
+    lastUpdate = Date.now();
+    frames = 0;
+    listener;
     constructor() {
       super({
         id: "FPSDisplay",
@@ -603,7 +638,47 @@
       });
     }
     load() {
+      Object.entries({
+        padding: "0.3rem 0.4rem",
+        font: "16px Arial",
+        display: "none",
+        position: "fixed",
+        top: "0px",
+        left: "50%",
+        transform: "translateX(-50%)",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        borderBottomLeftRadius: "6px",
+        borderBottomRightRadius: "6px",
+        pointerEvents: "none",
+        userSelect: "none"
+      }).forEach((e) => {
+        this.frameDisplay.style[e[0]] = e[1];
+      });
+      this.frameDisplay.textContent = "...";
+      this.lastUpdate = Date.now();
+      document.body.appendChild(this.frameDisplay);
+      this.listener = Ninja_default.onstep(() => this.update());
       super.load();
+    }
+    unload() {
+      Ninja_default.offstep(this.listener);
+      document.body.removeChild(this.frameDisplay);
+      super.unload();
+    }
+    update() {
+      const now = Date.now(), elapsed = now - this.lastUpdate;
+      if (elapsed < 500) {
+        this.frames++;
+      } else {
+        let fps = `${Math.round(this.frames / (elapsed / 1e3))} FPS`;
+        if (Ninja_default.inGame())
+          fps += ` - ${Ninja_default.serverLatency || 0}ms`;
+        if (this.frameDisplay.innerText !== fps)
+          this.frameDisplay.innerText = fps;
+        this.frames = 0;
+        this.lastUpdate = now;
+        this.frameDisplay.style.display = "block";
+      }
     }
   };
 
