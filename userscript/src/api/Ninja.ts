@@ -1,5 +1,6 @@
 import { app, App } from "typings";
 import config from "../config";
+import hookModMenu from "../hookModMenu";
 import Mod from "./Mod";
 import Settings from "./Settings";
 
@@ -16,6 +17,7 @@ export default new (class Ninja {
   public init() {
     const ninja = this;
     this.ready = true;
+
     const stepper = app.stepCallback;
     app.stepCallback = function (...d) {
       try {
@@ -25,6 +27,10 @@ export default new (class Ninja {
       }
       return stepper(...d);
     };
+
+    hookModMenu();
+
+    this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
   }
 
   public ready = false;
@@ -53,7 +59,7 @@ export default new (class Ninja {
   }
   public loadMod(id: string) {
     const mod = this.mods.find((m) => m.id == id);
-    if (!mod || mod.loaded) return;
+    if (!mod || mod.loaded || !mod.isInstalled()) return;
     if (this.ready && mod.loadon == "appstart") mod.load();
     else if (mod.loadon == "pagestart") mod.load();
   }

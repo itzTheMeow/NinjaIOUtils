@@ -221,7 +221,7 @@ export default function hookModMenu() {
       label.y = pt += 8;
       container.addChild(label);
       const authorLabel = new PIXI.Text(
-        mod.details.author == "builtin" ? "(Built-In)" : "by " + mod.details.author,
+        mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
         { ...FontStyle.SmallMenuTextYellow, fontSize: 20 }
       );
       authorLabel.x = pl + label.width + 4;

@@ -124,157 +124,6 @@
     }
   };
 
-  // src/api/Settings.ts
-  var Settings = class {
-    constructor(key = "niou_settings", defaults) {
-      this.key = key;
-      this.defaults = defaults;
-    }
-    getStore() {
-      return JSON.parse(localStorage.getItem(this.key) || "{}");
-    }
-    get(key) {
-      return this.getStore()[key] ?? this.defaults[key];
-    }
-    set(key, value) {
-      return localStorage.setItem(this.key, JSON.stringify({ ...this.getStore(), [key]: value }));
-    }
-  };
-
-  // src/api/Ninja.ts
-  var Ninja_default = new class Ninja {
-    settings = new Settings(config_default.settingsKey, {
-      enabledMods: []
-    });
-    constructor() {
-    }
-    init() {
-      const ninja = this;
-      this.ready = true;
-      const stepper = app.stepCallback;
-      app.stepCallback = function(...d) {
-        try {
-          ninja.stepListeners.forEach((l) => l());
-        } catch (err) {
-          console.error(err);
-        }
-        return stepper(...d);
-      };
-    }
-    ready = false;
-    get GameVersion() {
-      return document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
-        try {
-          return App.ClientVersion;
-        } catch {
-          return "unknown";
-        }
-      })();
-    }
-    serverLatency = 0;
-    mods = [];
-    registerMod(mod) {
-      this.mods.push(mod);
-      if (mod.isInstalled())
-        this.loadMod(mod.id);
-    }
-    loadMod(id) {
-      const mod = this.mods.find((m) => m.id == id);
-      if (!mod || mod.loaded)
-        return;
-      if (this.ready && mod.loadon == "appstart")
-        mod.load();
-      else if (mod.loadon == "pagestart")
-        mod.load();
-    }
-    log(text, color) {
-      if (this.ready)
-        App.Console.log(text, color);
-      else
-        console.log(text);
-    }
-    stepListeners = [];
-    onstep(l) {
-      this.stepListeners.push(l);
-      return l;
-    }
-    offstep(l) {
-      const i = this.stepListeners.indexOf(l);
-      if (i >= 0)
-        this.stepListeners.splice(i, 1);
-    }
-    inGame() {
-      return app.matchStarted && (app.gameClient.socket && app.gameClient.socket.readyState == WebSocket.OPEN || app.pvpClient.socket && app.pvpClient.socket.readyState == WebSocket.OPEN);
-    }
-  }();
-
-  // src/coremods/index.ts
-  var coremods_exports = {};
-  __export(coremods_exports, {
-    ShareURLMod: () => ShareURLMod
-  });
-
-  // src/api/Mod.ts
-  var Mod = class {
-    constructor(details) {
-      this.details = details;
-    }
-    get id() {
-      return this.details.id;
-    }
-    get name() {
-      return this.details.name;
-    }
-    loaded = false;
-    loadon = "appstart";
-    config = null;
-    isInstalled() {
-      return this.details.core || Ninja_default.settings.get("enabledMods").includes(this.id);
-    }
-    doInstall(add = true) {
-      const list = new Set(Ninja_default.settings.get("enabledMods"));
-      if (add) {
-        list.add(this.id);
-        if (!this.loaded)
-          this.load();
-      } else {
-        list.delete(this.id);
-        if (this.loaded)
-          this.unload();
-      }
-      Ninja_default.settings.set("enabledMods", [...list]);
-      return add;
-    }
-    load() {
-      this.log(`Loaded successfully!`);
-      this.loaded = true;
-    }
-    unload() {
-      this.log(`Unloaded mod.`);
-      this.loaded = false;
-    }
-    log(text, color) {
-      Ninja_default.log(`[${this.id}] ${text}`, color);
-    }
-    implementConfig(defaults) {
-      this.config = new Settings(`modconfig_${this.id}`, defaults);
-    }
-  };
-
-  // src/coremods/shareURLs.ts
-  var ShareURLMod = class extends Mod {
-    constructor() {
-      super({
-        id: "ShareURL",
-        name: "Share URLs",
-        description: "Allows other players to join your game by providing a link.",
-        author: "builtin",
-        icon: "menu_icon_players",
-        core: true
-      });
-    }
-  };
-
   // src/hookModMenu.ts
   
   
@@ -574,7 +423,7 @@
         label.x = pl += iconSize + 4;
         label.y = pt += 8;
         container.addChild(label);
-        const authorLabel = new PIXI.Text(mod.details.author == "builtin" ? "(Built-In)" : "by " + mod.details.author, { ...FontStyle.SmallMenuTextYellow, fontSize: 20 });
+        const authorLabel = new PIXI.Text(mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author, { ...FontStyle.SmallMenuTextYellow, fontSize: 20 });
         authorLabel.x = pl + label.width + 4;
         authorLabel.y = pt + 5;
         container.addChild(authorLabel);
@@ -639,6 +488,159 @@
     App.Layer.features.push(modsMenu);
   }
 
+  // src/api/Settings.ts
+  var Settings = class {
+    constructor(key = "niou_settings", defaults) {
+      this.key = key;
+      this.defaults = defaults;
+    }
+    getStore() {
+      return JSON.parse(localStorage.getItem(this.key) || "{}");
+    }
+    get(key) {
+      return this.getStore()[key] ?? this.defaults[key];
+    }
+    set(key, value) {
+      return localStorage.setItem(this.key, JSON.stringify({ ...this.getStore(), [key]: value }));
+    }
+  };
+
+  // src/api/Ninja.ts
+  var Ninja_default = new class Ninja {
+    settings = new Settings(config_default.settingsKey, {
+      enabledMods: []
+    });
+    constructor() {
+    }
+    init() {
+      const ninja = this;
+      this.ready = true;
+      const stepper = app.stepCallback;
+      app.stepCallback = function(...d) {
+        try {
+          ninja.stepListeners.forEach((l) => l());
+        } catch (err) {
+          console.error(err);
+        }
+        return stepper(...d);
+      };
+      hookModMenu();
+      this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
+    }
+    ready = false;
+    get GameVersion() {
+      return document.querySelector(`script[src*="game.js"]`)?.src.split("/").pop()?.split("?v=")?.[1] || (() => {
+        try {
+          return App.ClientVersion;
+        } catch {
+          return "unknown";
+        }
+      })();
+    }
+    serverLatency = 0;
+    mods = [];
+    registerMod(mod) {
+      this.mods.push(mod);
+      if (mod.isInstalled())
+        this.loadMod(mod.id);
+    }
+    loadMod(id) {
+      const mod = this.mods.find((m) => m.id == id);
+      if (!mod || mod.loaded || !mod.isInstalled())
+        return;
+      if (this.ready && mod.loadon == "appstart")
+        mod.load();
+      else if (mod.loadon == "pagestart")
+        mod.load();
+    }
+    log(text, color) {
+      if (this.ready)
+        App.Console.log(text, color);
+      else
+        console.log(text);
+    }
+    stepListeners = [];
+    onstep(l) {
+      this.stepListeners.push(l);
+      return l;
+    }
+    offstep(l) {
+      const i = this.stepListeners.indexOf(l);
+      if (i >= 0)
+        this.stepListeners.splice(i, 1);
+    }
+    inGame() {
+      return app.matchStarted && (app.gameClient.socket && app.gameClient.socket.readyState == WebSocket.OPEN || app.pvpClient.socket && app.pvpClient.socket.readyState == WebSocket.OPEN);
+    }
+  }();
+
+  // src/coremods/index.ts
+  var coremods_exports = {};
+  __export(coremods_exports, {
+    ShareURLMod: () => ShareURLMod
+  });
+
+  // src/api/Mod.ts
+  var Mod = class {
+    constructor(details) {
+      this.details = details;
+    }
+    get id() {
+      return this.details.id;
+    }
+    get name() {
+      return this.details.name;
+    }
+    loaded = false;
+    loadon = "appstart";
+    config = null;
+    isInstalled() {
+      return this.details.core || Ninja_default.settings.get("enabledMods").includes(this.id);
+    }
+    doInstall(add = true) {
+      const list = new Set(Ninja_default.settings.get("enabledMods"));
+      if (add) {
+        list.add(this.id);
+        if (!this.loaded)
+          this.load();
+      } else {
+        list.delete(this.id);
+        if (this.loaded)
+          this.unload();
+      }
+      Ninja_default.settings.set("enabledMods", [...list]);
+      return add;
+    }
+    load() {
+      this.log(`Loaded successfully!`);
+      this.loaded = true;
+    }
+    unload() {
+      this.log(`Unloaded mod.`);
+      this.loaded = false;
+    }
+    log(text, color) {
+      Ninja_default.log(`[${this.id}] ${text}`, color);
+    }
+    implementConfig(defaults) {
+      this.config = new Settings(`modconfig_${this.id}`, defaults);
+    }
+  };
+
+  // src/coremods/shareURLs.ts
+  var ShareURLMod = class extends Mod {
+    constructor() {
+      super({
+        id: "ShareURL",
+        name: "Share URLs",
+        description: "Allows other players to join your game by providing a link.",
+        author: "builtin",
+        icon: "menu_icon_players",
+        core: true
+      });
+    }
+  };
+
   // src/mods/index.ts
   var mods_exports = {};
   __export(mods_exports, {
@@ -648,7 +650,7 @@
 
   // src/mods/fpsDisplay.ts
   var FPSDisplayMod = class extends Mod {
-    frameDisplay = document.createElement("div");
+    frameDisplay;
     lastUpdate = Date.now();
     frames = 0;
     listener;
@@ -665,10 +667,10 @@
       });
     }
     load() {
+      this.frameDisplay = document.createElement("div");
       Object.entries({
         padding: "0.3rem 0.4rem",
         font: "16px Arial",
-        display: "none",
         position: "fixed",
         top: "0px",
         left: "50%",
@@ -689,7 +691,7 @@
     }
     unload() {
       Ninja_default.offstep(this.listener);
-      document.body.removeChild(this.frameDisplay);
+      this.frameDisplay.remove();
       super.unload();
     }
     update() {
@@ -723,6 +725,7 @@
   };
 
   // src/index.ts
+  window.Ninja = Ninja_default;
   Object.values(coremods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Object.values(mods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && m.load());
@@ -734,8 +737,6 @@
       return;
     }
     clearInterval(tester);
-    Ninja_default.ready = true;
-    hookModMenu();
-    Ninja_default.mods.forEach((m) => m.loadon == "appstart" && m.load());
+    Ninja_default.init();
   });
 })();

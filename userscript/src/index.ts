@@ -2,8 +2,9 @@ import { APIClient } from "lib";
 import { app } from "typings";
 import Ninja from "./api/Ninja";
 import * as CoreMods from "./coremods/index";
-import hookModMenu from "./hookModMenu";
 import * as Mods from "./mods/index";
+
+(<any>window).Ninja = Ninja;
 
 Object.values(CoreMods).forEach((mod) => Ninja.registerMod(new mod()));
 Object.values(Mods).forEach((mod) => Ninja.registerMod(new mod()));
@@ -25,9 +26,6 @@ const tester = setInterval(() => {
     return;
   }
   clearInterval(tester);
-  Ninja.ready = true;
 
-  hookModMenu();
-
-  Ninja.mods.forEach((m) => m.loadon == "appstart" && m.load());
+  Ninja.init();
 });

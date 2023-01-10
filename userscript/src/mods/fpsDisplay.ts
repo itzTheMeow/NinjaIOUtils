@@ -4,7 +4,7 @@ import Ninja, { Listener } from "../api/Ninja";
 export class FPSDisplayMod extends Mod<{
   showTime: boolean;
 }> {
-  frameDisplay = document.createElement("div");
+  frameDisplay: HTMLDivElement;
   lastUpdate = Date.now();
   frames = 0;
   listener: Listener;
@@ -22,10 +22,10 @@ export class FPSDisplayMod extends Mod<{
     });
   }
   public load() {
+    this.frameDisplay = document.createElement("div");
     Object.entries({
       padding: "0.3rem 0.4rem",
       font: "16px Arial",
-      display: "none",
       position: "fixed",
       top: "0px",
       left: "50%",
@@ -46,7 +46,7 @@ export class FPSDisplayMod extends Mod<{
   }
   public unload() {
     Ninja.offstep(this.listener);
-    document.body.removeChild(this.frameDisplay);
+    this.frameDisplay.remove();
     super.unload();
   }
 
