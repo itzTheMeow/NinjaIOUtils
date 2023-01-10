@@ -869,11 +869,11 @@
       });
     }
     load() {
-      document.addEventListener("keydown", this.keydown);
+      window.addEventListener("keydown", this.keydown);
       super.load();
     }
     unload() {
-      document.removeEventListener("keydown", this.keydown);
+      window.removeEventListener("keydown", this.keydown);
       super.unload();
     }
     handleKeyDown(e) {

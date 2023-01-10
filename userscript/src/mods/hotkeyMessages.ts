@@ -42,11 +42,11 @@ export class HotkeyMessagesMod extends Mod<{
   }
 
   public load() {
-    document.addEventListener("keydown", this.keydown);
+    window.addEventListener("keydown", this.keydown);
     super.load();
   }
   public unload() {
-    document.removeEventListener("keydown", this.keydown);
+    window.removeEventListener("keydown", this.keydown);
     super.unload();
   }
 
