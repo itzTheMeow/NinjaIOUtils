@@ -686,8 +686,12 @@
       if (i >= 0)
         this.stepListeners.splice(i, 1);
     }
+    activeClient() {
+      return app.gameClient.socket ? app.gameClient : app.pvpClient.socket ? app.pvpClient : null;
+    }
     inGame() {
-      return app.matchStarted && (app.gameClient.socket && app.gameClient.socket.readyState == WebSocket.OPEN || app.pvpClient.socket && app.pvpClient.socket.readyState == WebSocket.OPEN);
+      const active = this.activeClient();
+      return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
     }
   }();
 
@@ -837,7 +841,9 @@
   };
 
   // src/mods/hotkeyMessages.ts
+  
   var HotkeyMessagesMod = class extends Mod {
+    lastSent = Date.now();
     constructor() {
       super({
         id: "HotkeyMessages",
@@ -861,6 +867,32 @@
         keyW: "ALT + W",
         keyE: "ALT + E"
       });
+    }
+    load() {
+      document.addEventListener("keydown", this.keydown);
+      super.load();
+    }
+    unload() {
+      document.removeEventListener("keydown", this.keydown);
+      super.unload();
+    }
+    handleKeyDown(e) {
+      if (e.repeat)
+        return;
+      const message = this.config.get(`key${e.key.toUpperCase()}`);
+      if (e.altKey && message)
+        this.sendChatMessage(message);
+    }
+    keydown = this.handleKeyDown.bind(this);
+    sendChatMessage(msg) {
+      if (!Ninja_default.inGame() || this.lastSent >= Date.now())
+        return;
+      const binaryChatMessage = Client.compress({
+        t: Protocol.Game.MESSAGE,
+        msg
+      });
+      Ninja_default.activeClient().socket.send(binaryChatMessage);
+      this.lastSent = Date.now() + 1e3 * 1.4;
     }
   };
 

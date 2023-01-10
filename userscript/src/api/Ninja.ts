@@ -79,11 +79,11 @@ export default new (class Ninja {
     if (i >= 0) this.stepListeners.splice(i, 1);
   }
 
+  public activeClient() {
+    return app.gameClient.socket ? app.gameClient : app.pvpClient.socket ? app.pvpClient : null;
+  }
   public inGame() {
-    return (
-      app.matchStarted &&
-      ((app.gameClient.socket && app.gameClient.socket.readyState == WebSocket.OPEN) ||
-        (app.pvpClient.socket && app.pvpClient.socket.readyState == WebSocket.OPEN))
-    );
+    const active = this.activeClient();
+    return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
   }
 })();
