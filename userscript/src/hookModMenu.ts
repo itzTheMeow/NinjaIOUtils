@@ -1,4 +1,4 @@
-import { Checkbox, Feature, ImgButton, MemberMenuButton } from "lib";
+import { Button, Checkbox, Feature, ImgButton, MemberMenuButton } from "lib";
 import { app, App, FontStyle, Layer, PIXI } from "typings";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
@@ -238,6 +238,20 @@ export default function hookModMenu() {
       description.x = pl = 12;
       description.y = pt += iconSize - 2;
       container.addChild(description);
+
+      if (!mod.details.core) {
+        const button = new Button("installer");
+        button.setText(mod.isInstalled() ? "Uninstall" : "Install");
+        button.setTint(mod.isInstalled() ? config.Colors.red : config.Colors.green);
+        button.scale.x = button.scale.y = 0.75;
+        button.x = container.width - button.width;
+        button.y = 12;
+        button.addListener(Button.BUTTON_RELEASED, () => {
+          mod.doInstall(!mod.isInstalled());
+          this.indexList();
+        });
+        container.addChild(button);
+      }
 
       return container;
     }

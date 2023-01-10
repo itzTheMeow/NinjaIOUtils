@@ -389,7 +389,7 @@ declare module "lib" {
         export { SCROLL_1 as SCROLL };
     }
     export class Button extends PIXI.Graphics {
-        constructor(a: any, b?: any, c?: any, d?: any);
+        constructor(id: any, b?: any, c?: any, d?: any);
         id: any;
         value: string;
         enabled: boolean;
@@ -399,7 +399,7 @@ declare module "lib" {
         image: PIXI.Sprite;
         clickTimeout: any;
         edge: PIXI.Graphics;
-        setText(a: any, b: any, c: any): void;
+        setText(text: any, x?: number, y?: number): void;
         text: PIXI.Text;
         redraw(): void;
         draw(): void;

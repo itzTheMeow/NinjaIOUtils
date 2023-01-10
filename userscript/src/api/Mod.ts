@@ -33,6 +33,18 @@ export default class Mod<cfg = {}> {
   public isInstalled() {
     return this.details.core || Ninja.settings.get("enabledMods").includes(this.id);
   }
+  public doInstall(add = true) {
+    const list = new Set(Ninja.settings.get("enabledMods"));
+    if (add) {
+      list.add(this.id);
+      if (!this.loaded) this.load();
+    } else {
+      list.delete(this.id);
+      if (this.loaded) this.unload();
+    }
+    Ninja.settings.set("enabledMods", [...list]);
+    return add;
+  }
   public load() {
     this.log(`Loaded successfully!`);
     this.loaded = true;
