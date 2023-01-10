@@ -1,6 +1,7 @@
 export default {
   ver: "$$version",
-  api: "https://nutils.itsmeow.cat",
+  //api: "https://nutils.itsmeow.cat",
+  api: "http://localhost:8907",
   customDelimiter: "__custom",
   settingsKey: "nutils_settings",
   Colors: {

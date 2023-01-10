@@ -23,7 +23,7 @@ export class TexturePackMod extends Mod {
   public load() {
     const texturePack = Ninja.settings.get("texturePack");
     class WorkerNew extends Worker {
-      _postMessage: any;
+      _postMessage: typeof this.postMessage;
       constructor(url: string, opts: any) {
         super(url, opts);
         this._postMessage = this.postMessage;

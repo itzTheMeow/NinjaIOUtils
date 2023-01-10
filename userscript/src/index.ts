@@ -18,7 +18,7 @@ window.addEventListener("keydown", (e) => {
 Object.values(CoreMods).forEach((mod) => Ninja.registerMod(new mod()));
 Object.values(Mods).forEach((mod) => Ninja.registerMod(new mod()));
 
-Ninja.mods.forEach((m) => m.loadon == "pagestart" && m.load());
+Ninja.mods.forEach((m) => m.loadon == "pagestart" && !m.loaded && m.load());
 
 const tester = setInterval(() => {
   try {

@@ -2203,7 +2203,7 @@
   // src/config.ts
   var config_default = {
     ver: "2.0",
-    api: "https://nutils.itsmeow.cat",
+    api: "http://localhost:8907",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
     Colors: {
@@ -2814,8 +2814,6 @@
     mods = [];
     registerMod(mod) {
       this.mods.push(mod);
-      if (mod.isInstalled())
-        this.loadMod(mod.id);
     }
     loadMod(id) {
       const mod = this.mods.find((m) => m.id == id);
@@ -2844,7 +2842,7 @@
     }
     readyListeners = [];
     onready(l) {
-      this.stepListeners.push(l);
+      this.readyListeners.push(l);
       return l;
     }
     offready(l) {
@@ -3467,7 +3465,7 @@
   });
   Object.values(coremods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Object.values(mods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
-  Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && m.load());
+  Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && !m.loaded && m.load());
   var tester = setInterval(() => {
     try {
       if (!app || !app.menu || !app.menu.joinButton || JSON.stringify(app.status) == "{}" || !APIClient || !APIClient.postCreateGame)

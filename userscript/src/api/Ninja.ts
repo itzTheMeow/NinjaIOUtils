@@ -58,7 +58,6 @@ export default new (class Ninja {
 
   public registerMod(mod: Mod<any>) {
     this.mods.push(mod);
-    if (mod.isInstalled()) this.loadMod(mod.id);
   }
   public loadMod(id: string) {
     const mod = this.mods.find((m) => m.id == id);
@@ -84,7 +83,7 @@ export default new (class Ninja {
 
   private readyListeners: Listener[] = [];
   public onready(l: Listener) {
-    this.stepListeners.push(l);
+    this.readyListeners.push(l);
     return l;
   }
   public offready(l: Listener) {
