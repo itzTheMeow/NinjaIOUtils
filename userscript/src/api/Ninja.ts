@@ -33,6 +33,7 @@ export default new (class Ninja {
     hookModMenu();
 
     this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
+    this.readyListeners.forEach((l) => l());
   }
 
   public ready = false;
@@ -79,6 +80,16 @@ export default new (class Ninja {
   public offstep(l: Listener) {
     const i = this.stepListeners.indexOf(l);
     if (i >= 0) this.stepListeners.splice(i, 1);
+  }
+
+  private readyListeners: Listener[] = [];
+  public onready(l: Listener) {
+    this.stepListeners.push(l);
+    return l;
+  }
+  public offready(l: Listener) {
+    const i = this.readyListeners.indexOf(l);
+    if (i >= 0) this.readyListeners.splice(i, 1);
   }
 
   public activeClient() {

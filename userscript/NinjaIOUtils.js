@@ -2798,6 +2798,7 @@
       };
       hookModMenu();
       this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
+      this.readyListeners.forEach((l) => l());
     }
     ready = false;
     get GameVersion() {
@@ -2840,6 +2841,16 @@
       const i = this.stepListeners.indexOf(l);
       if (i >= 0)
         this.stepListeners.splice(i, 1);
+    }
+    readyListeners = [];
+    onready(l) {
+      this.stepListeners.push(l);
+      return l;
+    }
+    offready(l) {
+      const i = this.readyListeners.indexOf(l);
+      if (i >= 0)
+        this.readyListeners.splice(i, 1);
     }
     activeClient() {
       return app.gameClient.socket ? app.gameClient : app.pvpClient.socket ? app.pvpClient : null;
@@ -2927,8 +2938,53 @@
       this.loadon = "pagestart";
     }
     load() {
+      const texturePack = Ninja_default.settings.get("texturePack");
+      class WorkerNew extends Worker {
+        _postMessage;
+        constructor(url, opts) {
+          super(url, opts);
+          this._postMessage = this.postMessage;
+          this.postMessage = this.newPostMessage;
+        }
+        newPostMessage(data, ...args) {
+          if (texturePack && !window.SKIP_TEX_LOAD && !data?.bypass) {
+            fetch(`${config_default.api}/packs/${texturePack}`).then((r) => r.json()).then(async (pack) => {
+              if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && texturePack) {
+                const orig = data.data[0];
+                const isCustom = texturePack == config_default.customDelimiter;
+                if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.endsWith(".png"))
+                  data.data[0] = `${config_default.api}/packs/${texturePack}/combined.png?v=${Ninja_default.GameVersion}`;
+                if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.endsWith(".png"))
+                  data.data[0] = `${config_default.api}/packs/${texturePack}/seamless.png?v=${Ninja_default.GameVersion}`;
+                if (data.data[0].startsWith(config_default.api) && isCustom) {
+                  const zip = await import_localforage.default.getItem("custom_pack");
+                  if (zip) {
+                    const form = new FormData();
+                    form.append("zip", zip);
+                    const res = await fetch(data.data[0], {
+                      method: "POST",
+                      body: form
+                    }).then((r) => r.blob());
+                    data.data[0] = URL.createObjectURL(res);
+                  } else
+                    data.data[0] = orig;
+                }
+              }
+              this._postMessage(data, ...args);
+            }).catch(() => {
+              this._postMessage(data, ...args);
+            });
+          } else
+            this._postMessage(data, ...args);
+        }
+      }
+      window.Worker = Worker = WorkerNew;
+      Ninja_default.onready(() => this.init());
+      super.load();
+    }
+    init() {
       if (!app.menu?.settingsPanel)
-        return setTimeout(() => this.load(), 500);
+        return setTimeout(() => this.init(), 500);
       function SettingsPanelNew(w, h) {
         const pan = new SettingsPanel(w, h);
         function newTab(title, name, x, tab) {
@@ -2997,7 +3053,6 @@
         tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
         tab._events.mousedown.shift();
       });
-      super.load();
     }
   };
   function getTexTab() {

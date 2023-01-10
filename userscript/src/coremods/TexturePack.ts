@@ -21,8 +21,77 @@ export class TexturePackMod extends Mod {
   }
 
   public load() {
+    const texturePack = Ninja.settings.get("texturePack");
+    class WorkerNew extends Worker {
+      _postMessage: any;
+      constructor(url: string, opts: any) {
+        super(url, opts);
+        this._postMessage = this.postMessage;
+        this.postMessage = this.newPostMessage;
+      }
+      // expected data, must be validated - example data:
+      // {"data":["https://ninja.io/assets-dev/combined/combined.png"],"uuid":0,"id":"loadImageBitmap"}
+      newPostMessage(
+        data: { bypass?: boolean; data: [string | Request]; uuid: number; id: "loadImageBitmap" },
+        ...args: any
+      ) {
+        if (texturePack && !(window as any).SKIP_TEX_LOAD && !data?.bypass) {
+          fetch(`${config.api}/packs/${texturePack}`)
+            .then((r) => r.json())
+            .then(async (pack: TexturePack) => {
+              if (
+                pack &&
+                data.id == "loadImageBitmap" &&
+                typeof data.data[0] == "string" &&
+                texturePack
+              ) {
+                const orig = data.data[0];
+                const isCustom = texturePack == config.customDelimiter;
+                if (
+                  (pack.hasCombined || isCustom) &&
+                  orig.includes("ninja.io") &&
+                  orig.includes("combined") &&
+                  orig.endsWith(".png")
+                )
+                  data.data[0] = `${config.api}/packs/${texturePack}/combined.png?v=${Ninja.GameVersion}`;
+                if (
+                  (pack.hasSeamless || isCustom) &&
+                  orig.includes("ninja.io") &&
+                  orig.includes("seamless") &&
+                  orig.endsWith(".png")
+                )
+                  data.data[0] = `${config.api}/packs/${texturePack}/seamless.png?v=${Ninja.GameVersion}`;
+
+                if (data.data[0].startsWith(config.api) && isCustom) {
+                  const zip: File = await localForage.getItem("custom_pack");
+                  if (zip) {
+                    const form = new FormData();
+                    form.append("zip", zip);
+                    const res = await fetch(data.data[0], {
+                      method: "POST",
+                      body: form,
+                    }).then((r) => r.blob());
+                    data.data[0] = URL.createObjectURL(res);
+                  } else data.data[0] = orig;
+                }
+              }
+              this._postMessage(data, ...args);
+            })
+            .catch(() => {
+              this._postMessage(data, ...args);
+            });
+        } else this._postMessage(data, ...args);
+      }
+    }
+    window.Worker = Worker = WorkerNew;
+
+    Ninja.onready(() => this.init());
+    super.load();
+  }
+
+  public init() {
     // retry panel inject if failed
-    if (!app.menu?.settingsPanel) return setTimeout(() => this.load(), 500);
+    if (!app.menu?.settingsPanel) return setTimeout(() => this.init(), 500);
     function SettingsPanelNew(w: number, h: number) {
       const pan = new SettingsPanel(w, h);
       function newTab(
@@ -111,8 +180,6 @@ export class TexturePackMod extends Mod {
       tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
       tab._events.mousedown.shift();
     });
-
-    super.load();
   }
 }
 
