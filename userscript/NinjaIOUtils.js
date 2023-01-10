@@ -563,7 +563,7 @@
             container.addChild(label);
             const input = new InputField(`config${data.key}`);
             input.x = Math.ceil(label.width / 15) * 15 + 4;
-            input.setDimensions(370, 34);
+            input.setDimensions(500, 34);
             input.setMaxChars(data.maxLength || Infinity);
             input.setText(String(data.value));
             input.setFilter(isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.", false);
