@@ -53,7 +53,11 @@ export class HotkeyMessagesMod extends Mod<{
   public handleKeyDown(e: KeyboardEvent) {
     if (e.repeat) return;
     const message = this.config.get(<any>`key${e.key.toUpperCase()}`);
-    if (e.altKey && message) this.sendChatMessage(message);
+    if (e.altKey && message) {
+      this.sendChatMessage(message);
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
   }
   public keydown = this.handleKeyDown.bind(this);
 

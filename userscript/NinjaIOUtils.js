@@ -880,8 +880,11 @@
       if (e.repeat)
         return;
       const message = this.config.get(`key${e.key.toUpperCase()}`);
-      if (e.altKey && message)
+      if (e.altKey && message) {
         this.sendChatMessage(message);
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
     }
     keydown = this.handleKeyDown.bind(this);
     sendChatMessage(msg) {
