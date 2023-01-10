@@ -6,6 +6,15 @@ import * as Mods from "./mods/index";
 
 (<any>window).Ninja = Ninja;
 
+/* Hook for improved fullscreen. */
+window.addEventListener("keydown", (e) => {
+  if (e.key == "F11") {
+    e.preventDefault();
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.querySelector("html").requestFullscreen();
+  }
+});
+
 Object.values(CoreMods).forEach((mod) => Ninja.registerMod(new mod()));
 Object.values(Mods).forEach((mod) => Ninja.registerMod(new mod()));
 

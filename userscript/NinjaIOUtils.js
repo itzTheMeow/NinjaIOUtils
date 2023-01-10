@@ -901,6 +901,15 @@
 
   // src/index.ts
   window.Ninja = Ninja_default;
+  window.addEventListener("keydown", (e) => {
+    if (e.key == "F11") {
+      e.preventDefault();
+      if (document.fullscreenElement)
+        document.exitFullscreen();
+      else
+        document.querySelector("html").requestFullscreen();
+    }
+  });
   Object.values(coremods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Object.values(mods_exports).forEach((mod) => Ninja_default.registerMod(new mod()));
   Ninja_default.mods.forEach((m) => m.loadon == "pagestart" && m.load());
