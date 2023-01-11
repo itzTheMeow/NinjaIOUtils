@@ -5,6 +5,12 @@ import config from "./config";
 import * as CoreMods from "./coremods/index";
 import * as Mods from "./mods/index";
 
+//@ts-ignore
+if (Worker.prototype.newPostMessage)
+  alert(
+    "NinjaIOUtils is already loaded! Please disable other instances of the script before loading."
+  );
+
 (<any>window).Ninja = Ninja;
 
 /* Hook for improved fullscreen. */

@@ -3525,6 +3525,8 @@
   };
 
   // src/index.ts
+  if (Worker.prototype.newPostMessage)
+    alert("NinjaIOUtils is already loaded! Please disable other instances of the script before loading.");
   window.Ninja = Ninja_default;
   window.addEventListener("keydown", (e) => {
     if (e.key == "F11") {
