@@ -22,7 +22,7 @@ export async function getTextureJSON(url: string): Promise<{
 }> {
   return (await axios.get(url)).data;
 }
-const DOMAIN = "https://dev.ninja.io";
+const DOMAIN = "https://ninja.io";
 
 export async function getTextureURLs() {
   const mainPage = String((await axios.get(DOMAIN)).data);
