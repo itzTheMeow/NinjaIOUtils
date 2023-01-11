@@ -7,7 +7,7 @@ This contains the source code and build tools for the extension, as well as a te
 A simple script for ninja.io that adds some QOL features.
 For support DM `Meow#4567` on discord!
 
-# [DOWNLOAD THE USERSCRIPT HERE](https://greasyfork.org/en/scripts/441245-ninja-io-utils)
+# [DOWNLOAD THE USERSCRIPT HERE](https://greasyfork.org/en/scripts/458005-ninjaioutils)
 
 ### PLEASE DO NOT REPORT UTILS BUGS IN THE NINJA DISCORD, DM THEM TO ME
 
