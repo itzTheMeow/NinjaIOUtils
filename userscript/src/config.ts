@@ -1,38 +1,19 @@
 export default {
   ver: "$$version",
-  api: "https://nutils.itsmeow.cat",
+  //api: "https://nutils.itsmeow.cat",
+  api: "http://localhost:8907",
   customDelimiter: "__custom",
-  actualGameVersion:
-    document
-      .querySelector<HTMLScriptElement>(`script[src*="game.js"]`)
-      ?.src.split("/")
-      .pop()
-      ?.split("?v=")?.[1] ||
-    (() => {
-      try {
-        return App.ClientVersion;
-      } catch {
-        return "unknown";
-      }
-    })(),
-  PacketTypeMap: {
-    systemMessage: "w",
-    chatSend: "x",
-    findMatch: "h",
-    joinMatch: "j",
-    data: "d",
-    data2: "p",
-    joinedMessage: "i",
-  },
+  settingsKey: "nutils_settings",
   Colors: {
-    dotGreen: 65280,
-    dotGrey: 8947848,
-    dotOrange: 16757012,
-    green: 8978312,
-    grey: 16777215,
-    red: 12603201,
-    white: 13421772,
-    yellow: 16763904,
+    black: 0x000000,
+    dotGreen: 0x00ff00,
+    dotGrey: 0x888888,
+    dotOrange: 0xffb114,
+    green: 0x88ff88,
+    grey: 0xffffff,
+    red: 0xc04f41,
+    white: 0xcccccc,
+    yellow: 0xffcc00,
   },
   MapIDs: {
     Hull: 1,

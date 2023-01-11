@@ -1,0 +1,11 @@
+{
+  "include": ["lib.js"],
+  "compilerOptions": {
+    "allowJs": true,
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "lib": ["ES2015", "DOM"],
+    "esModuleInterop": true,
+    "outFile": "../userscript/src/lib.d.ts"
+  }
+}

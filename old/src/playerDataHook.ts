@@ -1,4 +1,4 @@
-import config from "./config";
+import config from "../../userscript/src/config";
 import { SETTINGS } from "./settings/settings";
 
 export default function hookPlayerData() {

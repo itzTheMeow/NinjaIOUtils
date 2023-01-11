@@ -1,0 +1,26 @@
+{
+  "name": "ninjaioutils",
+  "version": "1.0.0",
+  "description": "This is the repo for all things NinjaIOUtils related.",
+  "main": "latest.js",
+  "scripts": {
+    "start": "tsc -b tsconfig.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/itzTheMeow/NinjaIOUtils.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/itzTheMeow/NinjaIOUtils/issues"
+  },
+  "homepage": "https://github.com/itzTheMeow/NinjaIOUtils#readme",
+  "dependencies": {
+    "@types/howler": "^2.2.7",
+    "howler": "^2.2.3",
+    "pixi.js": "^7.0.5",
+    "typescript": "^4.9.4"
+  }
+}

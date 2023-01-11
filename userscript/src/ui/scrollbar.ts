@@ -1,16 +1,18 @@
-export default function getScrollbar() {
+import { UserInput } from "lib";
+import { App, PIXI } from "typings";
+
+export default function Scrollbar() {
+  //@ts-expect-error
   class _Scrollbar extends PIXI.Container {
     public scrolling = false;
     public oy = 0;
-    private scrollBar: Graphics;
-    private scrollButton: Graphics;
+    private scrollBar = new PIXI.Graphics();
+    private scrollButton = new PIXI.Graphics();
     private wheelListener: (c: { data: { delta: number } }) => any;
 
     constructor(public h: number, public start = 0) {
       super();
-      this.scrolling = !1;
-      this.oy = 0;
-      this.scrollBar = new PIXI.Graphics();
+
       this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
       this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
       this.scrollBar.endFill();
@@ -20,7 +22,7 @@ export default function getScrollbar() {
       this.scrollBar.alpha = 0.5;
       this.addChild(this.scrollBar);
       this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
-      this.scrollButton = new PIXI.Graphics();
+
       this.scrollButton.lineStyle(1, 16777215, 0.4, 0);
       this.scrollButton.beginFill(16777215, 0.2);
       this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
@@ -95,7 +97,7 @@ export default function getScrollbar() {
       this.scrollButton.alpha = 0.5;
     }
   }
-  const Scrollbar = _Scrollbar as typeof _Scrollbar & { SCROLL: string };
+  const Scrollbar = _Scrollbar as typeof _Scrollbar & { SCROLL: any };
   Scrollbar.SCROLL = "scroll";
   return Scrollbar;
 }

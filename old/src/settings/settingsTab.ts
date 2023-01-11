@@ -1,9 +1,5 @@
-import config from "../config";
+import config from "../../../userscript/src/config";
 import { saveSettings } from "./settings";
-import hookGraphicsSettingsTab from "./settingsTabGraphics";
-import getHotkeyMsgsTab from "./settingsTabHotkeyMsgs";
-import hookSoundSettingsTab from "./settingsTabSound";
-import getTexTab from "./settingsTabTex";
 
 export default function settingsTab() {
   // retry panel inject if failed
@@ -58,8 +54,8 @@ export default function settingsTab() {
       });
       pan.addChild(pan[`${name}ButtonBackground`]);
     }
-    newTab("Texture Pack", "tex", 302, getTexTab());
-    newTab("Messages", "hkm", 418, getHotkeyMsgsTab());
+    //newTab("Texture Pack", "tex", 302, getTexTab());
+    //newTab("Messages", "hkm", 418, getHotkeyMsgsTab());
     return pan;
   }
   SettingsPanel.Tabs.TEX = "tex";
@@ -100,7 +96,4 @@ export default function settingsTab() {
     tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
     tab._events.mousedown.shift();
   });
-
-  hookSoundSettingsTab();
-  hookGraphicsSettingsTab();
 }

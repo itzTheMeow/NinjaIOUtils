@@ -22,14 +22,15 @@ export async function getTextureJSON(url: string): Promise<{
 }> {
   return (await axios.get(url)).data;
 }
+const DOMAIN = "https://dev.ninja.io";
 
 export async function getTextureURLs() {
-  const mainPage = String((await axios.get("https://ninja.io")).data);
+  const mainPage = String((await axios.get(DOMAIN)).data);
   const scriptURL = mainPage
     .split(`<script async src="`)
     .find((u) => u.startsWith("."))
     .split(`"></script>`)[0]
-    .replace(/^./, "https://ninja.io");
+    .replace(/^./, DOMAIN);
   const scriptText = String((await axios.get(scriptURL)).data);
 
   const RESOURCE_FOLDER = scriptText
