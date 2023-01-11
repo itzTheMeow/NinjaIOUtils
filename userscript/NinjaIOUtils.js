@@ -2203,7 +2203,7 @@
   // src/config.ts
   var config_default = {
     ver: "2.0",
-    api: "http://localhost:8907",
+    api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
     Colors: {
