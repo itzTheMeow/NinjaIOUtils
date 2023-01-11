@@ -10,9 +10,11 @@ export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
     texturePack: string;
+    uiScale: number;
   }>(config.settingsKey, {
     enabledMods: [],
     texturePack: "",
+    uiScale: 0,
   });
 
   constructor() {}
@@ -35,6 +37,13 @@ export default new (class Ninja {
       ninja.serverLatency = ping;
       return App.Stats.realSetPing(ping);
     };
+
+    app.onResize = window.eval(
+      `(function ${app.onResize
+        .toString()
+        .replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`
+    );
+    app.onResize();
 
     hookModMenu();
 

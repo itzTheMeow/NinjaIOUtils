@@ -1,6 +1,7 @@
 import { APIClient } from "lib";
 import { app } from "typings";
 import Ninja from "./api/Ninja";
+import config from "./config";
 import * as CoreMods from "./coremods/index";
 import * as Mods from "./mods/index";
 
@@ -44,4 +45,7 @@ const tester = setInterval(() => {
       `NinjaIOUtils works best when you are logged in!
 No support will be provided to logged out users experiencing issues, sorry.`
     );
+
+  Ninja.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
+  Ninja.log(`This is a beta version of NinjaIOUtils. Not all features are implemented.`);
 });

@@ -2788,7 +2788,8 @@
   var Ninja_default = new class Ninja {
     settings = new Settings(config_default.settingsKey, {
       enabledMods: [],
-      texturePack: ""
+      texturePack: "",
+      uiScale: 0
     });
     constructor() {
     }
@@ -2809,6 +2810,8 @@
         ninja.serverLatency = ping;
         return App.Stats.realSetPing(ping);
       };
+      app.onResize = window.eval(`(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`);
+      app.onResize();
       hookModMenu();
       this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
       this.readyListeners.forEach((l) => l());
@@ -3548,6 +3551,8 @@
     if (Ninja_default.isGuest())
       alert(`NinjaIOUtils works best when you are logged in!
 No support will be provided to logged out users experiencing issues, sorry.`);
+    Ninja_default.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
+    Ninja_default.log(`This is a beta version of NinjaIOUtils. Not all features are implemented.`);
   });
 })();
 /*!

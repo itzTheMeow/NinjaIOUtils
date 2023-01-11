@@ -1,22 +1,16 @@
 import applySettingsHook from "./applySettingsHook";
 import config from "./config";
-import { showFPS } from "./fpsCounter";
 import initFriendOnlineHook, { updateFriendList } from "./friendOnlineHook";
 import { socialMenuHook } from "./friendSearch";
-import hookFullscreen from "./fullscreenHook";
 import hookUtilsMenu from "./hookUtilsMenu";
-import { handleKeyDown } from "./hotkeyMessages";
 import hookJoinGameButton from "./joinGameHook";
 import initMapIdentifier from "./mapIdentifier";
 import matchEndHook from "./matchEndHook";
 import matchStartHook from "./matchStartHook";
 import initOnlineOptionHook from "./onlineStatus";
-import initPartyMenu from "./partyMenu";
 import hookPlayerData from "./playerDataHook";
 import hookPreloader from "./preloaderHook";
 import reposItems from "./repositionItems";
-import { SETTINGS } from "./settings/settings";
-import settingsTab from "./settings/settingsTab";
 import { initShareURLHook, tryJoinLink } from "./shareURLs";
 import hookSocialMenu from "./socialMenuHook";
 import { hookTextureLoader } from "./texturePack";
@@ -76,20 +70,6 @@ const testing = setInterval(() => {
       return;
     }
   }
-  try {
-    if (
-      !app ||
-      !app.menu ||
-      !app.menu.joinButton ||
-      typeof app.status.updating !== "boolean" ||
-      !APIClient ||
-      !APIClient.postCreateGame
-    )
-      return;
-  } catch {
-    return;
-  }
-  clearInterval(testing);
 
   app._showMenu = app.showMenu;
   const menuListeners: (() => any)[] = [];
@@ -102,27 +82,16 @@ const testing = setInterval(() => {
     reposItems();
   };
 
-  showFPS();
   matchStartHook();
   matchEndHook();
   applySettingsHook();
   initShareURLHook();
   initOnlineOptionHook();
-  initPartyMenu();
-  App.Console.log("Successfully injected party menu button.");
-  settingsTab();
-  App.Console.log("Successfully injected settings tab.");
-  //initHashManager();
-  hookFullscreen();
-  reposItems();
   initMapIdentifier();
   hookSocialMenu();
   window.addEventListener("resize", () => reposItems());
   window.addEventListener("focus", () => setTimeout(() => reposItems(), 50));
   setInterval(() => reposItems(), 100);
-
-  //Handler for HotkeyMessages
-  document.addEventListener("keydown", handleKeyDown);
 
   updateFriendList();
   hookJoinGameButton();
@@ -133,13 +102,5 @@ const testing = setInterval(() => {
   //hookRenderer();
   hookPlayerData();
 
-  // replace the app scale setter function
-  app.onResize = window.eval(
-    `(function ${app.onResize.toString().replace(`App.Scale=b`, `b=App.NUIScale||b,App.Scale=b`)})`
-  );
-  App.NUIScale = SETTINGS.uiScale;
-  app.onResize();
-
-  App.Console.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
   tryJoinLink();
 }, 50);
