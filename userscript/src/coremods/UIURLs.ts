@@ -163,6 +163,11 @@ export class UIURLMod extends Mod {
       .map(encodeURIComponent)
       .join("/")}`);
   }
+  public setGameHash(id: string, name: string, password = "") {
+    Ninja.gamePassword = password;
+    return (window.location.hash =
+      this.switchHash(HashPaths.game, id, name, Ninja.gamePassword) + "/");
+  }
 
   public hook() {
     const mod = this;
@@ -174,16 +179,13 @@ export class UIURLMod extends Mod {
           a.type == Protocol.SESSION &&
           a.data.type == Protocol.Session.JOIN_RESP &&
           a.data.info.startsWith("You joined ")
-        ) {
-          const roomName = a.data.info.substring("You joined ".length);
-          window.location.hash =
-            mod.switchHash(
-              HashPaths.game,
-              app.gameClient.server.id,
-              roomName,
-              Ninja.gamePassword || ""
-            ) + "/";
-        }
+        )
+          mod.setGameHash(
+            app.gameClient.server.id,
+            a.data.info.substring("You joined ".length),
+            Ninja.gamePassword
+          );
+
         const testMap = async (name: string) => {
           this.mapID = 0;
           const maps: APIMap[] = await APIClient.getMaps();

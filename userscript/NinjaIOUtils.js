@@ -2867,7 +2867,7 @@
       if (i >= 0)
         this.readyListeners.splice(i, 1);
     }
-    gamePassword = null;
+    gamePassword = "";
     isGuest() {
       return App.Layer.setup == Layer.SETUP_GUEST;
     }
@@ -3368,15 +3368,17 @@
     switchHash(path, ...extra) {
       return window.location.hash = `/${[path, ...extra].filter((e) => e).map(encodeURIComponent).join("/")}`;
     }
+    setGameHash(id, name, password = "") {
+      Ninja_default.gamePassword = password;
+      return window.location.hash = this.switchHash("play" /* game */, id, name, Ninja_default.gamePassword) + "/";
+    }
     hook() {
       const mod = this;
       Client.prototype.onMessage = function(_a) {
         const a = Client.decompress(_a.data);
         try {
-          if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined ")) {
-            const roomName = a.data.info.substring("You joined ".length);
-            window.location.hash = mod.switchHash("play" /* game */, app.gameClient.server.id, roomName, Ninja_default.gamePassword || "") + "/";
-          }
+          if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined "))
+            mod.setGameHash(app.gameClient.server.id, a.data.info.substring("You joined ".length), Ninja_default.gamePassword);
           const testMap = async (name) => {
             this.mapID = 0;
             const maps = await APIClient.getMaps();
