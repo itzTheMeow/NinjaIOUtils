@@ -11,6 +11,7 @@ export type PacketListener = (type: "game" | "pvp", packet: any) => any;
 export enum NinjaEvents {
   GAME_START = "gs",
   GAME_END = "ge",
+  STEP = "st", // called every render frame
 }
 
 export default new (class Ninja {
@@ -47,12 +48,8 @@ export default new (class Ninja {
     };
 
     const stepper = app.stepCallback;
-    app.stepCallback = function (...d) {
-      try {
-        ninja.stepListeners.forEach((l) => l());
-      } catch (err) {
-        console.error(err);
-      }
+    app.stepCallback = (...d) => {
+      this.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
       return stepper(...d);
     };
 
@@ -128,16 +125,6 @@ export default new (class Ninja {
   public log(text: string, color?: number) {
     if (this.ready) App.Console.log(text, color);
     else console.log(text);
-  }
-
-  private stepListeners: Listener[] = [];
-  public onstep(l: Listener) {
-    this.stepListeners.push(l);
-    return l;
-  }
-  public offstep(l: Listener) {
-    const i = this.stepListeners.indexOf(l);
-    if (i >= 0) this.stepListeners.splice(i, 1);
   }
 
   private readyListeners: Listener[] = [];

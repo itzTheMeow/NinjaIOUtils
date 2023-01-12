@@ -1,5 +1,10 @@
 # Changelog
 
+v2.2
+
+- Added xp gain mod.
+- Refactored some event code to make it more efficient.
+
 v2.1
 
 - Fixed mod list not included in url hash.

@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.1
+// @version      2.2
 // ==/UserScript==
 
 /*
@@ -2203,7 +2203,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "2.1",
+    ver: "2.2",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -2821,12 +2821,8 @@
         return this._endGame(data);
       };
       const stepper = app.stepCallback;
-      app.stepCallback = function(...d) {
-        try {
-          ninja.stepListeners.forEach((l) => l());
-        } catch (err) {
-          console.error(err);
-        }
+      app.stepCallback = (...d) => {
+        this.events.dispatchEvent(new CustomEvent("st" /* STEP */));
         return stepper(...d);
       };
       App.Stats.realSetPing = App.Stats.setPing;
@@ -2889,16 +2885,6 @@
         App.Console.log(text, color);
       else
         console.log(text);
-    }
-    stepListeners = [];
-    onstep(l) {
-      this.stepListeners.push(l);
-      return l;
-    }
-    offstep(l) {
-      const i = this.stepListeners.indexOf(l);
-      if (i >= 0)
-        this.stepListeners.splice(i, 1);
     }
     readyListeners = [];
     onready(l) {
@@ -3514,7 +3500,6 @@ ${name}`);
     frameDisplay;
     lastUpdate = Date.now();
     frames = 0;
-    listener;
     constructor() {
       super({
         id: "FPSDisplay",
@@ -3550,11 +3535,11 @@ ${name}`);
       this.frameDisplay.textContent = "...";
       this.lastUpdate = Date.now();
       document.body.appendChild(this.frameDisplay);
-      this.listener = Ninja_default.onstep(() => this.update());
+      Ninja_default.events.addListener("st" /* STEP */, this.updater);
       super.load();
     }
     unload() {
-      Ninja_default.offstep(this.listener);
+      Ninja_default.events.removeListener("st" /* STEP */, this.updater);
       this.frameDisplay.remove();
       super.unload();
     }
@@ -3575,6 +3560,7 @@ ${name}`);
         this.frameDisplay.style.display = "block";
       }
     }
+    updater = this.update.bind(this);
   };
 
   // src/mods/hotkeyMessages.ts

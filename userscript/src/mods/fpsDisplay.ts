@@ -1,5 +1,5 @@
 import Mod from "../api/Mod";
-import Ninja, { Listener } from "../api/Ninja";
+import Ninja, { NinjaEvents } from "../api/Ninja";
 
 export class FPSDisplayMod extends Mod<{
   showTime: boolean;
@@ -7,7 +7,6 @@ export class FPSDisplayMod extends Mod<{
   frameDisplay: HTMLDivElement;
   lastUpdate = Date.now();
   frames = 0;
-  listener: Listener;
 
   constructor() {
     super({
@@ -47,11 +46,11 @@ export class FPSDisplayMod extends Mod<{
     this.frameDisplay.textContent = "...";
     this.lastUpdate = Date.now();
     document.body.appendChild(this.frameDisplay);
-    this.listener = Ninja.onstep(() => this.update());
+    Ninja.events.addListener(NinjaEvents.STEP, this.updater);
     super.load();
   }
   public unload() {
-    Ninja.offstep(this.listener);
+    Ninja.events.removeListener(NinjaEvents.STEP, this.updater);
     this.frameDisplay.remove();
     super.unload();
   }
@@ -71,4 +70,5 @@ export class FPSDisplayMod extends Mod<{
       this.frameDisplay.style.display = "block";
     }
   }
+  public updater = this.update.bind(this);
 }
