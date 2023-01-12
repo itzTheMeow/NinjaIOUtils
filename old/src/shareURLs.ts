@@ -1,51 +1,10 @@
 import config from "./config";
-import settingsTab from "./settings/settingsTab";
-import { setHash } from "./utils";
 
 export let gameLinkData = { id: "", name: "", pass: "" };
 function clearSaved() {
   window.location.hash = "";
   gameLinkData.id = gameLinkData.name = gameLinkData.pass = "";
 }
-
-export function initShareURLHook() {
-  /* Hooks into join_game event and sets your URL to the game you are in. */
-  App.Layer.on("join_game", (name, id, pass) => {
-    setHash(id, name, pass);
-  });
-  /* Upon disconnect, remove the saved server. */
-  app.client.addListener(Protocol.DISCONNECT, () => {
-    clearSaved();
-    settingsTab();
-  });
-
-  /* Hook into the create game function. */
-  APIClient.realPostCreateGame = APIClient.postCreateGame;
-  APIClient.postCreateGame = function (
-    serverID,
-    settings,
-    mode,
-    time,
-    serverName,
-    serverPass,
-    customData,
-    auth
-  ) {
-    /* Saves created info to URL. */
-    setHash(serverID, serverName, serverPass);
-    return APIClient.realPostCreateGame(
-      serverID,
-      settings,
-      mode,
-      time,
-      serverName,
-      serverPass,
-      customData,
-      auth
-    );
-  };
-}
-
 export function tryJoinLink(args?: [string, string, string]) {
   /* Extract room details from URL. */
   const [id, name, pass] =

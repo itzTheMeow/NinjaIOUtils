@@ -171,6 +171,7 @@ export class UIURLMod extends Mod {
 
   public hook() {
     const mod = this;
+    /** Identify map and server details on join. */
     Client.prototype.onMessage = function (_a) {
       const a: any = Client.decompress(_a.data);
       try {
@@ -206,6 +207,39 @@ export class UIURLMod extends Mod {
         console.error(err);
       }
       this.dispatchEvent(a);
+    };
+
+    App.Layer.on(Layer.Events.JOIN_GAME, (name, id, pass) => {
+      this.setGameHash(id, name, pass);
+    });
+    app.gameClient.addListener(Protocol.DISCONNECT, () => {
+      Ninja.gamePassword = "";
+      this.switchHash(HashPaths.menu);
+    });
+
+    const realPostCreateGame = APIClient.postCreateGame.bind(APIClient);
+    APIClient.postCreateGame = function (
+      serverID,
+      settings,
+      mode,
+      time,
+      serverName,
+      serverPass,
+      customData,
+      auth
+    ) {
+      /* Saves created info to URL. */
+      mod.setGameHash(serverID, serverName, serverPass);
+      return realPostCreateGame(
+        serverID,
+        settings,
+        mode,
+        time,
+        serverName,
+        serverPass,
+        customData,
+        auth
+      );
     };
   }
 }

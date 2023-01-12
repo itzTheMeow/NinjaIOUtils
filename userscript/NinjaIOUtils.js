@@ -3400,6 +3400,18 @@
         }
         this.dispatchEvent(a);
       };
+      App.Layer.on(Layer.Events.JOIN_GAME, (name, id, pass) => {
+        this.setGameHash(id, name, pass);
+      });
+      app.gameClient.addListener(Protocol.DISCONNECT, () => {
+        Ninja_default.gamePassword = "";
+        this.switchHash("" /* menu */);
+      });
+      const realPostCreateGame = APIClient.postCreateGame.bind(APIClient);
+      APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
+        mod.setGameHash(serverID, serverName, serverPass);
+        return realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
+      };
     }
   };
 
