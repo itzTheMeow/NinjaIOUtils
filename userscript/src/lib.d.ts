@@ -77,6 +77,7 @@ declare module "lib" {
         const ChallengeURL: string;
     }
     export class Client extends EventDispatcher {
+        mapID: number;
         pinger: number;
         socket: WebSocket;
         time: number;
@@ -3114,6 +3115,7 @@ declare module "lib" {
         applyCustomization(a: any): void;
     }
     export class PVPClient extends EventDispatcher {
+        mapID: number;
         connectionTimeout: number;
         socket: WebSocket;
         allowNextAttempt: boolean;

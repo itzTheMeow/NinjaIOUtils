@@ -1,3 +1,4 @@
+import { Client, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -5,6 +6,7 @@ import Mod from "./Mod";
 import Settings from "./Settings";
 
 export type Listener = () => any;
+export type PacketListener = (type: "game" | "pvp", packet: any) => any;
 
 export default new (class Ninja {
   public settings = new Settings<{
@@ -45,6 +47,25 @@ export default new (class Ninja {
     );
     app.onResize();
 
+    Client.prototype.onMessage = function (_a) {
+      const a: any = Client.decompress(_a.data);
+      try {
+        ninja.clientPacketListeners.forEach((l) => l("game", a));
+      } catch (err) {
+        console.error(err);
+      }
+      this.dispatchEvent(a);
+    };
+    PVPClient.prototype.onMessage = function (_a) {
+      const a: any = PVPClient.decompress(_a.data);
+      try {
+        ninja.clientPacketListeners.forEach((l) => l("pvp", a));
+      } catch (err) {
+        console.error(err);
+      }
+      this.dispatchEvent(a);
+    };
+
     hookModMenu();
 
     this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
@@ -72,6 +93,7 @@ export default new (class Ninja {
   public mods: Mod[] = [];
 
   public registerMod(mod: Mod<any>) {
+    if (mod.details.draft) return;
     this.mods.push(mod);
   }
   public loadMod(id: string) {
@@ -104,6 +126,16 @@ export default new (class Ninja {
   public offready(l: Listener) {
     const i = this.readyListeners.indexOf(l);
     if (i >= 0) this.readyListeners.splice(i, 1);
+  }
+
+  private clientPacketListeners: PacketListener[] = [];
+  public onClientPacket(l: PacketListener) {
+    this.clientPacketListeners.push(l);
+    return l;
+  }
+  public offClientPacket(l: PacketListener) {
+    const i = this.clientPacketListeners.indexOf(l);
+    if (i >= 0) this.clientPacketListeners.splice(i, 1);
   }
 
   public gamePassword = "";

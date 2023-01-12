@@ -13,7 +13,9 @@ export interface ModDetails {
   /** A ninja texture keyname used as an icon. */
   icon: string;
   /** Determines if the mod is built-in. You should not need to use this. */
-  core?: boolean;
+  core?: true;
+  /** Determines if this mod is a draft. Draft mods are not registered and can not be installed. */
+  draft?: true;
 }
 
 export default class Mod<cfg = any> {

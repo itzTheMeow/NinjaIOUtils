@@ -2199,6 +2199,7 @@
 
   // src/api/Ninja.ts
   
+  
 
   // src/config.ts
   var config_default = {
@@ -2813,6 +2814,24 @@
       };
       app.onResize = window.eval(`(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`);
       app.onResize();
+      Client.prototype.onMessage = function(_a) {
+        const a = Client.decompress(_a.data);
+        try {
+          ninja.clientPacketListeners.forEach((l) => l("game", a));
+        } catch (err) {
+          console.error(err);
+        }
+        this.dispatchEvent(a);
+      };
+      PVPClient.prototype.onMessage = function(_a) {
+        const a = PVPClient.decompress(_a.data);
+        try {
+          ninja.clientPacketListeners.forEach((l) => l("pvp", a));
+        } catch (err) {
+          console.error(err);
+        }
+        this.dispatchEvent(a);
+      };
       hookModMenu();
       this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
       this.readyListeners.forEach((l) => l());
@@ -2830,6 +2849,8 @@
     serverLatency = 0;
     mods = [];
     registerMod(mod) {
+      if (mod.details.draft)
+        return;
       this.mods.push(mod);
     }
     loadMod(id) {
@@ -2866,6 +2887,16 @@
       const i = this.readyListeners.indexOf(l);
       if (i >= 0)
         this.readyListeners.splice(i, 1);
+    }
+    clientPacketListeners = [];
+    onClientPacket(l) {
+      this.clientPacketListeners.push(l);
+      return l;
+    }
+    offClientPacket(l) {
+      const i = this.clientPacketListeners.indexOf(l);
+      if (i >= 0)
+        this.clientPacketListeners.splice(i, 1);
     }
     gamePassword = "";
     isGuest() {
@@ -3382,32 +3413,12 @@
     }
     hook() {
       const mod = this;
-      Client.prototype.onMessage = function(_a) {
-        const a = Client.decompress(_a.data);
-        try {
-          if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined "))
-            mod.setGameHash(app.gameClient.server.id, a.data.info.substring("You joined ".length), Ninja_default.gamePassword);
-          const testMap = async (name) => {
-            this.mapID = 0;
-            const maps = await APIClient.getMaps();
-            const map = maps.find((m) => m.name == name);
-            if (map) {
-              this.mapID = Number(map.id);
-              App.Console.log(`# Identified map as ${map.name} (ID: ${map.id}).`);
-            } else
-              App.Console.log(`# Failed to identify map. (name: ${name}) Please report to Meow.`);
-          };
-          if (a.type == Protocol.GAME && a.data.t == Protocol.Game.INFO) {
-            if (a.data.msg.startsWith("Joining "))
-              testMap((a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1]);
-            else if (a.data.msg.startsWith("loading map: "))
-              testMap(a.data.msg.substring("loading map: ".length));
-          }
-        } catch (err) {
-          console.error(err);
-        }
-        this.dispatchEvent(a);
-      };
+      Ninja_default.onClientPacket((type, a) => {
+        if (type !== "game")
+          return;
+        if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined "))
+          mod.setGameHash(app.gameClient.server.id, a.data.info.substring("You joined ".length), Ninja_default.gamePassword);
+      });
       App.Layer.on(Layer.Events.JOIN_GAME, (name, id, pass) => {
         this.setGameHash(id, name, pass);
       });
