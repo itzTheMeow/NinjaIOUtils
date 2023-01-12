@@ -13,6 +13,7 @@ enum HashPaths {
   mods = "mods",
   players = "players",
   profile = "profile",
+  pvp = "spectate",
   ranks = "ranks",
   recover = "recovery",
   register = "register",
@@ -164,6 +165,12 @@ export class UIURLMod extends Mod {
         .split("/")
         .map(decodeURIComponent);
       if (id && name) this.tryJoin(id, name, pass);
+    } else if (window.location.hash.startsWith(`#/${HashPaths.pvp}/`)) {
+      const [id, name, pass] = window.location.hash
+        .substring(`#/${HashPaths.pvp}/`.length)
+        .split("/")
+        .map(decodeURIComponent);
+      if (id && name) this.tryJoin(id, name, pass, true);
     }
 
     super.load();
@@ -178,7 +185,12 @@ export class UIURLMod extends Mod {
   public setGameHash(id: string, name: string, password = "") {
     Ninja.gamePassword = password;
     return (window.location.hash =
-      this.switchHash(HashPaths.game, id, name, Ninja.gamePassword) + "/");
+      this.switchHash(
+        name.startsWith("#") ? HashPaths.pvp : HashPaths.game,
+        id,
+        name,
+        Ninja.gamePassword
+      ) + "/");
   }
 
   public hook() {
@@ -232,14 +244,14 @@ export class UIURLMod extends Mod {
     };
   }
 
-  public tryJoin(id: string, name: string, pass?: string) {
+  public tryJoin(id: string, name: string, pass?: string, spec = false) {
     App.Console.log(`Attempting to join server '${name}'...`);
     const loadingMenu = App.Layer.loadingMenu;
 
     /* Shows loading menu. */
     App.Layer.addChild(loadingMenu);
     loadingMenu.show();
-    loadingMenu.setTitle(`Click to join server.\n${name}`);
+    loadingMenu.setTitle(`Click to ${spec ? "spectate" : "join"} server.\n${name}`);
     loadingMenu.cancelCount = -1;
 
     const joinButton = new Button("join");
@@ -249,7 +261,7 @@ export class UIURLMod extends Mod {
       removeJoinStuff();
       loadingMenu.show();
       /* Joins the game using the specified details. */
-      App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "");
+      App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "", spec);
     });
     joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
     joinButton.y = loadingMenu.title.y + 40;

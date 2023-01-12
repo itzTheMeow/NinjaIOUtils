@@ -1,5 +1,10 @@
 # Changelog
 
+v2.1
+
+- Fixed mod list not included in url hash.
+- Added share URLs for 1v1s and regular games.
+
 v2.0
 
 - Replaced unused NinjaIOUtils menu with Mods.

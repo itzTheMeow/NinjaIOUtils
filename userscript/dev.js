@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.0
+// @version      2.1
 // ==/UserScript==
 
 /*

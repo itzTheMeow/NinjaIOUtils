@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.0
+// @version      2.1
 // ==/UserScript==
 
 /*
@@ -2203,7 +2203,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "2.0",
+    ver: "2.1",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -3401,6 +3401,10 @@
         const [id, name, pass] = window.location.hash.substring(`#/${"play" /* game */}/`.length).split("/").map(decodeURIComponent);
         if (id && name)
           this.tryJoin(id, name, pass);
+      } else if (window.location.hash.startsWith(`#/${"spectate" /* pvp */}/`)) {
+        const [id, name, pass] = window.location.hash.substring(`#/${"spectate" /* pvp */}/`.length).split("/").map(decodeURIComponent);
+        if (id && name)
+          this.tryJoin(id, name, pass, true);
       }
       super.load();
     }
@@ -3409,7 +3413,7 @@
     }
     setGameHash(id, name, password = "") {
       Ninja_default.gamePassword = password;
-      return window.location.hash = this.switchHash("play" /* game */, id, name, Ninja_default.gamePassword) + "/";
+      return window.location.hash = this.switchHash(name.startsWith("#") ? "spectate" /* pvp */ : "play" /* game */, id, name, Ninja_default.gamePassword) + "/";
     }
     hook() {
       const mod = this;
@@ -3432,12 +3436,12 @@
         return realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
       };
     }
-    tryJoin(id, name, pass) {
+    tryJoin(id, name, pass, spec = false) {
       App.Console.log(`Attempting to join server '${name}'...`);
       const loadingMenu = App.Layer.loadingMenu;
       App.Layer.addChild(loadingMenu);
       loadingMenu.show();
-      loadingMenu.setTitle(`Click to join server.
+      loadingMenu.setTitle(`Click to ${spec ? "spectate" : "join"} server.
 ${name}`);
       loadingMenu.cancelCount = -1;
       const joinButton = new Button("join");
@@ -3446,7 +3450,7 @@ ${name}`);
       joinButton.addListener(Button.BUTTON_RELEASED, function() {
         removeJoinStuff();
         loadingMenu.show();
-        App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "");
+        App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "", spec);
       });
       joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
       joinButton.y = loadingMenu.title.y + 40;
