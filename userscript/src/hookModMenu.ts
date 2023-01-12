@@ -250,7 +250,7 @@ export default function hookModMenu() {
           mod.details.description.slice(0, maxDesc) +
           (mod.details.description.length > maxDesc ? "..." : "")
         ).trim(),
-        { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 595 }
+        { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 }
       );
       description.x = pl = 12;
       description.y = pt += iconSize - 2;
