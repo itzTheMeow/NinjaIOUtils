@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, PVPClient } from "lib";
+import { Client, EventDispatcher, Game, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -7,6 +7,11 @@ import Settings from "./Settings";
 
 export type Listener = () => any;
 export type PacketListener = (type: "game" | "pvp", packet: any) => any;
+
+export enum NinjaEvents {
+  GAME_START = "gs",
+  GAME_END = "ge",
+}
 
 export default new (class Ninja {
   public settings = new Settings<{
@@ -18,12 +23,28 @@ export default new (class Ninja {
     texturePack: "",
     uiScale: 0,
   });
+  public events: EventDispatcher;
 
   constructor() {}
   public init() {
     const ninja = this;
     this.ready = true;
     this.events = new EventDispatcher();
+
+    //@ts-ignore
+    App.prototype.realInitGameMode = App.prototype.initGameMode;
+    App.prototype.initGameMode = function (data) {
+      this.realInitGameMode(data);
+      this.game.on(Game.MATCH_START, () =>
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_START))
+      );
+    };
+    //@ts-ignore
+    Game.prototype._endGame = Game.prototype.endGame;
+    Game.prototype.endGame = function (data) {
+      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, data));
+      return this._endGame(data);
+    };
 
     const stepper = app.stepCallback;
     app.stepCallback = function (...d) {
@@ -153,6 +174,4 @@ export default new (class Ninja {
     const active = this.activeClient();
     return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
   }
-
-  public events: EventDispatcher;
 })();

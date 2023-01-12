@@ -3168,7 +3168,24 @@ declare module "lib" {
     }
     export class App extends PIXI.Container<PIXI.DisplayObject> {
         constructor();
-        credential: {};
+        credential: {
+            id: any;
+            type: string;
+            username: string;
+            playerid: number;
+            level: number;
+            title: string;
+            skill: number;
+            accounttype: string;
+            products: {};
+            customization: {};
+            clan_id: number;
+            clan_name: string;
+            clan_role: string;
+            addr: string;
+            version: string;
+            ts: number;
+        };
         servers: any[];
         status: {};
         stage: PIXI.Container<PIXI.DisplayObject>;

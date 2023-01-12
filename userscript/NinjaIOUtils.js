@@ -2802,12 +2802,23 @@
       texturePack: "",
       uiScale: 0
     });
+    events;
     constructor() {
     }
     init() {
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
+      App.prototype.realInitGameMode = App.prototype.initGameMode;
+      App.prototype.initGameMode = function(data) {
+        this.realInitGameMode(data);
+        this.game.on(Game.MATCH_START, () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */)));
+      };
+      Game.prototype._endGame = Game.prototype.endGame;
+      Game.prototype.endGame = function(data) {
+        ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, data));
+        return this._endGame(data);
+      };
       const stepper = app.stepCallback;
       app.stepCallback = function(...d) {
         try {
@@ -2922,7 +2933,6 @@
       const active = this.activeClient();
       return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
     }
-    events;
   }();
 
   // src/coremods/index.ts
@@ -3448,7 +3458,7 @@
       };
     }
     tryJoin(id, name, pass, spec = false) {
-      App.Console.log(`Attempting to join server '${name}'...`);
+      Ninja_default.log(`Attempting to join server '${name}'...`);
       const loadingMenu = App.Layer.loadingMenu;
       App.Layer.addChild(loadingMenu);
       loadingMenu.show();
@@ -3654,6 +3664,7 @@ ${name}`);
 
   // src/mods/statTracker.ts
   
+  
   var StatTrackerMod = class extends Mod {
     constructor() {
       super({
@@ -3685,11 +3696,53 @@ ${name}`);
             testMap(a.data.msg.substring("loading map: ".length));
         }
       });
+      Ninja_default.events.addListener("ge" /* GAME_END */, ({ data }) => {
+        if ("apiKey") {
+          Ninja_default.log("Attempting to upload match score...");
+          if (app.game.manager.isRanked) {
+            try {
+              const leaderIndex = data.leaderboard.id.indexOf(app.game.sessionId);
+              const statModel = {
+                id: app.credential.playerid,
+                map: Ninja_default.activeClient().mapID,
+                mode: app.game.mode,
+                kills: data.leaderboard.kills[leaderIndex],
+                deaths: data.leaderboard.deaths[leaderIndex],
+                caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
+              };
+              fetch(`${config_default.api}/submit?key=${"APIKEY"}`, {
+                method: "POST",
+                body: JSON.stringify(statModel),
+                headers: {
+                  "Content-Type": "application/json"
+                }
+              }).then((res) => res.json()).then((res) => {
+                if (res.err) {
+                  Ninja_default.log(`Failed to upload match score! ERR_${res.err}`);
+                  Ninja_default.log(`Error: ${res.message}`);
+                } else {
+                  Ninja_default.log("Successfully uploaded match score!");
+                }
+              }).catch((err) => {
+                Ninja_default.log("Failed to upload match score! (check console for errors)");
+                console.error(err);
+              });
+            } catch (err) {
+              Ninja_default.log("Failed to upload match score! (check console for errors)");
+              console.error(err);
+            }
+          } else {
+            Ninja_default.log("Match is unranked or custom, scores not uploaded.");
+          }
+        }
+      });
       super.load();
     }
   };
 
   // src/mods/xpStats.ts
+  
+  
   var XPStatsMod = class extends Mod {
     constructor() {
       super({
@@ -3698,11 +3751,15 @@ ${name}`);
         description: "Shows how much XP you gained after finishing a match.",
         author: "Meow",
         icon: "10xp",
-        draft: true,
         recommend: true
       });
     }
+    startingLevel = 0;
     load() {
+      Ninja_default.events.addListener("gs" /* GAME_START */, async () => {
+        this.startingLevel = 0;
+        this.startingLevel = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+      });
       super.load();
     }
   };

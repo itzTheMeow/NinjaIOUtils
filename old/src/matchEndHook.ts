@@ -1,82 +1,9 @@
 import config from "./config";
 import { startingLevel } from "./matchStartHook";
-import { SETTINGS } from "./settings/settings";
 
 export default function matchEndHook() {
   Game.prototype._endGame = Game.prototype.endGame;
   Game.prototype.endGame = function (data) {
-    // example - points can now be omitted
-    /*{
-      mode: 1,
-      winner: 0,
-      leaderboard: {
-        id: ["7", "d", "9", "4", "5", "b", "2", "c", "6", "0", "8"],
-        points: [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        kills: [31, 41, 21, 8, 8, 5, 5, 2, 0, -2, -6],
-        deaths: [11, 16, 8, 27, 22, 16, 8, 2, 0, 11, 23],
-        name: [
-          "sheep",
-          ".Frost.Killer",
-          "ALEXMEOW4560",
-          "rtyty",
-          "NinjaBK730",
-          "NinjaPH74",
-          "NinjaPL529",
-          "NinjaBD919",
-          "saldapaga",
-          "NinjaXO395",
-          "NinjaTA163",
-        ],
-      },
-      countdown: 24,
-      completed: 0,
-    };*/
-
-    if (SETTINGS.apiKey) {
-      App.Console.log("Attempting to upload match score...");
-
-      if (this.manager.isRanked) {
-        try {
-          const leaderIndex = data.leaderboard.id.indexOf(this.sessionId);
-          const statModel = {
-            id: app.credential.playerid,
-            map: app.client.mapID,
-            mode: this.mode,
-            kills: data.leaderboard.kills[leaderIndex],
-            deaths: data.leaderboard.deaths[leaderIndex],
-            caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0,
-          };
-
-          /* Uploads your match stats to the tracker. */
-          fetch(`${config.api}/submit?key=${SETTINGS.apiKey}`, {
-            method: "POST",
-            body: JSON.stringify(statModel),
-            headers: {
-              "Content-Type": "application/json",
-            },
-          })
-            .then((res) => res.json())
-            .then((res: { err?: boolean; message?: string }) => {
-              if (res.err) {
-                App.Console.log(`Failed to upload match score! ERR_${res.err}`);
-                App.Console.log(`Error: ${res.message}`);
-              } else {
-                App.Console.log("Successfully uploaded match score!");
-              }
-            })
-            .catch((err) => {
-              App.Console.log("Failed to upload match score! (check console for errors)");
-              console.error(err);
-            });
-        } catch (err) {
-          App.Console.log("Failed to upload match score! (check console for errors)");
-          console.error(err);
-        }
-      } else {
-        App.Console.log("Match is unranked or custom, scores not uploaded.");
-      }
-    }
-
     app.game.reticle.children.forEach((c) => (c.visible = false));
 
     (async () => {

@@ -245,7 +245,7 @@ export class UIURLMod extends Mod {
   }
 
   public tryJoin(id: string, name: string, pass?: string, spec = false) {
-    App.Console.log(`Attempting to join server '${name}'...`);
+    Ninja.log(`Attempting to join server '${name}'...`);
     const loadingMenu = App.Layer.loadingMenu;
 
     /* Shows loading menu. */
