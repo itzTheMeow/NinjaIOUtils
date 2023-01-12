@@ -2867,6 +2867,7 @@
       if (i >= 0)
         this.readyListeners.splice(i, 1);
     }
+    gamePassword = null;
     isGuest() {
       return App.Layer.setup == Layer.SETUP_GUEST;
     }
@@ -3361,10 +3362,42 @@
           break;
         }
       }
+      this.hook();
       super.load();
     }
     switchHash(path, ...extra) {
-      window.location.hash = `/${[path, ...extra].filter((e) => e).join("/")}`;
+      return window.location.hash = `/${[path, ...extra].filter((e) => e).map(encodeURIComponent).join("/")}`;
+    }
+    hook() {
+      const mod = this;
+      Client.prototype.onMessage = function(_a) {
+        const a = Client.decompress(_a.data);
+        try {
+          if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined ")) {
+            const roomName = a.data.info.substring("You joined ".length);
+            window.location.hash = mod.switchHash("play" /* game */, app.gameClient.server.id, roomName, Ninja_default.gamePassword || "") + "/";
+          }
+          const testMap = async (name) => {
+            this.mapID = 0;
+            const maps = await APIClient.getMaps();
+            const map = maps.find((m) => m.name == name);
+            if (map) {
+              this.mapID = Number(map.id);
+              App.Console.log(`# Identified map as ${map.name} (ID: ${map.id}).`);
+            } else
+              App.Console.log(`# Failed to identify map. (name: ${name}) Please report to Meow.`);
+          };
+          if (a.type == Protocol.GAME && a.data.t == Protocol.Game.INFO) {
+            if (a.data.msg.startsWith("Joining "))
+              testMap((a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1]);
+            else if (a.data.msg.startsWith("loading map: "))
+              testMap(a.data.msg.substring("loading map: ".length));
+          }
+        } catch (err) {
+          console.error(err);
+        }
+        this.dispatchEvent(a);
+      };
     }
   };
 

@@ -106,6 +106,7 @@ export default new (class Ninja {
     if (i >= 0) this.readyListeners.splice(i, 1);
   }
 
+  public gamePassword: string | null = null;
   public isGuest() {
     return App.Layer.setup == Layer.SETUP_GUEST;
   }

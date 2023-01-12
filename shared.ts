@@ -10,3 +10,13 @@ export interface TexturePack {
   hasCombined: boolean;
   hasSeamless: boolean;
 }
+
+export interface APIMap {
+  id: string;
+  title: string;
+  name: string;
+  author: string;
+  mode: "deathmatch" | "captureTheFlag" | "dodgeball";
+  enabled: "0" | "1";
+  version: string;
+}

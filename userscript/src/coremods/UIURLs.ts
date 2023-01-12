@@ -1,5 +1,6 @@
-import { CustomizationMenu, ProfileMenu, SettingsPanel } from "lib";
+import { APIClient, Client, CustomizationMenu, ProfileMenu, Protocol, SettingsPanel } from "lib";
 import { app, App, Layer } from "typings";
+import { APIMap } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import { clickContainer } from "../utils";
@@ -7,6 +8,7 @@ import { clickContainer } from "../utils";
 enum HashPaths {
   menu = "",
   clans = "clans",
+  game = "play",
   login = "login",
   mods = "mods",
   players = "players",
@@ -151,10 +153,57 @@ export class UIURLMod extends Mod {
       }
     }
 
+    this.hook();
     super.load();
   }
 
   public switchHash(path: HashPaths, ...extra: string[]) {
-    window.location.hash = `/${[path, ...extra].filter((e) => e).join("/")}`;
+    return (window.location.hash = `/${[path, ...extra]
+      .filter((e) => e)
+      .map(encodeURIComponent)
+      .join("/")}`);
+  }
+
+  public hook() {
+    const mod = this;
+    Client.prototype.onMessage = function (_a) {
+      const a: any = Client.decompress(_a.data);
+      try {
+        /* Hooks into the join message and gets the server name you join using. */
+        if (
+          a.type == Protocol.SESSION &&
+          a.data.type == Protocol.Session.JOIN_RESP &&
+          a.data.info.startsWith("You joined ")
+        ) {
+          const roomName = a.data.info.substring("You joined ".length);
+          window.location.hash =
+            mod.switchHash(
+              HashPaths.game,
+              app.gameClient.server.id,
+              roomName,
+              Ninja.gamePassword || ""
+            ) + "/";
+        }
+        const testMap = async (name: string) => {
+          this.mapID = 0;
+          const maps: APIMap[] = await APIClient.getMaps();
+          const map = maps.find((m) => m.name == name);
+          if (map) {
+            this.mapID = Number(map.id);
+            App.Console.log(`# Identified map as ${map.name} (ID: ${map.id}).`);
+          } else
+            App.Console.log(`# Failed to identify map. (name: ${name}) Please report to Meow.`);
+        };
+        if (a.type == Protocol.GAME && a.data.t == Protocol.Game.INFO) {
+          if (a.data.msg.startsWith("Joining "))
+            testMap((a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1]);
+          else if (a.data.msg.startsWith("loading map: "))
+            testMap(a.data.msg.substring("loading map: ".length));
+        }
+      } catch (err) {
+        console.error(err);
+      }
+      this.dispatchEvent(a);
+    };
   }
 }
