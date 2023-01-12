@@ -111,13 +111,14 @@ export default function hookModMenu() {
   const utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
   utilsButton.x = 0;
   utilsButton.y = menu.memberButton.y + 70;
-  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => menu.emit(<any>"modacc"));
+  menu.on(<any>"modacc", () => {
     if (utilsButton.active) {
       utilsButton.setActive(false);
       menu.emit(Layer.Events.MENU_ACCESS);
       return;
     }
-    menu.emit(Layer.Events.MENU_ACCESS);
+    menu.emit(Layer.Events.MENU_ACCESS, "mod");
     menu.playButton.setActive(false);
     utilsButton.setActive(true);
     modsMenu.show();

@@ -8,6 +8,7 @@ enum HashPaths {
   menu = "",
   clans = "clans",
   login = "login",
+  mods = "mods",
   players = "players",
   profile = "profile",
   ranks = "ranks",
@@ -52,7 +53,9 @@ export class UIURLMod extends Mod {
     if (!window.location.hash.substring(1)) window.location.hash = "/";
 
     // Menu
-    menu.addListener(Layer.Events.MENU_ACCESS, () => this.switchHash(HashPaths.menu));
+    menu.addListener(Layer.Events.MENU_ACCESS, (m) =>
+      this.switchHash(m == "mod" ? HashPaths.mods : HashPaths.menu)
+    );
     // Profile
     let profCurTab = "";
     menu.on(Layer.Events.PROFILE_ACCESS, () =>
@@ -140,6 +143,10 @@ export class UIURLMod extends Mod {
       }
       case HashPaths.recover: {
         menu.emit(Layer.Events.RECOVER_ACCESS);
+        break;
+      }
+      case HashPaths.mods: {
+        menu.emit(<any>"modacc");
         break;
       }
     }

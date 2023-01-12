@@ -2485,13 +2485,14 @@
     const utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
     utilsButton.x = 0;
     utilsButton.y = menu.memberButton.y + 70;
-    utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => {
+    utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => menu.emit("modacc"));
+    menu.on("modacc", () => {
       if (utilsButton.active) {
         utilsButton.setActive(false);
         menu.emit(Layer.Events.MENU_ACCESS);
         return;
       }
-      menu.emit(Layer.Events.MENU_ACCESS);
+      menu.emit(Layer.Events.MENU_ACCESS, "mod");
       menu.playButton.setActive(false);
       utilsButton.setActive(true);
       modsMenu.show();
@@ -3290,7 +3291,7 @@
       };
       if (!window.location.hash.substring(1))
         window.location.hash = "/";
-      menu.addListener(Layer.Events.MENU_ACCESS, () => this.switchHash("" /* menu */));
+      menu.addListener(Layer.Events.MENU_ACCESS, (m) => this.switchHash(m == "mod" ? "mods" /* mods */ : "" /* menu */));
       let profCurTab = "";
       menu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
       const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
@@ -3353,6 +3354,10 @@
         }
         case "recovery" /* recover */: {
           menu.emit(Layer.Events.RECOVER_ACCESS);
+          break;
+        }
+        case "mods" /* mods */: {
+          menu.emit("modacc");
           break;
         }
       }
