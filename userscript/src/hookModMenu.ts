@@ -231,6 +231,7 @@ export default function hookModMenu() {
       iconSprite.y = iconSize / 2 + pt;
       icon.addChild(iconSprite);
       container.addChild(icon);
+      iconSprite.scale.set(Math.min(iconSprite.scale.x, iconSprite.scale.y));
 
       const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
       label.x = pl += iconSize + 4;
