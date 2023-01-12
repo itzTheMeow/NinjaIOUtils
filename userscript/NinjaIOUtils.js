@@ -2597,7 +2597,7 @@
         authorLabel.x = pl + label.width + 4;
         authorLabel.y = pt + 5;
         container.addChild(authorLabel);
-        const description = new PIXI.Text((mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(), { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 });
+        const description = new PIXI.Text((mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(), { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 595 });
         description.x = pl = 12;
         description.y = pt += iconSize - 2;
         container.addChild(description);
