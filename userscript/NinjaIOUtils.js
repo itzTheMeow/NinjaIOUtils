@@ -2787,13 +2787,14 @@
   };
 
   // src/api/Ninja.ts
-  var Ninja_default = new class Ninja {
+  var Ninja_default = new class Ninja extends EventDispatcher {
     settings = new Settings(config_default.settingsKey, {
       enabledMods: [],
       texturePack: "",
       uiScale: 0
     });
     constructor() {
+      super();
     }
     init() {
       const ninja = this;
@@ -3482,7 +3483,9 @@ ${name}`);
   __export(mods_exports, {
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
-    SoundEffectsMod: () => SoundEffectsMod
+    SoundEffectsMod: () => SoundEffectsMod,
+    StatTrackerMod: () => StatTrackerMod,
+    XPStatsMod: () => XPStatsMod
   });
 
   // src/mods/fpsDisplay.ts
@@ -3636,6 +3639,59 @@ ${name}`);
       AudioEffects.ButtonHover.audio.play();
     }
     consoleListener = this.consoleTyped.bind(this);
+  };
+
+  // src/mods/statTracker.ts
+  
+  var StatTrackerMod = class extends Mod {
+    constructor() {
+      super({
+        id: "StatTracker",
+        name: "Stat Tracker",
+        description: "Tracks your stats.",
+        author: "Meow",
+        icon: "",
+        draft: true
+      });
+    }
+    load() {
+      Ninja_default.onClientPacket((type, a) => {
+        const testMap = async (name) => {
+          Ninja_default.activeClient().mapID = 0;
+          const maps = await APIClient.getMaps();
+          const map = maps.find((m) => m.name == name);
+          if (map) {
+            Ninja_default.activeClient().mapID = Number(map.id);
+            Ninja_default.log(`# Identified map as ${map.name} (ID: ${map.id}).`);
+          } else
+            Ninja_default.log(`# Failed to identify map. (name: ${name}) Please report to Meow.`);
+        };
+        if (a.type == Protocol.GAME && a.data.t == Protocol.Game.INFO) {
+          if (a.data.msg.startsWith("Joining "))
+            testMap((a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1]);
+          else if (a.data.msg.startsWith("loading map: "))
+            testMap(a.data.msg.substring("loading map: ".length));
+        }
+      });
+      super.load();
+    }
+  };
+
+  // src/mods/xpStats.ts
+  var XPStatsMod = class extends Mod {
+    constructor() {
+      super({
+        id: "XPStats",
+        name: "XP Stats",
+        description: "Shows how much XP you gained after finishing a match.",
+        author: "Meow",
+        icon: "10xp",
+        draft: true
+      });
+    }
+    load() {
+      super.load();
+    }
   };
 
   // src/index.ts

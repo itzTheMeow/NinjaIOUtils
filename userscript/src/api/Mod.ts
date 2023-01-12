@@ -16,6 +16,8 @@ export interface ModDetails {
   core?: true;
   /** Determines if this mod is a draft. Draft mods are not registered and can not be installed. */
   draft?: true;
+  /** Recommend this mod for installation. You should not need to use this. */
+  recommend?: true;
 }
 
 export default class Mod<cfg = any> {

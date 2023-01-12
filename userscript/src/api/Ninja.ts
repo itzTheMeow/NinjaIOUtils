@@ -1,4 +1,4 @@
-import { Client, PVPClient } from "lib";
+import { Client, EventDispatcher, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -8,7 +8,7 @@ import Settings from "./Settings";
 export type Listener = () => any;
 export type PacketListener = (type: "game" | "pvp", packet: any) => any;
 
-export default new (class Ninja {
+export default new (class Ninja extends EventDispatcher {
   public settings = new Settings<{
     enabledMods: string[];
     texturePack: string;
@@ -19,7 +19,9 @@ export default new (class Ninja {
     uiScale: 0,
   });
 
-  constructor() {}
+  constructor() {
+    super();
+  }
   public init() {
     const ninja = this;
     this.ready = true;
