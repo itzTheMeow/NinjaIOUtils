@@ -6,7 +6,7 @@ export default class Settings<Store extends Record<string, any> = { _: "" }> {
     if (fillDefaults) return { ...this.defaults, ...store };
     else return store;
   }
-  public get(key: keyof Store) {
+  public get<K extends keyof Store>(key: K): Store[K] {
     return this.getStore()[key] ?? this.defaults[key];
   }
   public set<K extends keyof Store>(key: K, value: Store[K]) {
