@@ -1,8 +1,17 @@
-import { APIClient, Client, CustomizationMenu, ProfileMenu, Protocol, SettingsPanel } from "lib";
+import {
+  APIClient,
+  Button,
+  Client,
+  CustomizationMenu,
+  ProfileMenu,
+  Protocol,
+  SettingsPanel,
+} from "lib";
 import { app, App, Layer } from "typings";
 import { APIMap } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
+import config from "../config";
 import { clickContainer } from "../utils";
 
 enum HashPaths {
@@ -154,6 +163,18 @@ export class UIURLMod extends Mod {
     }
 
     this.hook();
+
+    const [_id, _name, _pass] =
+      window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
+    if (_id && Number(_id) && _name) this.tryJoin(_id, _name, _pass);
+    else if (window.location.hash.startsWith(`#/${HashPaths.game}/`)) {
+      const [id, name, pass] = window.location.hash
+        .substring(`#/${HashPaths.game}/`.length)
+        .split("/")
+        .map(decodeURIComponent);
+      if (id && name) this.tryJoin(id, name, pass);
+    }
+
     super.load();
   }
 
@@ -241,5 +262,51 @@ export class UIURLMod extends Mod {
         auth
       );
     };
+  }
+
+  public tryJoin(id: string, name: string, pass?: string) {
+    App.Console.log(`Attempting to join server '${name}'...`);
+    const loadingMenu = App.Layer.loadingMenu;
+
+    /* Shows loading menu. */
+    App.Layer.addChild(loadingMenu);
+    loadingMenu.show();
+    loadingMenu.setTitle(`Click to join server.\n${name}`);
+    loadingMenu.cancelCount = -1;
+
+    const joinButton = new Button("join");
+    joinButton.setText("Join");
+    joinButton.scale.x = joinButton.scale.y = 0.8;
+    joinButton.addListener(Button.BUTTON_RELEASED, function () {
+      removeJoinStuff();
+      loadingMenu.show();
+      /* Joins the game using the specified details. */
+      App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "");
+    });
+    joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
+    joinButton.y = loadingMenu.title.y + 40;
+    joinButton.setTint(config.Colors.green);
+    loadingMenu.container.addChild(joinButton);
+
+    const cancelButton = new Button("cancel2");
+    cancelButton.setText("Cancel");
+    cancelButton.scale.x = cancelButton.scale.y = 0.8;
+    cancelButton.addListener(Button.BUTTON_RELEASED, function () {
+      removeJoinStuff();
+      Ninja.gamePassword = "";
+      return loadingMenu.emit(Layer.Events.LOADING_CANCEL);
+    });
+    cancelButton.x = joinButton.x + joinButton.width + 8;
+    cancelButton.y = loadingMenu.title.y + 40;
+    cancelButton.setTint(config.Colors.red);
+    loadingMenu.container.addChild(cancelButton);
+
+    loadingMenu.title.y -= 36;
+
+    function removeJoinStuff() {
+      loadingMenu.title.y += 36;
+      loadingMenu.container.removeChild(joinButton);
+      loadingMenu.container.removeChild(cancelButton);
+    }
   }
 }

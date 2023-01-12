@@ -3363,6 +3363,14 @@
         }
       }
       this.hook();
+      const [_id, _name, _pass] = window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
+      if (_id && Number(_id) && _name)
+        this.tryJoin(_id, _name, _pass);
+      else if (window.location.hash.startsWith(`#/${"play" /* game */}/`)) {
+        const [id, name, pass] = window.location.hash.substring(`#/${"play" /* game */}/`.length).split("/").map(decodeURIComponent);
+        if (id && name)
+          this.tryJoin(id, name, pass);
+      }
       super.load();
     }
     switchHash(path, ...extra) {
@@ -3412,6 +3420,45 @@
         mod.setGameHash(serverID, serverName, serverPass);
         return realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
       };
+    }
+    tryJoin(id, name, pass) {
+      App.Console.log(`Attempting to join server '${name}'...`);
+      const loadingMenu = App.Layer.loadingMenu;
+      App.Layer.addChild(loadingMenu);
+      loadingMenu.show();
+      loadingMenu.setTitle(`Click to join server.
+${name}`);
+      loadingMenu.cancelCount = -1;
+      const joinButton = new Button("join");
+      joinButton.setText("Join");
+      joinButton.scale.x = joinButton.scale.y = 0.8;
+      joinButton.addListener(Button.BUTTON_RELEASED, function() {
+        removeJoinStuff();
+        loadingMenu.show();
+        App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "");
+      });
+      joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
+      joinButton.y = loadingMenu.title.y + 40;
+      joinButton.setTint(config_default.Colors.green);
+      loadingMenu.container.addChild(joinButton);
+      const cancelButton = new Button("cancel2");
+      cancelButton.setText("Cancel");
+      cancelButton.scale.x = cancelButton.scale.y = 0.8;
+      cancelButton.addListener(Button.BUTTON_RELEASED, function() {
+        removeJoinStuff();
+        Ninja_default.gamePassword = "";
+        return loadingMenu.emit(Layer.Events.LOADING_CANCEL);
+      });
+      cancelButton.x = joinButton.x + joinButton.width + 8;
+      cancelButton.y = loadingMenu.title.y + 40;
+      cancelButton.setTint(config_default.Colors.red);
+      loadingMenu.container.addChild(cancelButton);
+      loadingMenu.title.y -= 36;
+      function removeJoinStuff() {
+        loadingMenu.title.y += 36;
+        loadingMenu.container.removeChild(joinButton);
+        loadingMenu.container.removeChild(cancelButton);
+      }
     }
   };
 
