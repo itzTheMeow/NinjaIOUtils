@@ -6,6 +6,9 @@ import { Rectangle } from "./lighting_engine/rectangle";
 import { calculateVisibility } from "./lighting_engine/visibility";
 
 export default function hookRenderer() {
+  // on game end
+  app.game.reticle.children.forEach((c) => (c.visible = false));
+
   Canvas.prototype._update = Canvas.prototype.update;
   Canvas.prototype.update = function (...d) {
     const upd = this._update(...d);

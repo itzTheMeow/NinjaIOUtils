@@ -3756,12 +3756,35 @@ ${name}`);
     }
     startingLevel = 0;
     load() {
-      Ninja_default.events.addListener("gs" /* GAME_START */, async () => {
-        this.startingLevel = 0;
-        this.startingLevel = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
-      });
+      this.startingLevel = 0;
+      Ninja_default.events.addListener("gs" /* GAME_START */, this.gamestart);
+      Ninja_default.events.addListener("ge" /* GAME_END */, this.gameend);
       super.load();
     }
+    unload() {
+      Ninja_default.events.removeListener("gs" /* GAME_START */, this.gamestart);
+      Ninja_default.events.removeListener("ge" /* GAME_END */, this.gameend);
+      super.unload();
+    }
+    async onGameStart() {
+      this.startingLevel = 0;
+      this.startingLevel = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+    }
+    gamestart = this.onGameStart.bind(this);
+    async onGameEnd() {
+      const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+      if (xp && this.startingLevel) {
+        const plevel = LevelBar.XPToLevel(this.startingLevel);
+        const level = LevelBar.XPToLevel(xp);
+        const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+        const gain = xp - this.startingLevel;
+        Ninja_default.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
+        if (level > plevel)
+          Ninja_default.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
+      }
+      this.startingLevel = 0;
+    }
+    gameend = this.onGameEnd.bind(this);
   };
 
   // src/index.ts
