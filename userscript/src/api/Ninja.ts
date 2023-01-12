@@ -8,7 +8,7 @@ import Settings from "./Settings";
 export type Listener = () => any;
 export type PacketListener = (type: "game" | "pvp", packet: any) => any;
 
-export default new (class Ninja extends EventDispatcher {
+export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
     texturePack: string;
@@ -19,12 +19,11 @@ export default new (class Ninja extends EventDispatcher {
     uiScale: 0,
   });
 
-  constructor() {
-    super();
-  }
+  constructor() {}
   public init() {
     const ninja = this;
     this.ready = true;
+    this.events = new EventDispatcher();
 
     const stepper = app.stepCallback;
     app.stepCallback = function (...d) {
@@ -154,4 +153,6 @@ export default new (class Ninja extends EventDispatcher {
     const active = this.activeClient();
     return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
   }
+
+  public events: EventDispatcher;
 })();

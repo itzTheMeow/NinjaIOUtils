@@ -12,6 +12,7 @@ export class StatTrackerMod extends Mod {
       author: "Meow",
       icon: "",
       draft: true,
+      recommend: true,
     });
   }
   public load() {

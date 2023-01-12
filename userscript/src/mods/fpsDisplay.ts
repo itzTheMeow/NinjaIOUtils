@@ -16,6 +16,7 @@ export class FPSDisplayMod extends Mod<{
       author: "Meow",
       description: "Displays your FPS and ping at the top of the screen.",
       icon: "energy_icon",
+      recommend: true,
     });
     this.implementConfig(
       {

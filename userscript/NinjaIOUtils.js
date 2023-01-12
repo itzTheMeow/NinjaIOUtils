@@ -2614,6 +2614,15 @@
             this.indexList();
           });
           container.addChild(button);
+          if (!mod.isInstalled() && mod.details.recommend) {
+            const recLabel = new PIXI.Text("Recommended", {
+              ...FontStyle.SmallMenuTextYellow,
+              fontSize: 12
+            });
+            recLabel.x = pl -= recLabel.width + 15;
+            recLabel.y = pt + 2;
+            container.addChild(recLabel);
+          }
         }
         if (mod.isInstalled() && mod.config) {
           const button = new Button("settings");
@@ -2787,18 +2796,18 @@
   };
 
   // src/api/Ninja.ts
-  var Ninja_default = new class Ninja extends EventDispatcher {
+  var Ninja_default = new class Ninja {
     settings = new Settings(config_default.settingsKey, {
       enabledMods: [],
       texturePack: "",
       uiScale: 0
     });
     constructor() {
-      super();
     }
     init() {
       const ninja = this;
       this.ready = true;
+      this.events = new EventDispatcher();
       const stepper = app.stepCallback;
       app.stepCallback = function(...d) {
         try {
@@ -2913,6 +2922,7 @@
       const active = this.activeClient();
       return app.matchStarted && active && active.socket.readyState == WebSocket.OPEN;
     }
+    events;
   }();
 
   // src/coremods/index.ts
@@ -3500,7 +3510,8 @@ ${name}`);
         name: "FPS Display",
         author: "Meow",
         description: "Displays your FPS and ping at the top of the screen.",
-        icon: "energy_icon"
+        icon: "energy_icon",
+        recommend: true
       });
       this.implementConfig({
         showTime: false
@@ -3651,7 +3662,8 @@ ${name}`);
         description: "Tracks your stats.",
         author: "Meow",
         icon: "",
-        draft: true
+        draft: true,
+        recommend: true
       });
     }
     load() {
@@ -3686,7 +3698,8 @@ ${name}`);
         description: "Shows how much XP you gained after finishing a match.",
         author: "Meow",
         icon: "10xp",
-        draft: true
+        draft: true,
+        recommend: true
       });
     }
     load() {

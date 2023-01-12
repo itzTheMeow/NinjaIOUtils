@@ -9,6 +9,7 @@ export class XPStatsMod extends Mod {
       author: "Meow",
       icon: "10xp",
       draft: true,
+      recommend: true,
     });
   }
 

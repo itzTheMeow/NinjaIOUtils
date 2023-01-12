@@ -269,6 +269,15 @@ export default function hookModMenu() {
           this.indexList();
         });
         container.addChild(button);
+        if (!mod.isInstalled() && mod.details.recommend) {
+          const recLabel = new PIXI.Text("Recommended", {
+            ...FontStyle.SmallMenuTextYellow,
+            fontSize: 12,
+          });
+          recLabel.x = pl -= recLabel.width + 15;
+          recLabel.y = pt + 2;
+          container.addChild(recLabel);
+        }
       }
       if (mod.isInstalled() && mod.config) {
         const button = new Button("settings");
