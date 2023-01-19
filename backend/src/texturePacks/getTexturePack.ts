@@ -37,11 +37,13 @@ export default function getTexturePack(pack: string) {
         textures.combined.meta.size.h
       );
       const combined = combinedCanvas.getContext("2d");
-      combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
+      if (!hasSinglePixel) combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
       const pix = hasSinglePixel
         ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
         : null;
-      for (const img of images.filter((i) => i.startsWith("c_"))) {
+      for (const img of pix
+        ? Object.keys(textures.combined.frames).map((k) => `c_${k}.png`)
+        : images.filter((i) => i.startsWith("c_"))) {
         const id = img.match(/.*?_(.*?).png/)?.[1];
         const tex = textures.combined.frames[id];
         if (!tex) continue;
@@ -65,11 +67,13 @@ export default function getTexturePack(pack: string) {
         textures.seamless.meta.size.h
       );
       const seamless = seamlessCanvas.getContext("2d");
+      if (!hasSinglePixel) seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
       const pix = hasSinglePixel
         ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
         : null;
-      seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
-      for (const img of images.filter((i) => i.startsWith("s_"))) {
+      for (const img of pix
+        ? Object.keys(textures.seamless.frames).map((k) => `s_${k}.png`)
+        : images.filter((i) => i.startsWith("s_"))) {
         const id = img.match(/.*?_(.*?).png/)?.[1];
         const tex = textures.seamless.frames[id];
         if (!tex) continue;
