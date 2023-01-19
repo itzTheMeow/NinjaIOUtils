@@ -37,30 +37,23 @@ export default function getTexturePack(pack: string) {
         textures.combined.meta.size.h
       );
       const combined = combinedCanvas.getContext("2d");
-      if (hasSinglePixel) {
+      combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
+      const pix = hasSinglePixel
+        ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
+        : null;
+      for (const img of images.filter((i) => i.startsWith("c_"))) {
+        const id = img.match(/.*?_(.*?).png/)?.[1];
+        const tex = textures.combined.frames[id];
+        if (!tex) continue;
+        const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
+        combined.clearRect(size.x, size.y, size.w, size.h);
         combined.drawImage(
-          await canvas.loadImage(path.join(packFolder, "_usepixel.png")),
-          0,
-          0,
-          combinedCanvas.width,
-          combinedCanvas.height
+          pix || (await canvas.loadImage(path.join(packFolder, img))),
+          size.x,
+          size.y,
+          size.w,
+          size.h
         );
-      } else {
-        combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
-        for (const img of images.filter((i) => i.startsWith("c_"))) {
-          const id = img.match(/.*?_(.*?).png/)?.[1];
-          const tex = textures.combined.frames[id];
-          if (!tex) continue;
-          const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
-          combined.clearRect(size.x, size.y, size.w, size.h);
-          combined.drawImage(
-            await canvas.loadImage(path.join(packFolder, img)),
-            size.x,
-            size.y,
-            size.w,
-            size.h
-          );
-        }
       }
       return combinedCanvas.toBuffer();
     },
@@ -72,30 +65,23 @@ export default function getTexturePack(pack: string) {
         textures.seamless.meta.size.h
       );
       const seamless = seamlessCanvas.getContext("2d");
-      if (hasSinglePixel) {
+      const pix = hasSinglePixel
+        ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
+        : null;
+      seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
+      for (const img of images.filter((i) => i.startsWith("s_"))) {
+        const id = img.match(/.*?_(.*?).png/)?.[1];
+        const tex = textures.seamless.frames[id];
+        if (!tex) continue;
+        const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
+        seamless.clearRect(size.x, size.y, size.w, size.h);
         seamless.drawImage(
-          await canvas.loadImage(path.join(packFolder, "_usepixel.png")),
-          0,
-          0,
-          seamlessCanvas.width,
-          seamlessCanvas.height
+          pix || (await canvas.loadImage(path.join(packFolder, img))),
+          size.x,
+          size.y,
+          size.w,
+          size.h
         );
-      } else {
-        seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
-        for (const img of images.filter((i) => i.startsWith("s_"))) {
-          const id = img.match(/.*?_(.*?).png/)?.[1];
-          const tex = textures.seamless.frames[id];
-          if (!tex) continue;
-          const size = tex.rotated ? { ...tex.frame, w: tex.frame.h, h: tex.frame.w } : tex.frame;
-          seamless.clearRect(size.x, size.y, size.w, size.h);
-          seamless.drawImage(
-            await canvas.loadImage(path.join(packFolder, img)),
-            size.x,
-            size.y,
-            size.w,
-            size.h
-          );
-        }
       }
       return seamlessCanvas.toBuffer();
     },
