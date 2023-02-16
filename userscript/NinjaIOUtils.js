@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.2
+// @version      2.3
 // ==/UserScript==
 
 /*
@@ -54,11 +54,14 @@
     }
     return to;
   };
-  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
+  var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+    isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+    mod
+  ));
 
-  // node_modules/localforage/dist/localforage.js
+  // node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js
   var require_localforage = __commonJS({
-    "node_modules/localforage/dist/localforage.js"(exports, module) {
+    "node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js"(exports, module) {
       (function(f) {
         if (typeof exports === "object" && typeof module !== "undefined") {
           module.exports = f();
@@ -2203,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "2.2",
+    ver: "2.3",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -2540,7 +2543,10 @@
         this.closeButton.x = this.background.width - 40;
         this.closeButton.y = this.oy + 34;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
-        this.closeButton.on("mousedown", () => this.shownConfig ? this.show() : App.Layer.onMenuAccess());
+        this.closeButton.on(
+          "mousedown",
+          () => this.shownConfig ? this.show() : App.Layer.onMenuAccess()
+        );
         this.container.addChild(this.closeButton);
         this.marginLeft += 20;
         this.marginTop = this.titleText.height * 3.25;
@@ -2593,11 +2599,17 @@
         label.x = pl += iconSize + 4;
         label.y = pt += 8;
         container.addChild(label);
-        const authorLabel = new PIXI.Text(mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author, { ...FontStyle.SmallMenuTextYellow, fontSize: 20 });
+        const authorLabel = new PIXI.Text(
+          mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
+          { ...FontStyle.SmallMenuTextYellow, fontSize: 20 }
+        );
         authorLabel.x = pl + label.width + 4;
         authorLabel.y = pt + 5;
         container.addChild(authorLabel);
-        const description = new PIXI.Text((mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(), { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 });
+        const description = new PIXI.Text(
+          (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
+          { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 }
+        );
         description.x = pl = 12;
         description.y = pt += iconSize - 2;
         container.addChild(description);
@@ -2686,30 +2698,37 @@
               return Array.isArray(n) ? n[0] : n;
           };
           store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach(([key, value]) => {
-            const cfgname = mod.configNames[key], item = mnu.constructConfigItem(mod, typeof value == "boolean" ? {
-              type: "bool",
-              name: name(key),
-              key,
-              value
-            } : typeof value == "number" ? {
-              type: "num",
-              name: name(key),
-              key,
-              value
-            } : {
-              type: "str",
-              name: name(key),
-              key,
-              value,
-              maxLength: typeof cfgname == "object" ? cfgname.maxLength || 0 : 0
-            });
+            const cfgname = mod.configNames[key], item = mnu.constructConfigItem(
+              mod,
+              typeof value == "boolean" ? {
+                type: "bool",
+                name: name(key),
+                key,
+                value
+              } : typeof value == "number" ? {
+                type: "num",
+                name: name(key),
+                key,
+                value
+              } : {
+                type: "str",
+                name: name(key),
+                key,
+                value,
+                maxLength: typeof cfgname == "object" ? cfgname.maxLength || 0 : 0
+              }
+            );
             item.y = off;
             off += item.height;
             mnu.configContainer.addChild(item);
           });
         }
-        doKeys(Object.entries(mod.configNames).filter((e) => typeof e[1] == "object").map(([k]) => [k, mod.config.get(k)]));
-        doKeys(Object.entries(mod.configNames).filter((e) => typeof e[1] !== "object").map(([k]) => [k, mod.config.get(k)]));
+        doKeys(
+          Object.entries(mod.configNames).filter((e) => typeof e[1] == "object").map(([k]) => [k, mod.config.get(k)])
+        );
+        doKeys(
+          Object.entries(mod.configNames).filter((e) => typeof e[1] !== "object").map(([k]) => [k, mod.config.get(k)])
+        );
       }
       constructConfigItem(mod, data) {
         const container = new PIXI.Container();
@@ -2740,7 +2759,10 @@
             input.setDimensions(500, 34);
             input.setMaxChars(data.maxLength || Infinity);
             input.setText(String(data.value));
-            input.setFilter(isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.", false);
+            input.setFilter(
+              isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
+              false
+            );
             input.addListener(InputField.CHANGE, function(d) {
               const val = d.data.value || "";
               mod.config.set(data.key, isNum ? Number(val) : val);
@@ -2813,7 +2835,10 @@
       App.prototype.realInitGameMode = App.prototype.initGameMode;
       App.prototype.initGameMode = function(data) {
         this.realInitGameMode(data);
-        this.game.on(Game.MATCH_START, () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */)));
+        this.game.on(
+          Game.MATCH_START,
+          () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */))
+        );
       };
       Game.prototype._endGame = Game.prototype.endGame;
       Game.prototype.endGame = function(data) {
@@ -2830,7 +2855,9 @@
         ninja.serverLatency = ping;
         return App.Stats.realSetPing(ping);
       };
-      app.onResize = window.eval(`(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`);
+      app.onResize = window.eval(
+        `(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`
+      );
       app.onResize();
       Client.prototype.onMessage = function(_a) {
         const a = Client.decompress(_a.data);
@@ -3014,9 +3041,9 @@
                 if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && texturePack) {
                   const orig = data.data[0];
                   const isCustom = texturePack == config_default.customDelimiter;
-                  if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.endsWith(".png"))
+                  if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.includes(".png"))
                     data.data[0] = `${config_default.api}/packs/${texturePack}/combined.png?v=${Ninja_default.GameVersion}`;
-                  if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.endsWith(".png"))
+                  if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.includes(".png"))
                     data.data[0] = `${config_default.api}/packs/${texturePack}/seamless.png?v=${Ninja_default.GameVersion}`;
                   if (data.data[0].startsWith(config_default.api) && isCustom) {
                     const zip = await import_localforage.default.getItem("custom_pack");
@@ -3076,8 +3103,14 @@
           pan[`${name}ButtonBackground`].x = x;
           pan[`${name}ButtonBackground`].y = 12;
           pan[`${name}ButtonBackground`].interactive = true;
-          pan[`${name}ButtonBackground`].on("touchstart", pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES));
-          pan[`${name}ButtonBackground`].on("mousedown", pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES));
+          pan[`${name}ButtonBackground`].on(
+            "touchstart",
+            pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES)
+          );
+          pan[`${name}ButtonBackground`].on(
+            "mousedown",
+            pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES)
+          );
           pan[`${name}ButtonBackground`].on("mouseover", function() {
             pan[`${name}ButtonBackground`].tint = 11184810;
           });
@@ -3220,12 +3253,15 @@
             }
             packList.forEach((pak) => {
               const hasPack = Ninja_default.settings.get("texturePack") == pak.id;
-              const packName = new PIXI.Text(`${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`, {
-                fontSize: 16,
-                fill: config_default.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round"
-              });
+              const packName = new PIXI.Text(
+                `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
+                {
+                  fontSize: 16,
+                  fill: config_default.Colors.white,
+                  strokeThickness: 2,
+                  lineJoin: "round"
+                }
+              );
               packName.x = this.marginLeft;
               packName.y = this.off += 28;
               this.hadPacks.push(this.addChild(packName));
@@ -3234,12 +3270,15 @@
                 flags.push("textures");
               if (pak.hasSeamless)
                 flags.push("terrain");
-              const packDescription = new PIXI.Text(`${pak.description || "No Description."}${flags.length ? ` (${flags.join(", ")})` : ""}`, {
-                fontSize: 14,
-                fill: config_default.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round"
-              });
+              const packDescription = new PIXI.Text(
+                `${pak.description || "No Description."}${flags.length ? ` (${flags.join(", ")})` : ""}`,
+                {
+                  fontSize: 14,
+                  fill: config_default.Colors.white,
+                  strokeThickness: 2,
+                  lineJoin: "round"
+                }
+              );
               packDescription.x = this.marginLeft;
               packDescription.y = this.off += packName.height + 2;
               this.hadPacks.push(this.addChild(packDescription));
@@ -3265,7 +3304,9 @@
     TexTab.prototype.onShow = function() {
       if (!this.scroller) {
         const off = this.parent.texTabButton.height + 32;
-        this.scroller = new (Scrollbar())(this.parent.height - off - 12 - this.parent.applyButton.height);
+        this.scroller = new (Scrollbar())(
+          this.parent.height - off - 12 - this.parent.applyButton.height
+        );
         this.scroller.x = this.parent.width - this.scroller.width * 1.75;
         this.scroller.y = off;
         this.scroller.on(Scrollbar().SCROLL, (prog) => {
@@ -3331,23 +3372,47 @@
       };
       if (!window.location.hash.substring(1))
         window.location.hash = "/";
-      menu.addListener(Layer.Events.MENU_ACCESS, (m) => this.switchHash(m == "mod" ? "mods" /* mods */ : "" /* menu */));
+      menu.addListener(
+        Layer.Events.MENU_ACCESS,
+        (m) => this.switchHash(m == "mod" ? "mods" /* mods */ : "" /* menu */)
+      );
       let profCurTab = "";
-      menu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
+      menu.on(
+        Layer.Events.PROFILE_ACCESS,
+        () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab])
+      );
       const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
       App.Layer.profileMenu.openTab = (tab, audio) => {
         openTab(tab, audio);
         profCurTab = tab;
         this.switchHash("profile" /* profile */, ProfilePaths[tab]);
       };
-      menu.on(Layer.Events.CUSTOMIZATION_ACCESS, () => this.switchHash("shop" /* shop */, ShopPaths[App.Layer.customizationMenu.display]));
-      App.Layer.customizationMenu.playerCustomizationButton.on("mousedown", () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.PLAYER]));
-      App.Layer.customizationMenu.weaponCustomizationButton.on("mousedown", () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.WEAPONS]));
+      menu.on(
+        Layer.Events.CUSTOMIZATION_ACCESS,
+        () => this.switchHash("shop" /* shop */, ShopPaths[App.Layer.customizationMenu.display])
+      );
+      App.Layer.customizationMenu.playerCustomizationButton.on(
+        "mousedown",
+        () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.PLAYER])
+      );
+      App.Layer.customizationMenu.weaponCustomizationButton.on(
+        "mousedown",
+        () => this.switchHash("shop" /* shop */, ShopPaths[CustomizationMenu.WEAPONS])
+      );
       menu.on(Layer.Events.RANKING_ACCESS, () => this.switchHash("ranks" /* ranks */));
       menu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash("players" /* players */));
       menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash("clans" /* clans */));
-      menu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]));
-      menu.on("open_tab", (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab]));
+      menu.on(
+        Layer.Events.SETTINGS_ACCESS,
+        () => this.switchHash(
+          "settings" /* settings */,
+          SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]
+        )
+      );
+      menu.on(
+        "open_tab",
+        (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab])
+      );
       menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash("login" /* login */));
       menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash("register" /* register */));
       menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash("recovery" /* recover */));
@@ -3362,7 +3427,9 @@
         }
         case "shop" /* shop */: {
           menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
-          clickContainer(curPath[1] == ShopPaths[CustomizationMenu.WEAPONS] ? App.Layer.customizationMenu.weaponCustomizationButton : App.Layer.customizationMenu.playerCustomizationButton);
+          clickContainer(
+            curPath[1] == ShopPaths[CustomizationMenu.WEAPONS] ? App.Layer.customizationMenu.weaponCustomizationButton : App.Layer.customizationMenu.playerCustomizationButton
+          );
           break;
         }
         case "ranks" /* ranks */: {
@@ -3421,7 +3488,12 @@
     }
     setGameHash(id, name, password = "") {
       Ninja_default.gamePassword = password;
-      return window.location.hash = this.switchHash(name.startsWith("#") ? "spectate" /* pvp */ : "play" /* game */, id, name, Ninja_default.gamePassword) + "/";
+      return window.location.hash = this.switchHash(
+        name.startsWith("#") ? "spectate" /* pvp */ : "play" /* game */,
+        id,
+        name,
+        Ninja_default.gamePassword
+      ) + "/";
     }
     hook() {
       const mod = this;
@@ -3429,7 +3501,11 @@
         if (type !== "game")
           return;
         if (a.type == Protocol.SESSION && a.data.type == Protocol.Session.JOIN_RESP && a.data.info.startsWith("You joined "))
-          mod.setGameHash(app.gameClient.server.id, a.data.info.substring("You joined ".length), Ninja_default.gamePassword);
+          mod.setGameHash(
+            app.gameClient.server.id,
+            a.data.info.substring("You joined ".length),
+            Ninja_default.gamePassword
+          );
       });
       App.Layer.on(Layer.Events.JOIN_GAME, (name, id, pass) => {
         this.setGameHash(id, name, pass);
@@ -3441,7 +3517,16 @@
       const realPostCreateGame = APIClient.postCreateGame.bind(APIClient);
       APIClient.postCreateGame = function(serverID, settings, mode, time, serverName, serverPass, customData, auth) {
         mod.setGameHash(serverID, serverName, serverPass);
-        return realPostCreateGame(serverID, settings, mode, time, serverName, serverPass, customData, auth);
+        return realPostCreateGame(
+          serverID,
+          settings,
+          mode,
+          time,
+          serverName,
+          serverPass,
+          customData,
+          auth
+        );
       };
     }
     tryJoin(id, name, pass, spec = false) {
@@ -3509,11 +3594,14 @@ ${name}`);
         icon: "energy_icon",
         recommend: true
       });
-      this.implementConfig({
-        showTime: false
-      }, {
-        showTime: "Show Current Time"
-      });
+      this.implementConfig(
+        {
+          showTime: false
+        },
+        {
+          showTime: "Show Current Time"
+        }
+      );
     }
     load() {
       this.frameDisplay = document.createElement("div");
@@ -3575,21 +3663,24 @@ ${name}`);
         description: "Lets you send pre-defined messages in chat using hotkeys. Use fullscreen to avoid conflics with browser hotkeys.",
         icon: "chat-ingame"
       });
-      this.implementConfig({
-        keyA: "",
-        keyS: "",
-        keyD: "",
-        keyQ: "",
-        keyW: "",
-        keyE: ""
-      }, {
-        keyA: "ALT + A",
-        keyS: "ALT + S",
-        keyD: "ALT + D",
-        keyQ: "ALT + Q",
-        keyW: "ALT + W",
-        keyE: "ALT + E"
-      });
+      this.implementConfig(
+        {
+          keyA: "",
+          keyS: "",
+          keyD: "",
+          keyQ: "",
+          keyW: "",
+          keyE: ""
+        },
+        {
+          keyA: "ALT + A",
+          keyS: "ALT + S",
+          keyD: "ALT + D",
+          keyQ: "ALT + Q",
+          keyW: "ALT + W",
+          keyE: "ALT + E"
+        }
+      );
     }
     load() {
       window.addEventListener("keydown", this.keydown);
@@ -3755,7 +3846,9 @@ ${name}`);
     }
     async onGameStart() {
       this.startingLevel = 0;
-      this.startingLevel = Number((await APIClient.getUserProfile(app.credential.playerid)).experience);
+      this.startingLevel = Number(
+        (await APIClient.getUserProfile(app.credential.playerid)).experience
+      );
     }
     gamestart = this.onGameStart.bind(this);
     async onGameEnd() {
@@ -3765,7 +3858,10 @@ ${name}`);
         const level = LevelBar.XPToLevel(xp);
         const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
         const gain = xp - this.startingLevel;
-        Ninja_default.log(`You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`, config_default.Colors.green);
+        Ninja_default.log(
+          `You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`,
+          config_default.Colors.green
+        );
         if (level > plevel)
           Ninja_default.log(`You leveled up! You are now level ${level}.`, config_default.Colors.yellow);
       }
@@ -3776,7 +3872,9 @@ ${name}`);
 
   // src/index.ts
   if (Worker.prototype.newPostMessage)
-    alert("NinjaIOUtils is already loaded! Please disable other instances of the script before loading.");
+    alert(
+      "NinjaIOUtils is already loaded! Please disable other instances of the script before loading."
+    );
   window.Ninja = Ninja_default;
   window.addEventListener("keydown", (e) => {
     if (e.key == "F11") {
@@ -3801,8 +3899,10 @@ ${name}`);
     Ninja_default.log("Loading NinjaIOUtils...");
     Ninja_default.init();
     if (Ninja_default.isGuest())
-      alert(`NinjaIOUtils works best when you are logged in!
-No support will be provided to logged out users experiencing issues, sorry.`);
+      alert(
+        `NinjaIOUtils works best when you are logged in!
+No support will be provided to logged out users experiencing issues, sorry.`
+      );
     Ninja_default.log(`NinjaIOUtils ${config_default.ver} Loaded Successfully!`);
     Ninja_default.log(`This is a beta version of NinjaIOUtils. Not all features are implemented.`);
   });

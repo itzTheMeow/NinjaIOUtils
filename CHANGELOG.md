@@ -1,5 +1,9 @@
 # Changelog
 
+v2.3
+
+- Fixed texture pack loading.
+
 v2.2
 
 - Added xp gain mod.
