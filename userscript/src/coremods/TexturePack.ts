@@ -52,14 +52,14 @@ export class TexturePackMod extends Mod {
                     (pack.hasCombined || isCustom) &&
                     orig.includes("ninja.io") &&
                     orig.includes("combined") &&
-                    orig.endsWith(".png")
+                    orig.includes(".png")
                   )
                     data.data[0] = `${config.api}/packs/${texturePack}/combined.png?v=${Ninja.GameVersion}`;
                   if (
                     (pack.hasSeamless || isCustom) &&
                     orig.includes("ninja.io") &&
                     orig.includes("seamless") &&
-                    orig.endsWith(".png")
+                    orig.includes(".png")
                   )
                     data.data[0] = `${config.api}/packs/${texturePack}/seamless.png?v=${Ninja.GameVersion}`;
 
