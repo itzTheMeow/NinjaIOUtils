@@ -45,7 +45,7 @@ initStatTracker(app);
 texturePackHandler(app);
 
 const server = app.listen(config.port, () => {
-  console.log(`Listening on port ${config.port}.`);
+  console.log(`Server is online and listening on port ${config.port}.`);
 });
 const ws = new Server(server, { cors: { origin: "*" } });
 ws.on("connection", (socket) => {
