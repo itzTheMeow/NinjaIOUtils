@@ -1,5 +1,10 @@
 # Changelog
 
+v2.4
+
+- Fixed UIURLs not navigating properly to settings page.
+- Fixed Texture Pack button in settings panel using the wrong font.
+
 v2.3
 
 - Fixed texture pack loading.

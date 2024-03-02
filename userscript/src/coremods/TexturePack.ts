@@ -1,6 +1,6 @@
 import { AudioEffects, Button, EventDispatcher, SettingsPanel } from "lib";
 import localForage from "localforage";
-import { App, app, PIXI } from "typings";
+import { App, FontStyle, PIXI, app } from "typings";
 import type { TexturePack } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -112,13 +112,7 @@ export class TexturePackMod extends Mod {
       ) {
         name = `${name}Tab`;
         pan[name] = new tab();
-        pan[`${name}Button`] = new PIXI.Text(title, {
-          fontSize: 18,
-          lineHeight: 18,
-          fill: config.Colors.yellow,
-          strokeThickness: 3,
-          lineJoin: "round",
-        });
+        pan[`${name}Button`] = new PIXI.Text(title, FontStyle.MediumMenuTextOrange);
         pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
         pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
         pan[`${name}Button`].x = x + 56;

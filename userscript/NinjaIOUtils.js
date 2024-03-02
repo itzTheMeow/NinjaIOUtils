@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.3
+// @version      2.4
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "2.3",
+    ver: "2.4",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -3084,13 +3084,7 @@
         function newTab(title, name, x, tab) {
           name = `${name}Tab`;
           pan[name] = new tab();
-          pan[`${name}Button`] = new PIXI.Text(title, {
-            fontSize: 18,
-            lineHeight: 18,
-            fill: config_default.Colors.yellow,
-            strokeThickness: 3,
-            lineJoin: "round"
-          });
+          pan[`${name}Button`] = new PIXI.Text(title, FontStyle.MediumMenuTextOrange);
           pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
           pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
           pan[`${name}Button`].x = x + 56;
