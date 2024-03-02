@@ -3416,58 +3416,60 @@
       menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash("login" /* login */));
       menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash("register" /* register */));
       menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash("recovery" /* recover */));
-      const curPath = window.location.hash.substring(2).split("/");
-      switch (curPath[0]) {
-        case "profile" /* profile */: {
-          menu.emit(Layer.Events.PROFILE_ACCESS);
-          const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
-          if (profPath)
-            App.Layer.profileMenu.openTab(profPath[0], false);
-          break;
+      setTimeout(() => {
+        const curPath = window.location.hash.substring(2).split("/");
+        switch (curPath[0]) {
+          case "profile" /* profile */: {
+            menu.emit(Layer.Events.PROFILE_ACCESS);
+            const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
+            if (profPath)
+              App.Layer.profileMenu.openTab(profPath[0], false);
+            break;
+          }
+          case "shop" /* shop */: {
+            menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
+            clickContainer(
+              curPath[1] == ShopPaths[CustomizationMenu.WEAPONS] ? App.Layer.customizationMenu.weaponCustomizationButton : App.Layer.customizationMenu.playerCustomizationButton
+            );
+            break;
+          }
+          case "ranks" /* ranks */: {
+            menu.emit(Layer.Events.RANKING_ACCESS);
+            break;
+          }
+          case "players" /* players */: {
+            menu.emit(Layer.Events.MEMBER_ACCESS + "f");
+            break;
+          }
+          case "clans" /* clans */: {
+            menu.emit(Layer.Events.CLAN_BROWSER_ACCESS + "f");
+            break;
+          }
+          case "settings" /* settings */: {
+            menu.emit(Layer.Events.SETTINGS_ACCESS);
+            const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
+            if (settPath)
+              app.menu.settingsPanel.displayTab(settPath[0]);
+            break;
+          }
+          case "login" /* login */: {
+            menu.emit(Layer.Events.LOGIN_ACCESS);
+            break;
+          }
+          case "register" /* register */: {
+            menu.emit(Layer.Events.REGISTER_ACCESS);
+            break;
+          }
+          case "recovery" /* recover */: {
+            menu.emit(Layer.Events.RECOVER_ACCESS);
+            break;
+          }
+          case "mods" /* mods */: {
+            menu.emit("modacc");
+            break;
+          }
         }
-        case "shop" /* shop */: {
-          menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
-          clickContainer(
-            curPath[1] == ShopPaths[CustomizationMenu.WEAPONS] ? App.Layer.customizationMenu.weaponCustomizationButton : App.Layer.customizationMenu.playerCustomizationButton
-          );
-          break;
-        }
-        case "ranks" /* ranks */: {
-          menu.emit(Layer.Events.RANKING_ACCESS);
-          break;
-        }
-        case "players" /* players */: {
-          menu.emit(Layer.Events.MEMBER_ACCESS + "f");
-          break;
-        }
-        case "clans" /* clans */: {
-          menu.emit(Layer.Events.CLAN_BROWSER_ACCESS + "f");
-          break;
-        }
-        case "settings" /* settings */: {
-          menu.emit(Layer.Events.SETTINGS_ACCESS);
-          const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
-          if (settPath)
-            app.menu.settingsPanel.displayTab(settPath[0]);
-          break;
-        }
-        case "login" /* login */: {
-          menu.emit(Layer.Events.LOGIN_ACCESS);
-          break;
-        }
-        case "register" /* register */: {
-          menu.emit(Layer.Events.REGISTER_ACCESS);
-          break;
-        }
-        case "recovery" /* recover */: {
-          menu.emit(Layer.Events.RECOVER_ACCESS);
-          break;
-        }
-        case "mods" /* mods */: {
-          menu.emit("modacc");
-          break;
-        }
-      }
+      }, 150);
       this.hook();
       const [_id, _name, _pass] = window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
       if (_id && Number(_id) && _name)

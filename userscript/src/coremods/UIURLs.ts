@@ -1,5 +1,5 @@
 import { APIClient, Button, CustomizationMenu, ProfileMenu, Protocol, SettingsPanel } from "lib";
-import { app, App, Layer } from "typings";
+import { App, Layer, app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";
@@ -101,58 +101,61 @@ export class UIURLMod extends Mod {
     menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash(HashPaths.register));
     menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash(HashPaths.recover));
 
-    const curPath = window.location.hash.substring(2).split("/");
-    switch (curPath[0]) {
-      case HashPaths.profile: {
-        menu.emit(Layer.Events.PROFILE_ACCESS);
-        const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
-        if (profPath) App.Layer.profileMenu.openTab(profPath[0], false);
-        break;
+    // timeout is needed for at least settings page
+    setTimeout(() => {
+      const curPath = window.location.hash.substring(2).split("/");
+      switch (curPath[0]) {
+        case HashPaths.profile: {
+          menu.emit(Layer.Events.PROFILE_ACCESS);
+          const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
+          if (profPath) App.Layer.profileMenu.openTab(profPath[0], false);
+          break;
+        }
+        case HashPaths.shop: {
+          menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
+          clickContainer(
+            curPath[1] == ShopPaths[CustomizationMenu.WEAPONS]
+              ? App.Layer.customizationMenu.weaponCustomizationButton
+              : App.Layer.customizationMenu.playerCustomizationButton
+          );
+          break;
+        }
+        case HashPaths.ranks: {
+          menu.emit(Layer.Events.RANKING_ACCESS);
+          break;
+        }
+        case HashPaths.players: {
+          menu.emit(<any>(Layer.Events.MEMBER_ACCESS + "f"));
+          break;
+        }
+        case HashPaths.clans: {
+          menu.emit(<any>(Layer.Events.CLAN_BROWSER_ACCESS + "f"));
+          break;
+        }
+        case HashPaths.settings: {
+          menu.emit(Layer.Events.SETTINGS_ACCESS);
+          const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
+          if (settPath) app.menu.settingsPanel.displayTab(settPath[0]);
+          break;
+        }
+        case HashPaths.login: {
+          menu.emit(Layer.Events.LOGIN_ACCESS);
+          break;
+        }
+        case HashPaths.register: {
+          menu.emit(Layer.Events.REGISTER_ACCESS);
+          break;
+        }
+        case HashPaths.recover: {
+          menu.emit(Layer.Events.RECOVER_ACCESS);
+          break;
+        }
+        case HashPaths.mods: {
+          menu.emit(<any>"modacc");
+          break;
+        }
       }
-      case HashPaths.shop: {
-        menu.emit(Layer.Events.CUSTOMIZATION_ACCESS);
-        clickContainer(
-          curPath[1] == ShopPaths[CustomizationMenu.WEAPONS]
-            ? App.Layer.customizationMenu.weaponCustomizationButton
-            : App.Layer.customizationMenu.playerCustomizationButton
-        );
-        break;
-      }
-      case HashPaths.ranks: {
-        menu.emit(Layer.Events.RANKING_ACCESS);
-        break;
-      }
-      case HashPaths.players: {
-        menu.emit(<any>(Layer.Events.MEMBER_ACCESS + "f"));
-        break;
-      }
-      case HashPaths.clans: {
-        menu.emit(<any>(Layer.Events.CLAN_BROWSER_ACCESS + "f"));
-        break;
-      }
-      case HashPaths.settings: {
-        menu.emit(Layer.Events.SETTINGS_ACCESS);
-        const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
-        if (settPath) app.menu.settingsPanel.displayTab(settPath[0]);
-        break;
-      }
-      case HashPaths.login: {
-        menu.emit(Layer.Events.LOGIN_ACCESS);
-        break;
-      }
-      case HashPaths.register: {
-        menu.emit(Layer.Events.REGISTER_ACCESS);
-        break;
-      }
-      case HashPaths.recover: {
-        menu.emit(Layer.Events.RECOVER_ACCESS);
-        break;
-      }
-      case HashPaths.mods: {
-        menu.emit(<any>"modacc");
-        break;
-      }
-    }
+    }, 150);
 
     this.hook();
 
