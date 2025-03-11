@@ -4,11 +4,24 @@ import path from "path";
 import { TexturePack } from "../../../shared";
 import { getTextureURLs } from "./textureURLs";
 
+enum PackSpecials {
+  None = "",
+  SinglePixel = "_usepixel.png",
+  SingleImage = "_useimg.png",
+}
+
 export function getAllTexturePacks() {
   return fs
     .readdirSync(path.join(process.cwd(), "../texturepacks"))
     .map((pak) => getTexturePack(pak)?.meta)
     .filter((p) => p);
+}
+
+//TODO: refactor
+function packSpecial(images: string[]): PackSpecials {
+  if (images.some((i) => i == PackSpecials.SingleImage)) return PackSpecials.SingleImage;
+  if (images.some((i) => i == PackSpecials.SinglePixel)) return PackSpecials.SinglePixel;
+  return PackSpecials.None;
 }
 
 export default function getTexturePack(pack: string) {
@@ -18,16 +31,16 @@ export default function getTexturePack(pack: string) {
   if (!fs.existsSync(packFolder)) return null;
   const images = fs.readdirSync(packFolder);
   if (!images.includes("_meta.json")) return null;
-  const hasSinglePixel = !!images.find((i) => i == "_usepixel.png");
-  if (!images.find((i) => i.startsWith("c_") || i.startsWith("s_")) && !hasSinglePixel) return null;
+  const specialCase = packSpecial(images);
+  if (!images.some((i) => i.startsWith("c_") || i.startsWith("s_")) && !specialCase) return null;
   const packMeta = JSON.parse(fs.readFileSync(path.join(packFolder, "_meta.json")).toString());
 
   return {
     meta: {
       ...packMeta,
       id: pack,
-      hasCombined: hasSinglePixel || !!images.find((i) => i.startsWith("c_")),
-      hasSeamless: hasSinglePixel || !!images.find((i) => i.startsWith("s_")),
+      hasCombined: !!specialCase || images.some((i) => i.startsWith("c_")),
+      hasSeamless: !!specialCase || images.some((i) => i.startsWith("s_")),
     } as TexturePack,
     /* Combined (Main) Textures */
     combined: async () => {
@@ -37,10 +50,8 @@ export default function getTexturePack(pack: string) {
         textures.combined.meta.size.h
       );
       const combined = combinedCanvas.getContext("2d");
-      if (!hasSinglePixel) combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
-      const pix = hasSinglePixel
-        ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
-        : null;
+      if (!specialCase) combined.drawImage(await canvas.loadImage(textures.combinedURL), 0, 0);
+      const pix = specialCase ? await canvas.loadImage(path.join(packFolder, specialCase)) : null;
       for (const img of pix
         ? Object.keys(textures.combined.frames).map((k) => `c_${k}.png`)
         : images.filter((i) => i.startsWith("c_"))) {
@@ -67,10 +78,8 @@ export default function getTexturePack(pack: string) {
         textures.seamless.meta.size.h
       );
       const seamless = seamlessCanvas.getContext("2d");
-      if (!hasSinglePixel) seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
-      const pix = hasSinglePixel
-        ? await canvas.loadImage(path.join(packFolder, "_usepixel.png"))
-        : null;
+      if (!specialCase) seamless.drawImage(await canvas.loadImage(textures.seamlessURL), 0, 0);
+      const pix = specialCase ? await canvas.loadImage(path.join(packFolder, specialCase)) : null;
       for (const img of pix
         ? Object.keys(textures.seamless.frames).map((k) => `s_${k}.png`)
         : images.filter((i) => i.startsWith("s_"))) {
