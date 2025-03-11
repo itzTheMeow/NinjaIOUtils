@@ -7,7 +7,7 @@ declare module "typings" {
   export declare var App: typeof Lib.App;
   export declare var Layer: typeof Lib.Layer;
 
-  type Font = Partial<PixiJS.ITextStyle>;
+  type Font = PixiJS.TextStyle;
   export declare var FontStyle: {
     LargeDefault: Font;
     MediumBlack: Font;

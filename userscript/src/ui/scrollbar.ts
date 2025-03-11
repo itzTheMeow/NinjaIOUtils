@@ -2,7 +2,6 @@ import { UserInput } from "lib";
 import { App, PIXI } from "typings";
 
 export default function Scrollbar() {
-  //@ts-expect-error
   class _Scrollbar extends PIXI.Container {
     public scrolling = false;
     public oy = 0;
@@ -13,9 +12,9 @@ export default function Scrollbar() {
     constructor(public h: number, public start = 0) {
       super();
 
-      this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
-      this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
-      this.scrollBar.endFill();
+      this.scrollBar.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+      this.scrollBar.roundRect(0, -5, 20, this.h, 4);
+      this.scrollBar.fill();
       this.scrollBar.x = 0;
       this.scrollBar.y = 0;
       this.scrollBar.interactive = !0;
@@ -23,10 +22,9 @@ export default function Scrollbar() {
       this.addChild(this.scrollBar);
       this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
 
-      this.scrollButton.lineStyle(1, 16777215, 0.4, 0);
-      this.scrollButton.beginFill(16777215, 0.2);
-      this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
-      this.scrollButton.endFill();
+      this.scrollButton.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+      this.scrollButton.roundRect(0, 0, 16, 32, 4);
+      this.scrollButton.fill({ color: 16777215, alpha: 0.2 });
       this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
       this.addChild(this.scrollButton);
       this.scrollButton.x = 2;

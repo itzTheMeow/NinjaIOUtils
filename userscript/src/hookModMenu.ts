@@ -4,11 +4,13 @@ import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
 import Scrollbar from "./ui/scrollbar";
+import { cloneTextStyle } from "./utils";
 
 export default function hookModMenu() {
   const menu = Ninja.activeMenu();
-  menu.memberButton.parent.removeChild(menu.memberButton);
-  menu.clanButton.parent.removeChild(menu.clanButton);
+  //TODO: figure out why this is wrong
+  menu.memberButton.parent.removeChild(<any>menu.memberButton);
+  menu.clanButton.parent.removeChild(<any>menu.clanButton);
 
   let menuClanState: 0 | 1 | 2 = 0;
   const memberclanButton = new MemberMenuButton("", 16763904, 18);
@@ -64,32 +66,34 @@ export default function hookModMenu() {
   ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
   ico1.tint = ico2.tint = config.Colors.white;
   ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
-  const icosep = new PIXI.Text("/", {
-    ...FontStyle.MenuTitle,
-    fontSize: 16,
-    fill: config.Colors.white,
+  const icosep = new PIXI.Text({
+    text: "/",
+    style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 16, fill: config.Colors.white }),
   });
   icosep.x = 0.5 * memberclanButton.rectWidth;
   icosep.y = 0.37 * memberclanButton.rectHeight;
   icosep.anchor.x = icosep.anchor.y = 0.5;
   memberclanButton.addChild(icosep);
 
-  const title1 = new PIXI.Text("Players", {
-    ...FontStyle.MenuTitle,
-    fontSize: 10,
+  const title1 = new PIXI.Text({
+    text: "Players",
+    style: cloneTextStyle(FontStyle.MenuTitle, {
+      fontSize: 10,
+    }),
   });
   title1.x = 0.25 * memberclanButton.rectWidth;
   memberclanButton.addChild(title1);
-  const title2 = new PIXI.Text("Clans", {
-    ...FontStyle.MenuTitle,
-    fontSize: 14,
+  const title2 = new PIXI.Text({
+    text: "Clans",
+    style: cloneTextStyle(FontStyle.MenuTitle, {
+      fontSize: 14,
+    }),
   });
   title2.x = 0.75 * memberclanButton.rectWidth;
   memberclanButton.addChild(title2);
-  const titlesep = new PIXI.Text("/", {
-    ...FontStyle.MenuTitle,
-    fontSize: 14,
-    fill: config.Colors.white,
+  const titlesep = new PIXI.Text({
+    text: "/",
+    style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 14, fill: config.Colors.white }),
   });
   titlesep.x = 0.5 * memberclanButton.rectWidth;
   memberclanButton.addChild(titlesep);
@@ -151,7 +155,7 @@ export default function hookModMenu() {
 
       this.background.x = 0;
       this.background.y = 40;
-      this.background.lineStyle(1, 16777215, 0.1, 0);
+      this.background.lineStyle(1, 16777215, 0.1);
       this.background.beginFill(3355443, 1);
       this.background.drawRect(0, 0, 660, 524);
       this.background.endFill();
@@ -233,25 +237,31 @@ export default function hookModMenu() {
       container.addChild(icon);
       iconSprite.scale.set(Math.min(iconSprite.scale.x, iconSprite.scale.y));
 
-      const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
+      const label = new PIXI.Text({
+        text: mod.name,
+        style: cloneTextStyle(FontStyle.ClanTitle, { fontSize: 30 }),
+      });
       label.x = pl += iconSize + 4;
       label.y = pt += 8;
       container.addChild(label);
-      const authorLabel = new PIXI.Text(
-        mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
-        { ...FontStyle.SmallMenuTextYellow, fontSize: 20 }
-      );
+      const authorLabel = new PIXI.Text({
+        text: mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
+        style: cloneTextStyle(FontStyle.SmallMenuTextYellow, { fontSize: 20 }),
+      });
       authorLabel.x = pl + label.width + 4;
       authorLabel.y = pt + 5;
       container.addChild(authorLabel);
 
-      const description = new PIXI.Text(
-        (
+      const description = new PIXI.Text({
+        text: (
           mod.details.description.slice(0, maxDesc) +
           (mod.details.description.length > maxDesc ? "..." : "")
         ).trim(),
-        { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 }
-      );
+        style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
+          wordWrap: true,
+          wordWrapWidth: 600,
+        }),
+      });
       description.x = pl = 12;
       description.y = pt += iconSize - 2;
       container.addChild(description);
@@ -262,7 +272,7 @@ export default function hookModMenu() {
         const button = new Button("installer");
         button.setText(mod.isInstalled() ? "Uninstall" : "Install");
         button.setTint(mod.isInstalled() ? config.Colors.red : config.Colors.green);
-        button.scale.x = button.scale.y = 0.7;
+        button.scale.x = button.scale.y = 0.8;
         button.x = pl -= button.width;
         button.y = pt;
         button.addListener(Button.BUTTON_RELEASED, () => {
@@ -271,9 +281,11 @@ export default function hookModMenu() {
         });
         container.addChild(button);
         if (!mod.isInstalled() && mod.details.recommend) {
-          const recLabel = new PIXI.Text("Recommended", {
-            ...FontStyle.SmallMenuTextYellow,
-            fontSize: 12,
+          const recLabel = new PIXI.Text({
+            text: "Recommended",
+            style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
+              fontSize: 12,
+            }),
           });
           recLabel.x = pl -= recLabel.width + 15;
           recLabel.y = pt + 2;
@@ -282,7 +294,7 @@ export default function hookModMenu() {
       }
       if (mod.isInstalled() && mod.config) {
         const button = new Button("settings");
-        button.scale.x = button.scale.y = 0.7;
+        button.scale.x = button.scale.y = 0.8;
         button.setText("");
         button.x = pl -= button.width + 8;
         button.y = pt;
@@ -291,11 +303,12 @@ export default function hookModMenu() {
           this.showConfig(mod);
         });
         const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
-        ico.width = button.width - 4;
-        ico.height = button.height - 4;
-        ico.anchor.x = ico.anchor.y = 0.5;
-        ico.x = 6;
-        ico.y = button.height / 2 + 3;
+        ico.width = (button.width - 4) * button.scale.y;
+        ico.height = (button.height - 4) * button.scale.x;
+        // no idea why these values work the way they do
+        ico.x = button.width / -3.5;
+        ico.y = button.height / 8;
+        console.log(ico);
         button.addChild(ico);
         container.addChild(button);
       }
@@ -343,7 +356,7 @@ export default function hookModMenu() {
         const name = (key: string): string => {
           const n = mod.configNames[key];
           if (!n) return key;
-          else return Array.isArray(n) ? n[0] : n;
+          else return typeof n == "string" ? n : n.name;
         };
         store
           .sort((e1, e2) => (name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1))
@@ -406,7 +419,7 @@ export default function hookModMenu() {
             mod.config.set(<any>data.key, box.checked);
             mod.configChanged(<any>data.key);
           });
-          container.addChild(box);
+          container.addChild(<any>box);
           break;
         }
         case "str":
@@ -416,8 +429,7 @@ export default function hookModMenu() {
             fontSize: 18,
             lineHeight: 16,
             fill: 16763904,
-            strokeThickness: 2,
-            lineJoin: "round",
+            stroke: { width: 2, join: "round" },
           });
           label.y = 6;
           container.addChild(label);

@@ -1,5 +1,6 @@
 import { AudioEffects, Button, EventDispatcher, SettingsPanel } from "lib";
 import localForage from "localforage";
+import { Text } from "pixi.js";
 import { App, FontStyle, PIXI, app } from "typings";
 import type { TexturePack } from "../../../shared";
 import Mod from "../api/Mod";
@@ -192,59 +193,62 @@ function getTexTab() {
   FileUploader.style.display = "none";
   document.body.appendChild(FileUploader);
 
+  //TODO: finish migrating to use proper class methods
   class TexTab extends (PIXI.Container as any) {
+    public marginLeft = 40;
+    public marginTop = 52;
+    public offset = this.marginTop + 6;
+    public texTitle: Text;
+    public texHint: Text;
+
     constructor() {
       super();
       const tab = this;
       EventDispatcher.call(this);
-      this.marginLeft = 40;
-      this.marginTop = 52;
-      this.off = this.marginTop + 6;
 
       /* ============= Title ============= */
-      this.texTitle = new PIXI.Text("Texture Packs", {
-        fontSize: 18,
-        lineHeight: 18,
-        fill: config.Colors.yellow,
-        strokeThickness: 3,
-        lineJoin: "round",
+      this.texTitle = new PIXI.Text({
+        text: "Texture Packs",
+        style: {
+          fontSize: 18,
+          lineHeight: 18,
+          fill: config.Colors.yellow,
+          stroke: { width: 3, join: "round", color: config.Colors.black },
+        },
       });
       this.texTitle.x = this.marginLeft - 5;
-      this.texTitle.y = this.off;
+      this.texTitle.y = this.offset;
       this.addChild(this.texTitle);
 
       this.texHint = new PIXI.Text("(make sure to click save)", {
         fontSize: 14,
         fill: config.Colors.white,
-        strokeThickness: 2,
-        lineJoin: "round",
+        stroke: { width: 2, join: "round", color: config.Colors.black },
       });
       this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
-      this.texHint.y = this.off + 2;
+      this.texHint.y = this.offset + 2;
       this.addChild(this.texHint);
-      this.off += 30;
+      this.offset += 30;
 
       const customTitle = new PIXI.Text("Custom Pack (read docs for tutorial)", {
         fontSize: 16,
         fill: config.Colors.white,
-        strokeThickness: 2,
-        lineJoin: "round",
+        stroke: { width: 2, join: "round", color: config.Colors.black },
       });
       customTitle.x = this.marginLeft;
-      customTitle.y = this.off;
+      customTitle.y = this.offset;
       this.addChild(customTitle);
-      this.off += 20;
+      this.offset += 20;
 
       const customDesc = new PIXI.Text("Upload a zip file containing your textures.", {
         fontSize: 14,
         fill: config.Colors.yellow,
-        strokeThickness: 2,
-        lineJoin: "round",
+        stroke: { width: 2, join: "round", color: config.Colors.black },
       });
       customDesc.x = this.marginLeft;
-      customDesc.y = this.off;
+      customDesc.y = this.offset;
       this.addChild(customDesc);
-      this.off += 24;
+      this.offset += 24;
 
       const uploader = new Button("uploader");
       uploader.addListener(Button.BUTTON_RELEASED, async () => {
@@ -257,16 +261,16 @@ function getTexTab() {
         }
       });
       uploader.x = this.marginLeft + 8;
-      uploader.y = this.off;
+      uploader.y = this.offset;
       uploader.scale.x = uploader.scale.y = 0.75;
       this.addChild(uploader);
-      this.off += 12;
+      this.offset += 12;
 
-      const off = this.off;
+      const off = this.offset;
       this.packIndex = 0;
       !(this.runPacks = async () => {
         try {
-          this.off = off;
+          this.offset = off;
           if (this.hadPacks) this.hadPacks.map((p) => p.destroy());
           this.hadPacks = [];
           const packs: TexturePack[] =
@@ -301,12 +305,11 @@ function getTexTab() {
               {
                 fontSize: 16,
                 fill: config.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round",
+                stroke: { width: 2, join: "round", color: config.Colors.black },
               }
             );
             packName.x = this.marginLeft;
-            packName.y = this.off += 28;
+            packName.y = this.offset += 28;
             this.hadPacks.push(this.addChild(packName));
             const flags = [];
             if (pak.hasCombined) flags.push("textures");
@@ -318,16 +321,15 @@ function getTexTab() {
               {
                 fontSize: 14,
                 fill: config.Colors.white,
-                strokeThickness: 2,
-                lineJoin: "round",
+                stroke: { width: 2, join: "round", color: config.Colors.black },
               }
             );
             packDescription.x = this.marginLeft;
-            packDescription.y = this.off += packName.height + 2;
+            packDescription.y = this.offset += packName.height + 2;
             this.hadPacks.push(this.addChild(packDescription));
             const packButton = new Button(`pack_btn_${pak.id}`);
             packButton.x = packName.x + packName.width + 12;
-            packButton.y = this.off - packName.height;
+            packButton.y = this.offset - packName.height;
             packButton.setText(hasPack ? "Remove" : "Use");
             packButton.setTint(hasPack ? config.Colors.red : config.Colors.green);
             packButton.scale.x = packButton.scale.y = 0.5;

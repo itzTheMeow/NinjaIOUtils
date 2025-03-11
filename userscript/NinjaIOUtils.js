@@ -16,7 +16,7 @@
 // @homepageURL  https://nutils.itsmeow.cat
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      2.4
+// @version      3.0
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "2.4",
+    ver: "3.0",
     api: "https://nutils.itsmeow.cat",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -2295,19 +2295,18 @@
         super();
         this.h = h;
         this.start = start;
-        this.scrollBar.lineStyle(1, 16777215, 0.4, 0);
-        this.scrollBar.drawRoundedRect(0, -5, 20, this.h, 4);
-        this.scrollBar.endFill();
+        this.scrollBar.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+        this.scrollBar.roundRect(0, -5, 20, this.h, 4);
+        this.scrollBar.fill();
         this.scrollBar.x = 0;
         this.scrollBar.y = 0;
         this.scrollBar.interactive = true;
         this.scrollBar.alpha = 0.5;
         this.addChild(this.scrollBar);
         this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
-        this.scrollButton.lineStyle(1, 16777215, 0.4, 0);
-        this.scrollButton.beginFill(16777215, 0.2);
-        this.scrollButton.drawRoundedRect(0, 0, 16, 32, 4);
-        this.scrollButton.endFill();
+        this.scrollButton.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+        this.scrollButton.roundRect(0, 0, 16, 32, 4);
+        this.scrollButton.fill({ color: 16777215, alpha: 0.2 });
         this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
         this.addChild(this.scrollButton);
         this.scrollButton.x = 2;
@@ -2387,6 +2386,18 @@
     return Scrollbar2;
   }
 
+  // src/utils.ts
+  function clickContainer(container) {
+    container._events.mousedown.forEach((f) => f.fn());
+  }
+  function cloneTextStyle(style, newProps) {
+    const newStyle = style.clone();
+    Object.keys(newProps).forEach((key) => {
+      newStyle[key] = newProps[key];
+    });
+    return newStyle;
+  }
+
   // src/hookModMenu.ts
   function hookModMenu() {
     const menu = Ninja_default.activeMenu();
@@ -2449,31 +2460,33 @@
     ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
     ico1.tint = ico2.tint = config_default.Colors.white;
     ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
-    const icosep = new PIXI.Text("/", {
-      ...FontStyle.MenuTitle,
-      fontSize: 16,
-      fill: config_default.Colors.white
+    const icosep = new PIXI.Text({
+      text: "/",
+      style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 16, fill: config_default.Colors.white })
     });
     icosep.x = 0.5 * memberclanButton.rectWidth;
     icosep.y = 0.37 * memberclanButton.rectHeight;
     icosep.anchor.x = icosep.anchor.y = 0.5;
     memberclanButton.addChild(icosep);
-    const title1 = new PIXI.Text("Players", {
-      ...FontStyle.MenuTitle,
-      fontSize: 10
+    const title1 = new PIXI.Text({
+      text: "Players",
+      style: cloneTextStyle(FontStyle.MenuTitle, {
+        fontSize: 10
+      })
     });
     title1.x = 0.25 * memberclanButton.rectWidth;
     memberclanButton.addChild(title1);
-    const title2 = new PIXI.Text("Clans", {
-      ...FontStyle.MenuTitle,
-      fontSize: 14
+    const title2 = new PIXI.Text({
+      text: "Clans",
+      style: cloneTextStyle(FontStyle.MenuTitle, {
+        fontSize: 14
+      })
     });
     title2.x = 0.75 * memberclanButton.rectWidth;
     memberclanButton.addChild(title2);
-    const titlesep = new PIXI.Text("/", {
-      ...FontStyle.MenuTitle,
-      fontSize: 14,
-      fill: config_default.Colors.white
+    const titlesep = new PIXI.Text({
+      text: "/",
+      style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 14, fill: config_default.Colors.white })
     });
     titlesep.x = 0.5 * memberclanButton.rectWidth;
     memberclanButton.addChild(titlesep);
@@ -2525,7 +2538,7 @@
         super();
         this.background.x = 0;
         this.background.y = 40;
-        this.background.lineStyle(1, 16777215, 0.1, 0);
+        this.background.lineStyle(1, 16777215, 0.1);
         this.background.beginFill(3355443, 1);
         this.background.drawRect(0, 0, 660, 524);
         this.background.endFill();
@@ -2595,21 +2608,27 @@
         icon.addChild(iconSprite);
         container.addChild(icon);
         iconSprite.scale.set(Math.min(iconSprite.scale.x, iconSprite.scale.y));
-        const label = new PIXI.Text(mod.name, { ...FontStyle.ClanTitle, fontSize: 30 });
+        const label = new PIXI.Text({
+          text: mod.name,
+          style: cloneTextStyle(FontStyle.ClanTitle, { fontSize: 30 })
+        });
         label.x = pl += iconSize + 4;
         label.y = pt += 8;
         container.addChild(label);
-        const authorLabel = new PIXI.Text(
-          mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
-          { ...FontStyle.SmallMenuTextYellow, fontSize: 20 }
-        );
+        const authorLabel = new PIXI.Text({
+          text: mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
+          style: cloneTextStyle(FontStyle.SmallMenuTextYellow, { fontSize: 20 })
+        });
         authorLabel.x = pl + label.width + 4;
         authorLabel.y = pt + 5;
         container.addChild(authorLabel);
-        const description = new PIXI.Text(
-          (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
-          { ...FontStyle.SmallMenuTextWhite2, wordWrap: true, wordWrapWidth: 600 }
-        );
+        const description = new PIXI.Text({
+          text: (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
+          style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
+            wordWrap: true,
+            wordWrapWidth: 600
+          })
+        });
         description.x = pl = 12;
         description.y = pt += iconSize - 2;
         container.addChild(description);
@@ -2619,7 +2638,7 @@
           const button = new Button("installer");
           button.setText(mod.isInstalled() ? "Uninstall" : "Install");
           button.setTint(mod.isInstalled() ? config_default.Colors.red : config_default.Colors.green);
-          button.scale.x = button.scale.y = 0.7;
+          button.scale.x = button.scale.y = 0.8;
           button.x = pl -= button.width;
           button.y = pt;
           button.addListener(Button.BUTTON_RELEASED, () => {
@@ -2628,9 +2647,11 @@
           });
           container.addChild(button);
           if (!mod.isInstalled() && mod.details.recommend) {
-            const recLabel = new PIXI.Text("Recommended", {
-              ...FontStyle.SmallMenuTextYellow,
-              fontSize: 12
+            const recLabel = new PIXI.Text({
+              text: "Recommended",
+              style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
+                fontSize: 12
+              })
             });
             recLabel.x = pl -= recLabel.width + 15;
             recLabel.y = pt + 2;
@@ -2639,7 +2660,7 @@
         }
         if (mod.isInstalled() && mod.config) {
           const button = new Button("settings");
-          button.scale.x = button.scale.y = 0.7;
+          button.scale.x = button.scale.y = 0.8;
           button.setText("");
           button.x = pl -= button.width + 8;
           button.y = pt;
@@ -2648,11 +2669,11 @@
             this.showConfig(mod);
           });
           const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
-          ico.width = button.width - 4;
-          ico.height = button.height - 4;
-          ico.anchor.x = ico.anchor.y = 0.5;
-          ico.x = 6;
-          ico.y = button.height / 2 + 3;
+          ico.width = (button.width - 4) * button.scale.y;
+          ico.height = (button.height - 4) * button.scale.x;
+          ico.x = button.width / -3.5;
+          ico.y = button.height / 8;
+          console.log(ico);
           button.addChild(ico);
           container.addChild(button);
         }
@@ -2695,7 +2716,7 @@
             if (!n)
               return key;
             else
-              return Array.isArray(n) ? n[0] : n;
+              return typeof n == "string" ? n : n.name;
           };
           store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach(([key, value]) => {
             const cfgname = mod.configNames[key], item = mnu.constructConfigItem(
@@ -2749,8 +2770,7 @@
               fontSize: 18,
               lineHeight: 16,
               fill: 16763904,
-              strokeThickness: 2,
-              lineJoin: "round"
+              stroke: { width: 2, join: "round" }
             });
             label.y = 6;
             container.addChild(label);
@@ -3157,53 +3177,54 @@
     FileUploader.style.display = "none";
     document.body.appendChild(FileUploader);
     class TexTab extends PIXI.Container {
+      marginLeft = 40;
+      marginTop = 52;
+      offset = this.marginTop + 6;
+      texTitle;
+      texHint;
       constructor() {
         super();
         const tab = this;
         EventDispatcher.call(this);
-        this.marginLeft = 40;
-        this.marginTop = 52;
-        this.off = this.marginTop + 6;
-        this.texTitle = new PIXI.Text("Texture Packs", {
-          fontSize: 18,
-          lineHeight: 18,
-          fill: config_default.Colors.yellow,
-          strokeThickness: 3,
-          lineJoin: "round"
+        this.texTitle = new PIXI.Text({
+          text: "Texture Packs",
+          style: {
+            fontSize: 18,
+            lineHeight: 18,
+            fill: config_default.Colors.yellow,
+            stroke: { width: 3, join: "round", color: config_default.Colors.black }
+          }
         });
         this.texTitle.x = this.marginLeft - 5;
-        this.texTitle.y = this.off;
+        this.texTitle.y = this.offset;
         this.addChild(this.texTitle);
         this.texHint = new PIXI.Text("(make sure to click save)", {
           fontSize: 14,
           fill: config_default.Colors.white,
-          strokeThickness: 2,
-          lineJoin: "round"
+          stroke: { width: 2, join: "round", color: config_default.Colors.black }
         });
         this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
-        this.texHint.y = this.off + 2;
+        this.texHint.y = this.offset + 2;
         this.addChild(this.texHint);
-        this.off += 30;
+        this.offset += 30;
         const customTitle = new PIXI.Text("Custom Pack (read docs for tutorial)", {
           fontSize: 16,
           fill: config_default.Colors.white,
-          strokeThickness: 2,
-          lineJoin: "round"
+          stroke: { width: 2, join: "round", color: config_default.Colors.black }
         });
         customTitle.x = this.marginLeft;
-        customTitle.y = this.off;
+        customTitle.y = this.offset;
         this.addChild(customTitle);
-        this.off += 20;
+        this.offset += 20;
         const customDesc = new PIXI.Text("Upload a zip file containing your textures.", {
           fontSize: 14,
           fill: config_default.Colors.yellow,
-          strokeThickness: 2,
-          lineJoin: "round"
+          stroke: { width: 2, join: "round", color: config_default.Colors.black }
         });
         customDesc.x = this.marginLeft;
-        customDesc.y = this.off;
+        customDesc.y = this.offset;
         this.addChild(customDesc);
-        this.off += 24;
+        this.offset += 24;
         const uploader = new Button("uploader");
         uploader.addListener(Button.BUTTON_RELEASED, async () => {
           if (await import_localforage.default.getItem("custom_pack")) {
@@ -3215,15 +3236,15 @@
           }
         });
         uploader.x = this.marginLeft + 8;
-        uploader.y = this.off;
+        uploader.y = this.offset;
         uploader.scale.x = uploader.scale.y = 0.75;
         this.addChild(uploader);
-        this.off += 12;
-        const off = this.off;
+        this.offset += 12;
+        const off = this.offset;
         this.packIndex = 0;
         !(this.runPacks = async () => {
           try {
-            this.off = off;
+            this.offset = off;
             if (this.hadPacks)
               this.hadPacks.map((p) => p.destroy());
             this.hadPacks = [];
@@ -3252,12 +3273,11 @@
                 {
                   fontSize: 16,
                   fill: config_default.Colors.white,
-                  strokeThickness: 2,
-                  lineJoin: "round"
+                  stroke: { width: 2, join: "round", color: config_default.Colors.black }
                 }
               );
               packName.x = this.marginLeft;
-              packName.y = this.off += 28;
+              packName.y = this.offset += 28;
               this.hadPacks.push(this.addChild(packName));
               const flags = [];
               if (pak.hasCombined)
@@ -3269,16 +3289,15 @@
                 {
                   fontSize: 14,
                   fill: config_default.Colors.white,
-                  strokeThickness: 2,
-                  lineJoin: "round"
+                  stroke: { width: 2, join: "round", color: config_default.Colors.black }
                 }
               );
               packDescription.x = this.marginLeft;
-              packDescription.y = this.off += packName.height + 2;
+              packDescription.y = this.offset += packName.height + 2;
               this.hadPacks.push(this.addChild(packDescription));
               const packButton = new Button(`pack_btn_${pak.id}`);
               packButton.x = packName.x + packName.width + 12;
-              packButton.y = this.off - packName.height;
+              packButton.y = this.offset - packName.height;
               packButton.setText(hasPack ? "Remove" : "Use");
               packButton.setTint(hasPack ? config_default.Colors.red : config_default.Colors.green);
               packButton.scale.x = packButton.scale.y = 0.5;
@@ -3331,13 +3350,6 @@
   // src/coremods/UIURLs.ts
   
   
-
-  // src/utils.ts
-  function clickContainer(container) {
-    container._events.mousedown.forEach((f) => f.fn());
-  }
-
-  // src/coremods/UIURLs.ts
   var UIURLMod = class extends Mod {
     constructor() {
       super({
