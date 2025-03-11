@@ -1,5 +1,17 @@
 import fs from "fs";
 
+/* Script to run on browser: */
+!(() => {
+  Client.unpackGameData = function (a) {
+    const d = JSON.parse(LZString.decompressFromUint8Array_Fast(a.subarray(1)));
+    console.log(d);
+    return {
+      t: Protocol.Game.UPDATE,
+      d,
+    };
+  };
+});
+
 const Map = {
   _id: null,
   name: "test",
