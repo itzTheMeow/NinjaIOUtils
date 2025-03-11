@@ -12,6 +12,9 @@ import fs from "fs";
   };
 });
 
+// scales all polygons for maps that need it
+const MAP_SCALE = 20;
+
 const Map = {
   _id: null,
   name: "test",
@@ -48,11 +51,9 @@ for (const packet of json) {
     delete obj.p.r;
     obj.p.sh?.forEach((sh) => {
       delete sh.o;
-      return;
-      // scale all polygons up by 20x for some reason
       sh.v?.forEach((v) => {
-        v.x *= 20;
-        v.y *= 20;
+        v.x *= MAP_SCALE;
+        v.y *= MAP_SCALE;
       });
     });
     Map.contextData.go.push(obj);
