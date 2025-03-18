@@ -259,7 +259,7 @@ export default function hookModMenu() {
         ).trim(),
         style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
           wordWrap: true,
-          wordWrapWidth: 600,
+          wordWrapWidth: 550,
         }),
       });
       description.x = pl = 12;

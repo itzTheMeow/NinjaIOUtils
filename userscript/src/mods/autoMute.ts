@@ -16,12 +16,13 @@ export class AutoMuteMod extends Mod<{
   private enableLogs: boolean = true;
   private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
+  private originalDisplayChatBubble: Function | null = null;
 
   constructor() {
     super({
       id: "AutoMute",
       name: "Auto Mute",
-      description: "Constantly mutes players you mute. Can be configured to mute all players below a set level.",
+      description: "Constantly mutes players you mute, removes chat bubble above them. Can be configured to mute all players below a set level.",
       author: "Lumen",
       icon: "mute_icon",
     });
@@ -117,13 +118,33 @@ export class AutoMuteMod extends Mod<{
     Game.Muted = [];
   }
 
+  private overrideChatBubble(): void {
+    if (!Label.prototype.displayChatBubble) {
+      return;
+    }
+    if (!this.originalDisplayChatBubble) {
+      this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
+    }
+    Label.prototype.displayChatBubble = function () {
+      if (this.go && Game.Muted.includes(this.go.sid)) return;
+      return this.originalDisplayChatBubble.apply(this);
+    };
+  }
+
+  private restoreChatBubble(): void {
+    if (this.originalDisplayChatBubble) {
+      Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
+      this.originalDisplayChatBubble = null;
+    }
+  }
+
   public load(): void {
     if (Ninja.isGuest()) {
       this.log("Not supported for guests.", config.Colors.red);
       return;
     }
     this.loadConfig();
-
+    this.overrideChatBubble();
     Ninja.events.addListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
@@ -132,6 +153,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   public unload(): void {
+    this.restoreChatBubble();
     Ninja.events.removeListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.removeListener("pm", this.onManualMute.bind(this));
     Ninja.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));

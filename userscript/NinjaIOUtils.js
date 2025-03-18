@@ -2626,7 +2626,7 @@
           text: (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
           style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
             wordWrap: true,
-            wordWrapWidth: 600
+            wordWrapWidth: 550
           })
         });
         description.x = pl = 12;
@@ -2954,6 +2954,12 @@
       Game.prototype.playerJoined = function(data, extra) {
         ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: data }));
         return this._playerJoined(data, extra);
+      };
+      Label.prototype._displayChatBubble = Label.prototype.displayChatBubble;
+      Label.prototype.displayChatBubble = function() {
+        if (this.go && Game.Muted.includes(this.go.sid))
+          return;
+        return this._displayChatBubble();
       };
       PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
       PlayerDropdown.prototype.onMute = function() {
@@ -3710,11 +3716,12 @@ ${name}`);
     enableLogs = true;
     doNotMuteGuests = true;
     permanentMuteList = [];
+    originalDisplayChatBubble = null;
     constructor() {
       super({
         id: "AutoMute",
         name: "Auto Mute",
-        description: "Constantly mutes players you mute. Can be configured to mute all players below a set level.",
+        description: "Constantly mutes players you mute, removes chat bubble above them. Can be configured to mute all players below a set level.",
         author: "Lumen",
         icon: "mute_icon"
       });
@@ -3800,18 +3807,40 @@ ${name}`);
     onGameplayStopped() {
       Game.Muted = [];
     }
+    overrideChatBubble() {
+      if (!Label.prototype.displayChatBubble) {
+        console.error("[AutoMuteMod] Label.prototype.displayChatBubble is undefined.");
+        return;
+      }
+      if (!this.originalDisplayChatBubble) {
+        this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
+      }
+      Label.prototype.displayChatBubble = function() {
+        if (this.go && Game.Muted.includes(this.go.sid))
+          return;
+        return this.originalDisplayChatBubble.apply(this);
+      };
+    }
+    restoreChatBubble() {
+      if (this.originalDisplayChatBubble) {
+        Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
+        this.originalDisplayChatBubble = null;
+      }
+    }
     load() {
       if (Ninja_default.isGuest()) {
         this.log("Not supported for guests.", config_default.Colors.red);
         return;
       }
       this.loadConfig();
+      this.overrideChatBubble();
       Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
       super.load();
     }
     unload() {
+      this.restoreChatBubble();
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
