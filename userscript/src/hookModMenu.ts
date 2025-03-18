@@ -199,8 +199,8 @@ export default function hookModMenu() {
       this.modContainer.y = this.marginTop + this.filterBox.height;
       this.container.addChild(this.modContainer);
 
-      this.scroller.x = this.width - this.scroller.width * 1.75;
-      this.scroller.y = this.titleText.height * 3 + 2;
+      this.scroller.x = this.background.width - 36;
+      this.scroller.y = this.background.y + this.closeButton.height + this.oy + 3;
       this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
         this.scrollTop = prog;
         this.indexList();
@@ -308,7 +308,7 @@ export default function hookModMenu() {
         // no idea why these values work the way they do
         ico.x = button.width / -3.5;
         ico.y = button.height / 8;
-        console.log(ico);
+        // console.log(ico);
         button.addChild(ico);
         container.addChild(button);
       }
@@ -364,7 +364,16 @@ export default function hookModMenu() {
             const cfgname = mod.configNames[key],
               item = mnu.constructConfigItem(
                 mod,
-                typeof value == "boolean"
+                Array.isArray(value)
+                  ? {
+                      type: "list",
+                      name: name(key),
+                      key,
+                      value,
+                      removableElements:
+                        typeof cfgname === "object" ? cfgname.removableElements ?? false : false,
+                    }
+                  : typeof value === "boolean"
                   ? {
                       type: "bool",
                       name: name(key),
@@ -387,7 +396,7 @@ export default function hookModMenu() {
                     }
               );
             item.y = off;
-            off += item.height;
+            off += item.height + 10;
             mnu.configContainer.addChild(item);
           });
       }
@@ -409,6 +418,7 @@ export default function hookModMenu() {
         | { type: "bool"; value: boolean }
         | { type: "num"; value: number }
         | { type: "str"; value: string }
+        | { type: "list"; value: any[]; removableElements: boolean }
       )
     ) {
       const container = new PIXI.Container();
@@ -437,7 +447,7 @@ export default function hookModMenu() {
           input.x = Math.ceil(label.width / 15) * 15 + 4;
           input.setDimensions(500, 34);
           input.setMaxChars(data.maxLength || Infinity);
-          input.setText(String(data.value));
+          input.setText(data.value);
           input.setFilter(
             isNum
               ? "0123456789-"
@@ -450,6 +460,97 @@ export default function hookModMenu() {
             mod.configChanged(<any>data.key);
           });
           container.addChild(input);
+          break;
+        }
+        case "list": {
+          const label = new PIXI.Text(data.name, {
+            fontSize: 18,
+            lineHeight: 16,
+            fill: 16763904,
+            stroke: { width: 2, join: "round" },
+          });
+          label.y = 6;
+          container.addChild(label);
+    
+          const listWidth = 300;
+          const listHeight = 150;
+          const listBackground = new PIXI.Graphics();
+          listBackground.beginFill(0x000000, 0.3);
+          listBackground.drawRoundedRect(0, 0, listWidth, listHeight, 6);
+          listBackground.endFill();
+          listBackground.y = label.height + 10;
+          container.addChild(listBackground);
+    
+          const scrollContainer = new PIXI.Container();
+          scrollContainer.y = listBackground.y;
+          container.addChild(scrollContainer);
+    
+          const mask = new PIXI.Graphics();
+          mask.beginFill(0xffffff);
+          mask.drawRoundedRect(0, 0, listWidth - 15, listHeight, 6);
+          mask.endFill();
+          mask.x = 0;
+          mask.y = 0;
+          scrollContainer.addChild(mask);
+          scrollContainer.mask = mask;
+    
+          const scrollContent = new PIXI.Container();
+          scrollContainer.addChild(scrollContent);
+    
+          const scrollbar = new (Scrollbar())(listHeight);
+          scrollbar.x = listWidth - scrollbar.width + 5;
+          scrollbar.y = listBackground.y + 4;
+          container.addChild(scrollbar);
+    
+          scrollbar.on(Scrollbar().SCROLL, (prog) => {
+            scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
+          });
+    
+          function refreshList() {
+            scrollContent.removeChildren();
+            let offY = 5;
+            data.value.forEach((player, index) => {
+              const playerRow = new PIXI.Container();
+              playerRow.y = offY;
+              const playerName = new PIXI.Text(player, {
+                fontSize: 16,
+                fill: 0xffffff,
+              });
+              playerName.x = 10;
+              playerRow.addChild(playerName);
+    
+              if (data.removableElements) {
+                const removeButton = new Button("remove");
+                removeButton.setText("Delete");
+                removeButton.setTint(config.Colors.red);
+                removeButton.scale.set(0.7);
+                removeButton.x = listWidth - removeButton.width - 10;
+                removeButton.addListener(Button.BUTTON_RELEASED, () => {
+                  data.value.splice(index, 1);
+                  mod.config.set(<any>data.key, data.value);
+                  mod.configChanged(<any>data.key);
+                  refreshList();
+                });
+                playerRow.addChild(removeButton);
+              }
+    
+              offY += playerName.height + 8;
+              scrollContent.addChild(playerRow);
+            });
+    
+            scrollbar.reset();
+            if (scrollContent.height > listHeight) {
+              scrollbar.enableWheel();
+              scrollbar.visible = true;
+            } else {
+              scrollbar.disableWheel();
+              scrollbar.visible = false;
+              scrollContent.y = 0;
+            }
+          }
+    
+          refreshList();
+          break;
         }
       }
       return container;

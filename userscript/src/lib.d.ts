@@ -159,6 +159,17 @@ declare module "lib" {
             }
         }
     }
+    export class PlayerDropdown extends PIXI.Container {
+        public target: { sid: string; name: string } | null = null;
+        public muteRow: any;
+        public unmuteRow: any;
+        public inviteRow: any;
+      
+        constructor();
+        public onMute(): void;
+        public onUnmute(): void;
+        public show(): void;
+      }
     export class SettingsPanel extends PIXI.Container<PIXI.DisplayObject> {
         constructor(a: any, b: any);
         selectedTab: string;

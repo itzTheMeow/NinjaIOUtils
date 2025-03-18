@@ -8,11 +8,13 @@ export class AutoMuteMod extends Mod<{
   muteBelowEnabled: boolean;
   muteBelowLevel: number;
   enableLogs: boolean;
+  doNotMuteGuests: boolean;
   permanentMuteList: string[];
 }> {
   private muteEnabled: boolean = true;
   private levelLimit: number = 15;
   private enableLogs: boolean = true;
+  private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
 
   constructor() {
@@ -29,12 +31,14 @@ export class AutoMuteMod extends Mod<{
         muteBelowEnabled: true,
         muteBelowLevel: 15,
         enableLogs: true,
+        doNotMuteGuests: true,
         permanentMuteList: [],
       },
       {
         muteBelowEnabled: "Enable muting players with level not higher than Level limit",
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
+        doNotMuteGuests: "Do not add guests to Mute List",
         permanentMuteList: {
           name: "Permanently muted players",
           removableElements: true,
@@ -47,6 +51,7 @@ export class AutoMuteMod extends Mod<{
     this.muteEnabled = this.config.get("muteBelowEnabled");
     this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
     this.enableLogs = this.config.get("enableLogs");
+    this.doNotMuteGuests = this.config.get("doNotMuteGuests");
     const permMuteList = this.config.get("permanentMuteList");
     this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
   }
@@ -76,18 +81,24 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onPlayerJoined(e: CustomEvent): void {
-    const player = e.detail;
+    const player = e.data.detail;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
     }
   }
 
   private onManualMute(e: CustomEvent): void {
-    const player = e.detail;
+    const player = e.data.detail;
+    if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
+      return;
+    }
     if (!this.permanentMuteList.includes(player.name)) {
       this.permanentMuteList.push(player.name);
       this.config.set("permanentMuteList", this.permanentMuteList);
       this.configChanged("permanentMuteList");
+      if (this.enableLogs) {
+        Ninja.log(`${player.name} is added to mute list.`, config.Colors.green);
+      }
     }
   }
 
