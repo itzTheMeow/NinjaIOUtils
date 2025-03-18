@@ -347,7 +347,7 @@ export default function hookModMenu() {
       this.scroller.disableWheel();
       this.modContainer.visible = this.filterBox.visible = this.scroller.visible = false;
       this.configContainer.visible = true;
-      this.titleText.text = mod.name + " Config";
+      this.titleText.text = mod.name + " Config (refresh the page to apply)";
       this.configContainer.removeChildren();
 
       let off = 0;
