@@ -129,7 +129,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private overrideChatBubble(): void {
-    if (!Label) {
+    if (!Label.prototype.displayChatBubble) {
       return;
     }
     const original = this.originalDisplayChatBubble;
@@ -162,11 +162,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   public unload(): void {
-    console.log(this.originalDisplayChatBubble)
-    console.log(Label.prototype.displayChatBubble)
     this.restoreChatBubble();
-    console.log(this.originalDisplayChatBubble)
-    console.log(Label.prototype.displayChatBubble)
     Ninja.events.removeListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.removeListener("pm", this.onManualMute.bind(this));
     Ninja.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));

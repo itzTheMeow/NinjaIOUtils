@@ -3811,7 +3811,7 @@ ${name}`);
       Game.Muted = [];
     }
     overrideChatBubble() {
-      if (!Label) {
+      if (!Label.prototype.displayChatBubble) {
         return;
       }
       const original = this.originalDisplayChatBubble;
@@ -3841,11 +3841,7 @@ ${name}`);
       super.load();
     }
     unload() {
-      console.log(this.originalDisplayChatBubble);
-      console.log(Label.prototype.displayChatBubble);
       this.restoreChatBubble();
-      console.log(this.originalDisplayChatBubble);
-      console.log(Label.prototype.displayChatBubble);
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
