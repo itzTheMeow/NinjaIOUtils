@@ -3768,12 +3768,18 @@ ${name}`);
       }
     }
     onPlayerJoined(e) {
+      if (Ninja_default.isGuest()) {
+        return;
+      }
       const player = e.data.detail;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
+      if (Ninja_default.isGuest()) {
+        return;
+      }
       const player = e.data.detail;
       if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
         return;

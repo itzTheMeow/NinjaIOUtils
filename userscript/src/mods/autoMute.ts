@@ -81,6 +81,9 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onPlayerJoined(e: CustomEvent): void {
+    if (Ninja.isGuest()) {
+      return;
+    }
     const player = e.data.detail;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
@@ -88,6 +91,9 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onManualMute(e: CustomEvent): void {
+    if (Ninja.isGuest()) {
+      return;
+    }
     const player = e.data.detail;
     if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
       return;
