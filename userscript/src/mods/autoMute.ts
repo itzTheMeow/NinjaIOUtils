@@ -56,6 +56,11 @@ export class AutoMuteMod extends Mod<{
     this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
   }
 
+  public override configChanged(key: string): void {
+    super.configChanged(key);
+    this.loadConfig();
+  }
+
   private async checkAndMutePlayer(player: { name: string; sid: string; level: number }): Promise<void> {
     try {
       if (this.permanentMuteList.includes(player.name)) {

@@ -2705,7 +2705,7 @@
         this.scroller.disableWheel();
         this.modContainer.visible = this.filterBox.visible = this.scroller.visible = false;
         this.configContainer.visible = true;
-        this.titleText.text = mod.name + " Config (refresh the page to apply)";
+        this.titleText.text = mod.name + " Config";
         this.configContainer.removeChildren();
         let off = 0;
         const mnu = this;
@@ -3739,12 +3739,17 @@ ${name}`);
       );
     }
     loadConfig() {
+      console.log("config loaded");
       this.muteEnabled = this.config.get("muteBelowEnabled");
       this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
       this.enableLogs = this.config.get("enableLogs");
       this.doNotMuteGuests = this.config.get("doNotMuteGuests");
       const permMuteList = this.config.get("permanentMuteList");
       this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+    }
+    configChanged(key) {
+      super.configChanged(key);
+      this.loadConfig();
     }
     async checkAndMutePlayer(player) {
       try {
