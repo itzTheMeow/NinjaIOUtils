@@ -8,12 +8,14 @@ export class AutoMuteMod extends Mod<{
   muteBelowEnabled: boolean;
   muteBelowLevel: number;
   enableLogs: boolean;
+  enableRemoveBubble: boolean;
   doNotMuteGuests: boolean;
   permanentMuteList: string[];
 }> {
   private muteEnabled: boolean = true;
   private levelLimit: number = 15;
   private enableLogs: boolean = true;
+  private enableRemoveBubble: boolean = true;
   private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
   private originalDisplayChatBubble: Function | null = null;
@@ -22,7 +24,7 @@ export class AutoMuteMod extends Mod<{
     super({
       id: "AutoMute",
       name: "Auto Mute",
-      description: "Constantly mutes players you mute, removes chat bubble above them. Can be configured to mute all players below a set level.",
+      description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
       author: "Lumen",
       icon: "mute_icon",
     });
@@ -32,6 +34,7 @@ export class AutoMuteMod extends Mod<{
         muteBelowEnabled: true,
         muteBelowLevel: 15,
         enableLogs: true,
+        enableRemoveBubble: true,
         doNotMuteGuests: true,
         permanentMuteList: [],
       },
@@ -39,6 +42,7 @@ export class AutoMuteMod extends Mod<{
         muteBelowEnabled: "Enable muting players with level not higher than Level limit",
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
+        enableRemoveBubble: "Enable removing chat bubble above muted players",
         doNotMuteGuests: "Do not add guests to Mute List",
         permanentMuteList: {
           name: "Permanently muted players",
@@ -47,11 +51,17 @@ export class AutoMuteMod extends Mod<{
       }
     );
   }
-
+  
   private loadConfig(): void {
     this.muteEnabled = this.config.get("muteBelowEnabled");
     this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
     this.enableLogs = this.config.get("enableLogs");
+    this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+    if (this.enableRemoveBubble) {
+      this.overrideChatBubble();
+    } else {
+      this.restoreChatBubble();
+    }
     this.doNotMuteGuests = this.config.get("doNotMuteGuests");
     const permMuteList = this.config.get("permanentMuteList");
     this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
@@ -119,32 +129,31 @@ export class AutoMuteMod extends Mod<{
   }
 
   private overrideChatBubble(): void {
-    if (!Label.prototype.displayChatBubble) {
+    if (!Label) {
       return;
     }
-    if (!this.originalDisplayChatBubble) {
-      this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
-    }
-    Label.prototype.displayChatBubble = function () {
+    const original = this.originalDisplayChatBubble;
+    Label.prototype.displayChatBubble = async function () {
       if (this.go && Game.Muted.includes(this.go.sid)) return;
-      return this.originalDisplayChatBubble.apply(this);
+      await original.apply(this);
     };
   }
 
   private restoreChatBubble(): void {
     if (this.originalDisplayChatBubble) {
       Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
-      this.originalDisplayChatBubble = null;
     }
   }
 
   public load(): void {
+    if (!this.originalDisplayChatBubble) {
+      this.originalDisplayChatBubble = Label.prototype.displayChatBubble
+    }
     if (Ninja.isGuest()) {
       this.log("Not supported for guests.", config.Colors.red);
       return;
     }
     this.loadConfig();
-    this.overrideChatBubble();
     Ninja.events.addListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
@@ -153,7 +162,11 @@ export class AutoMuteMod extends Mod<{
   }
 
   public unload(): void {
+    console.log(this.originalDisplayChatBubble)
+    console.log(Label.prototype.displayChatBubble)
     this.restoreChatBubble();
+    console.log(this.originalDisplayChatBubble)
+    console.log(Label.prototype.displayChatBubble)
     Ninja.events.removeListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.removeListener("pm", this.onManualMute.bind(this));
     Ninja.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));

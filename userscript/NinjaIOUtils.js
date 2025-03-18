@@ -2955,12 +2955,6 @@
         ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: data }));
         return this._playerJoined(data, extra);
       };
-      Label.prototype._displayChatBubble = Label.prototype.displayChatBubble;
-      Label.prototype.displayChatBubble = function() {
-        if (this.go && Game.Muted.includes(this.go.sid))
-          return;
-        return this._displayChatBubble();
-      };
       PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
       PlayerDropdown.prototype.onMute = function() {
         ninja.events.dispatchEvent(
@@ -3714,6 +3708,7 @@ ${name}`);
     muteEnabled = true;
     levelLimit = 15;
     enableLogs = true;
+    enableRemoveBubble = true;
     doNotMuteGuests = true;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
@@ -3721,7 +3716,7 @@ ${name}`);
       super({
         id: "AutoMute",
         name: "Auto Mute",
-        description: "Constantly mutes players you mute, removes chat bubble above them. Can be configured to mute all players below a set level.",
+        description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
         author: "Lumen",
         icon: "mute_icon"
       });
@@ -3730,6 +3725,7 @@ ${name}`);
           muteBelowEnabled: true,
           muteBelowLevel: 15,
           enableLogs: true,
+          enableRemoveBubble: true,
           doNotMuteGuests: true,
           permanentMuteList: []
         },
@@ -3737,6 +3733,7 @@ ${name}`);
           muteBelowEnabled: "Enable muting players with level not higher than Level limit",
           muteBelowLevel: "Level limit",
           enableLogs: "Enable muting logs in chat",
+          enableRemoveBubble: "Enable removing chat bubble above muted players",
           doNotMuteGuests: "Do not add guests to Mute List",
           permanentMuteList: {
             name: "Permanently muted players",
@@ -3749,6 +3746,12 @@ ${name}`);
       this.muteEnabled = this.config.get("muteBelowEnabled");
       this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
       this.enableLogs = this.config.get("enableLogs");
+      this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+      if (this.enableRemoveBubble) {
+        this.overrideChatBubble();
+      } else {
+        this.restoreChatBubble();
+      }
       this.doNotMuteGuests = this.config.get("doNotMuteGuests");
       const permMuteList = this.config.get("permanentMuteList");
       this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
@@ -3808,39 +3811,41 @@ ${name}`);
       Game.Muted = [];
     }
     overrideChatBubble() {
-      if (!Label.prototype.displayChatBubble) {
-        console.error("[AutoMuteMod] Label.prototype.displayChatBubble is undefined.");
+      if (!Label) {
         return;
       }
-      if (!this.originalDisplayChatBubble) {
-        this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
-      }
-      Label.prototype.displayChatBubble = function() {
+      const original = this.originalDisplayChatBubble;
+      Label.prototype.displayChatBubble = async function() {
         if (this.go && Game.Muted.includes(this.go.sid))
           return;
-        return this.originalDisplayChatBubble.apply(this);
+        await original.apply(this);
       };
     }
     restoreChatBubble() {
       if (this.originalDisplayChatBubble) {
         Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
-        this.originalDisplayChatBubble = null;
       }
     }
     load() {
+      if (!this.originalDisplayChatBubble) {
+        this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
+      }
       if (Ninja_default.isGuest()) {
         this.log("Not supported for guests.", config_default.Colors.red);
         return;
       }
       this.loadConfig();
-      this.overrideChatBubble();
       Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
       super.load();
     }
     unload() {
+      console.log(this.originalDisplayChatBubble);
+      console.log(Label.prototype.displayChatBubble);
       this.restoreChatBubble();
+      console.log(this.originalDisplayChatBubble);
+      console.log(Label.prototype.displayChatBubble);
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));

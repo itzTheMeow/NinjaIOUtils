@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, Game, PVPClient, PlayerDropdown, Label } from "lib";
+import { Client, EventDispatcher, Game, PVPClient, PlayerDropdown } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -14,7 +14,7 @@ export enum NinjaEvents {
   STEP = "st", // called every render frame
   PLAYER_JOINED = "pj",
   PLAYER_MUTED = "pm",
-  GAMEPLAY_STOPPED = "gameplayStopped",
+  GAMEPLAY_STOPPED = "gameplayStopped"
 }
 
 export default new (class Ninja {
@@ -55,13 +55,6 @@ export default new (class Ninja {
     Game.prototype.playerJoined = function (data, extra) {
       ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: data }));
       return this._playerJoined(data, extra);
-    };
-
-    //@ts-ignore
-    Label.prototype._displayChatBubble = Label.prototype.displayChatBubble;
-    Label.prototype.displayChatBubble = function () {
-        if (this.go && Game.Muted.includes(this.go.sid)) return;
-        return this._displayChatBubble();
     };
 
     //@ts-ignore
