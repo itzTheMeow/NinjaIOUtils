@@ -80,7 +80,7 @@ export class AutoMuteMod extends Mod<{
     if (!Game.Muted.includes(player.sid)) {
       Game.Muted.push(player.sid);
       if (this.enableLogs) {
-        Ninja.log(`Muted player ${player.name} (${reason}).`, config.Colors.green);
+        Ninja.log(`Muted ${player.name} (${reason}).`, config.Colors.green);
       }
     }
   }
@@ -119,7 +119,7 @@ export class AutoMuteMod extends Mod<{
 
   public load(): void {
     if (Ninja.isGuest()) {
-      Ninja.log("AutoMute mod is not supported for guest players.", config.Colors.red);
+      this.log("Not supported for guests.", config.Colors.red);
       return;
     }
     this.loadConfig();

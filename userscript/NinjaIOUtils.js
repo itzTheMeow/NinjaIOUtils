@@ -3739,7 +3739,6 @@ ${name}`);
       );
     }
     loadConfig() {
-      console.log("config loaded");
       this.muteEnabled = this.config.get("muteBelowEnabled");
       this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
       this.enableLogs = this.config.get("enableLogs");
@@ -3768,7 +3767,7 @@ ${name}`);
       if (!Game.Muted.includes(player.sid)) {
         Game.Muted.push(player.sid);
         if (this.enableLogs) {
-          Ninja_default.log(`Muted player ${player.name} (${reason}).`, config_default.Colors.green);
+          Ninja_default.log(`Muted ${player.name} (${reason}).`, config_default.Colors.green);
         }
       }
     }
@@ -3803,7 +3802,7 @@ ${name}`);
     }
     load() {
       if (Ninja_default.isGuest()) {
-        Ninja_default.log("AutoMute mod is not supported for guest players.", config_default.Colors.red);
+        this.log("Not supported for guests.", config_default.Colors.red);
         return;
       }
       this.loadConfig();
