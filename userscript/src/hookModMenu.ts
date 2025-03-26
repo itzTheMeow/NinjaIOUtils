@@ -308,7 +308,6 @@ export default function hookModMenu() {
         // no idea why these values work the way they do
         ico.x = button.width / -3.5;
         ico.y = button.height / 8;
-        // console.log(ico);
         button.addChild(ico);
         container.addChild(button);
       }
@@ -447,7 +446,7 @@ export default function hookModMenu() {
           input.x = Math.ceil(label.width / 15) * 15 + 4;
           input.setDimensions(500, 34);
           input.setMaxChars(data.maxLength || Infinity);
-          input.setText(data.value);
+          input.setText(String(data.value));
           input.setFilter(
             isNum
               ? "0123456789-"

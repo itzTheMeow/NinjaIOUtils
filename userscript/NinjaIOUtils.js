@@ -59,9 +59,9 @@
     mod
   ));
 
-  // node_modules/localforage/dist/localforage.js
+  // node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js
   var require_localforage = __commonJS({
-    "node_modules/localforage/dist/localforage.js"(exports, module) {
+    "node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js"(exports, module) {
       (function(f) {
         if (typeof exports === "object" && typeof module !== "undefined") {
           module.exports = f();
@@ -2783,7 +2783,7 @@
             input.x = Math.ceil(label.width / 15) * 15 + 4;
             input.setDimensions(500, 34);
             input.setMaxChars(data.maxLength || Infinity);
-            input.setText(data.value);
+            input.setText(String(data.value));
             input.setFilter(
               isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
               false
