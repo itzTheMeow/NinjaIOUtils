@@ -470,7 +470,7 @@ export default function hookModMenu() {
           });
           label.y = 6;
           container.addChild(label);
-    
+
           const listWidth = 300;
           const listHeight = 150;
           const listBackground = new PIXI.Graphics();
@@ -479,11 +479,11 @@ export default function hookModMenu() {
           listBackground.endFill();
           listBackground.y = label.height + 10;
           container.addChild(listBackground);
-    
+
           const scrollContainer = new PIXI.Container();
           scrollContainer.y = listBackground.y;
           container.addChild(scrollContainer);
-    
+
           const mask = new PIXI.Graphics();
           mask.beginFill(0xffffff);
           mask.drawRoundedRect(0, 0, listWidth - 15, listHeight, 6);
@@ -492,19 +492,19 @@ export default function hookModMenu() {
           mask.y = 0;
           scrollContainer.addChild(mask);
           scrollContainer.mask = mask;
-    
+
           const scrollContent = new PIXI.Container();
           scrollContainer.addChild(scrollContent);
-    
+
           const scrollbar = new (Scrollbar())(listHeight);
           scrollbar.x = listWidth - scrollbar.width + 5;
           scrollbar.y = listBackground.y + 4;
           container.addChild(scrollbar);
-    
+
           scrollbar.on(Scrollbar().SCROLL, (prog) => {
             scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
           });
-    
+
           function refreshList() {
             scrollContent.removeChildren();
             let offY = 5;
@@ -517,7 +517,7 @@ export default function hookModMenu() {
               });
               playerName.x = 10;
               playerRow.addChild(playerName);
-    
+
               if (data.removableElements) {
                 const removeButton = new Button("remove");
                 removeButton.setText("Delete");
@@ -532,11 +532,11 @@ export default function hookModMenu() {
                 });
                 playerRow.addChild(removeButton);
               }
-    
+
               offY += playerName.height + 8;
               scrollContent.addChild(playerRow);
             });
-    
+
             scrollbar.reset();
             if (scrollContent.height > listHeight) {
               scrollbar.enableWheel();
@@ -547,7 +547,7 @@ export default function hookModMenu() {
               scrollContent.y = 0;
             }
           }
-    
+
           refreshList();
           break;
         }

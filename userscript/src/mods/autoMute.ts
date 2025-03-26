@@ -1,7 +1,7 @@
-import Mod from "../api/Mod";
-import Ninja from "../api/Ninja";
 import { Game } from "lib";
 import { app } from "typings";
+import Mod from "../api/Mod";
+import Ninja from "../api/Ninja";
 import config from "../config";
 
 export class AutoMuteMod extends Mod<{
@@ -24,7 +24,8 @@ export class AutoMuteMod extends Mod<{
     super({
       id: "AutoMute",
       name: "Auto Mute",
-      description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
+      description:
+        "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
       author: "Lumen",
       icon: "mute_icon",
     });
@@ -51,7 +52,7 @@ export class AutoMuteMod extends Mod<{
       }
     );
   }
-  
+
   private loadConfig(): void {
     this.muteEnabled = this.config.get("muteBelowEnabled");
     this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
@@ -72,7 +73,11 @@ export class AutoMuteMod extends Mod<{
     this.loadConfig();
   }
 
-  private async checkAndMutePlayer(player: { name: string; sid: string; level: number }): Promise<void> {
+  private async checkAndMutePlayer(player: {
+    name: string;
+    sid: string;
+    level: number;
+  }): Promise<void> {
     try {
       if (this.permanentMuteList.includes(player.name)) {
         this.mutePlayer(player, "permanently muted");
@@ -147,7 +152,7 @@ export class AutoMuteMod extends Mod<{
 
   public load(): void {
     if (!this.originalDisplayChatBubble) {
-      this.originalDisplayChatBubble = Label.prototype.displayChatBubble
+      this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
     }
     if (Ninja.isGuest()) {
       this.log("Not supported for guests.", config.Colors.red);

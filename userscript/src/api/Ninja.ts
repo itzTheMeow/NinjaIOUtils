@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, Game, PVPClient, PlayerDropdown } from "lib";
+import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -14,7 +14,7 @@ export enum NinjaEvents {
   STEP = "st", // called every render frame
   PLAYER_JOINED = "pj",
   PLAYER_MUTED = "pm",
-  GAMEPLAY_STOPPED = "gameplayStopped"
+  GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
 export default new (class Ninja {
@@ -61,7 +61,9 @@ export default new (class Ninja {
     PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
     PlayerDropdown.prototype.onMute = function () {
       ninja.events.dispatchEvent(
-        new CustomEvent(NinjaEvents.PLAYER_MUTED, { detail: { sid: this.target.sid, name: this.target.name },})
+        new CustomEvent(NinjaEvents.PLAYER_MUTED, {
+          detail: { sid: this.target.sid, name: this.target.name },
+        })
       );
       return this._onMute();
     };
@@ -72,7 +74,7 @@ export default new (class Ninja {
       await this.realLeaveGame();
       ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED));
     };
-    
+
     const stepper = app.stepCallback;
     app.stepCallback = (...d) => {
       this.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));

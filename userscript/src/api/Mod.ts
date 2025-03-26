@@ -32,7 +32,9 @@ export default class Mod<cfg = any> {
   public loadon: "pagestart" | "appstart" = "appstart";
   public config: Settings<cfg> | null = null;
   public configNames: Partial<{
-    [key in keyof cfg]: string | { name: string; priority?: boolean; maxLength?: number; removableElements?: boolean };
+    [key in keyof cfg]:
+      | string
+      | { name: string; priority?: boolean; maxLength?: number; removableElements?: boolean };
   }>;
 
   constructor(public readonly details: ModDetails) {}
@@ -71,7 +73,7 @@ export default class Mod<cfg = any> {
       if (typeof names[key] === "object") {
         this.configNames[key] = {
           name: names[key].name,
-          removableElements: names[key].removableElements ?? false
+          removableElements: names[key].removableElements ?? false,
         };
       } else {
         this.configNames[key] = names[key];
