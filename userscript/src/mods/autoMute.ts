@@ -84,7 +84,7 @@ export class AutoMuteMod extends Mod<{
         return;
       }
 
-      if (this.muteEnabled && player.level < this.levelLimit) {
+      if (this.muteEnabled && player.level <= this.levelLimit) {
         this.mutePlayer(player, `level ${player.level}`);
       }
     } catch (err) {
