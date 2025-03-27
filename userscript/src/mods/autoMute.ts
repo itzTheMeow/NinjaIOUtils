@@ -44,7 +44,7 @@ export class AutoMuteMod extends Mod<{
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
         enableRemoveBubble: "Enable removing chat bubble above muted players",
-        doNotMuteGuests: "Do not add guests to Mute List",
+        doNotMuteGuests: "Do not add guests to Permanent mute List",
         permanentMuteList: {
           name: "Permanently muted players",
           removableElements: true,

@@ -434,11 +434,9 @@ export default function hookModMenu() {
         case "str":
         case "num": {
           const isNum = data.type == "num";
-          const label = new PIXI.Text(data.name, {
-            fontSize: 18,
-            lineHeight: 16,
-            fill: 16763904,
-            stroke: { width: 2, join: "round" },
+          const label = new PIXI.Text({
+            text: data.name,
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
           });
           label.y = 6;
           container.addChild(label);
@@ -462,11 +460,9 @@ export default function hookModMenu() {
           break;
         }
         case "list": {
-          const label = new PIXI.Text(data.name, {
-            fontSize: 18,
-            lineHeight: 16,
-            fill: 16763904,
-            stroke: { width: 2, join: "round" },
+          const label = new PIXI.Text({
+            text: data.name,
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
           });
           label.y = 6;
           container.addChild(label);
@@ -500,23 +496,25 @@ export default function hookModMenu() {
           scrollbar.x = listWidth - scrollbar.width + 5;
           scrollbar.y = listBackground.y + 4;
           container.addChild(scrollbar);
+          let scrollProgress = 0;
 
           scrollbar.on(Scrollbar().SCROLL, (prog) => {
+            scrollProgress = prog;
             scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
           });
 
           function refreshList() {
             scrollContent.removeChildren();
             let offY = 5;
-            data.value.forEach((player, index) => {
-              const playerRow = new PIXI.Container();
-              playerRow.y = offY;
-              const playerName = new PIXI.Text(player, {
-                fontSize: 16,
-                fill: 0xffffff,
+            data.value.forEach((item, index) => {
+              const itemRow = new PIXI.Container();
+              itemRow.y = offY;
+              const itemName = new PIXI.Text({
+                text: item,
+                style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 }),
               });
-              playerName.x = 10;
-              playerRow.addChild(playerName);
+              itemName.x = 10;
+              itemRow.addChild(itemName);
 
               if (data.removableElements) {
                 const removeButton = new Button("remove");
@@ -530,21 +528,23 @@ export default function hookModMenu() {
                   mod.configChanged(<any>data.key);
                   refreshList();
                 });
-                playerRow.addChild(removeButton);
+                itemRow.addChild(removeButton);
               }
 
-              offY += playerName.height + 8;
-              scrollContent.addChild(playerRow);
+              offY += itemName.height + 8;
+              scrollContent.addChild(itemRow);
             });
 
-            scrollbar.reset();
+            // scrollbar.reset();
             if (scrollContent.height > listHeight) {
               scrollbar.enableWheel();
               scrollbar.visible = true;
+              scrollContent.y = -Math.round((scrollContent.height - listHeight) * scrollProgress);
             } else {
               scrollbar.disableWheel();
               scrollbar.visible = false;
               scrollContent.y = 0;
+              scrollProgress = 0;
             }
           }
 

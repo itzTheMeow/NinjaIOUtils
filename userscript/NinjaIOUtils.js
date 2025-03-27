@@ -2771,11 +2771,9 @@
           case "str":
           case "num": {
             const isNum = data.type == "num";
-            const label = new PIXI.Text(data.name, {
-              fontSize: 18,
-              lineHeight: 16,
-              fill: 16763904,
-              stroke: { width: 2, join: "round" }
+            const label = new PIXI.Text({
+              text: data.name,
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
             });
             label.y = 6;
             container.addChild(label);
@@ -2800,15 +2798,15 @@
             let refreshList = function() {
               scrollContent.removeChildren();
               let offY = 5;
-              data.value.forEach((player, index) => {
-                const playerRow = new PIXI.Container();
-                playerRow.y = offY;
-                const playerName = new PIXI.Text(player, {
-                  fontSize: 16,
-                  fill: 16777215
+              data.value.forEach((item, index) => {
+                const itemRow = new PIXI.Container();
+                itemRow.y = offY;
+                const itemName = new PIXI.Text({
+                  text: item,
+                  style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 })
                 });
-                playerName.x = 10;
-                playerRow.addChild(playerName);
+                itemName.x = 10;
+                itemRow.addChild(itemName);
                 if (data.removableElements) {
                   const removeButton = new Button("remove");
                   removeButton.setText("Delete");
@@ -2821,26 +2819,25 @@
                     mod.configChanged(data.key);
                     refreshList();
                   });
-                  playerRow.addChild(removeButton);
+                  itemRow.addChild(removeButton);
                 }
-                offY += playerName.height + 8;
-                scrollContent.addChild(playerRow);
+                offY += itemName.height + 8;
+                scrollContent.addChild(itemRow);
               });
-              scrollbar.reset();
               if (scrollContent.height > listHeight) {
                 scrollbar.enableWheel();
                 scrollbar.visible = true;
+                scrollContent.y = -Math.round((scrollContent.height - listHeight) * scrollProgress);
               } else {
                 scrollbar.disableWheel();
                 scrollbar.visible = false;
                 scrollContent.y = 0;
+                scrollProgress = 0;
               }
             };
-            const label = new PIXI.Text(data.name, {
-              fontSize: 18,
-              lineHeight: 16,
-              fill: 16763904,
-              stroke: { width: 2, join: "round" }
+            const label = new PIXI.Text({
+              text: data.name,
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
             });
             label.y = 6;
             container.addChild(label);
@@ -2869,7 +2866,9 @@
             scrollbar.x = listWidth - scrollbar.width + 5;
             scrollbar.y = listBackground.y + 4;
             container.addChild(scrollbar);
+            let scrollProgress = 0;
             scrollbar.on(Scrollbar().SCROLL, (prog) => {
+              scrollProgress = prog;
               scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
             });
             refreshList();
@@ -2958,7 +2957,9 @@
       PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
       PlayerDropdown.prototype.onMute = function() {
         ninja.events.dispatchEvent(
-          new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: this.target.sid, name: this.target.name } })
+          new CustomEvent("pm" /* PLAYER_MUTED */, {
+            detail: { sid: this.target.sid, name: this.target.name }
+          })
         );
         return this._onMute();
       };
@@ -3734,7 +3735,7 @@ ${name}`);
           muteBelowLevel: "Level limit",
           enableLogs: "Enable muting logs in chat",
           enableRemoveBubble: "Enable removing chat bubble above muted players",
-          doNotMuteGuests: "Do not add guests to Mute List",
+          doNotMuteGuests: "Do not add guests to Permanent mute List",
           permanentMuteList: {
             name: "Permanently muted players",
             removableElements: true
