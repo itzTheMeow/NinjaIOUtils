@@ -3767,7 +3767,7 @@ ${name}`);
           this.mutePlayer(player, "permanently muted");
           return;
         }
-        if (this.muteEnabled && player.level < this.levelLimit) {
+        if (this.muteEnabled && player.level <= this.levelLimit) {
           this.mutePlayer(player, `level ${player.level}`);
         }
       } catch (err) {
