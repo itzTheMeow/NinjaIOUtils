@@ -3713,6 +3713,7 @@ ${name}`);
     doNotMuteGuests = true;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
+    originalOnLogout = null;
     constructor() {
       super({
         id: "AutoMute",
@@ -3742,6 +3743,22 @@ ${name}`);
           }
         }
       );
+    }
+    overrideLogout() {
+      if (!this.originalOnLogout) {
+        this.originalOnLogout = MemberMenu.prototype.onLogout;
+      }
+      const self2 = this;
+      MemberMenu.prototype.onLogout = async function() {
+        await self2.originalOnLogout.call(this);
+        self2.unload();
+      };
+    }
+    restoreLogout() {
+      if (this.originalOnLogout) {
+        MemberMenu.prototype.onLogout = this.originalOnLogout;
+        this.originalOnLogout = null;
+      }
     }
     loadConfig() {
       this.muteEnabled = this.config.get("muteBelowEnabled");
@@ -3839,6 +3856,7 @@ ${name}`);
       Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      this.overrideLogout();
       super.load();
     }
     unload() {
@@ -3846,6 +3864,7 @@ ${name}`);
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      this.restoreLogout();
       super.unload();
     }
   };
