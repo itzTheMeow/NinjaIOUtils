@@ -182,7 +182,7 @@ export class AutoMuteMod extends Mod<{
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
     this.overrideLogout();
-    
+
     super.load();
   }
 

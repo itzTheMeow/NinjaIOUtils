@@ -1,5 +1,14 @@
 # Changelog
 
+v3.1
+
+- New Mod: `autoMute`
+- Added list config option for mods.
+
+v3.0
+
+- Fixed script to work with latest PIXI v8 library upgrade.
+
 v2.4
 
 - Fixed UIURLs not navigating properly to settings page.
