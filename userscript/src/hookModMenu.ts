@@ -199,8 +199,8 @@ export default function hookModMenu() {
       this.modContainer.y = this.marginTop + this.filterBox.height;
       this.container.addChild(this.modContainer);
 
-      this.scroller.x = this.width - this.scroller.width * 1.75;
-      this.scroller.y = this.titleText.height * 3 + 2;
+      this.scroller.x = this.background.width - 36;
+      this.scroller.y = this.background.y + this.closeButton.height + this.oy + 3;
       this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
         this.scrollTop = prog;
         this.indexList();
@@ -259,7 +259,7 @@ export default function hookModMenu() {
         ).trim(),
         style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
           wordWrap: true,
-          wordWrapWidth: 600,
+          wordWrapWidth: 550,
         }),
       });
       description.x = pl = 12;
@@ -308,7 +308,6 @@ export default function hookModMenu() {
         // no idea why these values work the way they do
         ico.x = button.width / -3.5;
         ico.y = button.height / 8;
-        console.log(ico);
         button.addChild(ico);
         container.addChild(button);
       }
@@ -364,7 +363,16 @@ export default function hookModMenu() {
             const cfgname = mod.configNames[key],
               item = mnu.constructConfigItem(
                 mod,
-                typeof value == "boolean"
+                Array.isArray(value)
+                  ? {
+                      type: "list",
+                      name: name(key),
+                      key,
+                      value,
+                      removableElements:
+                        typeof cfgname === "object" ? cfgname.removableElements ?? false : false,
+                    }
+                  : typeof value === "boolean"
                   ? {
                       type: "bool",
                       name: name(key),
@@ -387,7 +395,7 @@ export default function hookModMenu() {
                     }
               );
             item.y = off;
-            off += item.height;
+            off += item.height + 10;
             mnu.configContainer.addChild(item);
           });
       }
@@ -409,6 +417,7 @@ export default function hookModMenu() {
         | { type: "bool"; value: boolean }
         | { type: "num"; value: number }
         | { type: "str"; value: string }
+        | { type: "list"; value: any[]; removableElements: boolean }
       )
     ) {
       const container = new PIXI.Container();
@@ -425,11 +434,9 @@ export default function hookModMenu() {
         case "str":
         case "num": {
           const isNum = data.type == "num";
-          const label = new PIXI.Text(data.name, {
-            fontSize: 18,
-            lineHeight: 16,
-            fill: 16763904,
-            stroke: { width: 2, join: "round" },
+          const label = new PIXI.Text({
+            text: data.name,
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
           });
           label.y = 6;
           container.addChild(label);
@@ -450,6 +457,99 @@ export default function hookModMenu() {
             mod.configChanged(<any>data.key);
           });
           container.addChild(input);
+          break;
+        }
+        case "list": {
+          const label = new PIXI.Text({
+            text: data.name,
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
+          });
+          label.y = 6;
+          container.addChild(label);
+
+          const listWidth = 300;
+          const listHeight = 150;
+          const listBackground = new PIXI.Graphics();
+          listBackground.beginFill(0x000000, 0.3);
+          listBackground.drawRoundedRect(0, 0, listWidth, listHeight, 6);
+          listBackground.endFill();
+          listBackground.y = label.height + 10;
+          container.addChild(listBackground);
+
+          const scrollContainer = new PIXI.Container();
+          scrollContainer.y = listBackground.y;
+          container.addChild(scrollContainer);
+
+          const mask = new PIXI.Graphics();
+          mask.beginFill(0xffffff);
+          mask.drawRoundedRect(0, 0, listWidth - 15, listHeight, 6);
+          mask.endFill();
+          mask.x = 0;
+          mask.y = 0;
+          scrollContainer.addChild(mask);
+          scrollContainer.mask = mask;
+
+          const scrollContent = new PIXI.Container();
+          scrollContainer.addChild(scrollContent);
+
+          const scrollbar = new (Scrollbar())(listHeight);
+          scrollbar.x = listWidth - scrollbar.width + 5;
+          scrollbar.y = listBackground.y + 4;
+          container.addChild(scrollbar);
+          let scrollProgress = 0;
+
+          scrollbar.on(Scrollbar().SCROLL, (prog) => {
+            scrollProgress = prog;
+            scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
+          });
+
+          function refreshList() {
+            scrollContent.removeChildren();
+            let offY = 5;
+            data.value.forEach((item, index) => {
+              const itemRow = new PIXI.Container();
+              itemRow.y = offY;
+              const itemName = new PIXI.Text({
+                text: item,
+                style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 }),
+              });
+              itemName.x = 10;
+              itemRow.addChild(itemName);
+
+              if (data.removableElements) {
+                const removeButton = new Button("remove");
+                removeButton.setText("Delete");
+                removeButton.setTint(config.Colors.red);
+                removeButton.scale.set(0.7);
+                removeButton.x = listWidth - removeButton.width - 10;
+                removeButton.addListener(Button.BUTTON_RELEASED, () => {
+                  data.value.splice(index, 1);
+                  mod.config.set(<any>data.key, data.value);
+                  mod.configChanged(<any>data.key);
+                  refreshList();
+                });
+                itemRow.addChild(removeButton);
+              }
+
+              offY += itemName.height + 8;
+              scrollContent.addChild(itemRow);
+            });
+
+            // scrollbar.reset();
+            if (scrollContent.height > listHeight) {
+              scrollbar.enableWheel();
+              scrollbar.visible = true;
+              scrollContent.y = -Math.round((scrollContent.height - listHeight) * scrollProgress);
+            } else {
+              scrollbar.disableWheel();
+              scrollbar.visible = false;
+              scrollContent.y = 0;
+              scrollProgress = 0;
+            }
+          }
+
+          refreshList();
+          break;
         }
       }
       return container;

@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, Game, PVPClient } from "lib";
+import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -12,6 +12,9 @@ export enum NinjaEvents {
   GAME_START = "gs",
   GAME_END = "ge",
   STEP = "st", // called every render frame
+  PLAYER_JOINED = "pj",
+  PLAYER_MUTED = "pm",
+  GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
 export default new (class Ninja {
@@ -45,6 +48,31 @@ export default new (class Ninja {
     Game.prototype.endGame = function (data) {
       ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, data));
       return this._endGame(data);
+    };
+
+    //@ts-ignore
+    Game.prototype._playerJoined = Game.prototype.playerJoined;
+    Game.prototype.playerJoined = function (data, extra) {
+      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: data }));
+      return this._playerJoined(data, extra);
+    };
+
+    //@ts-ignore
+    PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
+    PlayerDropdown.prototype.onMute = function () {
+      ninja.events.dispatchEvent(
+        new CustomEvent(NinjaEvents.PLAYER_MUTED, {
+          detail: { sid: this.target.sid, name: this.target.name },
+        })
+      );
+      return this._onMute();
+    };
+
+    //@ts-ignore
+    App.prototype.realLeaveGame = App.prototype.leaveGame;
+    App.prototype.leaveGame = async function () {
+      await this.realLeaveGame();
+      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED));
     };
 
     const stepper = app.stepCallback;

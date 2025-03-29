@@ -2577,8 +2577,8 @@
         this.modContainer.x = this.marginLeft;
         this.modContainer.y = this.marginTop + this.filterBox.height;
         this.container.addChild(this.modContainer);
-        this.scroller.x = this.width - this.scroller.width * 1.75;
-        this.scroller.y = this.titleText.height * 3 + 2;
+        this.scroller.x = this.background.width - 36;
+        this.scroller.y = this.background.y + this.closeButton.height + this.oy + 3;
         this.scroller.on(Scrollbar().SCROLL, (prog) => {
           this.scrollTop = prog;
           this.indexList();
@@ -2626,7 +2626,7 @@
           text: (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
           style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
             wordWrap: true,
-            wordWrapWidth: 600
+            wordWrapWidth: 550
           })
         });
         description.x = pl = 12;
@@ -2673,7 +2673,6 @@
           ico.height = (button.height - 4) * button.scale.x;
           ico.x = button.width / -3.5;
           ico.y = button.height / 8;
-          console.log(ico);
           button.addChild(ico);
           container.addChild(button);
         }
@@ -2721,7 +2720,13 @@
           store.sort((e1, e2) => name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1).forEach(([key, value]) => {
             const cfgname = mod.configNames[key], item = mnu.constructConfigItem(
               mod,
-              typeof value == "boolean" ? {
+              Array.isArray(value) ? {
+                type: "list",
+                name: name(key),
+                key,
+                value,
+                removableElements: typeof cfgname === "object" ? cfgname.removableElements ?? false : false
+              } : typeof value === "boolean" ? {
                 type: "bool",
                 name: name(key),
                 key,
@@ -2740,7 +2745,7 @@
               }
             );
             item.y = off;
-            off += item.height;
+            off += item.height + 10;
             mnu.configContainer.addChild(item);
           });
         }
@@ -2766,11 +2771,9 @@
           case "str":
           case "num": {
             const isNum = data.type == "num";
-            const label = new PIXI.Text(data.name, {
-              fontSize: 18,
-              lineHeight: 16,
-              fill: 16763904,
-              stroke: { width: 2, join: "round" }
+            const label = new PIXI.Text({
+              text: data.name,
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
             });
             label.y = 6;
             container.addChild(label);
@@ -2789,6 +2792,87 @@
               mod.configChanged(data.key);
             });
             container.addChild(input);
+            break;
+          }
+          case "list": {
+            let refreshList = function() {
+              scrollContent.removeChildren();
+              let offY = 5;
+              data.value.forEach((item, index) => {
+                const itemRow = new PIXI.Container();
+                itemRow.y = offY;
+                const itemName = new PIXI.Text({
+                  text: item,
+                  style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 })
+                });
+                itemName.x = 10;
+                itemRow.addChild(itemName);
+                if (data.removableElements) {
+                  const removeButton = new Button("remove");
+                  removeButton.setText("Delete");
+                  removeButton.setTint(config_default.Colors.red);
+                  removeButton.scale.set(0.7);
+                  removeButton.x = listWidth - removeButton.width - 10;
+                  removeButton.addListener(Button.BUTTON_RELEASED, () => {
+                    data.value.splice(index, 1);
+                    mod.config.set(data.key, data.value);
+                    mod.configChanged(data.key);
+                    refreshList();
+                  });
+                  itemRow.addChild(removeButton);
+                }
+                offY += itemName.height + 8;
+                scrollContent.addChild(itemRow);
+              });
+              if (scrollContent.height > listHeight) {
+                scrollbar.enableWheel();
+                scrollbar.visible = true;
+                scrollContent.y = -Math.round((scrollContent.height - listHeight) * scrollProgress);
+              } else {
+                scrollbar.disableWheel();
+                scrollbar.visible = false;
+                scrollContent.y = 0;
+                scrollProgress = 0;
+              }
+            };
+            const label = new PIXI.Text({
+              text: data.name,
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
+            });
+            label.y = 6;
+            container.addChild(label);
+            const listWidth = 300;
+            const listHeight = 150;
+            const listBackground = new PIXI.Graphics();
+            listBackground.beginFill(0, 0.3);
+            listBackground.drawRoundedRect(0, 0, listWidth, listHeight, 6);
+            listBackground.endFill();
+            listBackground.y = label.height + 10;
+            container.addChild(listBackground);
+            const scrollContainer = new PIXI.Container();
+            scrollContainer.y = listBackground.y;
+            container.addChild(scrollContainer);
+            const mask = new PIXI.Graphics();
+            mask.beginFill(16777215);
+            mask.drawRoundedRect(0, 0, listWidth - 15, listHeight, 6);
+            mask.endFill();
+            mask.x = 0;
+            mask.y = 0;
+            scrollContainer.addChild(mask);
+            scrollContainer.mask = mask;
+            const scrollContent = new PIXI.Container();
+            scrollContainer.addChild(scrollContent);
+            const scrollbar = new (Scrollbar())(listHeight);
+            scrollbar.x = listWidth - scrollbar.width + 5;
+            scrollbar.y = listBackground.y + 4;
+            container.addChild(scrollbar);
+            let scrollProgress = 0;
+            scrollbar.on(Scrollbar().SCROLL, (prog) => {
+              scrollProgress = prog;
+              scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
+            });
+            refreshList();
+            break;
           }
         }
         return container;
@@ -2864,6 +2948,25 @@
       Game.prototype.endGame = function(data) {
         ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, data));
         return this._endGame(data);
+      };
+      Game.prototype._playerJoined = Game.prototype.playerJoined;
+      Game.prototype.playerJoined = function(data, extra) {
+        ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: data }));
+        return this._playerJoined(data, extra);
+      };
+      PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
+      PlayerDropdown.prototype.onMute = function() {
+        ninja.events.dispatchEvent(
+          new CustomEvent("pm" /* PLAYER_MUTED */, {
+            detail: { sid: this.target.sid, name: this.target.name }
+          })
+        );
+        return this._onMute();
+      };
+      App.prototype.realLeaveGame = App.prototype.leaveGame;
+      App.prototype.leaveGame = async function() {
+        await this.realLeaveGame();
+        ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
       };
       const stepper = app.stepCallback;
       app.stepCallback = (...d) => {
@@ -3029,6 +3132,16 @@
     implementConfig(defaults, names) {
       this.config = new Settings(`modconfig_${this.id}`, defaults);
       this.configNames = names;
+      for (const key in names) {
+        if (typeof names[key] === "object") {
+          this.configNames[key] = {
+            name: names[key].name,
+            removableElements: names[key].removableElements ?? false
+          };
+        } else {
+          this.configNames[key] = names[key];
+        }
+      }
     }
   };
 
@@ -3581,12 +3694,180 @@ ${name}`);
   // src/mods/index.ts
   var mods_exports = {};
   __export(mods_exports, {
+    AutoMuteMod: () => AutoMuteMod,
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
     StatTrackerMod: () => StatTrackerMod,
     XPStatsMod: () => XPStatsMod
   });
+
+  // src/mods/autoMute.ts
+  
+  
+  var AutoMuteMod = class extends Mod {
+    muteEnabled = true;
+    levelLimit = 15;
+    enableLogs = true;
+    enableRemoveBubble = true;
+    doNotMuteGuests = true;
+    permanentMuteList = [];
+    originalDisplayChatBubble = null;
+    originalOnLogout = null;
+    constructor() {
+      super({
+        id: "AutoMute",
+        name: "Auto Mute",
+        description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
+        author: "Lumen",
+        icon: "mute_icon"
+      });
+      this.implementConfig(
+        {
+          muteBelowEnabled: true,
+          muteBelowLevel: 15,
+          enableLogs: true,
+          enableRemoveBubble: true,
+          doNotMuteGuests: true,
+          permanentMuteList: []
+        },
+        {
+          muteBelowEnabled: "Enable muting players with level not higher than Level limit",
+          muteBelowLevel: "Level limit",
+          enableLogs: "Enable muting logs in chat",
+          enableRemoveBubble: "Enable removing chat bubble above muted players",
+          doNotMuteGuests: "Do not add guests to Permanent mute List",
+          permanentMuteList: {
+            name: "Permanently muted players",
+            removableElements: true
+          }
+        }
+      );
+    }
+    overrideLogout() {
+      if (!this.originalOnLogout) {
+        this.originalOnLogout = MemberMenu.prototype.onLogout;
+      }
+      const self2 = this;
+      MemberMenu.prototype.onLogout = async function() {
+        await self2.originalOnLogout.call(this);
+        self2.unload();
+      };
+    }
+    restoreLogout() {
+      if (this.originalOnLogout) {
+        MemberMenu.prototype.onLogout = this.originalOnLogout;
+        this.originalOnLogout = null;
+      }
+    }
+    loadConfig() {
+      this.muteEnabled = this.config.get("muteBelowEnabled");
+      this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+      this.enableLogs = this.config.get("enableLogs");
+      this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+      if (this.enableRemoveBubble) {
+        this.overrideChatBubble();
+      } else {
+        this.restoreChatBubble();
+      }
+      this.doNotMuteGuests = this.config.get("doNotMuteGuests");
+      const permMuteList = this.config.get("permanentMuteList");
+      this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+    }
+    configChanged(key) {
+      super.configChanged(key);
+      this.loadConfig();
+    }
+    async checkAndMutePlayer(player) {
+      try {
+        if (this.permanentMuteList.includes(player.name)) {
+          this.mutePlayer(player, "permanently muted");
+          return;
+        }
+        if (this.muteEnabled && player.level <= this.levelLimit) {
+          this.mutePlayer(player, `level ${player.level}`);
+        }
+      } catch (err) {
+        console.error(`Error checking level for player ${player.name}:`, err);
+      }
+    }
+    mutePlayer(player, reason) {
+      if (!Game.Muted.includes(player.sid)) {
+        Game.Muted.push(player.sid);
+        if (this.enableLogs) {
+          Ninja_default.log(`Muted ${player.name} (${reason}).`, config_default.Colors.green);
+        }
+      }
+    }
+    onPlayerJoined(e) {
+      if (Ninja_default.isGuest()) {
+        return;
+      }
+      const player = e.data.detail;
+      if (player.name !== app.credential.username) {
+        this.checkAndMutePlayer(player);
+      }
+    }
+    onManualMute(e) {
+      if (Ninja_default.isGuest()) {
+        return;
+      }
+      const player = e.data.detail;
+      if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
+        return;
+      }
+      if (!this.permanentMuteList.includes(player.name)) {
+        this.permanentMuteList.push(player.name);
+        this.config.set("permanentMuteList", this.permanentMuteList);
+        this.configChanged("permanentMuteList");
+        if (this.enableLogs) {
+          Ninja_default.log(`${player.name} is added to mute list.`, config_default.Colors.green);
+        }
+      }
+    }
+    onGameplayStopped() {
+      Game.Muted = [];
+    }
+    overrideChatBubble() {
+      if (!Label.prototype.displayChatBubble) {
+        return;
+      }
+      const original = this.originalDisplayChatBubble;
+      Label.prototype.displayChatBubble = async function() {
+        if (this.go && Game.Muted.includes(this.go.sid))
+          return;
+        await original.apply(this);
+      };
+    }
+    restoreChatBubble() {
+      if (this.originalDisplayChatBubble) {
+        Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
+      }
+    }
+    load() {
+      if (!this.originalDisplayChatBubble) {
+        this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
+      }
+      if (Ninja_default.isGuest()) {
+        this.log("Not supported for guests.", config_default.Colors.red);
+        return;
+      }
+      this.loadConfig();
+      Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
+      Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
+      Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      this.overrideLogout();
+      super.load();
+    }
+    unload() {
+      this.restoreChatBubble();
+      Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
+      Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
+      Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      this.restoreLogout();
+      super.unload();
+    }
+  };
 
   // src/mods/fpsDisplay.ts
   var FPSDisplayMod = class extends Mod {
