@@ -13,10 +13,10 @@
 // @match        http://*.ninja.io
 // @icon         https://www.google.com/s2/favicons?domain=ninja.io
 // @require      https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js
-// @homepageURL  https://nutils.itsmeow.cat
+// @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.1
+// @version      3.2
 // ==/UserScript==
 
 /*
@@ -2206,8 +2206,8 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.1",
-    api: "https://nutils.itsmeow.cat",
+    ver: "3.2",
+    api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
     Colors: {

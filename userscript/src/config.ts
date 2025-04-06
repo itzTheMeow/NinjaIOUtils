@@ -1,6 +1,6 @@
 export default {
   ver: "$$version",
-  api: "https://nutils.itsmeow.cat",
+  api: "https://utils.xela.codes",
   //api: "http://localhost:8907",
   customDelimiter: "__custom",
   settingsKey: "nutils_settings",

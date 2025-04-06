@@ -1,5 +1,9 @@
 # Changelog
 
+v3.2
+
+- Changed API domain from `nutils.itsmeow.cat` to `utils.xela.codes`.
+
 v3.1
 
 - New Mod: `autoMute`

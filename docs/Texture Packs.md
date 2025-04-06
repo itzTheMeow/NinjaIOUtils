@@ -8,7 +8,7 @@ There are no specific rules for packs, just don't make it NSFW.
 
 ### Editing Files
 
-[You can download the textures here](https://nutils.itsmeow.cat/pack_meta/textures.zip) and edit the ones you want. Once you're finished, put the files you changed somewhere and continue below. **Don't upload any files that you didnt change.**
+[You can download the textures here](https://utils.xela.codes/pack_meta/textures.zip) and edit the ones you want. Once you're finished, put the files you changed somewhere and continue below. **Don't upload any files that you didnt change.**
 
 ### Uploading Your Pack
 
@@ -42,8 +42,7 @@ If you would like to test your pack, you can put all of the images and (download
 
 ![image](https://user-images.githubusercontent.com/50887230/209454065-a7ae1338-a426-4254-b7a4-08cf51e0be86.png)
 
-
-You can then upload your zip to the settings page (make sure you've updated the script) and click Use on the custom pack, then click Save. Please note that ***the game will load SLOWER with a custom zip pack installed***, especially with bigger packs as the backend has to unzip your textures before assembling them.
+You can then upload your zip to the settings page (make sure you've updated the script) and click Use on the custom pack, then click Save. Please note that **_the game will load SLOWER with a custom zip pack installed_**, especially with bigger packs as the backend has to unzip your textures before assembling them.
 
 ---
 
