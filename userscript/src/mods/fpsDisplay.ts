@@ -4,6 +4,8 @@ import Ninja, { NinjaEvents } from "../api/Ninja";
 export class FPSDisplayMod extends Mod<{
   showTime: boolean;
 }> {
+  private showTime: boolean = false;
+
   frameDisplay: HTMLDivElement;
   lastUpdate = Date.now();
   frames = 0;
@@ -25,6 +27,9 @@ export class FPSDisplayMod extends Mod<{
         showTime: "Show Current Time",
       }
     );
+  }
+  public override loadConfig(key: string): void {
+    this.showTime = this.config.get("showTime");
   }
   public load() {
     this.frameDisplay = document.createElement("div");
@@ -62,7 +67,7 @@ export class FPSDisplayMod extends Mod<{
       this.frames++;
     } else {
       let fps = `${Math.round(this.frames / (elapsed / 1000))} FPS`;
-      if (this.config.get("showTime")) fps = `${new Date().toLocaleTimeString()} - ` + fps;
+      if (this.showTime) fps = `${new Date().toLocaleTimeString()} - ` + fps;
       if (Ninja.inGame()) fps += ` - ${Ninja.serverLatency || 0}ms`;
       if (this.frameDisplay.innerText !== fps) this.frameDisplay.innerText = fps;
       this.frames = 0;

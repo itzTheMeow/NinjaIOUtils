@@ -11,6 +11,7 @@ export class HotkeyMessagesMod extends Mod<{
   keyE: string;
 }> {
   lastSent = Date.now();
+  private keyBindings: Record<string, string> = {};
 
   constructor() {
     super({
@@ -41,6 +42,14 @@ export class HotkeyMessagesMod extends Mod<{
     );
   }
 
+  public override loadConfig(key: string): void {
+    if (key.startsWith("key") && key.length === 4) {
+      const letter = key[3].toUpperCase();
+      const value = this.config.get(key as keyof typeof this.config.defaults);
+      this.keyBindings[letter] = value;
+    }
+  }
+
   public load() {
     window.addEventListener("keydown", this.keydown);
     super.load();
@@ -52,7 +61,8 @@ export class HotkeyMessagesMod extends Mod<{
 
   public handleKeyDown(e: KeyboardEvent) {
     if (e.repeat) return;
-    const message = this.config.get(<any>`key${e.key.toUpperCase()}`);
+    const letter = e.key.toUpperCase();
+    const message = this.keyBindings[letter];
     if (e.altKey && message) {
       this.sendChatMessage(message);
       e.stopImmediatePropagation();

@@ -72,24 +72,36 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private loadConfig(): void {
-    this.muteEnabled = this.config.get("muteBelowEnabled");
-    this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
-    this.enableLogs = this.config.get("enableLogs");
-    this.enableRemoveBubble = this.config.get("enableRemoveBubble");
-    if (this.enableRemoveBubble) {
-      this.overrideChatBubble();
-    } else {
-      this.restoreChatBubble();
+  public override loadConfig(key: string): void {
+    switch (key) {
+      case "muteBelowEnabled":
+        this.muteEnabled = this.config.get("muteBelowEnabled");
+        break;
+      case "muteBelowLevel":
+        this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+        break;
+      case "enableLogs":
+        this.enableLogs = this.config.get("enableLogs");
+        break;
+      case "enableRemoveBubble":
+        this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+        if (this.enableRemoveBubble) {
+          this.overrideChatBubble();
+        } else {
+          this.restoreChatBubble();
+        }
+        break;
+      case "doNotMuteGuests":
+        this.doNotMuteGuests = this.config.get("doNotMuteGuests");
+        break;
+      case "permanentMuteList":
+        const permMuteList = this.config.get("permanentMuteList");
+        this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+        break;
+      default: 
+        this.loadConfigAll();
+        break;
     }
-    this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-    const permMuteList = this.config.get("permanentMuteList");
-    this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
-  }
-
-  public override configChanged(key: string): void {
-    super.configChanged(key);
-    this.loadConfig();
   }
 
   private async checkAndMutePlayer(player: {
@@ -177,7 +189,6 @@ export class AutoMuteMod extends Mod<{
       this.log("Not supported for guests.", config.Colors.red);
       return;
     }
-    this.loadConfig();
     Ninja.events.addListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
