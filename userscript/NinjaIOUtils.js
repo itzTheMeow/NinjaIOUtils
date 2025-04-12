@@ -2657,6 +2657,21 @@
             recLabel.y = pt + 2;
             container.addChild(recLabel);
           }
+          if (mod.details.noGuests) {
+            const noGuestsLabel = new PIXI.Text({
+              text: "Cannot be used for guests",
+              style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
+                fontSize: 12,
+                fill: "#ffffff"
+              })
+            });
+            noGuestsLabel.x = pl - noGuestsLabel.width + button.width - 7;
+            noGuestsLabel.y = button.height + pt + 1;
+            container.addChild(noGuestsLabel);
+            if (!mod.isInstalled() && Ninja_default.isGuest()) {
+              button.disable();
+            }
+          }
         }
         if (mod.isInstalled() && mod.config) {
           const button = new Button("settings");
@@ -2936,6 +2951,15 @@
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
+      const originalOnLogout = MemberMenu.prototype.onLogout;
+      MemberMenu.prototype.onLogout = function() {
+        originalOnLogout.call(this);
+        ninja.mods.forEach((mod) => {
+          if (mod.details.noGuests && mod.loaded) {
+            mod.unload();
+          }
+        });
+      };
       App.prototype.realInitGameMode = App.prototype.initGameMode;
       App.prototype.initGameMode = function(data) {
         this.realInitGameMode(data);
@@ -3125,6 +3149,10 @@
       }
     }
     load() {
+      if (this.details.noGuests && Ninja_default.isGuest()) {
+        this.log("Cannot be used for guests.", config_default.Colors.red);
+        return;
+      }
       if (this.config) {
         this.loadConfigAll();
       }
@@ -3732,7 +3760,8 @@ ${name}`);
         name: "Auto Mute",
         description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
         author: "Lumen",
-        icon: "mute_icon"
+        icon: "mute_icon",
+        noGuests: true
       });
       this.implementConfig(
         {
@@ -3755,22 +3784,6 @@ ${name}`);
           }
         }
       );
-    }
-    overrideLogout() {
-      if (!this.originalOnLogout) {
-        this.originalOnLogout = MemberMenu.prototype.onLogout;
-      }
-      const self2 = this;
-      MemberMenu.prototype.onLogout = async function() {
-        await self2.originalOnLogout.call(this);
-        self2.unload();
-      };
-    }
-    restoreLogout() {
-      if (this.originalOnLogout) {
-        MemberMenu.prototype.onLogout = this.originalOnLogout;
-        this.originalOnLogout = null;
-      }
     }
     loadConfig(key) {
       switch (key) {
@@ -3825,18 +3838,12 @@ ${name}`);
       }
     }
     onPlayerJoined(e) {
-      if (Ninja_default.isGuest()) {
-        return;
-      }
       const player = e.data.detail;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
-      if (Ninja_default.isGuest()) {
-        return;
-      }
       const player = e.data.detail;
       if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
         return;
@@ -3873,14 +3880,9 @@ ${name}`);
       if (!this.originalDisplayChatBubble) {
         this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
       }
-      if (Ninja_default.isGuest()) {
-        this.log("Not supported for guests.", config_default.Colors.red);
-        return;
-      }
       Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
-      this.overrideLogout();
       super.load();
     }
     unload() {
@@ -3888,7 +3890,6 @@ ${name}`);
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
-      this.restoreLogout();
       super.unload();
     }
   };

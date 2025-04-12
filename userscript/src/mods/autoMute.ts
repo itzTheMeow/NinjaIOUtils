@@ -1,4 +1,4 @@
-import { Game, MemberMenu, Label } from "lib";
+import { Game, Label } from "lib";
 import { app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -29,6 +29,7 @@ export class AutoMuteMod extends Mod<{
         "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
       author: "Lumen",
       icon: "mute_icon",
+      noGuests: true,
     });
 
     this.implementConfig(
@@ -52,24 +53,6 @@ export class AutoMuteMod extends Mod<{
         },
       }
     );
-  }
-
-  private overrideLogout(): void {
-    if (!this.originalOnLogout) {
-      this.originalOnLogout = MemberMenu.prototype.onLogout;
-    }
-    const self = this;
-    MemberMenu.prototype.onLogout = async function () {
-      await self.originalOnLogout.call(this);
-      self.unload();
-    };
-  }
-
-  private restoreLogout(): void {
-    if (this.originalOnLogout) {
-      MemberMenu.prototype.onLogout = this.originalOnLogout;
-      this.originalOnLogout = null;
-    }
   }
 
   public override loadConfig(key: string): void {
@@ -133,9 +116,6 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onPlayerJoined(e): void {
-    if (Ninja.isGuest()) {
-      return;
-    }
     const player = e.data.detail;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
@@ -143,9 +123,6 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onManualMute(e): void {
-    if (Ninja.isGuest()) {
-      return;
-    }
     const player = e.data.detail;
     if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
       return;
@@ -185,14 +162,9 @@ export class AutoMuteMod extends Mod<{
     if (!this.originalDisplayChatBubble) {
       this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
     }
-    if (Ninja.isGuest()) {
-      this.log("Not supported for guests.", config.Colors.red);
-      return;
-    }
     Ninja.events.addListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
-    this.overrideLogout();
 
     super.load();
   }
@@ -202,7 +174,6 @@ export class AutoMuteMod extends Mod<{
     Ninja.events.removeListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.removeListener("pm", this.onManualMute.bind(this));
     Ninja.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
-    this.restoreLogout();
 
     super.unload();
   }

@@ -291,6 +291,22 @@ export default function hookModMenu() {
           recLabel.y = pt + 2;
           container.addChild(recLabel);
         }
+        if (mod.details.noGuests) {
+          const noGuestsLabel = new PIXI.Text({
+            text: "Cannot be used for guests",
+            style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
+              fontSize: 12,
+              fill: "#ffffff",
+            }),
+          });
+          noGuestsLabel.x = pl - noGuestsLabel.width + button.width - 7;
+          noGuestsLabel.y = button.height + pt + 1;
+          container.addChild(noGuestsLabel);
+          
+          if (!mod.isInstalled() && Ninja.isGuest()) {
+            button.disable();
+          }
+        }
       }
       if (mod.isInstalled() && mod.config) {
         const button = new Button("settings");

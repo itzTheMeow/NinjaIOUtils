@@ -1,5 +1,6 @@
 import Ninja from "./Ninja";
 import Settings from "./Settings";
+import config from "../config";
 
 export interface ModDetails {
   /** The mod name, abbreviated if needed and without spaces. (keep capitalization) */
@@ -18,6 +19,8 @@ export interface ModDetails {
   draft?: true;
   /** Recommend this mod for installation. You should not need to use this. */
   recommend?: true;
+  /** Do not load this mod for guests and unload on logout. */
+  noGuests?: true;
 }
 
 export default class Mod<cfg = any> {
@@ -62,6 +65,10 @@ export default class Mod<cfg = any> {
     }
   }
   public load() {
+    if (this.details.noGuests && Ninja.isGuest()) {
+      this.log("Cannot be used for guests.", config.Colors.red);
+      return;
+    }
     if (this.config) {
       this.loadConfigAll();
     }
