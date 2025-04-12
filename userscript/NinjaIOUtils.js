@@ -3826,7 +3826,7 @@ ${name}`);
       }
     }
     onGameplayStopped() {
-      Game.Muted = [];
+      Game.Muted.length = 0;
     }
     overrideChatBubble() {
       if (!Label.prototype.displayChatBubble) {
@@ -3857,6 +3857,7 @@ ${name}`);
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
       this.overrideLogout();
+      console.log(Ninja_default.events);
       super.load();
     }
     unload() {

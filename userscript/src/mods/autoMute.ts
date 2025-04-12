@@ -1,4 +1,4 @@
-import { Game, MemberMenu } from "lib";
+import { Game, MemberMenu, Label } from "lib";
 import { app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -18,7 +18,7 @@ export class AutoMuteMod extends Mod<{
   private enableRemoveBubble: boolean = true;
   private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
-  private originalDisplayChatBubble: Function | null = null;
+  private originalDisplayChatBubble: (() => void) | null = null;
   private originalOnLogout: (() => void) | null = null;
 
   constructor() {
@@ -120,7 +120,7 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private onPlayerJoined(e: CustomEvent): void {
+  private onPlayerJoined(e): void {
     if (Ninja.isGuest()) {
       return;
     }
@@ -130,7 +130,7 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private onManualMute(e: CustomEvent): void {
+  private onManualMute(e): void {
     if (Ninja.isGuest()) {
       return;
     }
@@ -149,7 +149,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onGameplayStopped(): void {
-    Game.Muted = [];
+    Game.Muted.length = 0;
   }
 
   private overrideChatBubble(): void {
