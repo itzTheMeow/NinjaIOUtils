@@ -1,4 +1,4 @@
-import { Game, MemberMenu } from "lib";
+import { Game, Label } from "lib";
 import { app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -18,8 +18,7 @@ export class AutoMuteMod extends Mod<{
   private enableRemoveBubble: boolean = true;
   private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
-  private originalDisplayChatBubble: Function | null = null;
-  private originalOnLogout: (() => void) | null = null;
+  private originalDisplayChatBubble: (() => void) | null = null;
 
   constructor() {
     super({
@@ -29,6 +28,7 @@ export class AutoMuteMod extends Mod<{
         "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
       author: "Lumen",
       icon: "mute_icon",
+      noGuests: true,
     });
 
     this.implementConfig(
@@ -54,42 +54,36 @@ export class AutoMuteMod extends Mod<{
     );
   }
 
-  private overrideLogout(): void {
-    if (!this.originalOnLogout) {
-      this.originalOnLogout = MemberMenu.prototype.onLogout;
+  public override loadConfig(key: string): void {
+    switch (key) {
+      case "muteBelowEnabled":
+        this.muteEnabled = this.config.get("muteBelowEnabled");
+        break;
+      case "muteBelowLevel":
+        this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+        break;
+      case "enableLogs":
+        this.enableLogs = this.config.get("enableLogs");
+        break;
+      case "enableRemoveBubble":
+        this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+        if (this.enableRemoveBubble) {
+          this.overrideChatBubble();
+        } else {
+          this.restoreChatBubble();
+        }
+        break;
+      case "doNotMuteGuests":
+        this.doNotMuteGuests = this.config.get("doNotMuteGuests");
+        break;
+      case "permanentMuteList":
+        const permMuteList = this.config.get("permanentMuteList");
+        this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+        break;
+      default:
+        this.loadConfigAll();
+        break;
     }
-    const self = this;
-    MemberMenu.prototype.onLogout = async function () {
-      await self.originalOnLogout.call(this);
-      self.unload();
-    };
-  }
-
-  private restoreLogout(): void {
-    if (this.originalOnLogout) {
-      MemberMenu.prototype.onLogout = this.originalOnLogout;
-      this.originalOnLogout = null;
-    }
-  }
-
-  private loadConfig(): void {
-    this.muteEnabled = this.config.get("muteBelowEnabled");
-    this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
-    this.enableLogs = this.config.get("enableLogs");
-    this.enableRemoveBubble = this.config.get("enableRemoveBubble");
-    if (this.enableRemoveBubble) {
-      this.overrideChatBubble();
-    } else {
-      this.restoreChatBubble();
-    }
-    this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-    const permMuteList = this.config.get("permanentMuteList");
-    this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
-  }
-
-  public override configChanged(key: string): void {
-    super.configChanged(key);
-    this.loadConfig();
   }
 
   private async checkAndMutePlayer(player: {
@@ -120,20 +114,14 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private onPlayerJoined(e: CustomEvent): void {
-    if (Ninja.isGuest()) {
-      return;
-    }
+  private onPlayerJoined(e: any): void {
     const player = e.data.detail;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
     }
   }
 
-  private onManualMute(e: CustomEvent): void {
-    if (Ninja.isGuest()) {
-      return;
-    }
+  private onManualMute(e: any): void {
     const player = e.data.detail;
     if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
       return;
@@ -149,7 +137,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onGameplayStopped(): void {
-    Game.Muted = [];
+    Game.Muted.length = 0;
   }
 
   private overrideChatBubble(): void {
@@ -173,15 +161,9 @@ export class AutoMuteMod extends Mod<{
     if (!this.originalDisplayChatBubble) {
       this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
     }
-    if (Ninja.isGuest()) {
-      this.log("Not supported for guests.", config.Colors.red);
-      return;
-    }
-    this.loadConfig();
     Ninja.events.addListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.addListener("pm", this.onManualMute.bind(this));
     Ninja.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
-    this.overrideLogout();
 
     super.load();
   }
@@ -191,7 +173,6 @@ export class AutoMuteMod extends Mod<{
     Ninja.events.removeListener("pj", this.onPlayerJoined.bind(this));
     Ninja.events.removeListener("pm", this.onManualMute.bind(this));
     Ninja.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
-    this.restoreLogout();
 
     super.unload();
   }

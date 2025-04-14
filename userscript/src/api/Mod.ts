@@ -1,3 +1,4 @@
+import config from "../config";
 import Ninja from "./Ninja";
 import Settings from "./Settings";
 
@@ -18,6 +19,8 @@ export interface ModDetails {
   draft?: true;
   /** Recommend this mod for installation. You should not need to use this. */
   recommend?: true;
+  /** Do not load this mod for guests and unload on logout. */
+  noGuests?: true;
 }
 
 export default class Mod<cfg = any> {
@@ -54,11 +57,26 @@ export default class Mod<cfg = any> {
     Ninja.settings.set("enabledMods", [...list]);
     return add;
   }
+  public loadConfig(key: string): void {}
+  public loadConfigAll(): void {
+    const store = this.config.getStore(true);
+    for (const key in store) {
+      this.loadConfig(key);
+    }
+  }
   public load() {
+    if (this.details.noGuests && Ninja.isGuest()) {
+      this.log("This mod cannot be used for guests.", config.Colors.red);
+      return;
+    }
+
+    if (this.config) this.loadConfigAll();
     this.log(`Loaded successfully!`);
     this.loaded = true;
   }
-  public configChanged(key: string) {}
+  public configChanged(key: string) {
+    this.loadConfig(key);
+  }
   public unload() {
     this.log(`Unloaded mod.`);
     this.loaded = false;

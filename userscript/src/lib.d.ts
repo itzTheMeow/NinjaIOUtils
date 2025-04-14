@@ -183,6 +183,37 @@ declare module "lib" {
     constructor(a: any, b: any, c: any);
     actionText: PIXI.Text;
   }
+  export class Label extends PIXI.Container<PIXI.DisplayObject> {
+    constructor(a: any, b: any, c: any, d: any);
+    id: any;
+    go: any;
+    attached: any;
+    edge: boolean;
+    team: number;
+    chatBubble?: PIXI.Sprite;
+    marker: PIXI.Sprite | null;
+    tintColor: number;
+    text: PIXI.Text;
+    subText: PIXI.Text;
+    skillTag: PIXI.Sprite;
+    ratingTag: PIXI.Sprite;
+    clanTag: PIXI.Text;
+    inClan: boolean;
+    time: number;
+    markerTime?: number;
+    healthBar: PIXI.Sprite;
+    displayChatBubble(): void;
+    hideChatBubble(): void;
+    setText(text: string): void;
+    setSubText(subText: string): void;
+    showTitle(): void;
+    hideTitle(): void;
+    showSubTitle(): void;
+    hideSubTitle(): void;
+    stealthMode(mode: number): void;
+    updateHealth(): void;
+    update(a: { x: number; y: number; scale: number }, b: number, c: number): void;
+  }
   export class SettingsPanel extends PIXI.Container<PIXI.DisplayObject> {
     constructor(a: any, b: any);
     selectedTab: string;

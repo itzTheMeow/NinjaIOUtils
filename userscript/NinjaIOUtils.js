@@ -2657,6 +2657,21 @@
             recLabel.y = pt + 2;
             container.addChild(recLabel);
           }
+          if (mod.details.noGuests) {
+            const noGuestsLabel = new PIXI.Text({
+              text: "Cannot be used for guests",
+              style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
+                fontSize: 12,
+                fill: "#ffffff"
+              })
+            });
+            noGuestsLabel.x = pl - noGuestsLabel.width + button.width - 7;
+            noGuestsLabel.y = button.height + pt + 1;
+            container.addChild(noGuestsLabel);
+            if (!mod.isInstalled() && Ninja_default.isGuest()) {
+              button.disable();
+            }
+          }
         }
         if (mod.isInstalled() && mod.config) {
           const button = new Button("settings");
@@ -2936,6 +2951,15 @@
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
+      const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
+      MemberMenu.prototype.onLogout = function() {
+        _MemberMenu_onLogout.call(this);
+        ninja.mods.forEach((mod) => {
+          if (mod.details.noGuests && mod.loaded) {
+            mod.unload();
+          }
+        });
+      };
       App.prototype.realInitGameMode = App.prototype.initGameMode;
       App.prototype.initGameMode = function(data) {
         this.realInitGameMode(data);
@@ -3116,11 +3140,26 @@
       Ninja_default.settings.set("enabledMods", [...list]);
       return add;
     }
+    loadConfig(key) {
+    }
+    loadConfigAll() {
+      const store = this.config.getStore(true);
+      for (const key in store) {
+        this.loadConfig(key);
+      }
+    }
     load() {
+      if (this.details.noGuests && Ninja_default.isGuest()) {
+        this.log("This mod cannot be used for guests.", config_default.Colors.red);
+        return;
+      }
+      if (this.config)
+        this.loadConfigAll();
       this.log(`Loaded successfully!`);
       this.loaded = true;
     }
     configChanged(key) {
+      this.loadConfig(key);
     }
     unload() {
       this.log(`Unloaded mod.`);
@@ -3713,14 +3752,14 @@ ${name}`);
     doNotMuteGuests = true;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
-    originalOnLogout = null;
     constructor() {
       super({
         id: "AutoMute",
         name: "Auto Mute",
         description: "Constantly mutes players you mute. Can be configured to mute all players below a set level and remove chat bubble above muted players.",
         author: "Lumen",
-        icon: "mute_icon"
+        icon: "mute_icon",
+        noGuests: true
       });
       this.implementConfig(
         {
@@ -3744,39 +3783,36 @@ ${name}`);
         }
       );
     }
-    overrideLogout() {
-      if (!this.originalOnLogout) {
-        this.originalOnLogout = MemberMenu.prototype.onLogout;
+    loadConfig(key) {
+      switch (key) {
+        case "muteBelowEnabled":
+          this.muteEnabled = this.config.get("muteBelowEnabled");
+          break;
+        case "muteBelowLevel":
+          this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+          break;
+        case "enableLogs":
+          this.enableLogs = this.config.get("enableLogs");
+          break;
+        case "enableRemoveBubble":
+          this.enableRemoveBubble = this.config.get("enableRemoveBubble");
+          if (this.enableRemoveBubble) {
+            this.overrideChatBubble();
+          } else {
+            this.restoreChatBubble();
+          }
+          break;
+        case "doNotMuteGuests":
+          this.doNotMuteGuests = this.config.get("doNotMuteGuests");
+          break;
+        case "permanentMuteList":
+          const permMuteList = this.config.get("permanentMuteList");
+          this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+          break;
+        default:
+          this.loadConfigAll();
+          break;
       }
-      const self2 = this;
-      MemberMenu.prototype.onLogout = async function() {
-        await self2.originalOnLogout.call(this);
-        self2.unload();
-      };
-    }
-    restoreLogout() {
-      if (this.originalOnLogout) {
-        MemberMenu.prototype.onLogout = this.originalOnLogout;
-        this.originalOnLogout = null;
-      }
-    }
-    loadConfig() {
-      this.muteEnabled = this.config.get("muteBelowEnabled");
-      this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
-      this.enableLogs = this.config.get("enableLogs");
-      this.enableRemoveBubble = this.config.get("enableRemoveBubble");
-      if (this.enableRemoveBubble) {
-        this.overrideChatBubble();
-      } else {
-        this.restoreChatBubble();
-      }
-      this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-      const permMuteList = this.config.get("permanentMuteList");
-      this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
-    }
-    configChanged(key) {
-      super.configChanged(key);
-      this.loadConfig();
     }
     async checkAndMutePlayer(player) {
       try {
@@ -3800,18 +3836,12 @@ ${name}`);
       }
     }
     onPlayerJoined(e) {
-      if (Ninja_default.isGuest()) {
-        return;
-      }
       const player = e.data.detail;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
-      if (Ninja_default.isGuest()) {
-        return;
-      }
       const player = e.data.detail;
       if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
         return;
@@ -3826,7 +3856,7 @@ ${name}`);
       }
     }
     onGameplayStopped() {
-      Game.Muted = [];
+      Game.Muted.length = 0;
     }
     overrideChatBubble() {
       if (!Label.prototype.displayChatBubble) {
@@ -3848,15 +3878,9 @@ ${name}`);
       if (!this.originalDisplayChatBubble) {
         this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
       }
-      if (Ninja_default.isGuest()) {
-        this.log("Not supported for guests.", config_default.Colors.red);
-        return;
-      }
-      this.loadConfig();
       Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
-      this.overrideLogout();
       super.load();
     }
     unload() {
@@ -3864,13 +3888,13 @@ ${name}`);
       Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
       Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
       Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
-      this.restoreLogout();
       super.unload();
     }
   };
 
   // src/mods/fpsDisplay.ts
   var FPSDisplayMod = class extends Mod {
+    showTime = false;
     frameDisplay;
     lastUpdate = Date.now();
     frames = 0;
@@ -3891,6 +3915,9 @@ ${name}`);
           showTime: "Show Current Time"
         }
       );
+    }
+    loadConfig(key) {
+      this.showTime = this.config.get("showTime");
     }
     load() {
       this.frameDisplay = document.createElement("div");
@@ -3926,7 +3953,7 @@ ${name}`);
         this.frames++;
       } else {
         let fps = `${Math.round(this.frames / (elapsed / 1e3))} FPS`;
-        if (this.config.get("showTime"))
+        if (this.showTime)
           fps = `${new Date().toLocaleTimeString()} - ` + fps;
         if (Ninja_default.inGame())
           fps += ` - ${Ninja_default.serverLatency || 0}ms`;
@@ -3943,6 +3970,7 @@ ${name}`);
   // src/mods/hotkeyMessages.ts
   
   var HotkeyMessagesMod = class extends Mod {
+    keyBindings = {};
     lastSent = Date.now();
     constructor() {
       super({
@@ -3971,6 +3999,13 @@ ${name}`);
         }
       );
     }
+    loadConfig(key) {
+      if (key.startsWith("key") && key.length === 4) {
+        const letter = key[3].toUpperCase();
+        const value = this.config.get(key);
+        this.keyBindings[letter] = value;
+      }
+    }
     load() {
       window.addEventListener("keydown", this.keydown);
       super.load();
@@ -3982,7 +4017,8 @@ ${name}`);
     handleKeyDown(e) {
       if (e.repeat)
         return;
-      const message = this.config.get(`key${e.key.toUpperCase()}`);
+      const letter = e.key.toUpperCase();
+      const message = this.keyBindings[letter];
       if (e.altKey && message) {
         this.sendChatMessage(message);
         e.stopImmediatePropagation();

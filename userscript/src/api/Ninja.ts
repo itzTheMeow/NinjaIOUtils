@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
+import { Client, EventDispatcher, Game, MemberMenu, PlayerDropdown, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -35,6 +35,17 @@ export default new (class Ninja {
     this.ready = true;
     this.events = new EventDispatcher();
 
+    const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
+    MemberMenu.prototype.onLogout = function () {
+      _MemberMenu_onLogout.call(this);
+      ninja.mods.forEach((mod) => {
+        if (mod.details.noGuests && mod.loaded) {
+          mod.unload();
+        }
+      });
+    };
+
+    //TODO: rename and use .call:
     //@ts-ignore
     App.prototype.realInitGameMode = App.prototype.initGameMode;
     App.prototype.initGameMode = function (data) {
