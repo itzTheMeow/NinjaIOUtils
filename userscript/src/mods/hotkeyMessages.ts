@@ -10,8 +10,9 @@ export class HotkeyMessagesMod extends Mod<{
   keyW: string;
   keyE: string;
 }> {
-  lastSent = Date.now();
   private keyBindings: Record<string, string> = {};
+
+  lastSent = Date.now();
 
   constructor() {
     super({

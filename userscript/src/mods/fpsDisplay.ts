@@ -29,6 +29,7 @@ export class FPSDisplayMod extends Mod<{
     );
   }
   public override loadConfig(key: string): void {
+    //TODO: clean this up
     this.showTime = this.config.get("showTime");
   }
   public load() {

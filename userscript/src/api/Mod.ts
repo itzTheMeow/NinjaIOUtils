@@ -66,12 +66,11 @@ export default class Mod<cfg = any> {
   }
   public load() {
     if (this.details.noGuests && Ninja.isGuest()) {
-      this.log("Cannot be used for guests.", config.Colors.red);
+      this.log("This mod cannot be used for guests.", config.Colors.red);
       return;
     }
-    if (this.config) {
-      this.loadConfigAll();
-    }
+
+    if (this.config) this.loadConfigAll();
     this.log(`Loaded successfully!`);
     this.loaded = true;
   }

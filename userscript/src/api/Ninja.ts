@@ -35,9 +35,9 @@ export default new (class Ninja {
     this.ready = true;
     this.events = new EventDispatcher();
 
-    const originalOnLogout = MemberMenu.prototype.onLogout;
+    const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
     MemberMenu.prototype.onLogout = function () {
-      originalOnLogout.call(this);
+      _MemberMenu_onLogout.call(this);
       ninja.mods.forEach((mod) => {
         if (mod.details.noGuests && mod.loaded) {
           mod.unload();
@@ -45,6 +45,7 @@ export default new (class Ninja {
       });
     };
 
+    //TODO: rename and use .call:
     //@ts-ignore
     App.prototype.realInitGameMode = App.prototype.initGameMode;
     App.prototype.initGameMode = function (data) {

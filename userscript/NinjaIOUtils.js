@@ -2951,9 +2951,9 @@
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
-      const originalOnLogout = MemberMenu.prototype.onLogout;
+      const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
       MemberMenu.prototype.onLogout = function() {
-        originalOnLogout.call(this);
+        _MemberMenu_onLogout.call(this);
         ninja.mods.forEach((mod) => {
           if (mod.details.noGuests && mod.loaded) {
             mod.unload();
@@ -3150,12 +3150,11 @@
     }
     load() {
       if (this.details.noGuests && Ninja_default.isGuest()) {
-        this.log("Cannot be used for guests.", config_default.Colors.red);
+        this.log("This mod cannot be used for guests.", config_default.Colors.red);
         return;
       }
-      if (this.config) {
+      if (this.config)
         this.loadConfigAll();
-      }
       this.log(`Loaded successfully!`);
       this.loaded = true;
     }
@@ -3753,7 +3752,6 @@ ${name}`);
     doNotMuteGuests = true;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
-    originalOnLogout = null;
     constructor() {
       super({
         id: "AutoMute",
@@ -3972,8 +3970,8 @@ ${name}`);
   // src/mods/hotkeyMessages.ts
   
   var HotkeyMessagesMod = class extends Mod {
-    lastSent = Date.now();
     keyBindings = {};
+    lastSent = Date.now();
     constructor() {
       super({
         id: "HotkeyMessages",

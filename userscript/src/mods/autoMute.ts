@@ -19,7 +19,6 @@ export class AutoMuteMod extends Mod<{
   private doNotMuteGuests: boolean = true;
   private permanentMuteList: string[] = [];
   private originalDisplayChatBubble: (() => void) | null = null;
-  private originalOnLogout: (() => void) | null = null;
 
   constructor() {
     super({
@@ -115,14 +114,14 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private onPlayerJoined(e): void {
+  private onPlayerJoined(e: any): void {
     const player = e.data.detail;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
     }
   }
 
-  private onManualMute(e): void {
+  private onManualMute(e: any): void {
     const player = e.data.detail;
     if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
       return;
