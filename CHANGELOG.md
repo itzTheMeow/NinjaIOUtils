@@ -1,5 +1,11 @@
 # Changelog
 
+v3.3
+
+- Fixed typing issues on backend.
+- Added new option to mods to disable loading them for guests.
+- Optimized config loading for mods.
+
 v3.2
 
 - Changed API domain from `nutils.itsmeow.cat` to `utils.xela.codes`.
