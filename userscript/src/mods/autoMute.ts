@@ -81,7 +81,7 @@ export class AutoMuteMod extends Mod<{
         const permMuteList = this.config.get("permanentMuteList");
         this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
         break;
-      default: 
+      default:
         this.loadConfigAll();
         break;
     }

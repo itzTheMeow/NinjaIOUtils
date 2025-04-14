@@ -1,6 +1,6 @@
+import config from "../config";
 import Ninja from "./Ninja";
 import Settings from "./Settings";
-import config from "../config";
 
 export interface ModDetails {
   /** The mod name, abbreviated if needed and without spaces. (keep capitalization) */

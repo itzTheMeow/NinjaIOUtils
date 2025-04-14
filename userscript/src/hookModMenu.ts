@@ -302,7 +302,7 @@ export default function hookModMenu() {
           noGuestsLabel.x = pl - noGuestsLabel.width + button.width - 7;
           noGuestsLabel.y = button.height + pt + 1;
           container.addChild(noGuestsLabel);
-          
+
           if (!mod.isInstalled() && Ninja.isGuest()) {
             button.disable();
           }
