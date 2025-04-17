@@ -2529,7 +2529,7 @@
       shownConfig = null;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
-      titleText = new PIXI.Text("Mods", FontStyle.MediumOrangeText);
+      titleText = new PIXI.Text({ text: "Mods", style: FontStyle.MediumOrangeText });
       modContainer = new PIXI.Container();
       configContainer = new PIXI.Container();
       filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
@@ -2538,14 +2538,9 @@
         super();
         this.background.x = 0;
         this.background.y = 40;
-        this.background.lineStyle(1, 16777215, 0.1);
-        this.background.beginFill(3355443, 1);
-        this.background.drawRect(0, 0, 660, 524);
-        this.background.endFill();
-        this.background.beginFill(0, 0.3);
-        this.background.drawRect(10, 10, 640, 504);
-        this.background.endFill();
-        this.background.drawRect(15, 42, 630, 2);
+        this.background.rect(0, 0, 660, 524).setFillStyle({ color: 3355443, alpha: 1 }).fill();
+        this.background.rect(10, 10, 640, 504).setFillStyle({ color: 0, alpha: 0.3 }).fill();
+        this.background.stroke({ width: 1, color: 16777215, alpha: 0.1, alignment: 0 });
         this.container.addChild(this.background);
         this.titleText.x = 0.5 * this.width - 20;
         this.titleText.y = this.oy + 36;
@@ -2592,14 +2587,16 @@
       }
       constructModItem(mod) {
         const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
-        container.beginFill(mod.isInstalled() ? config_default.Colors.green : config_default.Colors.white, 0.1);
-        container.drawRoundedRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6);
-        container.endFill();
+        container.clear().beginPath().setFillStyle({
+          color: mod.isInstalled() ? config_default.Colors.green : config_default.Colors.white,
+          alpha: 0.1
+        }).roundRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6).fill();
         let pl = 0, pt = 0;
         const icon = new PIXI.Graphics();
-        icon.beginFill(config_default.Colors.black, 0.2);
-        icon.drawRoundedRect(pl += 10, pt = pl, iconSize, iconSize, 8);
-        icon.endFill();
+        icon.clear().beginPath().setFillStyle({
+          color: config_default.Colors.black,
+          alpha: 0.2
+        }).roundRect(pl += 10, pt = pl, iconSize, iconSize, 8).fill();
         const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
         iconSprite.width = iconSprite.height = iconSize - 10;
         iconSprite.anchor.x = iconSprite.anchor.y = 0.5;
@@ -2704,7 +2701,7 @@
         this.indexList();
       }
       indexList() {
-        const mods = Ninja_default.mods.filter((m) => this.showInstalled ? m.isInstalled() : true), top = Math.round((mods.length - this.maxMods) * this.scrollTop);
+        const mods = Ninja_default.mods.filter((m) => this.showInstalled ? m.isInstalled() : true), top = Math.max(0, Math.round((mods.length - this.maxMods) * this.scrollTop));
         this.modContainer.removeChildren();
         mods.sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(top, top + this.maxMods).forEach((m, i) => {
           const item = this.constructModItem(m);
@@ -2859,18 +2856,17 @@
             const listWidth = 300;
             const listHeight = 150;
             const listBackground = new PIXI.Graphics();
-            listBackground.beginFill(0, 0.3);
-            listBackground.drawRoundedRect(0, 0, listWidth, listHeight, 6);
-            listBackground.endFill();
+            listBackground.clear().beginPath().roundRect(0, 0, listWidth, listHeight, 6).fill({
+              color: 0,
+              alpha: 0.3
+            });
             listBackground.y = label.height + 10;
             container.addChild(listBackground);
             const scrollContainer = new PIXI.Container();
             scrollContainer.y = listBackground.y;
             container.addChild(scrollContainer);
             const mask = new PIXI.Graphics();
-            mask.beginFill(16777215);
-            mask.drawRoundedRect(0, 0, listWidth - 15, listHeight, 6);
-            mask.endFill();
+            mask.clear().beginPath().roundRect(0, 0, listWidth - 15, listHeight, 6).fill({ color: 16777215 });
             mask.x = 0;
             mask.y = 0;
             scrollContainer.addChild(mask);
@@ -2987,6 +2983,15 @@
         );
         return this._onMute();
       };
+      PlayerDropdown.prototype._onUnmute = PlayerDropdown.prototype.onUnmute;
+      PlayerDropdown.prototype.onUnmute = function() {
+        ninja.events.dispatchEvent(
+          new CustomEvent("pum" /* PLAYER_UNMUTED */, {
+            detail: { name: this.target.name }
+          })
+        );
+        return this._onUnmute();
+      };
       App.prototype.realLeaveGame = App.prototype.leaveGame;
       App.prototype.leaveGame = async function() {
         await this.realLeaveGame();
@@ -3025,7 +3030,7 @@
         this.dispatchEvent(a);
       };
       hookModMenu();
-      this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
+      this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && !(m.details.noGuests && this.isGuest()) && m.load());
       this.readyListeners.forEach((l) => l());
     }
     ready = false;
@@ -3149,10 +3154,6 @@
       }
     }
     load() {
-      if (this.details.noGuests && Ninja_default.isGuest()) {
-        this.log("This mod cannot be used for guests.", config_default.Colors.red);
-        return;
-      }
       if (this.config)
         this.loadConfigAll();
       this.log(`Loaded successfully!`);
@@ -3750,8 +3751,15 @@ ${name}`);
     enableLogs = true;
     enableRemoveBubble = true;
     doNotMuteGuests = true;
+    ignoreduels = false;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
+    skipPlayersJoinedCheck = false;
+    onPlayerJoinedBound = this.onPlayerJoined.bind(this);
+    onManualMuteBound = this.onManualMute.bind(this);
+    onManualUnmuteBound = this.onManualUnmute.bind(this);
+    onGameStartBound = this.onGameStart.bind(this);
+    onGameplayStoppedBound = this.onGameplayStopped.bind(this);
     constructor() {
       super({
         id: "AutoMute",
@@ -3768,6 +3776,7 @@ ${name}`);
           enableLogs: true,
           enableRemoveBubble: true,
           doNotMuteGuests: true,
+          ignoreduels: false,
           permanentMuteList: []
         },
         {
@@ -3775,9 +3784,10 @@ ${name}`);
           muteBelowLevel: "Level limit",
           enableLogs: "Enable muting logs in chat",
           enableRemoveBubble: "Enable removing chat bubble above muted players",
-          doNotMuteGuests: "Do not add guests to Permanent mute List",
+          doNotMuteGuests: "Do not add guests to Permanent mute list when muting manually",
+          ignoreduels: "Do not mute players and spectators in 1v1",
           permanentMuteList: {
-            name: "Permanently muted players",
+            name: "Permanent mute list",
             removableElements: true
           }
         }
@@ -3805,19 +3815,25 @@ ${name}`);
         case "doNotMuteGuests":
           this.doNotMuteGuests = this.config.get("doNotMuteGuests");
           break;
+        case "ignoreduels":
+          this.ignoreduels = this.config.get("ignoreduels");
+          if (this.ignoreduels) {
+            Ninja_default.events.addListener("gs", this.onGameStartBound);
+          } else {
+            Ninja_default.events.removeListener("gs", this.onGameStartBound);
+            this.skipPlayersJoinedCheck = false;
+          }
+          break;
         case "permanentMuteList":
           const permMuteList = this.config.get("permanentMuteList");
           this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
-          break;
-        default:
-          this.loadConfigAll();
           break;
       }
     }
     async checkAndMutePlayer(player) {
       try {
         if (this.permanentMuteList.includes(player.name)) {
-          this.mutePlayer(player, "permanently muted");
+          this.mutePlayer(player, "mute list");
           return;
         }
         if (this.muteEnabled && player.level <= this.levelLimit) {
@@ -3836,6 +3852,8 @@ ${name}`);
       }
     }
     onPlayerJoined(e) {
+      if (this.skipPlayersJoinedCheck)
+        return;
       const player = e.data.detail;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
@@ -3855,7 +3873,22 @@ ${name}`);
         }
       }
     }
+    onManualUnmute(e) {
+      const player = e.data.detail;
+      const ind = this.permanentMuteList.indexOf(player.name);
+      if (ind !== -1) {
+        this.permanentMuteList.splice(ind, 1);
+        this.config.set("permanentMuteList", this.permanentMuteList);
+        this.configChanged("permanentMuteList");
+        if (this.enableLogs) {
+          Ninja_default.log(`${player.name} is removed from mute list.`, config_default.Colors.green);
+        }
+      }
+    }
     onGameplayStopped() {
+      if (this.ignoreduels) {
+        Ninja_default.events.addListener("gs", this.onGameStartBound);
+      }
       Game.Muted.length = 0;
     }
     overrideChatBubble() {
@@ -3874,20 +3907,28 @@ ${name}`);
         Label.prototype.displayChatBubble = this.originalDisplayChatBubble;
       }
     }
+    async onGameStart() {
+      const mode = app.game.mode;
+      this.skipPlayersJoinedCheck = mode === "1v1" && this.ignoreduels;
+      Ninja_default.events.removeListener("gs", this.onGameStartBound);
+    }
     load() {
       if (!this.originalDisplayChatBubble) {
         this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
       }
-      Ninja_default.events.addListener("pj", this.onPlayerJoined.bind(this));
-      Ninja_default.events.addListener("pm", this.onManualMute.bind(this));
-      Ninja_default.events.addListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      Ninja_default.events.addListener("pj", this.onPlayerJoinedBound);
+      Ninja_default.events.addListener("pm", this.onManualMuteBound);
+      Ninja_default.events.addListener("pum", this.onManualUnmuteBound);
+      Ninja_default.events.addListener("gameplayStopped", this.onGameplayStoppedBound);
       super.load();
     }
     unload() {
       this.restoreChatBubble();
-      Ninja_default.events.removeListener("pj", this.onPlayerJoined.bind(this));
-      Ninja_default.events.removeListener("pm", this.onManualMute.bind(this));
-      Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStopped.bind(this));
+      Ninja_default.events.removeListener("gs", this.onGameStartBound);
+      Ninja_default.events.removeListener("pj", this.onPlayerJoinedBound);
+      Ninja_default.events.removeListener("pm", this.onManualMuteBound);
+      Ninja_default.events.removeListener("pum", this.onManualUnmuteBound);
+      Ninja_default.events.removeListener("gameplayStopped", this.onGameplayStoppedBound);
       super.unload();
     }
   };
