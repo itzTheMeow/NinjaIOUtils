@@ -138,7 +138,13 @@ export default new (class Ninja {
 
     hookModMenu();
 
-    this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && !(m.details.noGuests && this.isGuest()) && m.load());
+    this.mods.forEach(
+      (m) =>
+        m.isInstalled() &&
+        m.loadon == "appstart" &&
+        !(m.details.noGuests && this.isGuest()) &&
+        m.load()
+    );
     this.readyListeners.forEach((l) => l());
   }
 

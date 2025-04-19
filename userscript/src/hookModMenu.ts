@@ -144,7 +144,7 @@ export default function hookModMenu() {
 
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
-    titleText = new PIXI.Text({text: "Mods", style: FontStyle.MediumOrangeText});
+    titleText = new PIXI.Text({ text: "Mods", style: FontStyle.MediumOrangeText });
     modContainer = new PIXI.Container();
     configContainer = new PIXI.Container();
     filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
@@ -155,12 +155,8 @@ export default function hookModMenu() {
 
       this.background.x = 0;
       this.background.y = 40;
-      this.background.rect(0, 0, 660, 524)
-        .setFillStyle({ color: 3355443, alpha: 1 })
-        .fill();
-      this.background.rect(10, 10, 640, 504)
-        .setFillStyle({ color: 0, alpha: 0.3 })
-        .fill();
+      this.background.rect(0, 0, 660, 524).setFillStyle({ color: 3355443, alpha: 1 }).fill();
+      this.background.rect(10, 10, 640, 504).setFillStyle({ color: 0, alpha: 0.3 }).fill();
       this.background.stroke({ width: 1, color: 16777215, alpha: 0.1, alignment: 0 });
       this.container.addChild(this.background);
 
@@ -217,28 +213,28 @@ export default function hookModMenu() {
         maxDesc = 150,
         container = new PIXI.Graphics();
       container
-      .clear()
-      .beginPath()
-      .setFillStyle({
-        color: mod.isInstalled() ? config.Colors.green : config.Colors.white,
-        alpha: 0.1,
-      })
-      .roundRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6)
-      .fill();
+        .clear()
+        .beginPath()
+        .setFillStyle({
+          color: mod.isInstalled() ? config.Colors.green : config.Colors.white,
+          alpha: 0.1,
+        })
+        .roundRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6)
+        .fill();
 
       let pl = 0,
         pt = 0;
 
       const icon = new PIXI.Graphics();
       icon
-      .clear()
-      .beginPath()
-      .setFillStyle({
-        color: config.Colors.black,
-        alpha: 0.2,
-      })
-      .roundRect((pl += 10), (pt = pl), iconSize, iconSize, 8)
-      .fill();
+        .clear()
+        .beginPath()
+        .setFillStyle({
+          color: config.Colors.black,
+          alpha: 0.2,
+        })
+        .roundRect((pl += 10), (pt = pl), iconSize, iconSize, 8)
+        .fill();
       const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
       iconSprite.width = iconSprite.height = iconSize - 10;
       iconSprite.anchor.x = iconSprite.anchor.y = 0.5;
@@ -497,14 +493,10 @@ export default function hookModMenu() {
           const listWidth = 300;
           const listHeight = 150;
           const listBackground = new PIXI.Graphics();
-          listBackground
-            .clear()
-            .beginPath()
-            .roundRect(0, 0, listWidth, listHeight, 6)
-            .fill({
-              color: 0x000000,
-              alpha: 0.3,
-            });
+          listBackground.clear().beginPath().roundRect(0, 0, listWidth, listHeight, 6).fill({
+            color: 0x000000,
+            alpha: 0.3,
+          });
           listBackground.y = label.height + 10;
           container.addChild(listBackground);
 
@@ -538,6 +530,7 @@ export default function hookModMenu() {
           });
 
           function refreshList() {
+            if (data.type !== "list") return;
             scrollContent.removeChildren();
             let offY = 5;
             data.value.forEach((item, index) => {

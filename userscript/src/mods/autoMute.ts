@@ -1,4 +1,4 @@
-import { App, Game, Label } from "lib";
+import { Game, Label } from "lib";
 import { app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -10,7 +10,7 @@ export class AutoMuteMod extends Mod<{
   enableLogs: boolean;
   enableRemoveBubble: boolean;
   doNotMuteGuests: boolean;
-  ignoreduels: boolean;
+  ignoreDuels: boolean;
   permanentMuteList: string[];
 }> {
   private muteEnabled: boolean = true;
@@ -18,7 +18,7 @@ export class AutoMuteMod extends Mod<{
   private enableLogs: boolean = true;
   private enableRemoveBubble: boolean = true;
   private doNotMuteGuests: boolean = true;
-  private ignoreduels: boolean = false;
+  private ignoreDuels: boolean = false;
   private permanentMuteList: string[] = [];
   private originalDisplayChatBubble: (() => void) | null = null;
   private skipPlayersJoinedCheck: boolean = false;
@@ -47,7 +47,7 @@ export class AutoMuteMod extends Mod<{
         enableLogs: true,
         enableRemoveBubble: true,
         doNotMuteGuests: true,
-        ignoreduels: false,
+        ignoreDuels: false,
         permanentMuteList: [],
       },
       {
@@ -55,8 +55,8 @@ export class AutoMuteMod extends Mod<{
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
         enableRemoveBubble: "Enable removing chat bubble above muted players",
-        doNotMuteGuests: "Do not add guests to Permanent mute list when muting manually",
-        ignoreduels: "Do not mute players and spectators in 1v1",
+        doNotMuteGuests: "Do not add guests to permanent mute list when muting manually",
+        ignoreDuels: "Do not mute players and spectators in 1v1",
         permanentMuteList: {
           name: "Permanent mute list",
           removableElements: true,
@@ -87,9 +87,9 @@ export class AutoMuteMod extends Mod<{
       case "doNotMuteGuests":
         this.doNotMuteGuests = this.config.get("doNotMuteGuests");
         break;
-      case "ignoreduels":
-        this.ignoreduels = this.config.get("ignoreduels");
-        if (this.ignoreduels) {
+      case "ignoreDuels":
+        this.ignoreDuels = this.config.get("ignoreDuels");
+        if (this.ignoreDuels) {
           Ninja.events.addListener("gs", this.onGameStartBound);
         } else {
           Ninja.events.removeListener("gs", this.onGameStartBound);
@@ -100,7 +100,7 @@ export class AutoMuteMod extends Mod<{
         const permMuteList = this.config.get("permanentMuteList");
         this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
         break;
-      //todo default remove setting from ls
+      //TODO: default remove setting from ls
     }
   }
 
@@ -169,7 +169,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onGameplayStopped(): void {
-    if (this.ignoreduels) {
+    if (this.ignoreDuels) {
       Ninja.events.addListener("gs", this.onGameStartBound);
     }
     Game.Muted.length = 0;
@@ -194,7 +194,7 @@ export class AutoMuteMod extends Mod<{
 
   private async onGameStart(): Promise<void> {
     const mode = app.game.mode;
-    this.skipPlayersJoinedCheck = mode === "1v1" && this.ignoreduels;
+    this.skipPlayersJoinedCheck = mode === "1v1" && this.ignoreDuels;
     Ninja.events.removeListener("gs", this.onGameStartBound);
   }
 
