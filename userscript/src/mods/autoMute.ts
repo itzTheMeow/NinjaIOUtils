@@ -1,7 +1,7 @@
 import { Game, Label } from "lib";
 import { app } from "typings";
 import Mod from "../api/Mod";
-import Ninja from "../api/Ninja";
+import Ninja, { NinjaEvents } from "../api/Ninja";
 import config from "../config";
 
 export class AutoMuteMod extends Mod<{
@@ -90,9 +90,9 @@ export class AutoMuteMod extends Mod<{
       case "ignoreDuels":
         this.ignoreDuels = this.config.get("ignoreDuels");
         if (this.ignoreDuels) {
-          Ninja.events.addListener("gs", this.onGameStartBound);
+          Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
         } else {
-          Ninja.events.removeListener("gs", this.onGameStartBound);
+          Ninja.events.removeListener(NinjaEvents.GAME_START, this.onGameStartBound);
           this.skipPlayersJoinedCheck = false;
         }
         break;
@@ -195,28 +195,28 @@ export class AutoMuteMod extends Mod<{
   private async onGameStart(): Promise<void> {
     const mode = app.game.mode;
     this.skipPlayersJoinedCheck = mode === "1v1" && this.ignoreDuels;
-    Ninja.events.removeListener("gs", this.onGameStartBound);
+    Ninja.events.removeListener(NinjaEvents.GAME_START, this.onGameStartBound);
   }
 
   public load(): void {
     if (!this.originalDisplayChatBubble) {
       this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
     }
-    Ninja.events.addListener("pj", this.onPlayerJoinedBound);
-    Ninja.events.addListener("pm", this.onManualMuteBound);
-    Ninja.events.addListener("pum", this.onManualUnmuteBound);
-    Ninja.events.addListener("gameplayStopped", this.onGameplayStoppedBound);
+    Ninja.events.addListener(NinjaEvents.PLAYER_JOINED, this.onPlayerJoinedBound);
+    Ninja.events.addListener(NinjaEvents.PLAYER_MUTED, this.onManualMuteBound);
+    Ninja.events.addListener(NinjaEvents.PLAYER_UNMUTED, this.onManualUnmuteBound);
+    Ninja.events.addListener(NinjaEvents.GAMEPLAY_STOPPED, this.onGameplayStoppedBound);
 
     super.load();
   }
 
   public unload(): void {
     this.restoreChatBubble();
-    Ninja.events.removeListener("gs", this.onGameStartBound);
-    Ninja.events.removeListener("pj", this.onPlayerJoinedBound);
-    Ninja.events.removeListener("pm", this.onManualMuteBound);
-    Ninja.events.removeListener("pum", this.onManualUnmuteBound);
-    Ninja.events.removeListener("gameplayStopped", this.onGameplayStoppedBound);
+    Ninja.events.removeListener(NinjaEvents.PLAYER_JOINED, this.onPlayerJoinedBound);
+    Ninja.events.removeListener(NinjaEvents.PLAYER_MUTED, this.onManualMuteBound);
+    Ninja.events.removeListener(NinjaEvents.PLAYER_UNMUTED, this.onManualUnmuteBound);
+    Ninja.events.removeListener(NinjaEvents.GAMEPLAY_STOPPED, this.onGameplayStoppedBound);
+    Ninja.events.removeListener(NinjaEvents.GAME_START, this.onGameStartBound);
 
     super.unload();
   }
