@@ -1,5 +1,12 @@
 # Changelog
 
+v3.4
+
+- Stop using some deprecated PIXI features.
+- Fixed the guest mod loading.
+- [AutoMute] Add ignore duels option.
+- [AutoMute] Re-worded some UI elements.
+
 v3.3
 
 - Fixed typing issues on backend.
