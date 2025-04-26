@@ -14,6 +14,7 @@ export enum NinjaEvents {
   STEP = "st", // called every render frame
   PLAYER_JOINED = "pj",
   PLAYER_MUTED = "pm",
+  PLAYER_UNMUTED = "pum",
   GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
@@ -80,6 +81,17 @@ export default new (class Ninja {
     };
 
     //@ts-ignore
+    PlayerDropdown.prototype._onUnmute = PlayerDropdown.prototype.onUnmute;
+    PlayerDropdown.prototype.onUnmute = function () {
+      ninja.events.dispatchEvent(
+        new CustomEvent(NinjaEvents.PLAYER_UNMUTED, {
+          detail: { name: this.target.name },
+        })
+      );
+      return this._onUnmute();
+    };
+
+    //@ts-ignore
     App.prototype.realLeaveGame = App.prototype.leaveGame;
     App.prototype.leaveGame = async function () {
       await this.realLeaveGame();
@@ -126,7 +138,13 @@ export default new (class Ninja {
 
     hookModMenu();
 
-    this.mods.forEach((m) => m.isInstalled() && m.loadon == "appstart" && m.load());
+    this.mods.forEach(
+      (m) =>
+        m.isInstalled() &&
+        m.loadon == "appstart" &&
+        !(m.details.noGuests && this.isGuest()) &&
+        m.load()
+    );
     this.readyListeners.forEach((l) => l());
   }
 
