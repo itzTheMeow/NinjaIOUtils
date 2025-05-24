@@ -104,10 +104,10 @@ export default new (class Ninja {
       return stepper(...d);
     };
 
-    App.Stats.realSetPing = App.Stats.setPing;
+    const _App_Stats_setPing = App.Stats.setPing;
     App.Stats.setPing = function (ping) {
       ninja.serverLatency = ping;
-      return App.Stats.realSetPing(ping);
+      return _App_Stats_setPing.call(App.Stats, ping);
     };
 
     app.onResize = window.eval(

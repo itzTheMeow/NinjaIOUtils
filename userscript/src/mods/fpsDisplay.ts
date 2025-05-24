@@ -69,7 +69,7 @@ export class FPSDisplayMod extends Mod<{
     } else {
       let fps = `${Math.round(this.frames / (elapsed / 1000))} FPS`;
       if (this.showTime) fps = `${new Date().toLocaleTimeString()} - ` + fps;
-      if (Ninja.inGame()) fps += ` - ${Ninja.serverLatency || 0}ms`;
+      if (Ninja.inGame()) fps += ` - ${Math.round(Ninja.serverLatency || 0)}ms`;
       if (this.frameDisplay.innerText !== fps) this.frameDisplay.innerText = fps;
       this.frames = 0;
       this.lastUpdate = now;

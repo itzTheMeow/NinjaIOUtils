@@ -3004,10 +3004,10 @@
         this.events.dispatchEvent(new CustomEvent("st" /* STEP */));
         return stepper(...d);
       };
-      App.Stats.realSetPing = App.Stats.setPing;
+      const _App_Stats_setPing = App.Stats.setPing;
       App.Stats.setPing = function(ping) {
         ninja.serverLatency = ping;
-        return App.Stats.realSetPing(ping);
+        return _App_Stats_setPing.call(App.Stats, ping);
       };
       app.onResize = window.eval(
         `(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`
@@ -4001,7 +4001,7 @@ ${name}`);
         if (this.showTime)
           fps = `${new Date().toLocaleTimeString()} - ` + fps;
         if (Ninja_default.inGame())
-          fps += ` - ${Ninja_default.serverLatency || 0}ms`;
+          fps += ` - ${Math.round(Ninja_default.serverLatency || 0)}ms`;
         if (this.frameDisplay.innerText !== fps)
           this.frameDisplay.innerText = fps;
         this.frames = 0;

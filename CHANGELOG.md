@@ -1,5 +1,9 @@
 # Changelog
 
+v3.5 (upcoming)
+
+- [FPSDisplay] Fixed latency having too many decimals.
+
 v3.4
 
 - Stop using some deprecated PIXI features.

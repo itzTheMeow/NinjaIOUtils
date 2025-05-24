@@ -3441,7 +3441,9 @@ declare module "lib" {
     export const Renderer: any;
     export const Stage: any;
     export const Console: any;
-    export const Stats: any;
+    export const Stats: {
+      setPing(ping: number): void;
+    };
     export const Layer: Layer;
     export const ClientVersion: string;
     export const MinVersion: string;
@@ -3970,5 +3972,5 @@ declare module "lib" {
     const WHEEL: string;
     const ExclusiveWheel: any;
   }
-  export {};
+  export { };
 }
