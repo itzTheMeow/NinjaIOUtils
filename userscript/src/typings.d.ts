@@ -7,6 +7,44 @@ declare module "typings" {
   export declare var App: typeof Lib.App;
   export declare var Layer: typeof Lib.Layer;
 
+  export declare var Protocol: {
+    CONNECT: "connection";
+    CONNECTED: "onconnected";
+    DISCONNECT: "disconnect";
+    DISCONNECTED: "ondisconnected";
+    ECHO: "a";
+    ECHO_RESP: "b";
+    INFO: "c";
+    SESSION: "d";
+    Session: {
+      REGISTER: "e";
+      CREATE: "f";
+      CREATE_RESP: "g";
+      JOIN_MODE: "h";
+      JOIN_RESP: "i";
+      JOIN_GAME: "j";
+      LEAVE: "k";
+      LEAVE_RESP: "l";
+      LIST_GAMES: "m";
+      LIST_GAMES_RESP: "n";
+      CLIENT_AUTH: "o1";
+    };
+    GAME: "p";
+    GAME_BIN: "q";
+    Game: {
+      UPDATE: "r";
+      REQ: "t";
+      INPUT: "v";
+      INFO: "w";
+      MESSAGE: "x";
+      COMMAND: "y";
+      ACTION: "z";
+      STATUS: "aa";
+      TRIGGER_RESPAWN: "ab";
+    };
+    SIGNAL_FULL: "ad";
+  };
+
   type Font = PixiJS.TextStyle;
   export declare var FontStyle: {
     LargeDefault: Font;

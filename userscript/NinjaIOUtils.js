@@ -2999,16 +2999,18 @@
         await this.realLeaveGame();
         ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
       };
-      const stepper = app.stepCallback;
-      app.stepCallback = (...d) => {
-        this.events.dispatchEvent(new CustomEvent("st" /* STEP */));
-        return stepper(...d);
-      };
-      const _App_Stats_setPing = App.Stats.setPing;
-      App.Stats.setPing = function(ping) {
-        ninja.serverLatency = ping;
-        return _App_Stats_setPing.call(App.Stats, ping);
-      };
+      this.hookMethod(app, "stepCallback", {
+        callback: () => {
+          this.events.dispatchEvent(new CustomEvent("st" /* STEP */));
+        },
+        priority: -10
+      });
+      this.hookMethod(App.Stats, "setPing", {
+        callback({ args }) {
+          ninja.serverLatency = args[0];
+        },
+        priority: -10
+      });
       app.onResize = window.eval(
         `(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`
       );
@@ -3088,6 +3090,69 @@
       const i = this.clientPacketListeners.indexOf(l);
       if (i >= 0)
         this.clientPacketListeners.splice(i, 1);
+    }
+    hooks = [];
+    findHookReference(method) {
+      return this.hooks.find((h) => h.hook == method);
+    }
+    runHook(hook, args) {
+      const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
+      let returnValue = void 0;
+      for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
+        const res = callback({ args, returnValue });
+        if (typeof res == "object" && "returnValue" in res)
+          returnValue = res.returnValue;
+      }
+      const response = hook.original(...args);
+      if (returnValue === void 0)
+        returnValue = response;
+      for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
+        const res = callback({ args, returnValue });
+        if (typeof res == "object" && "returnValue" in res)
+          returnValue = res.returnValue;
+      }
+      return returnValue;
+    }
+    hookMethod(scope, methodName, hook) {
+      const method = scope[methodName];
+      if (typeof method !== "function") {
+        console.warn(
+          `Failed to hook method ${String(methodName)}, not found or is not function.`,
+          method,
+          scope
+        );
+        return void 0;
+      }
+      const ref = this.findHookReference(method);
+      if (ref)
+        ref.callbacks.push(hook);
+      else {
+        const state = {
+          original: method.bind(scope),
+          hook: ((...args) => this.runHook(state, args)).bind(this),
+          callbacks: [hook]
+        };
+        scope[methodName] = state.hook;
+        console.debug(`Hooked method ${String(methodName)}.`, scope);
+      }
+    }
+    unhookMethod(method, hook) {
+      const ref = this.findHookReference(method);
+      if (ref) {
+        const hookIndex = ref.callbacks.indexOf(hook);
+        if (hookIndex == -1)
+          return console.warn(`Failed to unhook method, callback not found.`, method);
+        ref.callbacks.splice(hookIndex, 1);
+        if (ref.callbacks.length == 0) {
+          const refIndex = this.hooks.indexOf(ref);
+          if (refIndex == -1)
+            console.warn(`Failed to unhook method, hook not found in state.`, method);
+          else
+            this.hooks.splice(refIndex, 1);
+        }
+      } else {
+        console.warn(`Failed to unhook method, hook not found.`, method);
+      }
     }
     gamePassword = "";
     isGuest() {
@@ -3742,6 +3807,7 @@ ${name}`);
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
+    SpectateMod: () => SpectateMod,
     StatTrackerMod: () => StatTrackerMod,
     XPStatsMod: () => XPStatsMod
   });
@@ -4097,17 +4163,52 @@ ${name}`);
       });
     }
     load() {
-      App.Console.consoleInput.addListener(InputField.CHANGE, this.consoleListener);
+      App.Console.consoleInput.addListener(InputField.CHANGE, this.consoleTyped);
       super.load();
     }
     unload() {
-      App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleListener);
+      App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleTyped);
       super.unload();
     }
-    consoleTyped() {
+    _consoleTyped() {
       AudioEffects.ButtonHover.audio.play();
     }
-    consoleListener = this.consoleTyped.bind(this);
+    consoleTyped = this._consoleTyped.bind(this);
+  };
+
+  // src/mods/spectate.ts
+  
+  var SpectateMod = class extends Mod {
+    constructor() {
+      super({
+        id: "Spectate",
+        name: "Spectate",
+        description: "Allows you to spectate non-1v1 games.",
+        author: "Meow",
+        icon: "face_shades"
+      });
+    }
+    load() {
+      Ninja_default.hookMethod(app, "initGameMode", this.initGame);
+      super.load();
+    }
+    unload() {
+      Ninja_default.unhookMethod(app.initGameMode, this.initGame);
+      super.unload();
+    }
+    _initGame() {
+    }
+    initGame = this._initGame.bind(this);
+    _joinedGame(packet) {
+      app.game.hud.applySpecSetup();
+    }
+    joinedGame = this._joinedGame.bind(this);
+    _leftGame() {
+    }
+    leftGame = this._leftGame.bind(this);
+    _exitedGame() {
+    }
+    exitedGame = this._exitedGame.bind(this);
   };
 
   // src/mods/statTracker.ts

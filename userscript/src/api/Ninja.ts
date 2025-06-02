@@ -18,6 +18,34 @@ export enum NinjaEvents {
   GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
+export interface NinjaHookState {
+  /** The original state of the function. */
+  original: CallableFunction;
+  /** The new state of the hooked function. */
+  hook: CallableFunction;
+  /** The set hooks to run with the function. */
+  callbacks: NinjaHook[];
+}
+export interface NinjaHookPayload {
+  /** Original function args. */
+  args: any[];
+  /** Current return value of the hook. */
+  returnValue: any;
+}
+export interface NinjaHook {
+  /**
+   * Callback to run for the hook.
+   * If the callback returns anything but `void`, the return value will be passed to the original function in order of priority. (the original return value will be ignored)
+   */
+  callback: (payload: NinjaHookPayload) => { returnValue: any } | void;
+  /**
+   * Lower numbers are ran first. 0 is the original function.
+   * This means use a negative number to run before the original, and a positive number or 0 to run after.
+   * Try to use a multiple of 10 where possible to allow other mods to override.
+   */
+  priority: number;
+}
+
 export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
@@ -98,17 +126,18 @@ export default new (class Ninja {
       ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED));
     };
 
-    const stepper = app.stepCallback;
-    app.stepCallback = (...d) => {
-      this.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
-      return stepper(...d);
-    };
-
-    const _App_Stats_setPing = App.Stats.setPing;
-    App.Stats.setPing = function (ping) {
-      ninja.serverLatency = ping;
-      return _App_Stats_setPing.call(App.Stats, ping);
-    };
+    this.hookMethod(app, "stepCallback", {
+      callback: () => {
+        this.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
+      },
+      priority: -10,
+    });
+    this.hookMethod(App.Stats, "setPing", {
+      callback({ args }) {
+        ninja.serverLatency = args[0];
+      },
+      priority: -10,
+    });
 
     app.onResize = window.eval(
       `(function ${app.onResize
@@ -202,6 +231,68 @@ export default new (class Ninja {
   public offClientPacket(l: PacketListener) {
     const i = this.clientPacketListeners.indexOf(l);
     if (i >= 0) this.clientPacketListeners.splice(i, 1);
+  }
+
+  private hooks: NinjaHookState[] = [];
+  private findHookReference(method: CallableFunction) {
+    return this.hooks.find((h) => h.hook == method);
+  }
+  private runHook(hook: NinjaHookState, args: any[]): any {
+    const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
+    let returnValue: any = void 0;
+    // run "lower" priority first
+    for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
+      const res = callback({ args, returnValue });
+      if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
+    }
+    // run original function and catch the return value if needed
+    const response = hook.original(...args);
+    if (returnValue === void 0) returnValue = response;
+    for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
+      const res = callback({ args, returnValue });
+      if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
+    }
+    return returnValue;
+  }
+  public hookMethod<T extends any>(scope: T, methodName: keyof T, hook: NinjaHook): void {
+    const method = scope[methodName];
+    if (typeof method !== "function") {
+      console.warn(
+        `Failed to hook method ${String(methodName)}, not found or is not function.`,
+        method,
+        scope
+      );
+      return void 0;
+    }
+    const ref = this.findHookReference(method);
+    if (ref) ref.callbacks.push(hook);
+    else {
+      const state: NinjaHookState = {
+        original: method.bind(scope),
+        hook: ((...args: any[]) => this.runHook(state, args)).bind(this),
+        callbacks: [hook],
+      };
+      scope[methodName] = <any>state.hook;
+      console.debug(`Hooked method ${String(methodName)}.`, scope);
+    }
+  }
+  public unhookMethod(method: CallableFunction, hook: NinjaHook): void {
+    // we don't need the scope to unhook because the hook can be found using the function reference
+    const ref = this.findHookReference(method);
+    if (ref) {
+      const hookIndex = ref.callbacks.indexOf(hook);
+      if (hookIndex == -1)
+        return console.warn(`Failed to unhook method, callback not found.`, method);
+      ref.callbacks.splice(hookIndex, 1);
+      if (ref.callbacks.length == 0) {
+        const refIndex = this.hooks.indexOf(ref);
+        if (refIndex == -1)
+          console.warn(`Failed to unhook method, hook not found in state.`, method);
+        else this.hooks.splice(refIndex, 1);
+      }
+    } else {
+      console.warn(`Failed to unhook method, hook not found.`, method);
+    }
   }
 
   public gamePassword = "";

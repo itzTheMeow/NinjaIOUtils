@@ -2508,6 +2508,10 @@ declare module "lib" {
     onRenameButtonReleased(): void;
     onLogoutButtonReleased(): void;
   }
+  export class Hud extends PIXI.Container {
+    applySpecSetup(): void;
+    displayWeaponMenu(state: boolean): void;
+  }
   export class Game extends PIXI.Container<PIXI.DisplayObject> {
     constructor(a: any);
     sessionId: any;
@@ -2528,7 +2532,7 @@ declare module "lib" {
     };
     mutePref: boolean;
     lastSent: string;
-    hud: any;
+    hud: Hud;
     lastInputUpdateTime: number;
     reticle: PIXI.Sprite;
     animTimeout: any;
@@ -3972,5 +3976,5 @@ declare module "lib" {
     const WHEEL: string;
     const ExclusiveWheel: any;
   }
-  export { };
+  export {};
 }
