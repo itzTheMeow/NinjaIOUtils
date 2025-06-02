@@ -11,10 +11,14 @@ export type PacketListener = (type: "game" | "pvp", packet: any) => any;
 export enum NinjaEvents {
   GAME_START = "gs",
   GAME_END = "ge",
+  /** Current player joined the game. */
+  GAME_JOIN = "gj",
   STEP = "st", // called every render frame
+  /** Any player joined the game. */
   PLAYER_JOINED = "pj",
   PLAYER_MUTED = "pm",
   PLAYER_UNMUTED = "pum",
+  GAMEPLAY_START = "gameplayStarted",
   GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
@@ -64,35 +68,27 @@ export default new (class Ninja {
     this.ready = true;
     this.events = new EventDispatcher();
 
-    this.hookMethod(App.Layer, "memberMenu", {
-      priority: -10,
-      callback() {
-        ninja.mods.forEach((mod) => {
-          if (mod.details.noGuests && mod.loaded) mod.unload();
-        });
-      },
-    });
-
     this.hookMethod(app, "initGameMode", {
       priority: 10,
       callback() {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_START));
         app.game.on(Game.MATCH_START, () =>
           ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_START))
         );
-        ninja.hookMethod(app.game, "playerJoined", {
-          priority: -10,
-          callback({ args }) {
-            ninja.events.dispatchEvent(
-              new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: args })
-            );
-          },
-        });
-        ninja.hookMethod(app.game, "endGame", {
-          priority: -10,
-          callback({ args }) {
-            ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, args[0]));
-          },
-        });
+      },
+    });
+    ninja.hookMethod(Game.prototype, "playerJoined", {
+      priority: -10,
+      callback({ args }) {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: args[0] }));
+        if (args[0]?.sid == app.game.sessionId)
+          ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_JOIN));
+      },
+    });
+    ninja.hookMethod(Game.prototype, "endGame", {
+      priority: -10,
+      callback({ args }) {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, args[0]));
       },
     });
 
@@ -165,6 +161,15 @@ export default new (class Ninja {
       this.dispatchEvent(a);
     };
 
+    this.hookMethod(App.Layer.memberMenu, "onLogout", {
+      priority: -10,
+      callback() {
+        ninja.mods.forEach((mod) => {
+          if (mod.details.noGuests && mod.loaded) mod.unload();
+        });
+      },
+    });
+
     hookModMenu();
 
     this.mods.forEach(
@@ -235,9 +240,9 @@ export default new (class Ninja {
 
   private hooks: NinjaHookState[] = [];
   private findHookReference(method: CallableFunction) {
-    return this.hooks.find((h) => h.hook == method);
+    return this.hooks.find((h) => h.hook === method);
   }
-  private runHook(hook: NinjaHookState, args: any[]): any {
+  private runHook(hook: NinjaHookState, scope: any, args: any[]): any {
     const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
     let returnValue: any = void 0;
     // run "lower" priority first
@@ -246,7 +251,7 @@ export default new (class Ninja {
       if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
     }
     // run original function and catch the return value if needed
-    const response = hook.original(...args);
+    const response = (<any>hook.original).call(scope, ...args);
     if (returnValue === void 0) returnValue = response;
     for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
       const res = callback({ args, returnValue });
@@ -267,20 +272,22 @@ export default new (class Ninja {
     const ref = this.findHookReference(method);
     if (ref) ref.callbacks.push(hook);
     else {
+      const ninja = this;
       const state: NinjaHookState = {
-        original: method.bind(scope),
-        hook: ((...args: any[]) => this.runHook(state, args)).bind(this),
+        original: method,
+        hook: (scope[methodName] = <any>function (...args: any[]) {
+          ninja.runHook(state, this, args);
+        }),
         callbacks: [hook],
       };
-      scope[methodName] = <any>state.hook;
       console.debug(`Hooked method ${String(methodName)}.`, scope);
     }
   }
-  public unhookMethod(method: CallableFunction, hook: NinjaHook): void {
+  public unhookMethod(method: CallableFunction, callback: CallableFunction): void {
     // we don't need the scope to unhook because the hook can be found using the function reference
     const ref = this.findHookReference(method);
     if (ref) {
-      const hookIndex = ref.callbacks.indexOf(hook);
+      const hookIndex = ref.callbacks.findIndex((cb) => cb.callback === callback);
       if (hookIndex == -1)
         return console.warn(`Failed to unhook method, callback not found.`, method);
       ref.callbacks.splice(hookIndex, 1);

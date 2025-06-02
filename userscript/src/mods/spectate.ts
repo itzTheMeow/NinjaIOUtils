@@ -1,6 +1,6 @@
 import { app } from "typings";
 import Mod from "../api/Mod";
-import Ninja from "../api/Ninja";
+import Ninja, { NinjaEvents } from "../api/Ninja";
 
 export class SpectateMod extends Mod {
   constructor() {
@@ -14,22 +14,24 @@ export class SpectateMod extends Mod {
   }
 
   public load() {
-    Ninja.hookMethod(app, "initGameMode", this.initGame);
+    Ninja.events.addListener(NinjaEvents.GAME_JOIN, this.joinedGame);
+    Ninja.hookMethod(app, "onLayerDisconnect", {
+      priority: -10,
+      callback: this.exitedGame,
+    });
     super.load();
   }
   public unload() {
-    Ninja.unhookMethod(app.initGameMode, this.initGame);
+    this.reset();
+    Ninja.unhookMethod(app.onLayerDisconnect, this.exitedGame);
     super.unload();
   }
-
-  private _initGame() {
-    // hook
+  private reset() {
+    Ninja.events.removeListener(NinjaEvents.GAME_JOIN, this.joinedGame);
   }
-  private initGame = this._initGame.bind(this);
 
-  private _joinedGame(packet: any) {
+  private _joinedGame() {
     app.game.hud.applySpecSetup();
-    //app.game.hud.displayWeaponMenu(false);
   }
   private joinedGame = this._joinedGame.bind(this);
 
@@ -38,6 +40,8 @@ export class SpectateMod extends Mod {
   private leftGame = this._leftGame.bind(this);
 
   // user leaves the game on purpose
-  private _exitedGame() {}
+  private _exitedGame() {
+    this.reset();
+  }
   private exitedGame = this._exitedGame.bind(this);
 }

@@ -2513,8 +2513,8 @@ declare module "lib" {
     displayWeaponMenu(state: boolean): void;
   }
   export class Game extends PIXI.Container<PIXI.DisplayObject> {
-    constructor(a: any);
-    sessionId: any;
+    constructor(sessionId: string);
+    sessionId: string;
     settings: any;
     clients: {};
     numClients: number;

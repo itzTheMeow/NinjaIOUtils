@@ -2949,36 +2949,28 @@
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
-      this.hookMethod(App.Layer, "memberMenu", {
-        priority: -10,
-        callback() {
-          ninja.mods.forEach((mod) => {
-            if (mod.details.noGuests && mod.loaded)
-              mod.unload();
-          });
-        }
-      });
       this.hookMethod(app, "initGameMode", {
         priority: 10,
         callback() {
+          ninja.events.dispatchEvent(new CustomEvent("gameplayStarted" /* GAMEPLAY_START */));
           app.game.on(
             Game.MATCH_START,
             () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */))
           );
-          ninja.hookMethod(app.game, "playerJoined", {
-            priority: -10,
-            callback({ args }) {
-              ninja.events.dispatchEvent(
-                new CustomEvent("pj" /* PLAYER_JOINED */, { detail: args })
-              );
-            }
-          });
-          ninja.hookMethod(app.game, "endGame", {
-            priority: -10,
-            callback({ args }) {
-              ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, args[0]));
-            }
-          });
+        }
+      });
+      ninja.hookMethod(Game.prototype, "playerJoined", {
+        priority: -10,
+        callback({ args }) {
+          ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: args[0] }));
+          if (args[0]?.sid == app.game.sessionId)
+            ninja.events.dispatchEvent(new CustomEvent("gj" /* GAME_JOIN */));
+        }
+      });
+      ninja.hookMethod(Game.prototype, "endGame", {
+        priority: -10,
+        callback({ args }) {
+          ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, args[0]));
         }
       });
       PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
@@ -3038,6 +3030,15 @@
         }
         this.dispatchEvent(a);
       };
+      this.hookMethod(App.Layer.memberMenu, "onLogout", {
+        priority: -10,
+        callback() {
+          ninja.mods.forEach((mod) => {
+            if (mod.details.noGuests && mod.loaded)
+              mod.unload();
+          });
+        }
+      });
       hookModMenu();
       this.mods.forEach(
         (m) => m.isInstalled() && m.loadon == "appstart" && !(m.details.noGuests && this.isGuest()) && m.load()
@@ -3098,9 +3099,9 @@
     }
     hooks = [];
     findHookReference(method) {
-      return this.hooks.find((h) => h.hook == method);
+      return this.hooks.find((h) => h.hook === method);
     }
-    runHook(hook, args) {
+    runHook(hook, scope, args) {
       const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
       let returnValue = void 0;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
@@ -3108,7 +3109,7 @@
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
-      const response = hook.original(...args);
+      const response = hook.original.call(scope, ...args);
       if (returnValue === void 0)
         returnValue = response;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
@@ -3132,19 +3133,21 @@
       if (ref)
         ref.callbacks.push(hook);
       else {
+        const ninja = this;
         const state = {
-          original: method.bind(scope),
-          hook: ((...args) => this.runHook(state, args)).bind(this),
+          original: method,
+          hook: scope[methodName] = function(...args) {
+            ninja.runHook(state, this, args);
+          },
           callbacks: [hook]
         };
-        scope[methodName] = state.hook;
         console.debug(`Hooked method ${String(methodName)}.`, scope);
       }
     }
-    unhookMethod(method, hook) {
+    unhookMethod(method, callback) {
       const ref = this.findHookReference(method);
       if (ref) {
-        const hookIndex = ref.callbacks.indexOf(hook);
+        const hookIndex = ref.callbacks.findIndex((cb) => cb.callback === callback);
         if (hookIndex == -1)
           return console.warn(`Failed to unhook method, callback not found.`, method);
         ref.callbacks.splice(hookIndex, 1);
@@ -4194,17 +4197,22 @@ ${name}`);
       });
     }
     load() {
-      Ninja_default.hookMethod(app, "initGameMode", this.initGame);
+      Ninja_default.events.addListener("gj" /* GAME_JOIN */, this.joinedGame);
+      Ninja_default.hookMethod(app, "onLayerDisconnect", {
+        priority: -10,
+        callback: this.exitedGame
+      });
       super.load();
     }
     unload() {
-      Ninja_default.unhookMethod(app.initGameMode, this.initGame);
+      this.reset();
+      Ninja_default.unhookMethod(app.onLayerDisconnect, this.exitedGame);
       super.unload();
     }
-    _initGame() {
+    reset() {
+      Ninja_default.events.removeListener("gj" /* GAME_JOIN */, this.joinedGame);
     }
-    initGame = this._initGame.bind(this);
-    _joinedGame(packet) {
+    _joinedGame() {
       app.game.hud.applySpecSetup();
     }
     joinedGame = this._joinedGame.bind(this);
@@ -4212,6 +4220,7 @@ ${name}`);
     }
     leftGame = this._leftGame.bind(this);
     _exitedGame() {
+      this.reset();
     }
     exitedGame = this._exitedGame.bind(this);
   };
