@@ -2949,33 +2949,38 @@
       const ninja = this;
       this.ready = true;
       this.events = new EventDispatcher();
-      const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
-      MemberMenu.prototype.onLogout = function() {
-        _MemberMenu_onLogout.call(this);
-        ninja.mods.forEach((mod) => {
-          if (mod.details.noGuests && mod.loaded) {
-            mod.unload();
-          }
-        });
-      };
-      App.prototype.realInitGameMode = App.prototype.initGameMode;
-      App.prototype.initGameMode = function(data) {
-        this.realInitGameMode(data);
-        this.game.on(
-          Game.MATCH_START,
-          () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */))
-        );
-      };
-      Game.prototype._endGame = Game.prototype.endGame;
-      Game.prototype.endGame = function(data) {
-        ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, data));
-        return this._endGame(data);
-      };
-      Game.prototype._playerJoined = Game.prototype.playerJoined;
-      Game.prototype.playerJoined = function(data, extra) {
-        ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: data }));
-        return this._playerJoined(data, extra);
-      };
+      this.hookMethod(App.Layer, "memberMenu", {
+        priority: -10,
+        callback() {
+          ninja.mods.forEach((mod) => {
+            if (mod.details.noGuests && mod.loaded)
+              mod.unload();
+          });
+        }
+      });
+      this.hookMethod(app, "initGameMode", {
+        priority: 10,
+        callback() {
+          app.game.on(
+            Game.MATCH_START,
+            () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */))
+          );
+          ninja.hookMethod(app.game, "playerJoined", {
+            priority: -10,
+            callback({ args }) {
+              ninja.events.dispatchEvent(
+                new CustomEvent("pj" /* PLAYER_JOINED */, { detail: args })
+              );
+            }
+          });
+          ninja.hookMethod(app.game, "endGame", {
+            priority: -10,
+            callback({ args }) {
+              ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, args[0]));
+            }
+          });
+        }
+      });
       PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
       PlayerDropdown.prototype.onMute = function() {
         ninja.events.dispatchEvent(
@@ -3000,16 +3005,16 @@
         ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
       };
       this.hookMethod(app, "stepCallback", {
-        callback: () => {
-          this.events.dispatchEvent(new CustomEvent("st" /* STEP */));
-        },
-        priority: -10
+        priority: -10,
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("st" /* STEP */));
+        }
       });
       this.hookMethod(App.Stats, "setPing", {
+        priority: -10,
         callback({ args }) {
           ninja.serverLatency = args[0];
-        },
-        priority: -10
+        }
       });
       app.onResize = window.eval(
         `(function ${app.onResize.toString().replace(`App.Scale=b`, `b=Ninja.settings.get("uiScale")||b,App.Scale=b`)})`

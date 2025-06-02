@@ -1,4 +1,4 @@
-import { Client, EventDispatcher, Game, MemberMenu, PlayerDropdown, PVPClient } from "lib";
+import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
 import { app, App, Layer } from "typings";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
@@ -64,39 +64,39 @@ export default new (class Ninja {
     this.ready = true;
     this.events = new EventDispatcher();
 
-    const _MemberMenu_onLogout = MemberMenu.prototype.onLogout;
-    MemberMenu.prototype.onLogout = function () {
-      _MemberMenu_onLogout.call(this);
-      ninja.mods.forEach((mod) => {
-        if (mod.details.noGuests && mod.loaded) {
-          mod.unload();
-        }
-      });
-    };
+    this.hookMethod(App.Layer, "memberMenu", {
+      priority: -10,
+      callback() {
+        ninja.mods.forEach((mod) => {
+          if (mod.details.noGuests && mod.loaded) mod.unload();
+        });
+      },
+    });
 
-    //TODO: rename and use .call:
-    //@ts-ignore
-    App.prototype.realInitGameMode = App.prototype.initGameMode;
-    App.prototype.initGameMode = function (data) {
-      this.realInitGameMode(data);
-      this.game.on(Game.MATCH_START, () =>
-        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_START))
-      );
-    };
-    //@ts-ignore
-    Game.prototype._endGame = Game.prototype.endGame;
-    Game.prototype.endGame = function (data) {
-      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, data));
-      return this._endGame(data);
-    };
+    this.hookMethod(app, "initGameMode", {
+      priority: 10,
+      callback() {
+        app.game.on(Game.MATCH_START, () =>
+          ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_START))
+        );
+        ninja.hookMethod(app.game, "playerJoined", {
+          priority: -10,
+          callback({ args }) {
+            ninja.events.dispatchEvent(
+              new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: args })
+            );
+          },
+        });
+        ninja.hookMethod(app.game, "endGame", {
+          priority: -10,
+          callback({ args }) {
+            ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_END, args[0]));
+          },
+        });
+      },
+    });
 
-    //@ts-ignore
-    Game.prototype._playerJoined = Game.prototype.playerJoined;
-    Game.prototype.playerJoined = function (data, extra) {
-      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: data }));
-      return this._playerJoined(data, extra);
-    };
-
+    //TODO: migrate to hooks
     //@ts-ignore
     PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
     PlayerDropdown.prototype.onMute = function () {
@@ -127,16 +127,16 @@ export default new (class Ninja {
     };
 
     this.hookMethod(app, "stepCallback", {
-      callback: () => {
-        this.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
-      },
       priority: -10,
+      callback() {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
+      },
     });
     this.hookMethod(App.Stats, "setPing", {
+      priority: -10,
       callback({ args }) {
         ninja.serverLatency = args[0];
       },
-      priority: -10,
     });
 
     app.onResize = window.eval(
