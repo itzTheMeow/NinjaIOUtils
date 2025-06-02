@@ -14,16 +14,16 @@ export class SoundEffectsMod extends Mod {
   }
 
   public load() {
-    App.Console.consoleInput.addListener(InputField.CHANGE, this.consoleListener);
+    App.Console.consoleInput.addListener(InputField.CHANGE, this.consoleTyped);
     super.load();
   }
   public unload() {
-    App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleListener);
+    App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleTyped);
     super.unload();
   }
 
-  public consoleTyped() {
+  private _consoleTyped() {
     AudioEffects.ButtonHover.audio.play();
   }
-  public consoleListener = this.consoleTyped.bind(this);
+  private consoleTyped = this._consoleTyped.bind(this);
 }
