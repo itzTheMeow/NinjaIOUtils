@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.4
+// @version      3.5
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.4",
+    ver: "3.5",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -4214,7 +4214,7 @@ ${name}`);
       super({
         id: "Spectate",
         name: "Spectate",
-        description: "Allows you to spectate non-1v1 games.",
+        description: "Adds a button to spectate non-1v1 games.",
         author: "Meow",
         icon: "cursor_def"
       });
@@ -4278,6 +4278,9 @@ ${name}`);
       app.game.hud.applySpecSetup();
       app.game.player.spec = true;
       app.game.readyToSpawn = true;
+      app.game.onCmdMessage = () => {
+        this.log("Chat is disabled while spectating!", config_default.Colors.red);
+      };
     }
     joinedGame = this._joinedGame.bind(this);
     _leftGame() {

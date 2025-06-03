@@ -2,13 +2,14 @@ import { Button, ServerListTableRow } from "lib";
 import { App, app, Layer, PIXI } from "typings";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
+import config from "../config";
 
 export class SpectateMod extends Mod {
   constructor() {
     super({
       id: "Spectate",
       name: "Spectate",
-      description: "Allows you to spectate non-1v1 games.",
+      description: "Adds a button to spectate non-1v1 games.",
       author: "Meow",
       icon: "cursor_def",
     });
@@ -81,6 +82,10 @@ export class SpectateMod extends Mod {
     app.game.player.spec = true;
     // make the game think the player has spawned
     app.game.readyToSpawn = true;
+    // block chat messages
+    app.game.onCmdMessage = () => {
+      this.log("Chat is disabled while spectating!", config.Colors.red);
+    };
   }
   private joinedGame = this._joinedGame.bind(this);
 
