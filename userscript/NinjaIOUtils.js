@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.6
+// @version      3.7
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.6",
+    ver: "3.7",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -4280,6 +4280,8 @@ ${name}`);
     }
     tableRowHook = this._tableRowHook.bind(this);
     _joinedGame() {
+      if (!this.currentGame)
+        return;
       app.game.hud.applySpecSetup();
       app.game.player.spec = true;
       app.game.readyToSpawn = true;

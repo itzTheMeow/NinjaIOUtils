@@ -1,5 +1,9 @@
 # Changelog
 
+v3.7
+
+- [Spectate] Fix spectator mode being enabled incorrectly when a new round starts.
+
 v3.6
 
 - [Spectate] Fixed spectate error when a new round is started.
