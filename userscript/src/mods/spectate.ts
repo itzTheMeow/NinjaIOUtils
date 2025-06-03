@@ -1,4 +1,5 @@
-import { app } from "typings";
+import { Button, ServerListTableRow } from "lib";
+import { App, app, Layer, PIXI } from "typings";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
 
@@ -9,26 +10,69 @@ export class SpectateMod extends Mod {
       name: "Spectate",
       description: "Allows you to spectate non-1v1 games.",
       author: "Meow",
-      icon: "face_shades",
+      icon: "cursor_def",
     });
   }
 
+  private currentGame: any[] | null = null;
+
   public load() {
-    Ninja.events.addListener(NinjaEvents.GAME_JOIN, this.joinedGame);
+    Ninja.events.addListener(NinjaEvents.GAMEPLAY_STOPPED, this.leftGame);
     Ninja.hookMethod(app, "onLayerDisconnect", {
       priority: -10,
       callback: this.exitedGame,
+    });
+    Ninja.hookMethod(ServerListTableRow.prototype, "addChild", {
+      priority: 10,
+      callback: this.tableRowHook,
+    });
+    Ninja.hookMethod(App.Layer, "onServerReject", {
+      priority: 10,
+      callback: this.serverRejectHook,
     });
     super.load();
   }
   public unload() {
     this.reset();
+    Ninja.events.removeListener(NinjaEvents.GAMEPLAY_STOPPED, this.leftGame);
     Ninja.unhookMethod(app.onLayerDisconnect, this.exitedGame);
+    Ninja.unhookMethod(ServerListTableRow.prototype.addChild, this.tableRowHook);
+    Ninja.unhookMethod(App.Layer.onServerReject, this.serverRejectHook);
     super.unload();
   }
   private reset() {
+    this.currentGame = null;
     Ninja.events.removeListener(NinjaEvents.GAME_JOIN, this.joinedGame);
   }
+  private serverRejectHook = this.reset.bind(this);
+
+  private _tableRowHook({ args }: { args: [Button] }) {
+    const joinButton = args[0];
+    // wait for join button to be added
+    if (joinButton && joinButton.id !== "join") return;
+
+    const specButton = new Button("__spec");
+    specButton.scale.x = specButton.scale.y = joinButton.scale.x;
+    specButton.setText("  ");
+    specButton.x = joinButton.x + joinButton.width + 4;
+    specButton.y = joinButton.y;
+    specButton.addListener(Button.BUTTON_RELEASED, () => {
+      App.Layer.once(Layer.Events.JOIN_GAME, (...args) => {
+        console.log(args);
+        this.currentGame = args;
+      });
+      Ninja.events.addListener(NinjaEvents.GAME_JOIN, this.joinedGame);
+      joinButton.onMouseUp(new MouseEvent(""));
+    });
+    const ico = new PIXI.Sprite(App.CombinedTextures[this.details.icon]);
+    ico.width = specButton.width;
+    ico.height = specButton.height;
+    ico.x = specButton.width * -0.2;
+    ico.y = specButton.height * 0.2;
+    specButton.addChild(ico);
+    joinButton.parent.addChild(specButton);
+  }
+  private tableRowHook = this._tableRowHook.bind(this);
 
   private _joinedGame() {
     app.game.hud.applySpecSetup();
@@ -36,7 +80,10 @@ export class SpectateMod extends Mod {
   private joinedGame = this._joinedGame.bind(this);
 
   // user is kicked
-  private _leftGame() {}
+  private _leftGame() {
+    // auto rejoin game
+    if (this.currentGame) App.Layer.emit(Layer.Events.JOIN_GAME, ...this.currentGame);
+  }
   private leftGame = this._leftGame.bind(this);
 
   // user leaves the game on purpose

@@ -19,6 +19,7 @@ export enum NinjaEvents {
   PLAYER_MUTED = "pm",
   PLAYER_UNMUTED = "pum",
   GAMEPLAY_START = "gameplayStarted",
+  /** When the game is left. */
   GAMEPLAY_STOPPED = "gameplayStopped",
 }
 
