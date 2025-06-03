@@ -1,14 +1,20 @@
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
 
-export class FPSDisplayMod extends Mod<{
+interface Config {
   showTime: boolean;
-}> {
-  private showTime: boolean = false;
+  gameTime: boolean;
+}
 
-  frameDisplay: HTMLDivElement;
-  lastUpdate = Date.now();
-  frames = 0;
+export class FPSDisplayMod extends Mod<Config> {
+  private showTime: boolean = false;
+  private gameTime: boolean = false;
+
+  /** Time of joining the current game. */
+  private joinedAt = Date.now();
+  private frameDisplay: HTMLDivElement;
+  private lastUpdate = Date.now();
+  private frames = 0;
 
   constructor() {
     super({
@@ -22,15 +28,23 @@ export class FPSDisplayMod extends Mod<{
     this.implementConfig(
       {
         showTime: false,
+        gameTime: false,
       },
       {
         showTime: "Show Current Time",
+        gameTime: "Show Game Time Elapsed",
       }
     );
   }
-  public override loadConfig(key: string): void {
-    //TODO: clean this up
-    this.showTime = this.config.get("showTime");
+  public override loadConfig(key: keyof Config) {
+    switch (key) {
+      case "showTime":
+        this.showTime = this.config.get("showTime");
+        break;
+      case "gameTime":
+        this.gameTime = this.config.get("gameTime");
+        break;
+    }
   }
   public load() {
     this.frameDisplay = document.createElement("div");
@@ -53,15 +67,17 @@ export class FPSDisplayMod extends Mod<{
     this.lastUpdate = Date.now();
     document.body.appendChild(this.frameDisplay);
     Ninja.events.addListener(NinjaEvents.STEP, this.updater);
+    Ninja.events.addListener(NinjaEvents.GAME_JOIN, this.onJoin);
     super.load();
   }
   public unload() {
     Ninja.events.removeListener(NinjaEvents.STEP, this.updater);
+    Ninja.events.removeListener(NinjaEvents.GAME_JOIN, this.onJoin);
     this.frameDisplay.remove();
     super.unload();
   }
 
-  public update() {
+  private update() {
     const now = Date.now(),
       elapsed = now - this.lastUpdate;
     if (elapsed < 500) {
@@ -69,12 +85,25 @@ export class FPSDisplayMod extends Mod<{
     } else {
       let fps = `${Math.round(this.frames / (elapsed / 1000))} FPS`;
       if (this.showTime) fps = `${new Date().toLocaleTimeString()} - ` + fps;
-      if (Ninja.inGame()) fps += ` - ${Math.round(Ninja.serverLatency || 0)}ms`;
+      if (Ninja.inGame()) {
+        fps += ` - ${Math.round(Ninja.serverLatency || 0)}ms`;
+        if (this.gameTime) {
+          const elapsed = (Date.now() - this.joinedAt) / 1000,
+            minutes = Math.floor(elapsed / 60),
+            seconds = Math.floor(elapsed % 60);
+          fps += ` - ${[minutes, seconds].map((t) => t.toString().padStart(2, "0")).join(":")}`;
+        }
+      }
       if (this.frameDisplay.innerText !== fps) this.frameDisplay.innerText = fps;
       this.frames = 0;
       this.lastUpdate = now;
       this.frameDisplay.style.display = "block";
     }
   }
-  public updater = this.update.bind(this);
+  private updater = this.update.bind(this);
+
+  private _onJoin() {
+    this.joinedAt = Date.now();
+  }
+  private onJoin = this._onJoin.bind(this);
 }

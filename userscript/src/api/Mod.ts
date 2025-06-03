@@ -56,7 +56,7 @@ export default class Mod<cfg = any> {
     Ninja.settings.set("enabledMods", [...list]);
     return add;
   }
-  public loadConfig(key: string): void {}
+  public loadConfig(key: keyof cfg): void {}
   public loadConfigAll(): void {
     const store = this.config.getStore(true);
     for (const key in store) {
@@ -68,7 +68,7 @@ export default class Mod<cfg = any> {
     this.log(`Loaded successfully!`);
     this.loaded = true;
   }
-  public configChanged(key: string) {
+  public configChanged(key: keyof cfg) {
     this.loadConfig(key);
   }
   public unload() {

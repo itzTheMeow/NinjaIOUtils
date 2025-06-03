@@ -4014,6 +4014,8 @@ ${name}`);
   // src/mods/fpsDisplay.ts
   var FPSDisplayMod = class extends Mod {
     showTime = false;
+    gameTime = false;
+    joinedAt = Date.now();
     frameDisplay;
     lastUpdate = Date.now();
     frames = 0;
@@ -4028,15 +4030,24 @@ ${name}`);
       });
       this.implementConfig(
         {
-          showTime: false
+          showTime: false,
+          gameTime: false
         },
         {
-          showTime: "Show Current Time"
+          showTime: "Show Current Time",
+          gameTime: "Show Game Time Elapsed"
         }
       );
     }
     loadConfig(key) {
-      this.showTime = this.config.get("showTime");
+      switch (key) {
+        case "showTime":
+          this.showTime = this.config.get("showTime");
+          break;
+        case "gameTime":
+          this.gameTime = this.config.get("gameTime");
+          break;
+      }
     }
     load() {
       this.frameDisplay = document.createElement("div");
@@ -4059,10 +4070,12 @@ ${name}`);
       this.lastUpdate = Date.now();
       document.body.appendChild(this.frameDisplay);
       Ninja_default.events.addListener("st" /* STEP */, this.updater);
+      Ninja_default.events.addListener("gj" /* GAME_JOIN */, this.onJoin);
       super.load();
     }
     unload() {
       Ninja_default.events.removeListener("st" /* STEP */, this.updater);
+      Ninja_default.events.removeListener("gj" /* GAME_JOIN */, this.onJoin);
       this.frameDisplay.remove();
       super.unload();
     }
@@ -4074,8 +4087,13 @@ ${name}`);
         let fps = `${Math.round(this.frames / (elapsed / 1e3))} FPS`;
         if (this.showTime)
           fps = `${new Date().toLocaleTimeString()} - ` + fps;
-        if (Ninja_default.inGame())
+        if (Ninja_default.inGame()) {
           fps += ` - ${Math.round(Ninja_default.serverLatency || 0)}ms`;
+          if (this.gameTime) {
+            const elapsed2 = (Date.now() - this.joinedAt) / 1e3, minutes = Math.floor(elapsed2 / 60), seconds = Math.floor(elapsed2 % 60);
+            fps += ` - ${[minutes, seconds].map((t) => t.toString().padStart(2, "0")).join(":")}`;
+          }
+        }
         if (this.frameDisplay.innerText !== fps)
           this.frameDisplay.innerText = fps;
         this.frames = 0;
@@ -4084,6 +4102,10 @@ ${name}`);
       }
     }
     updater = this.update.bind(this);
+    _onJoin() {
+      this.joinedAt = Date.now();
+    }
+    onJoin = this._onJoin.bind(this);
   };
 
   // src/mods/hotkeyMessages.ts
@@ -4238,12 +4260,10 @@ ${name}`);
       specButton.y = joinButton.y;
       specButton.addListener(Button.BUTTON_RELEASED, () => {
         App.Layer.once(Layer.Events.JOIN_GAME, (...args2) => {
-          console.log(args2);
           this.currentGame = args2;
         });
         Ninja_default.events.addListener("gj" /* GAME_JOIN */, this.joinedGame);
-        console.log(joinButton, joinButton.onMouseUp);
-        joinButton.onMouseUp(new MouseEvent(""));
+        joinButton.dispatchEvent(new CustomEvent(Button.BUTTON_RELEASED));
       });
       const ico = new PIXI.Sprite(App.CombinedTextures[this.details.icon]);
       ico.width = specButton.width;
@@ -4260,7 +4280,7 @@ ${name}`);
     joinedGame = this._joinedGame.bind(this);
     _leftGame() {
       if (this.currentGame)
-        App.Layer.emit(Layer.Events.JOIN_GAME, ...this.currentGame);
+        App.Layer.onServerListJoinGame(...this.currentGame);
     }
     leftGame = this._leftGame.bind(this);
     _exitedGame() {
