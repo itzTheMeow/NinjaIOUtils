@@ -4242,6 +4242,7 @@ ${name}`);
           this.currentGame = args2;
         });
         Ninja_default.events.addListener("gj" /* GAME_JOIN */, this.joinedGame);
+        console.log(joinButton, joinButton.onMouseUp);
         joinButton.onMouseUp(new MouseEvent(""));
       });
       const ico = new PIXI.Sprite(App.CombinedTextures[this.details.icon]);

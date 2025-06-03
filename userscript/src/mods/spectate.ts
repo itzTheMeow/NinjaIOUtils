@@ -14,7 +14,7 @@ export class SpectateMod extends Mod {
     });
   }
 
-  private currentGame: any[] | null = null;
+  private currentGame: [any, any, any, any] | null = null;
 
   public load() {
     Ninja.events.addListener(NinjaEvents.GAMEPLAY_STOPPED, this.leftGame);
@@ -57,12 +57,13 @@ export class SpectateMod extends Mod {
     specButton.x = joinButton.x + joinButton.width + 4;
     specButton.y = joinButton.y;
     specButton.addListener(Button.BUTTON_RELEASED, () => {
+      // listen for game details and store them
       App.Layer.once(Layer.Events.JOIN_GAME, (...args) => {
-        console.log(args);
-        this.currentGame = args;
+        this.currentGame = <any>args;
       });
       Ninja.events.addListener(NinjaEvents.GAME_JOIN, this.joinedGame);
-      joinButton.onMouseUp(new MouseEvent(""));
+      // click the join button
+      joinButton.dispatchEvent(<any>new CustomEvent(Button.BUTTON_RELEASED));
     });
     const ico = new PIXI.Sprite(App.CombinedTextures[this.details.icon]);
     ico.width = specButton.width;
@@ -82,7 +83,7 @@ export class SpectateMod extends Mod {
   // user is kicked
   private _leftGame() {
     // auto rejoin game
-    if (this.currentGame) App.Layer.emit(Layer.Events.JOIN_GAME, ...this.currentGame);
+    if (this.currentGame) App.Layer.onServerListJoinGame(...this.currentGame);
   }
   private leftGame = this._leftGame.bind(this);
 

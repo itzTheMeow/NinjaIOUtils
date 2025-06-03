@@ -3009,7 +3009,7 @@ declare module "lib" {
     onServerListingShow(): void;
     onServerListClose(): void;
     onServerListRefresh(): void;
-    onServerListJoinGame(a: any, b: any, c: any): Promise<void>;
+    onServerListJoinGame(a: any, b: any, c: any, d: any): Promise<void>;
     onJoinGameMode(): void;
     onServerCreationJoinGame(a: any, b: any, c: any): void;
     onCustomizationShow(): void;
