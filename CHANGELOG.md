@@ -3,6 +3,9 @@
 v3.5 (upcoming)
 
 - [FPSDisplay] Fixed latency having too many decimals.
+- [FPSDisplay] Added game time elapsed to settings.
+- [FPSDisplay] Refactored the mod a bit to work with the new system.
+- New Mod: `Spectate`
 
 v3.4
 

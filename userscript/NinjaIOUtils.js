@@ -2960,7 +2960,7 @@
         }
       });
       ninja.hookMethod(Game.prototype, "playerJoined", {
-        priority: -10,
+        priority: 10,
         callback({ args }) {
           ninja.events.dispatchEvent(new CustomEvent("pj" /* PLAYER_JOINED */, { detail: args[0] }));
           if (args[0]?.sid == app.game.sessionId)
@@ -4276,6 +4276,8 @@ ${name}`);
     tableRowHook = this._tableRowHook.bind(this);
     _joinedGame() {
       app.game.hud.applySpecSetup();
+      app.game.player.spec = true;
+      app.game.readyToSpawn = true;
     }
     joinedGame = this._joinedGame.bind(this);
     _leftGame() {

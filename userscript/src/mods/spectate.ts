@@ -76,7 +76,11 @@ export class SpectateMod extends Mod {
   private tableRowHook = this._tableRowHook.bind(this);
 
   private _joinedGame() {
+    // enable spectator UI
     app.game.hud.applySpecSetup();
+    app.game.player.spec = true;
+    // make the game think the player has spawned
+    app.game.readyToSpawn = true;
   }
   private joinedGame = this._joinedGame.bind(this);
 

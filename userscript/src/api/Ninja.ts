@@ -79,7 +79,7 @@ export default new (class Ninja {
       },
     });
     ninja.hookMethod(Game.prototype, "playerJoined", {
-      priority: -10,
+      priority: 10,
       callback({ args }) {
         ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: args[0] }));
         if (args[0]?.sid == app.game.sessionId)
