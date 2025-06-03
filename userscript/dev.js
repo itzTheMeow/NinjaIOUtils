@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.5
+// @version      3.6
 // ==/UserScript==
 
 /*

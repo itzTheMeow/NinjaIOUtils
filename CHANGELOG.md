@@ -1,6 +1,10 @@
 # Changelog
 
-v3.5 (upcoming)
+v3.6
+
+- [Spectate] Fixed spectate error when a new round is started.
+
+v3.5
 
 - [FPSDisplay] Fixed latency having too many decimals.
 - [FPSDisplay] Added game time elapsed to settings.

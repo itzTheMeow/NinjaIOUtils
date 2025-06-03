@@ -1,4 +1,4 @@
-import { Button, ServerListTableRow } from "lib";
+import { Button, Game, ServerListTableRow } from "lib";
 import { App, app, Layer, PIXI } from "typings";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
@@ -31,6 +31,10 @@ export class SpectateMod extends Mod {
       priority: 10,
       callback: this.serverRejectHook,
     });
+    Ninja.hookMethod(Game.prototype, "onStartNewGame", {
+      priority: 10,
+      callback: this.joinedGame,
+    });
     super.load();
   }
   public unload() {
@@ -39,6 +43,7 @@ export class SpectateMod extends Mod {
     Ninja.unhookMethod(app.onLayerDisconnect, this.exitedGame);
     Ninja.unhookMethod(ServerListTableRow.prototype.addChild, this.tableRowHook);
     Ninja.unhookMethod(App.Layer.onServerReject, this.serverRejectHook);
+    Ninja.unhookMethod(Game.prototype.onStartNewGame, this.joinedGame);
     super.unload();
   }
   private reset() {

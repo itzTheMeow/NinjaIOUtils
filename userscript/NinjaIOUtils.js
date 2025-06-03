@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.5
+// @version      3.6
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.5",
+    ver: "3.6",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -4234,6 +4234,10 @@ ${name}`);
         priority: 10,
         callback: this.serverRejectHook
       });
+      Ninja_default.hookMethod(Game.prototype, "onStartNewGame", {
+        priority: 10,
+        callback: this.joinedGame
+      });
       super.load();
     }
     unload() {
@@ -4242,6 +4246,7 @@ ${name}`);
       Ninja_default.unhookMethod(app.onLayerDisconnect, this.exitedGame);
       Ninja_default.unhookMethod(ServerListTableRow.prototype.addChild, this.tableRowHook);
       Ninja_default.unhookMethod(App.Layer.onServerReject, this.serverRejectHook);
+      Ninja_default.unhookMethod(Game.prototype.onStartNewGame, this.joinedGame);
       super.unload();
     }
     reset() {
