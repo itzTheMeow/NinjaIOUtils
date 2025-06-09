@@ -2,6 +2,7 @@
 
 v3.8
 
+- Fixed mod menu button icon scale.
 - Fixed content menu not hiding mod menu.
 - [Spectate] Fixed second spectate button appearing on 1v1 games.
 - [UIURLS] Added support for new content menu.

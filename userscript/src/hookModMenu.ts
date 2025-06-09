@@ -130,7 +130,6 @@ export default function hookModMenu() {
     App.Layer.emit(Layer.Events.HIDE_MENU);
     app.onResize();
   });
-  utilsButton.icon.scale.x = utilsButton.icon.scale.y = 0.7;
   menu.container.addChild(utilsButton);
 
   class ModsMenu extends Feature {
@@ -318,19 +317,17 @@ export default function hookModMenu() {
       if (mod.isInstalled() && mod.config) {
         const button = new Button("settings");
         button.scale.x = button.scale.y = 0.8;
-        button.setText("");
+        button.setText("  ");
         button.x = pl -= button.width + 8;
         button.y = pt;
-        button.width = button.height;
         button.addListener(Button.BUTTON_RELEASED, () => {
           this.showConfig(mod);
         });
         const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
-        ico.width = (button.width - 4) * button.scale.y;
-        ico.height = (button.height - 4) * button.scale.x;
-        // no idea why these values work the way they do
-        ico.x = button.width / -3.5;
-        ico.y = button.height / 8;
+        ico.width = button.width;
+        ico.height = button.height;
+        ico.x = button.width * -0.2;
+        ico.y = button.height * 0.1;
         button.addChild(ico);
         container.addChild(button);
       }
