@@ -1448,6 +1448,14 @@ declare module "lib" {
     const WEAPONS_2: string;
     export { WEAPONS_2 as WEAPONS };
   }
+  export class ContentMenu extends Feature {
+    weaponButton: PIXI.Graphics;
+    mapsButton: PIXI.Graphics;
+    display: string;
+  }
+  export namespace ContentMenu {
+    export const MAPS: string;
+  }
   export class InputField extends PIXI.Container<PIXI.DisplayObject> {
     constructor(id: any, noMouse?: boolean, fontSize?: number, bitmap?: boolean);
     id: any;
@@ -2957,7 +2965,9 @@ declare module "lib" {
       | GuestProfileMenu
       | RewardsMenu
       | PVPResultMenu
+      | ContentMenu
     )[];
+    contentMenu: ContentMenu;
     cursor: PIXI.Sprite;
     inputOverlay: PIXI.Sprite;
     onKeyDownListener: any;
@@ -3152,6 +3162,7 @@ declare module "lib" {
       export const REWARDS_CLAIMED: any;
       export const REWARDS_CANCEL: any;
       export const PVP_RESULT_CANCEL: any;
+      export const CONTENT_ACCESS: any;
     }
   }
   export namespace Protocol {

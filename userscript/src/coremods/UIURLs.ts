@@ -1,4 +1,12 @@
-import { APIClient, Button, CustomizationMenu, ProfileMenu, Protocol, SettingsPanel } from "lib";
+import {
+  APIClient,
+  Button,
+  ContentMenu,
+  CustomizationMenu,
+  ProfileMenu,
+  Protocol,
+  SettingsPanel,
+} from "lib";
 import { App, Layer, app } from "typings";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -19,6 +27,7 @@ enum HashPaths {
   register = "register",
   settings = "settings",
   shop = "shop",
+  content = "content",
 }
 
 export class UIURLMod extends Mod {
@@ -51,6 +60,10 @@ export class UIURLMod extends Mod {
         [SettingsPanel.Tabs.GRAPHICS]: "graphics",
         [SettingsPanel.Tabs.SOUND]: "sound",
         [SettingsPanel.Tabs.TEXTURES || "tex"]: "textures",
+      },
+      ContentPaths = {
+        [ContentMenu.MAPS]: "maps",
+        [CustomizationMenu.WEAPONS]: "weapons",
       };
 
     if (!window.location.hash.substring(1)) window.location.hash = "/";
@@ -86,6 +99,16 @@ export class UIURLMod extends Mod {
     menu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash(HashPaths.players));
     // Clans
     menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash(HashPaths.clans));
+    // Content
+    menu.on(Layer.Events.CONTENT_ACCESS, () =>
+      this.switchHash(HashPaths.content, App.Layer.contentMenu.display)
+    );
+    App.Layer.contentMenu.mapsButton.on("mousedown", () => {
+      this.switchHash(HashPaths.content, ContentPaths[ContentMenu.MAPS]);
+    });
+    App.Layer.contentMenu.weaponButton.on("mousedown", () => {
+      this.switchHash(HashPaths.content, ContentPaths[CustomizationMenu.WEAPONS]);
+    });
     // Settings
     menu.on(Layer.Events.SETTINGS_ACCESS, () =>
       this.switchHash(
@@ -136,6 +159,21 @@ export class UIURLMod extends Mod {
           menu.emit(Layer.Events.SETTINGS_ACCESS);
           const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
           if (settPath) app.menu.settingsPanel.displayTab(settPath[0]);
+          break;
+        }
+        case HashPaths.content: {
+          menu.emit(Layer.Events.CONTENT_ACCESS);
+          const conPath = Object.entries(ContentPaths).find((p) => p[1] == curPath[1]);
+          if (conPath) {
+            switch (conPath[0]) {
+              case CustomizationMenu.WEAPONS:
+                App.Layer.contentMenu.weaponButton.emit("mousedown", <any>{});
+                break;
+              case ContentMenu.MAPS:
+                App.Layer.contentMenu.mapsButton.emit("mousedown", <any>{});
+                break;
+            }
+          }
           break;
         }
         case HashPaths.login: {

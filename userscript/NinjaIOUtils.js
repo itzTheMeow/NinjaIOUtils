@@ -2909,7 +2909,8 @@
       "serverCreationMenu",
       "renameMenu",
       "logoutMenu",
-      "guestProfileMenu"
+      "guestProfileMenu",
+      "contentMenu"
     ].forEach((e) => App.Layer[e].hides.push(modsMenu));
     App.Layer.features.push(modsMenu);
   }
@@ -3605,6 +3606,9 @@
         [SettingsPanel.Tabs.GRAPHICS]: "graphics",
         [SettingsPanel.Tabs.SOUND]: "sound",
         [SettingsPanel.Tabs.TEXTURES || "tex"]: "textures"
+      }, ContentPaths = {
+        [ContentMenu.MAPS]: "maps",
+        [CustomizationMenu.WEAPONS]: "weapons"
       };
       if (!window.location.hash.substring(1))
         window.location.hash = "/";
@@ -3638,6 +3642,16 @@
       menu.on(Layer.Events.RANKING_ACCESS, () => this.switchHash("ranks" /* ranks */));
       menu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash("players" /* players */));
       menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash("clans" /* clans */));
+      menu.on(
+        Layer.Events.CONTENT_ACCESS,
+        () => this.switchHash("content" /* content */, App.Layer.contentMenu.display)
+      );
+      App.Layer.contentMenu.mapsButton.on("mousedown", () => {
+        this.switchHash("content" /* content */, ContentPaths[ContentMenu.MAPS]);
+      });
+      App.Layer.contentMenu.weaponButton.on("mousedown", () => {
+        this.switchHash("content" /* content */, ContentPaths[CustomizationMenu.WEAPONS]);
+      });
       menu.on(
         Layer.Events.SETTINGS_ACCESS,
         () => this.switchHash(
@@ -3686,6 +3700,21 @@
             const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
             if (settPath)
               app.menu.settingsPanel.displayTab(settPath[0]);
+            break;
+          }
+          case "content" /* content */: {
+            menu.emit(Layer.Events.CONTENT_ACCESS);
+            const conPath = Object.entries(ContentPaths).find((p) => p[1] == curPath[1]);
+            if (conPath) {
+              switch (conPath[0]) {
+                case CustomizationMenu.WEAPONS:
+                  App.Layer.contentMenu.weaponButton.emit("mousedown");
+                  break;
+                case ContentMenu.MAPS:
+                  App.Layer.contentMenu.mapsButton.emit("mousedown");
+                  break;
+              }
+            }
             break;
           }
           case "login" /* login */: {

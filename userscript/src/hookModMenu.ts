@@ -601,6 +601,7 @@ export default function hookModMenu() {
     "renameMenu",
     "logoutMenu",
     "guestProfileMenu",
+    "contentMenu",
   ].forEach((e) => App.Layer[e].hides.push(modsMenu));
   App.Layer.features.push(<any>modsMenu);
 }

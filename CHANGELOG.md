@@ -1,5 +1,10 @@
 # Changelog
 
+v3.8
+
+- Fixed content menu not hiding mod menu.
+- [UIURLS] Added support for new content menu.
+
 v3.7
 
 - [Spectate] Fix spectator mode being enabled incorrectly when a new round starts.
