@@ -55,7 +55,8 @@ export class SpectateMod extends Mod {
   private _tableRowHook({ args }: { args: [Button] }) {
     const joinButton = args[0];
     // wait for join button to be added
-    if (joinButton && joinButton.id !== "join") return;
+    if (!joinButton || joinButton.id !== "join" || (<any>joinButton.children[0])._text !== "Join")
+      return;
 
     const specButton = new Button("__spec");
     specButton.scale.x = specButton.scale.y = joinButton.scale.x;

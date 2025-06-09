@@ -3708,10 +3708,10 @@
             if (conPath) {
               switch (conPath[0]) {
                 case CustomizationMenu.WEAPONS:
-                  App.Layer.contentMenu.weaponButton.emit("mousedown");
+                  App.Layer.contentMenu.weaponButton.emit("mousedown", {});
                   break;
                 case ContentMenu.MAPS:
-                  App.Layer.contentMenu.mapsButton.emit("mousedown");
+                  App.Layer.contentMenu.mapsButton.emit("mousedown", {});
                   break;
               }
             }
@@ -4285,7 +4285,7 @@ ${name}`);
     serverRejectHook = this.reset.bind(this);
     _tableRowHook({ args }) {
       const joinButton = args[0];
-      if (joinButton && joinButton.id !== "join")
+      if (!joinButton || joinButton.id !== "join" || joinButton.children[0]._text !== "Join")
         return;
       const specButton = new Button("__spec");
       specButton.scale.x = specButton.scale.y = joinButton.scale.x;
