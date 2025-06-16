@@ -1,5 +1,9 @@
 # Changelog
 
+v3.9
+
+- Removed spectate mod. (feature was added to base game)
+
 v3.8
 
 - Fixed mod menu button icon scale.

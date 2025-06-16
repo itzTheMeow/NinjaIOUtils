@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.8
+// @version      3.9
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.8",
+    ver: "3.9",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -3842,7 +3842,6 @@ ${name}`);
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
-    SpectateMod: () => SpectateMod,
     StatTrackerMod: () => StatTrackerMod,
     XPStatsMod: () => XPStatsMod
   });
@@ -4231,101 +4230,6 @@ ${name}`);
       AudioEffects.ButtonHover.audio.play();
     }
     consoleTyped = this._consoleTyped.bind(this);
-  };
-
-  // src/mods/spectate.ts
-  
-  
-  var SpectateMod = class extends Mod {
-    constructor() {
-      super({
-        id: "Spectate",
-        name: "Spectate",
-        description: "Adds a button to spectate non-1v1 games.",
-        author: "Meow",
-        icon: "cursor_def"
-      });
-    }
-    currentGame = null;
-    load() {
-      Ninja_default.events.addListener("gameplayStopped" /* GAMEPLAY_STOPPED */, this.leftGame);
-      Ninja_default.hookMethod(app, "onLayerDisconnect", {
-        priority: -10,
-        callback: this.exitedGame
-      });
-      Ninja_default.hookMethod(ServerListTableRow.prototype, "addChild", {
-        priority: 10,
-        callback: this.tableRowHook
-      });
-      Ninja_default.hookMethod(App.Layer, "onServerReject", {
-        priority: 10,
-        callback: this.serverRejectHook
-      });
-      Ninja_default.hookMethod(Game.prototype, "onStartNewGame", {
-        priority: 10,
-        callback: this.joinedGame
-      });
-      super.load();
-    }
-    unload() {
-      this.reset();
-      Ninja_default.events.removeListener("gameplayStopped" /* GAMEPLAY_STOPPED */, this.leftGame);
-      Ninja_default.unhookMethod(app.onLayerDisconnect, this.exitedGame);
-      Ninja_default.unhookMethod(ServerListTableRow.prototype.addChild, this.tableRowHook);
-      Ninja_default.unhookMethod(App.Layer.onServerReject, this.serverRejectHook);
-      Ninja_default.unhookMethod(Game.prototype.onStartNewGame, this.joinedGame);
-      super.unload();
-    }
-    reset() {
-      this.currentGame = null;
-      Ninja_default.events.removeListener("gj" /* GAME_JOIN */, this.joinedGame);
-    }
-    serverRejectHook = this.reset.bind(this);
-    _tableRowHook({ args }) {
-      const joinButton = args[0];
-      if (!joinButton || joinButton.id !== "join" || joinButton.children[0]._text !== "Join")
-        return;
-      const specButton = new Button("__spec");
-      specButton.scale.x = specButton.scale.y = joinButton.scale.x;
-      specButton.setText("  ");
-      specButton.x = joinButton.x + joinButton.width + 4;
-      specButton.y = joinButton.y;
-      specButton.addListener(Button.BUTTON_RELEASED, () => {
-        App.Layer.once(Layer.Events.JOIN_GAME, (...args2) => {
-          this.currentGame = args2;
-        });
-        Ninja_default.events.addListener("gj" /* GAME_JOIN */, this.joinedGame);
-        joinButton.dispatchEvent(new CustomEvent(Button.BUTTON_RELEASED));
-      });
-      const ico = new PIXI.Sprite(App.CombinedTextures[this.details.icon]);
-      ico.width = specButton.width;
-      ico.height = specButton.height;
-      ico.x = specButton.width * -0.2;
-      ico.y = specButton.height * 0.2;
-      specButton.addChild(ico);
-      joinButton.parent.addChild(specButton);
-    }
-    tableRowHook = this._tableRowHook.bind(this);
-    _joinedGame() {
-      if (!this.currentGame)
-        return;
-      app.game.hud.applySpecSetup();
-      app.game.player.spec = true;
-      app.game.readyToSpawn = true;
-      app.game.onCmdMessage = () => {
-        this.log("Chat is disabled while spectating!", config_default.Colors.red);
-      };
-    }
-    joinedGame = this._joinedGame.bind(this);
-    _leftGame() {
-      if (this.currentGame)
-        App.Layer.onServerListJoinGame(...this.currentGame);
-    }
-    leftGame = this._leftGame.bind(this);
-    _exitedGame() {
-      this.reset();
-    }
-    exitedGame = this._exitedGame.bind(this);
   };
 
   // src/mods/statTracker.ts
