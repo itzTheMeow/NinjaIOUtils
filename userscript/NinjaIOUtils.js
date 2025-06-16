@@ -2655,7 +2655,7 @@
           }
           if (mod.details.noGuests) {
             const noGuestsLabel = new PIXI.Text({
-              text: "Cannot be used for guests",
+              text: "Cannot be used by guests",
               style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
                 fontSize: 12,
                 fill: "#ffffff"
