@@ -2921,10 +2921,13 @@
     }
     getStore(fillDefaults = false) {
       const store = JSON.parse(localStorage.getItem(this.key) || "{}");
-      if (fillDefaults)
-        return { ...this.defaults, ...store };
-      else
+      if (!fillDefaults)
         return store;
+      const cleaned = Object.fromEntries(
+        Object.entries(store).filter(([k]) => k in this.defaults)
+      );
+      localStorage.setItem(this.key, JSON.stringify(cleaned));
+      return { ...this.defaults, ...cleaned };
     }
     get(key) {
       return this.getStore()[key] ?? this.defaults[key];
@@ -3855,8 +3858,8 @@ ${name}`);
     levelLimit = 15;
     enableLogs = true;
     enableRemoveBubble = true;
-    doNotMuteGuests = true;
     ignoreDuels = false;
+    doNotMuteSpectators = false;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
     skipPlayersJoinedCheck = false;
@@ -3880,8 +3883,8 @@ ${name}`);
           muteBelowLevel: 15,
           enableLogs: true,
           enableRemoveBubble: true,
-          doNotMuteGuests: true,
           ignoreDuels: false,
+          doNotMuteSpectators: false,
           permanentMuteList: []
         },
         {
@@ -3889,8 +3892,8 @@ ${name}`);
           muteBelowLevel: "Level limit",
           enableLogs: "Enable muting logs in chat",
           enableRemoveBubble: "Enable removing chat bubble above muted players",
-          doNotMuteGuests: "Do not add guests to permanent mute list when muting manually",
-          ignoreDuels: "Do not mute players and spectators in 1v1",
+          ignoreDuels: "Do not mute anyone in 1v1",
+          doNotMuteSpectators: "Do not mute spectators",
           permanentMuteList: {
             name: "Permanent mute list",
             removableElements: true
@@ -3917,9 +3920,6 @@ ${name}`);
             this.restoreChatBubble();
           }
           break;
-        case "doNotMuteGuests":
-          this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-          break;
         case "ignoreDuels":
           this.ignoreDuels = this.config.get("ignoreDuels");
           if (this.ignoreDuels) {
@@ -3928,6 +3928,9 @@ ${name}`);
             Ninja_default.events.removeListener("gs" /* GAME_START */, this.onGameStartBound);
             this.skipPlayersJoinedCheck = false;
           }
+          break;
+        case "doNotMuteSpectators":
+          this.doNotMuteSpectators = this.config.get("doNotMuteSpectators");
           break;
         case "permanentMuteList":
           const permMuteList = this.config.get("permanentMuteList");
@@ -3960,15 +3963,14 @@ ${name}`);
       if (this.skipPlayersJoinedCheck)
         return;
       const player = e.data.detail;
+      if (this.doNotMuteSpectators && player.spec)
+        return;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
       const player = e.data.detail;
-      if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
-        return;
-      }
       if (!this.permanentMuteList.includes(player.name)) {
         this.permanentMuteList.push(player.name);
         this.config.set("permanentMuteList", this.permanentMuteList);
