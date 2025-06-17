@@ -36,6 +36,8 @@ export interface NinjaHookPayload {
   args: any[];
   /** Current return value of the hook. */
   returnValue: any;
+  /** Context of the original function */
+  scope?: any;
 }
 export interface NinjaHook {
   /**
@@ -93,35 +95,29 @@ export default new (class Ninja {
       },
     });
 
-    //TODO: migrate to hooks
-    //@ts-ignore
-    PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
-    PlayerDropdown.prototype.onMute = function () {
-      ninja.events.dispatchEvent(
-        new CustomEvent(NinjaEvents.PLAYER_MUTED, {
-          detail: { sid: this.target.sid, name: this.target.name },
-        })
-      );
-      return this._onMute();
-    };
+    this.hookMethod(PlayerDropdown.prototype, "onMute", {
+      priority: 10,
+      callback({ scope }) {
+        console.log(scope);
+        const target = scope.target;
+        ninja.events.dispatchEvent( new CustomEvent(NinjaEvents.PLAYER_MUTED, {detail: { sid: target.sid, name: target.name } }));
+      },
+    });
 
-    //@ts-ignore
-    PlayerDropdown.prototype._onUnmute = PlayerDropdown.prototype.onUnmute;
-    PlayerDropdown.prototype.onUnmute = function () {
-      ninja.events.dispatchEvent(
-        new CustomEvent(NinjaEvents.PLAYER_UNMUTED, {
-          detail: { name: this.target.name },
-        })
-      );
-      return this._onUnmute();
-    };
+    this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
+      priority: 10,
+      callback({ scope }) {
+        const target = scope.target;
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_UNMUTED, { detail: { name: target.name } }));
+      },
+    });
 
-    //@ts-ignore
-    App.prototype.realLeaveGame = App.prototype.leaveGame;
-    App.prototype.leaveGame = async function () {
-      await this.realLeaveGame();
-      ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED));
-    };
+    this.hookMethod(App.prototype, "leaveGame", {
+      priority: 10,
+      callback() {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED));
+      },
+    });
 
     this.hookMethod(app, "stepCallback", {
       priority: -10,
@@ -248,14 +244,14 @@ export default new (class Ninja {
     let returnValue: any = void 0;
     // run "lower" priority first
     for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
-      const res = callback({ args, returnValue });
+      const res = callback.call(scope, { args, returnValue, scope });
       if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
     }
     // run original function and catch the return value if needed
     const response = (<any>hook.original).call(scope, ...args);
     if (returnValue === void 0) returnValue = response;
     for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
-      const res = callback({ args, returnValue });
+      const res = callback.call(scope, { args, returnValue, scope });
       if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
     }
     return returnValue;

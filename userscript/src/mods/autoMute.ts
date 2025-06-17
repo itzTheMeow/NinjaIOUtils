@@ -167,7 +167,7 @@ export class AutoMuteMod extends Mod<{
 
   private onGameplayStopped(): void {
     if (this.ignoreDuels) {
-      Ninja.events.addListener("gs", this.onGameStartBound);
+      Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
     }
     Game.Muted.length = 0;
   }

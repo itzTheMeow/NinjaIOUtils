@@ -3,12 +3,8 @@ export default class Settings<Store extends Record<string, any> = { _: "" }> {
 
   public getStore(fillDefaults = false): Store {
     const store = JSON.parse(localStorage.getItem(this.key) || "{}");
-    if (!fillDefaults) return store;
-    const cleaned = Object.fromEntries(
-      Object.entries(store).filter(([k]) => k in this.defaults)
-    );
-    localStorage.setItem(this.key, JSON.stringify(cleaned));
-    return { ...this.defaults, ...cleaned };
+    if (fillDefaults) return { ...this.defaults, ...store };
+    else return store;
   }
   public get<K extends keyof Store>(key: K): Store[K] {
     return this.getStore()[key] ?? this.defaults[key];

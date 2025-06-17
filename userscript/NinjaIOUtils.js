@@ -2921,13 +2921,10 @@
     }
     getStore(fillDefaults = false) {
       const store = JSON.parse(localStorage.getItem(this.key) || "{}");
-      if (!fillDefaults)
+      if (fillDefaults)
+        return { ...this.defaults, ...store };
+      else
         return store;
-      const cleaned = Object.fromEntries(
-        Object.entries(store).filter(([k]) => k in this.defaults)
-      );
-      localStorage.setItem(this.key, JSON.stringify(cleaned));
-      return { ...this.defaults, ...cleaned };
     }
     get(key) {
       return this.getStore()[key] ?? this.defaults[key];
@@ -2975,29 +2972,27 @@
           ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, args[0]));
         }
       });
-      PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
-      PlayerDropdown.prototype.onMute = function() {
-        ninja.events.dispatchEvent(
-          new CustomEvent("pm" /* PLAYER_MUTED */, {
-            detail: { sid: this.target.sid, name: this.target.name }
-          })
-        );
-        return this._onMute();
-      };
-      PlayerDropdown.prototype._onUnmute = PlayerDropdown.prototype.onUnmute;
-      PlayerDropdown.prototype.onUnmute = function() {
-        ninja.events.dispatchEvent(
-          new CustomEvent("pum" /* PLAYER_UNMUTED */, {
-            detail: { name: this.target.name }
-          })
-        );
-        return this._onUnmute();
-      };
-      App.prototype.realLeaveGame = App.prototype.leaveGame;
-      App.prototype.leaveGame = async function() {
-        await this.realLeaveGame();
-        ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
-      };
+      this.hookMethod(PlayerDropdown.prototype, "onMute", {
+        priority: 10,
+        callback({ scope }) {
+          console.log(scope);
+          const target = scope.target;
+          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: target.sid, name: target.name } }));
+        }
+      });
+      this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
+        priority: 10,
+        callback({ scope }) {
+          const target = scope.target;
+          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, { detail: { name: target.name } }));
+        }
+      });
+      this.hookMethod(App.prototype, "leaveGame", {
+        priority: 10,
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
+        }
+      });
       this.hookMethod(app, "stepCallback", {
         priority: -10,
         callback() {
@@ -3107,7 +3102,7 @@
       const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
       let returnValue = void 0;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
-        const res = callback({ args, returnValue });
+        const res = callback.call(scope, { args, returnValue, scope });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
@@ -3115,7 +3110,7 @@
       if (returnValue === void 0)
         returnValue = response;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
-        const res = callback({ args, returnValue });
+        const res = callback.call(scope, { args, returnValue, scope });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
@@ -3994,7 +3989,7 @@ ${name}`);
     }
     onGameplayStopped() {
       if (this.ignoreDuels) {
-        Ninja_default.events.addListener("gs", this.onGameStartBound);
+        Ninja_default.events.addListener("gs" /* GAME_START */, this.onGameStartBound);
       }
       Game.Muted.length = 0;
     }
