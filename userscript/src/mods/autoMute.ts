@@ -9,16 +9,16 @@ export class AutoMuteMod extends Mod<{
   muteBelowLevel: number;
   enableLogs: boolean;
   enableRemoveBubble: boolean;
-  doNotMuteGuests: boolean;
   ignoreDuels: boolean;
+  doNotMuteSpectators: boolean;
   permanentMuteList: string[];
 }> {
   private muteEnabled: boolean = true;
   private levelLimit: number = 15;
   private enableLogs: boolean = true;
   private enableRemoveBubble: boolean = true;
-  private doNotMuteGuests: boolean = true;
   private ignoreDuels: boolean = false;
+  private doNotMuteSpectators: boolean = false;
   private permanentMuteList: string[] = [];
   private originalDisplayChatBubble: (() => void) | null = null;
   private skipPlayersJoinedCheck: boolean = false;
@@ -46,8 +46,8 @@ export class AutoMuteMod extends Mod<{
         muteBelowLevel: 15,
         enableLogs: true,
         enableRemoveBubble: true,
-        doNotMuteGuests: true,
         ignoreDuels: false,
+        doNotMuteSpectators: false,
         permanentMuteList: [],
       },
       {
@@ -55,8 +55,8 @@ export class AutoMuteMod extends Mod<{
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
         enableRemoveBubble: "Enable removing chat bubble above muted players",
-        doNotMuteGuests: "Do not add guests to permanent mute list when muting manually",
-        ignoreDuels: "Do not mute players and spectators in 1v1",
+        ignoreDuels: "Do not mute anyone in 1v1",
+        doNotMuteSpectators: "Do not mute spectators",
         permanentMuteList: {
           name: "Permanent mute list",
           removableElements: true,
@@ -84,9 +84,6 @@ export class AutoMuteMod extends Mod<{
           this.restoreChatBubble();
         }
         break;
-      case "doNotMuteGuests":
-        this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-        break;
       case "ignoreDuels":
         this.ignoreDuels = this.config.get("ignoreDuels");
         if (this.ignoreDuels) {
@@ -96,11 +93,13 @@ export class AutoMuteMod extends Mod<{
           this.skipPlayersJoinedCheck = false;
         }
         break;
+      case "doNotMuteSpectators":
+        this.doNotMuteSpectators = this.config.get("doNotMuteSpectators");
+        break;
       case "permanentMuteList":
         const permMuteList = this.config.get("permanentMuteList");
         this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
         break;
-      //TODO: default remove setting from ls
     }
   }
 
@@ -135,6 +134,7 @@ export class AutoMuteMod extends Mod<{
   private onPlayerJoined(e: any): void {
     if (this.skipPlayersJoinedCheck) return;
     const player = e.data.detail;
+    if (this.doNotMuteSpectators && player.spec) return;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
     }
@@ -142,9 +142,6 @@ export class AutoMuteMod extends Mod<{
 
   private onManualMute(e: any): void {
     const player = e.data.detail;
-    if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
-      return;
-    }
     if (!this.permanentMuteList.includes(player.name)) {
       this.permanentMuteList.push(player.name);
       this.config.set("permanentMuteList", this.permanentMuteList);
@@ -170,7 +167,7 @@ export class AutoMuteMod extends Mod<{
 
   private onGameplayStopped(): void {
     if (this.ignoreDuels) {
-      Ninja.events.addListener("gs", this.onGameStartBound);
+      Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
     }
     Game.Muted.length = 0;
   }

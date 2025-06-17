@@ -2655,7 +2655,7 @@
           }
           if (mod.details.noGuests) {
             const noGuestsLabel = new PIXI.Text({
-              text: "Cannot be used for guests",
+              text: "Cannot be used by guests",
               style: cloneTextStyle(FontStyle.SmallMenuTextYellow, {
                 fontSize: 12,
                 fill: "#ffffff"
@@ -2972,29 +2972,24 @@
           ninja.events.dispatchEvent(new CustomEvent("ge" /* GAME_END */, args[0]));
         }
       });
-      PlayerDropdown.prototype._onMute = PlayerDropdown.prototype.onMute;
-      PlayerDropdown.prototype.onMute = function() {
-        ninja.events.dispatchEvent(
-          new CustomEvent("pm" /* PLAYER_MUTED */, {
-            detail: { sid: this.target.sid, name: this.target.name }
-          })
-        );
-        return this._onMute();
-      };
-      PlayerDropdown.prototype._onUnmute = PlayerDropdown.prototype.onUnmute;
-      PlayerDropdown.prototype.onUnmute = function() {
-        ninja.events.dispatchEvent(
-          new CustomEvent("pum" /* PLAYER_UNMUTED */, {
-            detail: { name: this.target.name }
-          })
-        );
-        return this._onUnmute();
-      };
-      App.prototype.realLeaveGame = App.prototype.leaveGame;
-      App.prototype.leaveGame = async function() {
-        await this.realLeaveGame();
-        ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
-      };
+      this.hookMethod(PlayerDropdown.prototype, "onMute", {
+        priority: 10,
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: this.target.sid, name: this.target.name } }));
+        }
+      });
+      this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
+        priority: 10,
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, { detail: { name: this.target.name } }));
+        }
+      });
+      this.hookMethod(App.prototype, "leaveGame", {
+        priority: 10,
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */));
+        }
+      });
       this.hookMethod(app, "stepCallback", {
         priority: -10,
         callback() {
@@ -3104,7 +3099,7 @@
       const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
       let returnValue = void 0;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
-        const res = callback({ args, returnValue });
+        const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
@@ -3112,7 +3107,7 @@
       if (returnValue === void 0)
         returnValue = response;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
-        const res = callback({ args, returnValue });
+        const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
@@ -3854,8 +3849,8 @@ ${name}`);
     levelLimit = 15;
     enableLogs = true;
     enableRemoveBubble = true;
-    doNotMuteGuests = true;
     ignoreDuels = false;
+    doNotMuteSpectators = false;
     permanentMuteList = [];
     originalDisplayChatBubble = null;
     skipPlayersJoinedCheck = false;
@@ -3879,8 +3874,8 @@ ${name}`);
           muteBelowLevel: 15,
           enableLogs: true,
           enableRemoveBubble: true,
-          doNotMuteGuests: true,
           ignoreDuels: false,
+          doNotMuteSpectators: false,
           permanentMuteList: []
         },
         {
@@ -3888,8 +3883,8 @@ ${name}`);
           muteBelowLevel: "Level limit",
           enableLogs: "Enable muting logs in chat",
           enableRemoveBubble: "Enable removing chat bubble above muted players",
-          doNotMuteGuests: "Do not add guests to permanent mute list when muting manually",
-          ignoreDuels: "Do not mute players and spectators in 1v1",
+          ignoreDuels: "Do not mute anyone in 1v1",
+          doNotMuteSpectators: "Do not mute spectators",
           permanentMuteList: {
             name: "Permanent mute list",
             removableElements: true
@@ -3916,9 +3911,6 @@ ${name}`);
             this.restoreChatBubble();
           }
           break;
-        case "doNotMuteGuests":
-          this.doNotMuteGuests = this.config.get("doNotMuteGuests");
-          break;
         case "ignoreDuels":
           this.ignoreDuels = this.config.get("ignoreDuels");
           if (this.ignoreDuels) {
@@ -3927,6 +3919,9 @@ ${name}`);
             Ninja_default.events.removeListener("gs" /* GAME_START */, this.onGameStartBound);
             this.skipPlayersJoinedCheck = false;
           }
+          break;
+        case "doNotMuteSpectators":
+          this.doNotMuteSpectators = this.config.get("doNotMuteSpectators");
           break;
         case "permanentMuteList":
           const permMuteList = this.config.get("permanentMuteList");
@@ -3959,15 +3954,14 @@ ${name}`);
       if (this.skipPlayersJoinedCheck)
         return;
       const player = e.data.detail;
+      if (this.doNotMuteSpectators && player.spec)
+        return;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
       const player = e.data.detail;
-      if (this.doNotMuteGuests && player.name.endsWith(" (guest)")) {
-        return;
-      }
       if (!this.permanentMuteList.includes(player.name)) {
         this.permanentMuteList.push(player.name);
         this.config.set("permanentMuteList", this.permanentMuteList);
@@ -3991,7 +3985,7 @@ ${name}`);
     }
     onGameplayStopped() {
       if (this.ignoreDuels) {
-        Ninja_default.events.addListener("gs", this.onGameStartBound);
+        Ninja_default.events.addListener("gs" /* GAME_START */, this.onGameStartBound);
       }
       Game.Muted.length = 0;
     }
