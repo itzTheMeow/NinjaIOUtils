@@ -36,8 +36,6 @@ export interface NinjaHookPayload {
   args: any[];
   /** Current return value of the hook. */
   returnValue: any;
-  /** Context of the original function */
-  scope?: any;
 }
 export interface NinjaHook {
   /**
@@ -97,18 +95,15 @@ export default new (class Ninja {
 
     this.hookMethod(PlayerDropdown.prototype, "onMute", {
       priority: 10,
-      callback({ scope }) {
-        console.log(scope);
-        const target = scope.target;
-        ninja.events.dispatchEvent( new CustomEvent(NinjaEvents.PLAYER_MUTED, {detail: { sid: target.sid, name: target.name } }));
+      callback() {
+        ninja.events.dispatchEvent( new CustomEvent(NinjaEvents.PLAYER_MUTED, {detail: { sid: this.target.sid, name: this.target.name } }));
       },
     });
 
     this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
       priority: 10,
-      callback({ scope }) {
-        const target = scope.target;
-        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_UNMUTED, { detail: { name: target.name } }));
+      callback() {
+        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.PLAYER_UNMUTED, { detail: { name: this.target.name } }));
       },
     });
 
@@ -244,14 +239,14 @@ export default new (class Ninja {
     let returnValue: any = void 0;
     // run "lower" priority first
     for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
-      const res = callback.call(scope, { args, returnValue, scope });
+      const res = callback.call(scope, { args, returnValue });
       if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
     }
     // run original function and catch the return value if needed
     const response = (<any>hook.original).call(scope, ...args);
     if (returnValue === void 0) returnValue = response;
     for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
-      const res = callback.call(scope, { args, returnValue, scope });
+      const res = callback.call(scope, { args, returnValue });
       if (typeof res == "object" && "returnValue" in res) returnValue = res.returnValue;
     }
     return returnValue;

@@ -2974,17 +2974,14 @@
       });
       this.hookMethod(PlayerDropdown.prototype, "onMute", {
         priority: 10,
-        callback({ scope }) {
-          console.log(scope);
-          const target = scope.target;
-          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: target.sid, name: target.name } }));
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: this.target.sid, name: this.target.name } }));
         }
       });
       this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
         priority: 10,
-        callback({ scope }) {
-          const target = scope.target;
-          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, { detail: { name: target.name } }));
+        callback() {
+          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, { detail: { name: this.target.name } }));
         }
       });
       this.hookMethod(App.prototype, "leaveGame", {
@@ -3102,7 +3099,7 @@
       const sortedCallbacks = hook.callbacks.sort((a, b) => a.priority - b.priority);
       let returnValue = void 0;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority < 0)) {
-        const res = callback.call(scope, { args, returnValue, scope });
+        const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
@@ -3110,7 +3107,7 @@
       if (returnValue === void 0)
         returnValue = response;
       for (const { callback } of sortedCallbacks.filter((cb) => cb.priority >= 0)) {
-        const res = callback.call(scope, { args, returnValue, scope });
+        const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
