@@ -16,7 +16,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.9
+// @version      3.10
 // ==/UserScript==
 
 /*
@@ -2206,7 +2206,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.9",
+    ver: "3.10",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",

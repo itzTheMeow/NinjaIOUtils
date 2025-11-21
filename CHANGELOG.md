@@ -1,5 +1,10 @@
 # Changelog
 
+v3.10
+
+- Internally use new method hooks.
+- [AutoMute] Updated config options.
+
 v3.9
 
 - Removed spectate mod. (feature was added to base game)
