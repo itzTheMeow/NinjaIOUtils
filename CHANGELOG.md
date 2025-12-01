@@ -1,5 +1,9 @@
 # Changelog
 
+v3.11
+
+- Apply script to new ninjabattle.io domain.
+
 v3.10
 
 - Internally use new method hooks.

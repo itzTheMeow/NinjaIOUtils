@@ -3,6 +3,10 @@
 // @namespace    https://itsmeow.cat
 // @description  A modloader for Ninja.io.
 // @author       Meow
+// @match        https://ninjabattle.io
+// @match        https://www.ninjabattle.io
+// @match        https://ninjabattle.io/*
+// @match        https://*.ninjabattle.io/*
 // @match        https://ninja.io/*
 // @match        https://ninja.io
 // @match        http://ninja.io/*
@@ -16,7 +20,7 @@
 // @homepageURL  https://utils.xela.codes
 // @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
 // @grant        none
-// @version      3.10
+// @version      3.11
 // ==/UserScript==
 
 /*
@@ -2206,7 +2210,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.10",
+    ver: "3.11",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
