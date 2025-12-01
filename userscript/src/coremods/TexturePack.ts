@@ -51,14 +51,14 @@ export class TexturePackMod extends Mod {
                   const isCustom = texturePack == config.customDelimiter;
                   if (
                     (pack.hasCombined || isCustom) &&
-                    orig.includes("ninja.io") &&
+                    (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) &&
                     orig.includes("combined") &&
                     orig.includes(".png")
                   )
                     data.data[0] = `${config.api}/packs/${texturePack}/combined.png?v=${Ninja.GameVersion}`;
                   if (
                     (pack.hasSeamless || isCustom) &&
-                    orig.includes("ninja.io") &&
+                    (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) &&
                     orig.includes("seamless") &&
                     orig.includes(".png")
                   )

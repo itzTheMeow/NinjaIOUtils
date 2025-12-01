@@ -3289,9 +3289,9 @@
                 if (pack && data.id == "loadImageBitmap" && typeof data.data[0] == "string" && texturePack) {
                   const orig = data.data[0];
                   const isCustom = texturePack == config_default.customDelimiter;
-                  if ((pack.hasCombined || isCustom) && orig.includes("ninja.io") && orig.includes("combined") && orig.includes(".png"))
+                  if ((pack.hasCombined || isCustom) && (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) && orig.includes("combined") && orig.includes(".png"))
                     data.data[0] = `${config_default.api}/packs/${texturePack}/combined.png?v=${Ninja_default.GameVersion}`;
-                  if ((pack.hasSeamless || isCustom) && orig.includes("ninja.io") && orig.includes("seamless") && orig.includes(".png"))
+                  if ((pack.hasSeamless || isCustom) && (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) && orig.includes("seamless") && orig.includes(".png"))
                     data.data[0] = `${config_default.api}/packs/${texturePack}/seamless.png?v=${Ninja_default.GameVersion}`;
                   if (data.data[0].startsWith(config_default.api) && isCustom) {
                     const zip = await import_localforage.default.getItem("custom_pack");

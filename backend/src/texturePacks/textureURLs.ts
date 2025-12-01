@@ -22,7 +22,7 @@ export async function getTextureJSON(url: string): Promise<{
 }> {
   return (await axios.get(url)).data;
 }
-const DOMAIN = "https://ninja.io";
+const DOMAIN = "https://ninjabattle.io";
 
 export async function getTextureURLs() {
   const mainPage = String((await axios.get(DOMAIN)).data);
@@ -42,12 +42,33 @@ export async function getTextureURLs() {
     seamless: { id: string; file: string }[];
     fonts: { id: string; file: string }[];
   };
-  const combinedJSONURL = `https://ninja.io/${RESOURCE_FOLDER}/${RESOURCES.combined[0].id}/${RESOURCES.combined[0].file}`;
+  const combinedJSONURL = [
+    DOMAIN,
+    RESOURCE_FOLDER,
+    RESOURCES.combined[0].id,
+    RESOURCES.combined[0].file,
+  ].join("/");
   const combinedJSON = await getTextureJSON(combinedJSONURL);
-  const combinedURL = `https://ninja.io/${RESOURCE_FOLDER}/${RESOURCES.combined[0].id}/${combinedJSON.meta.image}`;
-  const seamlessJSONURL = `https://ninja.io/${RESOURCE_FOLDER}/${RESOURCES.seamless[0].id}/${RESOURCES.seamless[0].file}`;
+  const combinedURL = [
+    DOMAIN,
+    RESOURCE_FOLDER,
+    RESOURCES.combined[0].id,
+    combinedJSON.meta.image,
+  ].join("/");
+
+  const seamlessJSONURL = [
+    DOMAIN,
+    RESOURCE_FOLDER,
+    RESOURCES.seamless[0].id,
+    RESOURCES.seamless[0].file,
+  ].join("/");
   const seamlessJSON = await getTextureJSON(seamlessJSONURL);
-  const seamlessURL = `https://ninja.io/${RESOURCE_FOLDER}/${RESOURCES.seamless[0].id}/${seamlessJSON.meta.image}`;
+  const seamlessURL = [
+    DOMAIN,
+    RESOURCE_FOLDER,
+    RESOURCES.seamless[0].id,
+    seamlessJSON.meta.image,
+  ].join("/");
 
   return {
     combinedURL,
