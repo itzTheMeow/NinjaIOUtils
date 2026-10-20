@@ -1,24 +1,34 @@
 import {
   AudioEffects,
   Button,
-  EventDispatcher,
+  ContentMenu,
   MemberBrowserScrollbar,
-  SettingsPanel,
+  UITheme,
 } from "lib";
 import localForage from "localforage";
-import { App, FontStyle, PIXI, app } from "lib";
+import { App, FontStyle, PIXI } from "lib";
 import type { TexturePack } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";
+import { paintListRow } from "../utils";
+
+ContentMenu.TEXTURES = "tex";
+const MAX_PACKS = 6;
+
+const FileUploader = document.createElement("input");
+FileUploader.type = "file";
+FileUploader.accept = "application/zip";
+FileUploader.multiple = false;
+FileUploader.style.display = "none";
+document.body.appendChild(FileUploader);
 
 export class TexturePackMod extends Mod {
   constructor() {
     super({
       id: "TexturePack",
       name: "Texture Packs",
-      description:
-        "Adds in the texture pack settings tab and allows packs to load.",
+      description: "Adds a texture pack tab to the content menu.",
       author: "builtin",
       icon: "gears_icon",
       core: true,
@@ -108,312 +118,292 @@ export class TexturePackMod extends Mod {
   }
 
   public init() {
-    // retry panel inject if failed
-    if (!app.menu?.settingsPanel) return setTimeout(() => this.init(), 500);
-    //@ts-ignore
-    SettingsPanel.Tabs.TEXTURES = "tex";
-    function SettingsPanelNew(w: number, h: number) {
-      const pan = new SettingsPanel(w, h);
-      function newTab(
-        title: string,
-        name: string,
-        x: number,
-        tab: {
-          new (): void;
-          prototype: any;
-        },
-      ) {
-        name = `${name}Tab`;
-        pan[name] = new tab();
-        pan[`${name}Button`] = new PIXI.Text(
-          title,
-          FontStyle.MediumMenuTextOrange,
-        );
-        pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
-        pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
-        pan[`${name}Button`].x = x + 56;
-        pan[`${name}Button`].y = 28;
-        pan.addChild(pan[`${name}Button`]);
-        pan[`${name}ButtonBackground`] = new PIXI.Graphics();
-        pan[`${name}ButtonBackground`].beginFill(16777215, 0.1);
-        pan[`${name}ButtonBackground`].drawRoundedRect(0, 0, 112, 30, 2);
-        pan[`${name}ButtonBackground`].endFill();
-        pan[`${name}ButtonBackground`].x = x;
-        pan[`${name}ButtonBackground`].y = 12;
-        pan[`${name}ButtonBackground`].interactive = !0;
-        pan[`${name}ButtonBackground`].on(
-          "touchstart",
-          //TODO:frag fix
-          pan.displayTab.bind(
-            pan,
-            <string>(SettingsPanel.Tabs as any).TEXTURES,
-          ),
-        );
-        pan[`${name}ButtonBackground`].on(
-          "mousedown",
-          //TODO:frag fix
-          pan.displayTab.bind(
-            pan,
-            <string>(SettingsPanel.Tabs as any).TEXTURES,
-          ),
-        );
-        pan[`${name}ButtonBackground`].on("mouseover", function () {
-          pan[`${name}ButtonBackground`].tint = 11184810;
-        });
-        pan[`${name}ButtonBackground`].on("mouseout", function () {
-          pan[`${name}ButtonBackground`].tint = 16777215;
-        });
-        pan.addChild(pan[`${name}ButtonBackground`]);
-      }
-      newTab("Texture Pack", "tex", 302, getTexTab());
-      return pan;
-    }
-    const oldX = app.menu.settingsPanel.x,
-      oldY = app.menu.settingsPanel.y;
-    // remove the old settings panel and add our own
-    app.menu.settingsPanel.destroy();
-    app.menu.settingsPanel = SettingsPanelNew(660, 524);
-    app.menu.settingsPanel.x = oldX;
-    app.menu.settingsPanel.y = oldY;
-    app.menu.resize();
+    const content = App.Layer.contentMenu;
 
-    app.menu.settingsPanel.displayTab = function (name) {
+    // third tab next to maps/weapons - the pair shrinks to 258 wide to fit
+    const texTab = new TexTab();
+    content.texContainer = texTab;
+    content.texContainer.visible = false;
+    content.texContainer.x = 33;
+    content.texContainer.y = 152;
+    content.container.addChild(content.texContainer);
+
+    content.texButton = new PIXI.Graphics();
+    content.texButton.x = 556;
+    content.texButton.y = 100;
+    content.texButton.on("mouseover", () => {
+      content.texLabel.alpha = 1;
+      AudioEffects.ButtonHover.audio.play();
+    });
+    content.texButton.on("mouseout", () => {
+      content.texLabel.alpha =
+        content.display === ContentMenu.TEXTURES ? 1 : 0.5;
+    });
+    content.texButton.on("mousedown", () => {
+      content.display = ContentMenu.TEXTURES;
+      content.mapsContainer.visible = false;
+      content.mapsContainer.hide();
+      content.weaponContainer.visible = false;
+      content.mapPublishContainer.visible = false;
+      content.publishMapButton.visible = false;
+      content.description.visible = false;
+      content.texContainer.visible = true;
+      texTab.onShow();
+      content.updateTabStates();
       AudioEffects.ButtonClick.audio.play();
-      Object.values(SettingsPanel.Tabs)
-        .filter((t) => t !== name) // gets all the other tabs and "closes" them
-        .forEach((i) => {
-          const t = this[`${i}Tab`];
-          if (t.parent) {
-            if (t.onHide) t.onHide();
-            this.removeChild(t);
-          }
-          this[`${i}TabButtonBackground`].alpha = 1;
-        });
+    });
+    content.container.addChild(content.texButton);
 
-      const t = this[`${name}Tab`];
-      this[`${name}TabButtonBackground`].alpha = 0;
-      this.addChild(t);
-      if (t.onShow) t.onShow();
-      app.menu.settingsPanel.activeTab = name;
-      Ninja.activeMenu().emit(<any>"open_tab", name);
-    };
-    Object.values(SettingsPanel.Tabs).forEach((d) => {
-      // add our new mousedown listener and remove the old one (because we removed the old settings panel)
-      const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
-      tab.on(
-        "mousedown",
-        app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d),
+    content.texLabel = new PIXI.Text(
+      "Texture Packs",
+      FontStyle.SmallMenuTextOrange5,
+    );
+    content.texLabel.hitArea = new PIXI.Rectangle();
+    content.texLabel.resolution = 2;
+    content.container.addChild(content.texLabel);
+
+    // reposition the tabs to fit 3
+    content.weaponButton.x = 290;
+    content.mapsButton.menuTab.width = 258;
+    content.weaponButton.menuTab.width = 258;
+    content.updateTabStates = function () {
+      UITheme.styleMenuTab(
+        this.mapsButton,
+        this.mapsLabel,
+        258,
+        30,
+        this.display === ContentMenu.MAPS,
       );
-      tab._events.mousedown.shift();
+      UITheme.styleMenuTab(
+        this.weaponButton,
+        this.weaponLabel,
+        258,
+        30,
+        this.display === ContentMenu.WEAPONS,
+      );
+      UITheme.styleMenuTab(
+        this.texButton,
+        this.texLabel,
+        258,
+        30,
+        this.display === ContentMenu.TEXTURES,
+      );
+    };
+    content.updateTabStates();
+
+    // need to hide the tab when other tabs activate
+    content.mapsButton.on("mousedown", () => {
+      content.texContainer.visible = false;
+      texTab.onHide();
+    });
+    content.weaponButton.on("mousedown", () => {
+      content.texContainer.visible = false;
+      texTab.onHide();
     });
   }
 }
 
-function getTexTab() {
-  const maxPacks = 6;
+class TexTab extends PIXI.Container {
+  packList: TexturePack[] = [];
+  packIndex = 0;
+  hasCust: File | true | null = null;
+  hadPacks: PIXI.ContainerChild[] = [];
+  scroller = new MemberBrowserScrollbar(386);
+  uploader = new Button("uploader");
+  offset = 0;
+  packsTop = 0;
+  rowWidth = 745;
 
-  const FileUploader = document.createElement("input");
-  FileUploader.type = "file";
-  FileUploader.accept = "application/zip";
-  FileUploader.multiple = false;
-  FileUploader.style.display = "none";
-  document.body.appendChild(FileUploader);
+  constructor() {
+    super();
+    this.scroller.x = 757;
+    this.scroller.y = 0;
+    this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog: number) => {
+      this.packIndex = Math.round((this.packList.length - MAX_PACKS) * prog);
+      this.runPacks();
+    });
+    this.addChild(this.scroller);
 
-  //TODO: finish migrating to use proper class methods
-  class TexTab extends (PIXI.Container as any) {
-    public marginLeft = 40;
-    public marginTop = 52;
-    public offset = this.marginTop + 6;
-    public texTitle: PIXI.Text;
-    public texHint: PIXI.Text;
+    const title = new PIXI.Text("Texture Packs", <any>{
+      fontFamily: "Teko",
+      fontSize: 22,
+      fontWeight: "500",
+      fill: UITheme.MenuColors.accent,
+      letterSpacing: 0.5,
+    });
+    title.y = this.offset;
+    this.addChild(title);
+    this.offset += 28;
 
-    constructor() {
-      super();
-      const tab = this;
-      EventDispatcher.call(this);
+    const customTitle = new PIXI.Text("Custom pack (read docs for tutorial)", <
+      any
+    >{
+      fontFamily: "Teko",
+      fontSize: 16,
+      fill: UITheme.MenuColors.text,
+    });
+    customTitle.y = this.offset;
+    this.addChild(customTitle);
+    this.offset += 20;
 
-      /* ============= Title ============= */
-      this.texTitle = new PIXI.Text({
-        text: "Texture Packs",
-        style: {
-          fontSize: 18,
-          lineHeight: 18,
-          fill: config.Colors.yellow,
-          stroke: { width: 3, join: "round", color: config.Colors.black },
-        },
-      });
-      this.texTitle.x = this.marginLeft - 5;
-      this.texTitle.y = this.offset;
-      this.addChild(this.texTitle);
-
-      this.texHint = new PIXI.Text("(make sure to click save)", {
+    const customDesc = new PIXI.Text(
+      "Upload a zip file containing your textures.",
+      <any>{
+        fontFamily: "Teko",
         fontSize: 14,
-        fill: config.Colors.white,
-        stroke: { width: 2, join: "round", color: config.Colors.black },
-      });
-      this.texHint.x = this.texTitle.x + this.texTitle.width + 3;
-      this.texHint.y = this.offset + 2;
-      this.addChild(this.texHint);
-      this.offset += 30;
+        fill: UITheme.MenuColors.textMuted,
+      },
+    );
+    customDesc.y = this.offset;
+    this.addChild(customDesc);
+    this.offset += 22;
 
-      const customTitle = new PIXI.Text(
-        "Custom Pack (read docs for tutorial)",
-        {
-          fontSize: 16,
-          fill: config.Colors.white,
-          stroke: { width: 2, join: "round", color: config.Colors.black },
-        },
-      );
-      customTitle.x = this.marginLeft;
-      customTitle.y = this.offset;
-      this.addChild(customTitle);
-      this.offset += 20;
+    this.uploader.scale.set(0.75);
+    this.uploader.x = 8;
+    this.uploader.y = this.offset;
+    this.uploader.addListener(Button.BUTTON_RELEASED, async () => {
+      if (await localForage.getItem("custom_pack")) {
+        await localForage.removeItem("custom_pack");
+        this.hasCust = null;
+        this.runPacks();
+      } else {
+        FileUploader.click();
+      }
+    });
+    // hover border - white picks up the button tint
+    this.uploader.edge.stroke({ color: 0xffffff, width: 1.5 });
+    this.addChild(this.uploader);
+    this.offset += 32;
+    this.packsTop = this.offset;
 
-      const customDesc = new PIXI.Text(
-        "Upload a zip file containing your textures.",
-        {
-          fontSize: 14,
-          fill: config.Colors.yellow,
-          stroke: { width: 2, join: "round", color: config.Colors.black },
-        },
-      );
-      customDesc.x = this.marginLeft;
-      customDesc.y = this.offset;
-      this.addChild(customDesc);
-      this.offset += 24;
+    this.runPacks();
+  }
 
-      const uploader = new Button("uploader");
-      uploader.addListener(Button.BUTTON_RELEASED, async () => {
-        if (await localForage.getItem("custom_pack")) {
-          await localForage.removeItem("custom_pack");
-          delete this.hasCust;
-          this.runPacks();
-        } else {
-          FileUploader.click();
-        }
-      });
-      uploader.x = this.marginLeft + 8;
-      uploader.y = this.offset;
-      uploader.scale.x = uploader.scale.y = 0.75;
-      this.addChild(uploader);
-      this.offset += 12;
-
-      const off = this.offset;
-      this.packIndex = 0;
-      !(this.runPacks = async () => {
-        try {
-          this.offset = off;
-          if (this.hadPacks) this.hadPacks.map((p) => p.destroy());
-          this.hadPacks = [];
-          const packs: TexturePack[] =
-            this.packList ||
-            (this.packList =
+  runPacks = async () => {
+    try {
+      let y = this.packsTop;
+      this.hadPacks.forEach((p) => p.destroy());
+      this.hadPacks = [];
+      const packs: TexturePack[] =
+        this.packList.length > 0
+          ? this.packList
+          : (this.packList =
               (await fetch(`${config.api}/packs`).then((r) => r && r.json())) ||
               []);
-          const custom: File | true =
-            this.hasCust ||
-            (this.hasCust = (await localForage.getItem("custom_pack")) || true);
-          const packList = packs
-            .sort((a, b) =>
-              a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
-            )
-            .slice(this.packIndex, this.packIndex + maxPacks);
+      const custom: File | true | null =
+        this.hasCust ||
+        (this.hasCust = (await localForage.getItem("custom_pack")) || true);
+      const packRows = [...packs]
+        .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+        .slice(this.packIndex, this.packIndex + MAX_PACKS);
 
-          if (custom && custom !== true) {
-            packList.unshift({
-              id: config.customDelimiter,
-              name: "Custom Pack",
-              description: "Custom texture pack: " + custom.name,
-              author: "You!",
-              hasCombined: false,
-              hasSeamless: false,
-            });
-            uploader.setText("Delete");
-            uploader.setTint(config.Colors.red);
-          } else {
-            uploader.setText("Upload");
-            uploader.setTint(config.Colors.grey);
-          }
+      if (custom && custom !== true) {
+        packRows.unshift({
+          id: config.customDelimiter,
+          name: "Custom Pack",
+          description: "Custom texture pack: " + custom.name,
+          author: "You!",
+          hasCombined: false,
+          hasSeamless: false,
+        });
+        this.uploader.setText("Delete");
+        this.uploader.setTint(UITheme.MenuColors.danger);
+      } else {
+        this.uploader.setText("Upload");
+        this.uploader.setTint(UITheme.MenuColors.border);
+      }
+      this.uploader.edge.stroke({ color: 0xffffff, width: 1.5 });
 
-          packList.forEach((pak) => {
-            const hasPack = Ninja.settings.get("texturePack") == pak.id;
-            const packName = new PIXI.Text(
-              `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
-              {
-                fontSize: 16,
-                fill: config.Colors.white,
-                stroke: { width: 2, join: "round", color: config.Colors.black },
-              },
-            );
-            packName.x = this.marginLeft;
-            packName.y = this.offset += 28;
-            this.hadPacks.push(this.addChild(packName));
-            const flags = [];
-            if (pak.hasCombined) flags.push("textures");
-            if (pak.hasSeamless) flags.push("terrain");
-            const packDescription = new PIXI.Text(
-              `${pak.description || "No Description."}${
-                flags.length ? ` (${flags.join(", ")})` : ""
-              }`,
-              {
-                fontSize: 14,
-                fill: config.Colors.white,
-                stroke: { width: 2, join: "round", color: config.Colors.black },
-              },
-            );
-            packDescription.x = this.marginLeft;
-            packDescription.y = this.offset += packName.height + 2;
-            this.hadPacks.push(this.addChild(packDescription));
-            const packButton = new Button(`pack_btn_${pak.id}`);
-            packButton.x = packName.x + packName.width + 12;
-            packButton.y = this.offset - packName.height;
-            packButton.setText(hasPack ? "Remove" : "Use");
-            packButton.setTint(
-              hasPack ? config.Colors.red : config.Colors.green,
-            );
-            packButton.scale.x = packButton.scale.y = 0.5;
-            packButton.addListener(Button.BUTTON_RELEASED, async () => {
-              Ninja.settings.set("texturePack", hasPack ? "" : pak.id);
-              app.menu.settingsPanel.controlsTab.forceRefresh = true;
-              this.runPacks();
-            });
-            this.hadPacks.push(this.addChild(packButton));
-          });
-        } catch (err) {
-          console.error(err);
-        }
-      })();
-    }
-  }
-  TexTab.prototype.onShow = function () {
-    if (!this.scroller) {
-      const off = this.parent.texTabButton.height + 32;
-      this.scroller = new MemberBrowserScrollbar(
-        this.parent.height - off - 12 - this.parent.applyButton.height,
-      );
-      this.scroller.x = this.parent.width - this.scroller.width * 1.75;
-      this.scroller.y = off;
-      this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog: number) => {
-        this.packIndex = Math.round((this.packList.length - maxPacks) * prog);
-        this.runPacks();
+      packRows.forEach((pak, i) => {
+        const hasPack = Ninja.settings.get("texturePack") == pak.id;
+        const row = new PIXI.Graphics();
+        const edgeColor = hasPack
+          ? UITheme.MenuColors.success
+          : UITheme.MenuColors.accent;
+        const paint = (hovered: boolean) =>
+          paintListRow(
+            row,
+            this.rowWidth,
+            44,
+            this.packIndex + i,
+            hovered,
+            edgeColor,
+          );
+        paint(false);
+        row.eventMode = "static";
+        row.on("mouseover", () => {
+          paint(true);
+          AudioEffects.ButtonHover.audio.play();
+        });
+        row.on("mouseout", () => paint(false));
+        row.y = y;
+        y += 46;
+
+        const flags = [];
+        if (pak.hasCombined) flags.push("textures");
+        if (pak.hasSeamless) flags.push("terrain");
+        const packName = new PIXI.Text(
+          `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
+          <any>{
+            fontFamily: "Teko",
+            fontSize: 16,
+            fill: UITheme.MenuColors.text,
+          },
+        );
+        packName.x = 12;
+        packName.y = 2;
+        row.addChild(packName);
+        const packDescription = new PIXI.Text(
+          `${pak.description || "No Description."}${
+            flags.length ? ` (${flags.join(", ")})` : ""
+          }`,
+          <any>{
+            fontFamily: "Teko",
+            fontSize: 14,
+            fill: UITheme.MenuColors.textMuted,
+          },
+        );
+        packDescription.x = 12;
+        packDescription.y = 21;
+        row.addChild(packDescription);
+
+        const packButton = new Button(`pack_btn_${pak.id}`);
+        packButton.setText(hasPack ? "Remove" : "Use");
+        packButton.setTint(
+          hasPack ? UITheme.MenuColors.danger : UITheme.MenuColors.success,
+        );
+        packButton.edge.stroke({ color: 0xffffff, width: 1.5 });
+        packButton.scale.set(0.5);
+        packButton.x = this.rowWidth - packButton.width - 10;
+        packButton.y = 6;
+        packButton.addListener(Button.BUTTON_RELEASED, async () => {
+          Ninja.settings.set("texturePack", hasPack ? "" : pak.id);
+          this.runPacks();
+        });
+        row.addChild(packButton);
+
+        this.addChild(row);
+        this.hadPacks.push(row);
       });
-      this.addChild(this.scroller);
+    } catch (err) {
+      console.error(err);
     }
+  };
+
+  onShow() {
     this.scroller.enableWheel();
-    const tab = this;
     FileUploader.onchange = () => {
       [...FileUploader.files].forEach(async (f) => {
         if (f.type.startsWith("application/") && f.type.includes("zip")) {
           await localForage.setItem("custom_pack", f);
-          delete tab.hasCust;
-          tab.runPacks();
-          app.menu.settingsPanel.controlsTab.forceRefresh = true;
+          this.hasCust = null;
+          this.runPacks();
         }
       });
     };
-  };
-  TexTab.prototype.onHide = function () {
+  }
+
+  onHide() {
     this.scroller.disableWheel();
-  };
-  return TexTab;
+  }
 }

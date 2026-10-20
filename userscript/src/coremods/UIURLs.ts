@@ -59,12 +59,11 @@ export class UIURLMod extends Mod {
         [SettingsPanel.Tabs.CONTROLS]: "controls",
         [SettingsPanel.Tabs.GRAPHICS]: "graphics",
         [SettingsPanel.Tabs.SOUND]: "sound",
-        //TODO:frag fix
-        [(SettingsPanel.Tabs as any).TEXTURES || "tex"]: "textures",
       },
       ContentPaths = {
         [ContentMenu.MAPS]: "maps",
         [CustomizationMenu.WEAPONS]: "weapons",
+        [ContentMenu.TEXTURES]: "textures",
       };
 
     if (!window.location.hash.substring(1)) window.location.hash = "/";
@@ -117,6 +116,11 @@ export class UIURLMod extends Mod {
     menu.on(Layer.Events.CONTENT_ACCESS, () =>
       this.switchHash(HashPaths.content, App.Layer.contentMenu.display),
     );
+    Ninja.onready(() => {
+      App.Layer.contentMenu.texButton.addListener("mousedown", () =>
+        this.switchHash(HashPaths.content, ContentPaths[ContentMenu.TEXTURES]),
+      );
+    });
     App.Layer.contentMenu.mapsButton.on("mousedown", () => {
       this.switchHash(HashPaths.content, ContentPaths[ContentMenu.MAPS]);
     });
@@ -200,6 +204,9 @@ export class UIURLMod extends Mod {
                 break;
               case ContentMenu.MAPS:
                 App.Layer.contentMenu.mapsButton.emit("mousedown", <any>{});
+                break;
+              case ContentMenu.TEXTURES:
+                App.Layer.contentMenu.texButton.emit("mousedown", <any>{});
                 break;
             }
           }

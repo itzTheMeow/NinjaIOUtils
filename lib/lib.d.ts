@@ -29,6 +29,16 @@ export interface SubmenuButton extends PIXI.Container<PIXI.ContainerChild> {
     draw(hovered?: boolean): void;
 }
 
+export interface ContentMenuTab extends PIXI.Graphics {
+    menuTab?: {
+        label: PIXI.Text;
+        width: number;
+        height: number;
+        active: boolean;
+        hovered: boolean;
+    };
+}
+
 export type CombinedTextureName =
     "10xp" |
     "1v1_icon" |
@@ -5177,9 +5187,9 @@ declare class ContentMenu extends Feature {
     contentPanel: PIXI.Graphics;
     headerLine: PIXI.Graphics;
     contentTitle: PIXI.Text;
-    weaponButton: PIXI.Graphics;
+    weaponButton: ContentMenuTab;
     weaponLabel: PIXI.Text;
-    mapsButton: PIXI.Graphics;
+    mapsButton: ContentMenuTab;
     mapsLabel: PIXI.Text;
     mapsContainer: MapContentPanel;
     mapPublishContainer: MapPublishPanel;
@@ -5196,7 +5206,11 @@ declare class ContentMenu extends Feature {
     update(): void;
     setMode(a: any): void;
     onCancelButtonReleased(): void;
-}
+
+    texButton: ContentMenuTab;
+    texLabel: PIXI.Text;
+    texContainer: PIXI.Container;
+    static TEXTURES: string;}
 declare namespace ContentMenu {
     var MAPS: string;
     var WEAPONS: string;

@@ -11,7 +11,7 @@ import {
 import { app, App, FontStyle, Layer, PIXI } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
-import { cloneTextStyle } from "./utils";
+import { cloneTextStyle, paintListRow } from "./utils";
 
 export default function hookModMenu() {
   let menu = Ninja.activeMenu();
@@ -141,36 +141,18 @@ export default function hookModMenu() {
         maxDesc = 150,
         container = new PIXI.Graphics();
 
-      const paintRow = (hovered: boolean) => {
-        const even = index % 2 === 0;
-        container
-          .clear()
-          .roundRect(0, 0, this.rowWidth, this.modItemHeight, 4)
-          .fill({
-            color: hovered
-              ? even
-                ? UITheme.MenuColors.rowHoverEven
-                : UITheme.MenuColors.rowHoverOdd
-              : even
-                ? UITheme.MenuColors.rowEven
-                : UITheme.MenuColors.rowOdd,
-            alpha: hovered ? 0.8 : 0.78,
-          })
-          .stroke({
-            color: hovered
-              ? UITheme.MenuColors.accentStrong
-              : UITheme.MenuColors.panelStroke,
-            width: 1,
-            alpha: hovered ? 0.24 : 0.18,
-          })
-          .roundRect(0, 0, 5, this.modItemHeight, 4)
-          .fill({
-            color: mod.isInstalled()
-              ? UITheme.MenuColors.success
-              : UITheme.MenuColors.accent,
-            alpha: hovered ? 0.35 : 0.16,
-          });
-      };
+      const edgeColor = mod.isInstalled()
+        ? UITheme.MenuColors.success
+        : UITheme.MenuColors.accent;
+      const paintRow = (hovered: boolean) =>
+        paintListRow(
+          container,
+          this.rowWidth,
+          this.modItemHeight,
+          index,
+          hovered,
+          edgeColor,
+        );
       paintRow(false);
       container.eventMode = "static";
       container.on("mouseover", () => {

@@ -279,6 +279,13 @@ const MEMBER_OVERRIDES: MemberOverride[] = [
   { class: "Menu", member: "utilsIcon", type: "SubmenuButton" },
   { class: "Menu", member: "editorIcon", type: "SubmenuButton" },
   { class: "Menu", member: "feedbackIcon", type: "SubmenuButton" },
+  // TexturePack mod injects a third tab into the content menu
+  { class: "ContentMenu", member: "mapsButton", type: "ContentMenuTab" },
+  { class: "ContentMenu", member: "weaponButton", type: "ContentMenuTab" },
+  { class: "ContentMenu", member: "texButton", type: "ContentMenuTab" },
+  { class: "ContentMenu", member: "texLabel", type: "PIXI.Text" },
+  { class: "ContentMenu", member: "texContainer", type: "PIXI.Container" },
+  { class: "ContentMenu", member: "TEXTURES", type: "string", static: true },
 ];
 
 /** Hand-modeled runtime shapes the bundle never declares (JSON payloads,
@@ -320,6 +327,21 @@ const INTERFACE_INJECTIONS: { name: string; source: string }[] = [
     cardWidth: number;
     cardHeight: number;
     draw(hovered?: boolean): void;
+}`,
+  },
+  {
+    // Menu tab buttons styled by UITheme.styleMenuTab (maps/weapons/textures
+    // in the content menu). menuTab is optional: it only exists after the
+    // first styleMenuTab call.
+    name: "ContentMenuTab",
+    source: `export interface ContentMenuTab extends PIXI.Graphics {
+    menuTab?: {
+        label: PIXI.Text;
+        width: number;
+        height: number;
+        active: boolean;
+        hovered: boolean;
+    };
 }`,
   },
 ];

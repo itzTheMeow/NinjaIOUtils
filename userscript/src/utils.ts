@@ -1,4 +1,5 @@
 import type { PIXI } from "lib";
+import { UITheme } from "lib";
 
 export function clickContainer(container: any) {
   container._events.mousedown.forEach((f) => f.fn());
@@ -18,4 +19,42 @@ export function cloneTextStyle(
     newStyle[key] = newProps[key];
   });
   return newStyle;
+}
+
+/**
+ * Paints a themed list row (striped background, border, accent edge) in the
+ * style of the game's clan/player lists. Wire mouseover/mouseout to
+ * `paintListRow(gfx, w, h, index, true/false)` to update the hover state.
+ */
+export function paintListRow(
+  gfx: PIXI.Graphics,
+  w: number,
+  h: number,
+  index: number,
+  hovered: boolean,
+  edgeColor: number,
+) {
+  const even = index % 2 === 0;
+  gfx
+    .clear()
+    .roundRect(0, 0, w, h, 4)
+    .fill({
+      color: hovered
+        ? even
+          ? UITheme.MenuColors.rowHoverEven
+          : UITheme.MenuColors.rowHoverOdd
+        : even
+          ? UITheme.MenuColors.rowEven
+          : UITheme.MenuColors.rowOdd,
+      alpha: hovered ? 0.8 : 0.78,
+    })
+    .stroke({
+      color: hovered
+        ? UITheme.MenuColors.accentStrong
+        : UITheme.MenuColors.panelStroke,
+      width: 1,
+      alpha: hovered ? 0.24 : 0.18,
+    })
+    .roundRect(0, 0, 5, h, 4)
+    .fill({ color: edgeColor, alpha: hovered ? 0.35 : 0.16 });
 }
