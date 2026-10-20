@@ -2,7 +2,11 @@ import { build } from "esbuild";
 import fs from "fs";
 import { createServer } from "http";
 
-const ver = fs.readFileSync("../version.json").toString().replace(/"/g, "").trim();
+const ver = fs
+  .readFileSync("../version.json")
+  .toString()
+  .replace(/"/g, "")
+  .trim();
 
 function postBuild() {
   const meta = JSON.parse(fs.readFileSync("./meta.json").toString());
@@ -16,8 +20,8 @@ ${Object.entries(meta)
           Object.keys(meta)
             .map((a) => a.replace(/_/g, ""))
             .sort((a, b) => b.length - a.length)[0].length -
-          k.length
-      )}${v}`
+          k.length,
+      )}${v}`,
   )
   .join("\n")}
 // ==/UserScript==
@@ -37,13 +41,13 @@ ${Object.entries(meta)
       scriptFile
         // R E G E X - removes the imports for the .d.ts files so the script actually works
         .replace(/import_lib\d*\.?/g, "")
-        .replace(/var  ?= __require\("lib"\);/g, "")
+        .replace(/var  ?= __require\("lib"\);/g, ""),
   );
   fs.writeFileSync(
     "dev.js",
     metaString +
       `/* This script is used for development testing. */
-fetch("http://localhost:8000").then(r => r.text()).then(r => eval(r))\n`
+fetch("http://localhost:8000").then(r => r.text()).then(r => eval(r))\n`,
   );
 
   console.log(`NinjaIOUtils v${ver} built successfully!`);
