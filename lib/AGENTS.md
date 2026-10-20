@@ -65,8 +65,9 @@ TypeScript executed by bun directly — no build step for the generator itself.
    JS is what gives constructor-field inference and namespace merging.
 5. **Post-emit patches** — all via `EditTracker` (every edit = one pass):
    - `applyMemberOverrides`: widens the injected `?: null` params to
-     `?: any`, injects `INTERFACE_INJECTIONS` payload interfaces
-     (`Credential`), applies `MEMBER_OVERRIDES` (namespace vars retyped in
+     `?: any`, injects `INTERFACE_INJECTIONS` interfaces (payloads like
+     `Credential`, widget shapes like `SubmenuButton`), applies
+     `MEMBER_OVERRIDES` (namespace vars retyped in
      place; machine-alias pairs `var _x: any; export { _x as Member };`
      stripped in favor of a clean class static; otherwise a class static is
      stubbed), retargets the `//# sourceMappingURL=` comment to
@@ -111,8 +112,11 @@ TypeScript executed by bun directly — no build step for the generator itself.
 - New global needing member folding → `MEMBER_FOLD_NAMES`; new
   EventDispatcher mixin → `DISPATCHER_MIXIN_NAMES` or `CLASSIFY_AS_CLASS`;
   new vendor bundle → `VENDOR_MARKERS` (+ `VERSION_DETECTORS` if typed).
-- New runtime payload shape the bundle never declares → `INTERFACE_INJECTIONS`
-  (emitted as exported interfaces), then reference it from `MEMBER_OVERRIDES`.
+- New runtime shape the bundle never declares (JSON payload or dynamically
+  built widget object) → `INTERFACE_INJECTIONS` (emitted as exported
+  interfaces), then reference it from `MEMBER_OVERRIDES`. Note: an interface
+  extending a pixi class may only shadow inherited members with `any`
+  (e.g. `label` on `SubmenuButton`/`Checkbox` vs `Container.label: string`).
 - New dts patch → add to `applyMemberOverrides` via `EditTracker` only.
 - New pipeline sanity check → follow the existing regex/window pattern in
   `validateDeclarationMap`.

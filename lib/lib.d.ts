@@ -20,6 +20,15 @@ export interface Credential {
     version: string;
 }
 
+export interface SubmenuButton extends PIXI.Container<PIXI.ContainerChild> {
+    background: PIXI.Graphics;
+    icon: PIXI.Graphics;
+    label: any;
+    cardWidth: number;
+    cardHeight: number;
+    draw(hovered?: boolean): void;
+}
+
 declare var servicebase: {};
 declare class ServiceBase {
     xhrGet(a: any): Promise<any>;
@@ -14936,12 +14945,12 @@ declare class Menu extends PIXI.Container {
     submenuPanelWidth: number;
     submenuPanelHeight: number;
     submenuPanel: PIXI.Graphics;
-    settingsIcon: PIXI.Container<PIXI.ContainerChild>;
-    newsIcon: PIXI.Container<PIXI.ContainerChild>;
-    wikiIcon: PIXI.Container<PIXI.ContainerChild>;
-    utilsIcon: PIXI.Container<PIXI.ContainerChild>;
-    editorIcon: PIXI.Container<PIXI.ContainerChild>;
-    feedbackIcon: PIXI.Container<PIXI.ContainerChild>;
+    settingsIcon: SubmenuButton;
+    newsIcon: SubmenuButton;
+    wikiIcon: SubmenuButton;
+    utilsIcon: SubmenuButton;
+    editorIcon: SubmenuButton;
+    feedbackIcon: SubmenuButton;
     feedbackPanel: FeedbackPanel;
     feedbackViewport: MenuPanelViewport;
     versionText: PIXI.Text;

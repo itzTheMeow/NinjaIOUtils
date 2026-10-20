@@ -266,11 +266,19 @@ const MEMBER_OVERRIDES: MemberOverride[] = [
   }, // await PIXI.Assets.load(...) element map
   { class: "App", member: "ConnectedServer", type: "any", static: true },
   { class: "Checkbox", member: "label", type: "any" }, // shadows PIXI.Container.label
+  // Menu footer buttons built by Menu.createSubmenuButton (modeled as
+  // SubmenuButton in INTERFACE_INJECTIONS)
+  { class: "Menu", member: "settingsIcon", type: "SubmenuButton" },
+  { class: "Menu", member: "newsIcon", type: "SubmenuButton" },
+  { class: "Menu", member: "wikiIcon", type: "SubmenuButton" },
+  { class: "Menu", member: "utilsIcon", type: "SubmenuButton" },
+  { class: "Menu", member: "editorIcon", type: "SubmenuButton" },
+  { class: "Menu", member: "feedbackIcon", type: "SubmenuButton" },
 ];
 
-/** Hand-modeled runtime payload shapes the bundle never declares (JSON
- *  payloads, server responses). Injected as exported interfaces into the dts
- *  so MEMBER_OVERRIDES can reference them by name. */
+/** Hand-modeled runtime shapes the bundle never declares (JSON payloads,
+ *  server responses, dynamically-built widget objects). Injected as exported
+ *  interfaces into the dts so MEMBER_OVERRIDES can reference them by name. */
 const INTERFACE_INJECTIONS: { name: string; source: string }[] = [
   {
     name: "Credential",
@@ -292,6 +300,21 @@ const INTERFACE_INJECTIONS: { name: string; source: string }[] = [
     clan_role: string;
     addr: string;
     version: string;
+}`,
+  },
+  {
+    // Menu.createSubmenuButton builds these on a plain Container at runtime:
+    // background Graphics, footer icon Graphics, Teko label Text, hover draw().
+    // label must stay `any`: Container already declares `label: string`, and
+    // `any` is the only assignable redeclaration (same trick as Checkbox.label).
+    name: "SubmenuButton",
+    source: `export interface SubmenuButton extends PIXI.Container<PIXI.ContainerChild> {
+    background: PIXI.Graphics;
+    icon: PIXI.Graphics;
+    label: any;
+    cardWidth: number;
+    cardHeight: number;
+    draw(hovered?: boolean): void;
 }`,
   },
 ];

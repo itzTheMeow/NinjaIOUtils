@@ -12,7 +12,7 @@ export default function hookModMenu() {
   // just replace the utils button with the mods button
   function hookUtilsButton() {
     if (!app.menu) return;
-    (<any>app.menu.utilsIcon).label.text = "MODS";
+    app.menu.utilsIcon.label.text = "MODS";
     app.menu.utilsIcon.off("mousedown");
     app.menu.utilsIcon.on("mousedown", () => menu.emit("modacc"));
   }
