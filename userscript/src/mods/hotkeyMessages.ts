@@ -39,7 +39,7 @@ export class HotkeyMessagesMod extends Mod<{
         keyQ: "ALT + Q",
         keyW: "ALT + W",
         keyE: "ALT + E",
-      }
+      },
     );
   }
 

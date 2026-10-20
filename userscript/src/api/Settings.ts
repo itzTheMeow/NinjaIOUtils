@@ -1,5 +1,8 @@
 export default class Settings<Store extends Record<string, any> = { _: "" }> {
-  constructor(public key = "niou_settings", public defaults: Store) {}
+  constructor(
+    public key = "niou_settings",
+    public defaults: Store,
+  ) {}
 
   public getStore(fillDefaults = false): Store {
     const store = JSON.parse(localStorage.getItem(this.key) || "{}");
@@ -10,6 +13,9 @@ export default class Settings<Store extends Record<string, any> = { _: "" }> {
     return this.getStore()[key] ?? this.defaults[key];
   }
   public set<K extends keyof Store>(key: K, value: Store[K]) {
-    return localStorage.setItem(this.key, JSON.stringify({ ...this.getStore(), [key]: value }));
+    return localStorage.setItem(
+      this.key,
+      JSON.stringify({ ...this.getStore(), [key]: value }),
+    );
   }
 }

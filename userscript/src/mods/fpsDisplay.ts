@@ -33,7 +33,7 @@ export class FPSDisplayMod extends Mod<Config> {
       {
         showTime: "Show Current Time",
         gameTime: "Show Game Time Elapsed",
-      }
+      },
     );
   }
   public override loadConfig(key: keyof Config) {
@@ -94,7 +94,8 @@ export class FPSDisplayMod extends Mod<Config> {
           fps += ` - ${[minutes, seconds].map((t) => t.toString().padStart(2, "0")).join(":")}`;
         }
       }
-      if (this.frameDisplay.innerText !== fps) this.frameDisplay.innerText = fps;
+      if (this.frameDisplay.innerText !== fps)
+        this.frameDisplay.innerText = fps;
       this.frames = 0;
       this.lastUpdate = now;
       this.frameDisplay.style.display = "block";

@@ -36,13 +36,20 @@ export default class Mod<cfg = any> {
   public configNames: Partial<{
     [key in keyof cfg]:
       | string
-      | { name: string; priority?: boolean; maxLength?: number; removableElements?: boolean };
+      | {
+          name: string;
+          priority?: boolean;
+          maxLength?: number;
+          removableElements?: boolean;
+        };
   }>;
 
   constructor(public readonly details: ModDetails) {}
 
   public isInstalled() {
-    return this.details.core || Ninja.settings.get("enabledMods").includes(this.id);
+    return (
+      this.details.core || Ninja.settings.get("enabledMods").includes(this.id)
+    );
   }
   public doInstall(add = true) {
     const list = new Set(Ninja.settings.get("enabledMods"));
