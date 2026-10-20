@@ -60,9 +60,9 @@
   };
   var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target, mod));
 
-  // node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js
+  // node_modules/localforage/dist/localforage.js
   var require_localforage = __commonJS({
-    "node_modules/.pnpm/localforage@1.10.0/node_modules/localforage/dist/localforage.js"(exports, module) {
+    "node_modules/localforage/dist/localforage.js"(exports, module) {
       (function(f) {
         if (typeof exports === "object" && typeof module !== "undefined") {
           module.exports = f();
