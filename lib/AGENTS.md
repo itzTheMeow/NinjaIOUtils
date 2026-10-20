@@ -53,16 +53,28 @@ TypeScript executed by bun directly — no build step for the generator itself.
      `extends EventDispatcher`.
    - `optionalizeParams`: trailing `= null` params + JSDoc headers so legacy
      arities stay callable.
+   - `collectStaticMembers` (analysis only, no text rewrite): walks the FINAL
+     chunk AST for `Host.Member = ...` assignments at any depth — tsc only
+     lifts top-level ones, and the bundle assigns most statics inside methods.
+     Conservative typing (`new X()` → X, literals → primitives, else any).
 3. **Version pinning** — banner regexes (`VERSION_DETECTORS`) extract pixi.js /
    howler versions and bump `package.json` devDeps + `bun install`.
 4. **Emit** — the chunk is written as `.generate/game.js` (with an import
    header and an `export {...}` tail) and compiled by tsc as **JS**
    (`allowJs`, `checkJs: false`, `declaration`, `declarationMap`). Compiling as
    JS is what gives constructor-field inference and namespace merging.
-5. **Post-emit patches** — `applyMemberOverrides` rewrites `lib.d.ts` via
-   `EditTracker` (every edit = one pass): widens the injected `?: null` params
-   to `?: any`, applies `MEMBER_OVERRIDES`, retargets the
-   `//# sourceMappingURL=` comment to `lib.d.ts.map`.
+5. **Post-emit patches** — all via `EditTracker` (every edit = one pass):
+   - `applyMemberOverrides`: widens the injected `?: null` params to
+     `?: any`, injects `INTERFACE_INJECTIONS` payload interfaces
+     (`Credential`), applies `MEMBER_OVERRIDES` (namespace vars retyped in
+     place; machine-alias pairs `var _x: any; export { _x as Member };`
+     stripped in favor of a clean class static; otherwise a class static is
+     stubbed), retargets the `//# sourceMappingURL=` comment to
+     `lib.d.ts.map`.
+   - `applyStaticMembers`: injects the `collectStaticMembers` findings onto
+     `declare class` blocks — never duplicates members present on the class,
+     upgrades only useless namespace types (`any`/`{}`), strips `_x` alias
+     pairs. Explicit `MEMBER_OVERRIDES` always win (they run first).
 6. **Declaration-map surgery** — `rewriteDeclarationMap` re-keys tsc's map
    rows from the pre-patch dts onto the patched dts (lines shift!) and points
    `sources` at `.generate/game.js`. Validated, then written to
@@ -84,9 +96,11 @@ TypeScript executed by bun directly — no build step for the generator itself.
   must stay position-independent.
 - **Vendor version bumps come from bundle banners**, not manual edits — update
   `VERSION_DETECTORS` if the banner format changes.
-- `MEMBER_OVERRIDES` is for userscript-attached runtime fields and genuine
-  pixi/type conflicts only. If a member _moved or changed_ in the bundle, port
-  the consumer code instead of faking the type.
+- `MEMBER_OVERRIDES` is for userscript-attached runtime fields, modeled
+  payload types, and genuine pixi/type conflicts only. If a member _moved or
+  changed_ in the bundle, port the consumer code instead of faking the type.
+  Explicit `MEMBER_OVERRIDES` always win over `collectStaticMembers`
+  inference.
 - `USERSRIPT_DIR` typo is baked into a constant name; paths are anchored at
   `import.meta.url`, so the scripts work from any cwd.
 - tsc here is TypeScript 7 (native/tsgo). Some cast sites use `as any` around
@@ -97,6 +111,8 @@ TypeScript executed by bun directly — no build step for the generator itself.
 - New global needing member folding → `MEMBER_FOLD_NAMES`; new
   EventDispatcher mixin → `DISPATCHER_MIXIN_NAMES` or `CLASSIFY_AS_CLASS`;
   new vendor bundle → `VENDOR_MARKERS` (+ `VERSION_DETECTORS` if typed).
+- New runtime payload shape the bundle never declares → `INTERFACE_INJECTIONS`
+  (emitted as exported interfaces), then reference it from `MEMBER_OVERRIDES`.
 - New dts patch → add to `applyMemberOverrides` via `EditTracker` only.
 - New pipeline sanity check → follow the existing regex/window pattern in
   `validateDeclarationMap`.

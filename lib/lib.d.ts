@@ -1,5 +1,25 @@
 import * as PIXI from "pixi.js";
 import { Howl } from "howler";
+export interface Credential {
+    id: string;
+    type: string;
+    username: string;
+    playerid: string;
+    level: number;
+    title: string;
+    skill: number;
+    accounttype: string;
+    ts: number;
+    products: Record<string, any>;
+    customization: Record<string, any>;
+    ciphertext: string;
+    clan_id: number;
+    clan_name: string;
+    clan_role: string;
+    addr: string;
+    version: string;
+}
+
 declare var servicebase: {};
 declare class ServiceBase {
     xhrGet(a: any): Promise<any>;
@@ -1671,10 +1691,9 @@ declare class Thumbnail extends PIXI.Sprite {
     applyCustomization(a: any, b?: any[]): void;
     setPose(a: any, b?: any): void;
     destroy(a: any): void;
-}
+
+    static visualizer: Visualizer;}
 declare namespace Thumbnail {
-    var _b: any;
-    export { _b as visualizer };
     export var visualizerWidth: number;
     export var visualizerHeight: number;
     export var visualizerAura: boolean;
@@ -3961,7 +3980,7 @@ declare class FastDebugLineRenderer extends PIXI.Mesh {
     static getShader(): any;
 }
 declare namespace FastDebugLineRenderer {
-    var Shader: any;
+    var Shader: PIXI.Shader;
     var GlVertexSource: string;
     var GlFragmentSource: string;
     var GpuSource: string;
@@ -5314,7 +5333,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare class App extends PIXI.Container {
-    credential: any;
+    credential: Credential;
     servers: any[];
     status: {};
     stage: any;
@@ -5460,7 +5479,13 @@ declare class App extends PIXI.Container {
     onRightDown(a: any): void;
     onRightUp(a: any): void;
 
-    static CombinedTextures: any;}
+    static Credential: Credential;
+    static CombinedTextures: Record<string, any>;
+    static Console: CommandConsole;
+    static Layer: Layer;
+    static PlayerClothTextures: any;
+    static PlayerTextures: any;
+    static Stats: Stats;}
 declare namespace App {
     var UpdatePreloader: (a: any) => void;
     var RemovePreloader: () => void;
@@ -5490,12 +5515,6 @@ declare namespace App {
     export var ModePreference: string;
     export var Renderer: any;
     export var Stage: any;
-    export var _d: any;
-    export { _d as Console };
-    export var _e: any;
-    export { _e as Stats };
-    export var _f: any;
-    export { _f as Layer };
     export var ClientVersion: string;
     export var MinVersion: string;
     export var HasFocus: boolean;
@@ -5509,7 +5528,7 @@ declare namespace App {
     export var LastRewardCheck: number;
     export var HadRewards: boolean;
     export var ShowRewardedAd: boolean;
-    export var AdblockDetected: any;
+    export var AdblockDetected: boolean;
     export var ShowRewardedShopAd: boolean;
     export var WindowResized: boolean;
     export var HelpDisplayed: boolean;
@@ -5536,8 +5555,6 @@ declare namespace App {
     export var FieldHasFocus: boolean;
     export var Autogen: boolean;
     export var FirstRun: boolean;
-    export var _h: {};
-    export { _h as Credential };
     export var DisplayFrameTime: boolean;
     export var DisplayAdblockMessage: boolean;
     export var SetCredential: (a: any) => void;
@@ -5589,7 +5606,7 @@ declare namespace App {
             file: string;
         }[];
     };
-    export var DefaultCredential: any;
+    export var DefaultCredential: Credential;
     export var DefaultServers: any;
 }
 declare let whitelabel: string | boolean;
@@ -6902,7 +6919,15 @@ declare class TerrainSeams {
     recoverFeatures /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     coveredFeature /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): boolean;
     coveredInterval(a: any, b: any, c: any, e: any, f: any, g?: any, h?: boolean): boolean;
-}
+
+    static ceilingManifold: any;
+    static ceilingSupport: any;
+    static crawlForce: any;
+    static crawlManifold: any;
+    static groundFollowScratch: any;
+    static proneManifold: any;
+    static proneRay: any;
+    static rollScratch: any;}
 declare var actorhitboxes: {};
 declare class ActorHitboxes {
     static proneSlopeLowering /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
@@ -8695,7 +8720,8 @@ declare class BaseSprite extends PIXI.Container {
     constructRectMesh /** @param {any} a @param {any} [c] @param {any} [e] */(a: any, b?: number[], c?: any, e?: any): any;
     constructCircleMesh /** @param {any} a @param {any} [c] @param {any} [e] */(a: any, b?: number[], c?: any, e?: any): any;
     constructColoredMesh(a: any): void;
-}
+
+    static SurfacePrograms: any;}
 declare namespace BaseSprite {
     var MeshIDMap: any;
     var DefaultUVs: number[];
@@ -9155,7 +9181,9 @@ declare class LinkGunSprite extends PIXI.Sprite {
     animate(a: any): void;
     init(): void;
     onUse(): void;
-}
+
+    static BeamFrames: any;
+    static CoreFrames: any;}
 declare class M60Sprite extends PIXI.Sprite {
     secondaryScale: {
         x: number;

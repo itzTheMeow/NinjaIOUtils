@@ -249,14 +249,56 @@ const DISPATCHER_MIXIN_NAMES = ["UserInput"];
 
 /** Runtime fields the userscript attaches itself, or pixi/type conflicts we
  *  deliberately loosen. Tuned per generated run; members that genuinely moved
- *  in the bundle should NOT be faked here (port the consumer instead). */
+ *  in the bundle should NOT be faked here (port the consumer instead).
+ *  Static overrides win over collectStaticMembers inference (injection skips
+ *  members already present). */
 const MEMBER_OVERRIDES: MemberOverride[] = [
   { class: "Client", member: "mapID", type: "any" }, // userscript-attached on runtime instances
   { class: "PVPClient", member: "mapID", type: "any" },
-  { class: "App", member: "credential", type: "any" }, // auth payload shape varies at runtime
-  { class: "App", member: "CombinedTextures", type: "any", static: true },
+  { class: "App", member: "credential", type: "Credential" }, // auth payload (modeled in INTERFACE_INJECTIONS)
+  { class: "App", member: "Credential", type: "Credential", static: true },
+  {
+    class: "App",
+    member: "DefaultCredential",
+    type: "Credential",
+    static: true,
+  },
+  {
+    class: "App",
+    member: "CombinedTextures",
+    type: "Record<string, any>",
+    static: true,
+  }, // await PIXI.Assets.load(...) element map
   { class: "App", member: "ConnectedServer", type: "any", static: true },
   { class: "Checkbox", member: "label", type: "any" }, // shadows PIXI.Container.label
+];
+
+/** Hand-modeled runtime payload shapes the bundle never declares (JSON
+ *  payloads, server responses). Injected as exported interfaces into the dts
+ *  so MEMBER_OVERRIDES can reference them by name. */
+const INTERFACE_INJECTIONS: { name: string; source: string }[] = [
+  {
+    name: "Credential",
+    source: `export interface Credential {
+    id: string;
+    type: string;
+    username: string;
+    playerid: string;
+    level: number;
+    title: string;
+    skill: number;
+    accounttype: string;
+    ts: number;
+    products: Record<string, any>;
+    customization: Record<string, any>;
+    ciphertext: string;
+    clan_id: number;
+    clan_name: string;
+    clan_role: string;
+    addr: string;
+    version: string;
+}`,
+  },
 ];
 
 /** Bare `X = <expr>;` assignments to undeclared top-level names are declared
@@ -555,7 +597,7 @@ function optionalizeParams(gameChunk: string): { result: string; pass: Pass } {
     spans.push({
       start: fn.anchorStart,
       end: fn.anchorStart,
-      replacement: `${paramNames.map((p) => `@param ${p}`).join(" ") ? `/** ${paramNames.map((p) => `@param ${p}`).join(" ")} */` : ""} `,
+      replacement: `/** ${paramNames.map((p) => `@param ${p}`).join(" ")} */ `,
     });
   }
 
@@ -615,6 +657,128 @@ function classifyMixinClasses(gameChunk: string): {
     console.log(`mixin: class ${statement.id.name} extends EventDispatcher`);
   }
   return applySpans(gameChunk, spans);
+}
+
+/* ------------------------------------------------------------------ */
+/* 2c. static member collection                                        */
+/* ------------------------------------------------------------------ */
+
+/* tsc only lifts `Host.Member = ...` assignments made at the TOP LEVEL of the
+ * chunk; the bundle assigns most statics inside methods (App.Layer = new
+ * Layer() runs in App.init), so the emit loses them - at best they surface as
+ * aliased `any` vars (`export { _f as Layer }`). Collection walks the FINAL
+ * chunk AST (post transforms) for these assignments; applyStaticMembers then
+ * injects them onto the emitted `declare class` blocks. Typing is
+ * conservative: `new X()` -> X, literals -> primitives, everything else any. */
+
+interface StaticMember {
+  member: string;
+  type: string;
+}
+
+function inferStaticType(sites: Node[], classNames: Set<string>): string {
+  let constructed: string | null = null;
+  let primitive: string | null = null;
+  let conflict = false;
+  const record = (type: string, isNew: boolean): void => {
+    if (isNew) {
+      if (constructed && constructed !== type) conflict = true;
+      else constructed = type;
+    } else {
+      if (primitive && primitive !== type) conflict = true;
+      else primitive = type;
+    }
+  };
+  for (const site of sites) {
+    if (site?.type === "NewExpression") {
+      const callee = site.callee;
+      if (callee?.type === "Identifier") {
+        if (callee.name === "Set") record("Set<any>", true);
+        else if (callee.name === "Map") record("Map<any, any>", true);
+        else if (callee.name === "Array") record("any[]", true);
+        else if (classNames.has(callee.name)) record(callee.name, true);
+      } else if (
+        callee?.type === "MemberExpression" &&
+        !callee.computed &&
+        callee.object?.type === "Identifier" &&
+        callee.object.name === "PIXI" &&
+        callee.property?.type === "Identifier"
+      )
+        record(`PIXI.${callee.property.name}`, true);
+    } else if (
+      site?.type === "UnaryExpression" &&
+      site.operator === "!" &&
+      site.argument?.type === "Literal" &&
+      typeof site.argument.value === "number"
+    )
+      record("boolean", false);
+    else if (site?.type === "Literal") {
+      if (typeof site.value === "boolean") record("boolean", false);
+      else if (typeof site.value === "number") record("number", false);
+      else if (typeof site.value === "string") record("string", false);
+    } else if (
+      site?.type === "TemplateLiteral" &&
+      site.expressions.length === 0
+    )
+      record("string", false);
+  }
+  if (conflict) return "any";
+  if (constructed) return constructed;
+  return primitive ?? "any";
+}
+
+function collectStaticMembers(gameChunk: string): Map<string, StaticMember[]> {
+  const program = acorn.parse(gameChunk, {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  } as any);
+  // hosts AND constructor-name targets must be real classes so the injected
+  // type references resolve in the emit (`declare class X`)
+  const classNames = new Set<string>();
+  for (const statement of program.body)
+    if (statement.type === "ClassDeclaration" && statement.id)
+      classNames.add(statement.id.name);
+  const sites = new Map<string, Node[]>();
+  const walk = (node: Node): void => {
+    if (!node || typeof node !== "object") return;
+    if (
+      node.type === "AssignmentExpression" &&
+      node.operator === "=" &&
+      node.left?.type === "MemberExpression" &&
+      !node.left.computed &&
+      node.left.object?.type === "Identifier" &&
+      classNames.has(node.left.object.name) &&
+      node.left.property?.type === "Identifier" &&
+      /^[A-Za-z_$][\w$]*$/.test(node.left.property.name) &&
+      node.left.property.name !== "prototype"
+    ) {
+      const key = `${node.left.object.name}.${node.left.property.name}`;
+      if (!sites.has(key)) sites.set(key, []);
+      sites.get(key)!.push(node.right);
+    }
+    for (const key of Object.keys(node)) {
+      if (key === "range" || key === "loc") continue;
+      const value = node[key];
+      if (Array.isArray(value)) value.forEach(walk);
+      else if (value && typeof value === "object" && value.type) walk(value);
+    }
+  };
+  for (const statement of program.body) walk(statement);
+
+  const hosts = new Map<string, StaticMember[]>();
+  for (const [key, right] of sites) {
+    const dot = key.indexOf(".");
+    const host = key.slice(0, dot);
+    const member = key.slice(dot + 1);
+    if (!hosts.has(host)) hosts.set(host, []);
+    hosts.get(host)!.push({ member, type: inferStaticType(right, classNames) });
+  }
+  let total = 0;
+  for (const members of hosts.values()) total += members.length;
+  console.log(
+    `statics: collected ${total} member assignment(s) across ${hosts.size} host class(es)`,
+  );
+  return hosts;
 }
 
 /* ------------------------------------------------------------------ */
@@ -775,6 +939,24 @@ function runTsc(): { status: number | null; output: string } {
 /* 5. post-emit member overrides                                       */
 /* ------------------------------------------------------------------ */
 
+function findBlock(
+  heading: string,
+  text: string,
+): { start: number; end: number } | null {
+  const blockStart = text.indexOf(heading);
+  if (blockStart < 0) return null;
+  const openBrace = text.indexOf("{", blockStart);
+  let depth = 0;
+  for (let index = openBrace; index < text.length; index++) {
+    if (text[index] === "{") depth++;
+    else if (text[index] === "}") {
+      depth--;
+      if (depth === 0) return { start: openBrace, end: index };
+    }
+  }
+  return null;
+}
+
 function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
   // Our injected `= null` defaults infer the param type as literally `null`;
   // the runtime accepts anything, so widen them back to any. (These are the
@@ -786,23 +968,18 @@ function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
     (match) => `${match[1]}?: any`,
   );
   console.log(`optionalize: widened ${widened} inferred-null param types`);
-  const findBlock = (
-    heading: string,
-    text: string,
-  ): { start: number; end: number } | null => {
-    const blockStart = text.indexOf(heading);
-    if (blockStart < 0) return null;
-    const openBrace = text.indexOf("{", blockStart);
-    let depth = 0;
-    for (let index = openBrace; index < text.length; index++) {
-      if (text[index] === "{") depth++;
-      else if (text[index] === "}") {
-        depth--;
-        if (depth === 0) return { start: openBrace, end: index };
-      }
+  // modeled runtime payload interfaces (INTERFACE_INJECTIONS) - placed before
+  // the first declaration so every emitted declaration can reference them
+  for (const { name, source } of INTERFACE_INJECTIONS) {
+    if (tracker.text.includes(`interface ${name} `)) continue;
+    const anchor = tracker.text.search(/^declare /m);
+    if (anchor < 0) {
+      console.log(`interface: no declaration anchor found, skipping ${name}`);
+      continue;
     }
-    return null;
-  };
+    tracker.replaceRange(anchor, anchor, `${source}\n\n`);
+    console.log(`interface: injected ${name}`);
+  }
   // retype `<whitespace+static?><readonly ...> member: <old>;` inside a class
   // body; instance/static bodies carry the leading 4-space indent.
   const retypeMember = (
@@ -848,23 +1025,67 @@ function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
     static: isStatic,
   } of MEMBER_OVERRIDES) {
     if (isStatic) {
-      // statics must be reachable through `typeof App`; if the emit's namespace
-      // for the class already declares the member, retarget THAT declaration's
-      // type. Otherwise put a `static member` on the class declaration itself
-      // (an un-exported module namespace merge doesn't surface new members for
-      // consumers, but class statics do).
-      const pattern = new RegExp(`export var ${member}:\\s*[^;]+;`);
-      const match = pattern.exec(tracker.text);
-      if (match) {
+      // statics must be reachable through `typeof App`; the emit surfaces
+      // top-level `App.Member = ...` as a namespace var (possibly behind a
+      // machine alias `_x`), while method-assigned statics appear nowhere.
+      // Prefer retyping the namespace declaration in place; strip alias
+      // pairs in favor of a clean class static; stub the class otherwise
+      // (an un-exported module namespace merge doesn't surface new members
+      // for consumers, but class statics do).
+      const nsBlock = findBlock(
+        `declare namespace ${className} `,
+        tracker.text,
+      );
+      const nsBody = nsBlock
+        ? tracker.text.slice(nsBlock.start + 1, nsBlock.end)
+        : "";
+      const directPattern = new RegExp(
+        `((?:export )?)var ${member}:\\s*([^;]+);`,
+      );
+      const directMatch = directPattern.exec(nsBody);
+      if (nsBlock && directMatch) {
+        const absolute = nsBlock.start + 1 + directMatch.index;
         tracker.replaceRange(
-          match.index,
-          match.index + match[0].length,
-          `export var ${member}: ${type};`,
+          absolute,
+          absolute + directMatch[0].length,
+          `${directMatch[1]}var ${member}: ${type};`,
         );
         console.log(
           `override: retyped static ${className}.${member} (namespace) -> ${type}`,
         );
         continue;
+      }
+      const aliasPattern = new RegExp(
+        `\\n    export \\{ (_[A-Za-z0-9_$]*) as ${member} \\};`,
+      );
+      const aliasMatch = nsBody && aliasPattern.exec(nsBody);
+      if (nsBlock && aliasMatch) {
+        const aliasVar = aliasMatch[1];
+        const singleUse =
+          nsBody.match(new RegExp(`\\b${aliasVar} as `, "g"))?.length === 1;
+        const declPattern = new RegExp(
+          `\\n    export var ${aliasVar}:\\s*[^;]+;`,
+        );
+        const declMatch = singleUse && declPattern.exec(nsBody);
+        if (declMatch) {
+          const declAbsolute = nsBlock.start + 1 + declMatch.index;
+          const aliasAbsolute = nsBlock.start + 1 + aliasMatch.index;
+          tracker.replaceWith([
+            {
+              start: declAbsolute,
+              end: declAbsolute + declMatch[0].length,
+              replacement: "",
+            },
+            {
+              start: aliasAbsolute,
+              end: aliasAbsolute + aliasMatch[0].length,
+              replacement: "",
+            },
+          ]);
+          console.log(
+            `override: stripped alias pair for ${className}.${member} (namespace)`,
+          );
+        }
       }
       retypeMember(className, member, type, true);
       continue;
@@ -882,6 +1103,139 @@ function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
       "//# sourceMappingURL=lib.d.ts.map",
     );
   }
+  return { text: tracker.text, passes: tracker.passes };
+}
+
+/* ------------------------------------------------------------------ */
+/* 5a. static member injection                                         */
+/* ------------------------------------------------------------------ */
+
+/* Injects the members discovered by collectStaticMembers onto the emitted
+ * `declare class` blocks, via EditTracker only (declaration-map safe).
+ * Runs AFTER applyMemberOverrides so explicit MEMBER_OVERRIDES win; members
+ * already present on a class or namespace are never duplicated:
+ * - direct namespace var typed `any` -> retyped to the inferred type
+ * - machine alias pairs (`var _x: any; export { _x as Member };`) -> both
+ *   lines stripped and a clean `static Member: T;` added to the class
+ * - namespace vars tsc actually inferred -> trusted, left alone */
+
+function applyStaticMembers(
+  dts: string,
+  hosts: Map<string, StaticMember[]>,
+): { text: string; passes: Pass[] } {
+  const tracker = new EditTracker(dts);
+  let injected = 0;
+  let retyped = 0;
+  let stripped = 0;
+  const skipped: string[] = [];
+  const anyTyped: string[] = [];
+  for (const host of [...hosts.keys()].sort()) {
+    const members = hosts
+      .get(host)!
+      .slice()
+      .sort((a, b) => a.member.localeCompare(b.member));
+    const classBlock = findBlock(`declare class ${host} `, tracker.text);
+    if (!classBlock) {
+      for (const { member } of members)
+        skipped.push(`${host}.${member} (no emitted class)`);
+      continue;
+    }
+    const nsBlock = findBlock(`declare namespace ${host} `, tracker.text);
+    const body = tracker.text.slice(classBlock.start + 1, classBlock.end);
+    const nsBody = nsBlock
+      ? tracker.text.slice(nsBlock.start + 1, nsBlock.end)
+      : "";
+    // every edit for this host batches into ONE pass; all offsets are in
+    // tracker.text coordinates as of this iteration
+    const spans: Span[] = [];
+    for (const { member, type } of members) {
+      if (
+        new RegExp(
+          `\\n    (?:readonly |static |get |set )*(?:async )?${member}\\b`,
+        ).test(body)
+      ) {
+        skipped.push(`${host}.${member} (member exists)`);
+        continue;
+      }
+      const direct =
+        nsBody &&
+        new RegExp(`\\n    ((?:export )?)var ${member}:\\s*([^;]+);`).exec(
+          nsBody,
+        );
+      if (direct) {
+        if (type !== "any" && ["any", "{}"].includes(direct[2].trim())) {
+          spans.push({
+            start: nsBlock!.start + 1 + direct.index,
+            end: nsBlock!.start + 1 + direct.index + direct[0].length,
+            replacement: `\n    ${direct[1]}var ${member}: ${type};`,
+          });
+          retyped++;
+        } else skipped.push(`${host}.${member} (namespace-typed)`);
+        continue;
+      }
+      const alias =
+        nsBody &&
+        new RegExp(
+          `\\n    export \\{ ([A-Za-z_$][\\w$]*) as ${member} \\};`,
+        ).exec(nsBody);
+      if (alias) {
+        const aliasVar = alias[1];
+        const aliasVarDecl = new RegExp(
+          `\\n    (?:export )?var ${aliasVar}:\\s*([^;]+);`,
+        ).exec(nsBody);
+        const aliasCount = nsBody.match(
+          new RegExp(`\\b${aliasVar} as `, "g"),
+        )?.length;
+        if (
+          aliasVarDecl &&
+          ["any", "{}"].includes(aliasVarDecl[1].trim()) &&
+          type !== "any" &&
+          aliasCount === 1
+        ) {
+          spans.push({
+            start: nsBlock!.start + 1 + aliasVarDecl.index,
+            end:
+              nsBlock!.start + 1 + aliasVarDecl.index + aliasVarDecl[0].length,
+            replacement: "",
+          });
+          spans.push({
+            start: nsBlock!.start + 1 + alias.index,
+            end: nsBlock!.start + 1 + alias.index + alias[0].length,
+            replacement: "",
+          });
+          spans.push({
+            start: classBlock.end,
+            end: classBlock.end,
+            replacement: `\n    static ${member}: ${type};`,
+          });
+          injected++;
+          stripped++;
+          continue;
+        }
+        skipped.push(`${host}.${member} (alias ${aliasVar})`);
+        continue;
+      }
+      spans.push({
+        start: classBlock.end,
+        end: classBlock.end,
+        replacement: `\n    static ${member}: ${type};`,
+      });
+      injected++;
+      if (type === "any") anyTyped.push(`${host}.${member}`);
+    }
+    if (spans.length) tracker.replaceWith(spans);
+  }
+  console.log(
+    `statics: injected ${injected} static member(s), retyped ${retyped} namespace var(s), stripped ${stripped} alias pair(s), skipped ${skipped.length}`,
+  );
+  if (skipped.length)
+    console.log(
+      `statics: skipped (first 25): ${skipped.slice(0, 25).join(", ")}`,
+    );
+  if (anyTyped.length)
+    console.log(
+      `statics: injected as any (first 25, refine via MEMBER_OVERRIDES): ${anyTyped.slice(0, 25).join(", ")}`,
+    );
   return { text: tracker.text, passes: tracker.passes };
 }
 
@@ -1155,6 +1509,9 @@ function main(): void {
     console.log(
       `converted bare global assignments: ${rewritten.converted.join(", ")}`,
     );
+  // static surface discovery runs on the FINAL chunk (post transforms) and
+  // feeds the post-emit injection (applyStaticMembers)
+  const staticMembers = collectStaticMembers(gameChunk);
 
   syncPackageVersions(detectVersions(source));
 
@@ -1173,7 +1530,12 @@ function main(): void {
 
   fs.copyFileSync(outFile, OUT_FILE);
   const dtsBefore = fs.readFileSync(OUT_FILE, "utf8");
-  const patched = applyMemberOverrides(dtsBefore);
+  const overridden = applyMemberOverrides(dtsBefore);
+  const injected = applyStaticMembers(overridden.text, staticMembers);
+  const patched = {
+    text: injected.text,
+    passes: [...overridden.passes, ...injected.passes],
+  };
   // tsserver hard-caps navigated file loads at 4MB; if the game chunk outgrows
   // it, every definition request crashes instead of degrading - so drop the
   // map entirely in that case and keep the previous dts-only navigation.
