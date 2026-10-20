@@ -83,6 +83,16 @@ TypeScript executed by bun directly — no build step for the generator itself.
    `sources` at `.generate/game.js`. Validated, then written to
    `lib.d.ts.map`.
 7. **Validate** — `tsc --noEmit` over `userscript/` must pass.
+8. **Combined texture names** — `fetchCombinedTextureNames` fetches the
+   spritesheet atlas (`ASSET_HOST` = https://beta.fragline.com, URL follows
+   AssetLoader's `dir/group/file` scheme, version parsed from
+   `App.RESOURCES` in the bundle) and injects `CombinedTextureName` (union of
+   all texture names) + `CombinedTexturesMap` (name-keyed map keeping a
+   `Record<string, PIXI.Texture>` index for dynamic keys) via
+   `INTERFACE_INJECTIONS`; `App.CombinedTextures` is retyped to it and
+   `ModDetails.icon` uses the union. **Any failure degrades** to the old
+   `Record<string, any>` with a log — the regen itself never fails on the
+   network. Derived names land in `.generate/combined-names.json`.
 
 ## Invariants & gotchas (do not break these silently)
 

@@ -291,7 +291,7 @@ export default function hookModMenu() {
         button.addListener(Button.BUTTON_RELEASED, () => {
           this.showConfig(mod);
         });
-        const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
+        const ico = new PIXI.Sprite(App.CombinedTextures.gears_icon);
         ico.width = button.width;
         ico.height = button.height;
         ico.x = button.width * -0.2;

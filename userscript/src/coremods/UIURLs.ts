@@ -38,7 +38,7 @@ export class UIURLMod extends Mod {
       description:
         "Saves your navigation state between page loads. Also enables joining a game via link.",
       author: "builtin",
-      icon: "menu_icon_players",
+      icon: "globe",
       core: true,
     });
   }

@@ -36,6 +36,11 @@ const OUT_MAP_FILE = path.join(HERE, "lib.d.ts.map");
 const WORK = path.join(HERE, ".generate");
 const USERSRIPT_DIR = path.join(HERE, "..", "userscript");
 
+/** Base URL the combined texture atlas is fetched from (beta environment of
+ *  the game; the public site is a landing page). Used by
+ *  fetchCombinedTextureNames. */
+const ASSET_HOST = "https://beta.fragline.com";
+
 const NO_INSTALL = process.argv.includes("--no-install");
 const NO_VALIDATE = process.argv.includes("--no-validate");
 
@@ -1469,7 +1474,7 @@ function validateDeclarationMap(
 /* 6. main                                                             */
 /* ------------------------------------------------------------------ */
 
-function main(): void {
+async function main(): Promise<void> {
   if (!fs.existsSync(SOURCE)) fail("lib/latest.js not found");
   fs.rmSync(WORK, { recursive: true, force: true });
   fs.mkdirSync(WORK, { recursive: true });
@@ -1557,6 +1562,21 @@ function main(): void {
 
   fs.copyFileSync(outFile, OUT_FILE);
   const dtsBefore = fs.readFileSync(OUT_FILE, "utf8");
+  const textureNames = await fetchCombinedTextureNames(source);
+  if (textureNames) {
+    INTERFACE_INJECTIONS.push({
+      name: "CombinedTexturesMap",
+      source: `export type CombinedTextureName =\n    ${textureNames
+        .map((name) => JSON.stringify(name))
+        .join(
+          " |\n    ",
+        )};\nexport type CombinedTexturesMap = { [K in CombinedTextureName]: PIXI.Texture };`,
+    });
+    const override = MEMBER_OVERRIDES.find(
+      (entry) => entry.class === "App" && entry.member === "CombinedTextures",
+    );
+    if (override) override.type = "CombinedTexturesMap";
+  }
   const overridden = applyMemberOverrides(dtsBefore);
   const injected = applyStaticMembers(overridden.text, staticMembers);
   const patched = {
@@ -1613,4 +1633,52 @@ function validate(): void {
   console.log("userscript tsc --noEmit passed");
 }
 
-if (!process.env.GEN_TYPES_NO_MAIN) main();
+/* ------------------------------------------------------------------ */
+/* 7. combined texture names                                           */
+/* ------------------------------------------------------------------ */
+
+/* The game fills App.CombinedTextures from the spritesheet asset declared in
+ * App.RESOURCES (`combined.json?v=<version>`), plus a handful of textures
+ * assigned manually in App.start(). The atlas is fetched from ASSET_HOST so
+ * the generated type carries the real texture names (ModDetails.icon etc.
+ * check against them). ANY failure degrades to the old Record<string, any>
+ * typing instead of failing the regen. */
+async function fetchCombinedTextureNames(
+  source: string,
+): Promise<string[] | null> {
+  const degrade = (reason: string): null => {
+    console.log(`combined textures: ${reason} - keeping Record<string, any>`);
+    return null;
+  };
+  const version = /combined\.json\?v=([0-9.]+)/.exec(source)?.[1];
+  if (!version) return degrade("atlas version not found in bundle");
+  let names: string[] = [];
+  try {
+    // AssetLoader.load builds `dir + "/" + groupKey + "/" + file`
+    const response = await fetch(
+      `${ASSET_HOST}/assets/combined/combined.json?v=${version}`,
+    );
+    if (!response.ok) return degrade(`atlas fetch returned ${response.status}`);
+    const atlas: any = await response.json();
+    names = Object.keys(atlas.frames ?? atlas.textures ?? {});
+  } catch (error) {
+    return degrade(`atlas fetch failed (${(error as Error).message})`);
+  }
+  for (const match of source.matchAll(
+    /App\.CombinedTextures\.([A-Za-z0-9_$]+) =/g,
+  ))
+    if (!names.includes(match[1])) names.push(match[1]);
+  if (names.length < 100)
+    return degrade(`only ${names.length} texture names derived`);
+  names.sort();
+  fs.writeFileSync(
+    path.join(WORK, "combined-names.json"),
+    JSON.stringify(names, null, 2),
+  );
+  console.log(
+    `combined textures: derived ${names.length} names from the atlas (v${version})`,
+  );
+  return names;
+}
+
+if (!process.env.GEN_TYPES_NO_MAIN) await main();

@@ -2506,7 +2506,7 @@
           button.addListener(Button.BUTTON_RELEASED, () => {
             this.showConfig(mod);
           });
-          const ico = new PIXI.Sprite(App.CombinedTextures["menu_icon_settings"]);
+          const ico = new PIXI.Sprite(App.CombinedTextures.gears_icon);
           ico.width = button.width;
           ico.height = button.height;
           ico.x = button.width * -0.2;
@@ -3070,7 +3070,7 @@
         name: "Texture Packs",
         description: "Adds in the texture pack settings tab and allows packs to load.",
         author: "builtin",
-        icon: "menu_icon_settings",
+        icon: "gears_icon",
         core: true
       });
       this.loadon = "pagestart";
@@ -3373,7 +3373,7 @@
         name: "UI URLs",
         description: "Saves your navigation state between page loads. Also enables joining a game via link.",
         author: "builtin",
-        icon: "menu_icon_players",
+        icon: "globe",
         core: true
       });
     }

@@ -20,7 +20,7 @@ export class TexturePackMod extends Mod {
       description:
         "Adds in the texture pack settings tab and allows packs to load.",
       author: "builtin",
-      icon: "menu_icon_settings",
+      icon: "gears_icon",
       core: true,
     });
     this.loadon = "pagestart";

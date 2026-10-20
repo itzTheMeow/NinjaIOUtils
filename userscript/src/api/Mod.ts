@@ -1,3 +1,4 @@
+import type { CombinedTextureName } from "lib";
 import Ninja from "./Ninja";
 import Settings from "./Settings";
 
@@ -10,8 +11,8 @@ export interface ModDetails {
   description: string;
   /** The name of the mod's creator. */
   author: string;
-  /** A ninja texture keyname used as an icon. */
-  icon: string;
+  /** A texture name from the game's combined texture atlas. */
+  icon: CombinedTextureName;
   /** Determines if the mod is built-in. You should not need to use this. */
   core?: true;
   /** Determines if this mod is a draft. Draft mods are not registered and can not be installed. */
