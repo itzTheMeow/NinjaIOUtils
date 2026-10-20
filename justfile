@@ -10,3 +10,11 @@ lib:
 # typecheck the lib generator scripts
 lib-check:
     cd lib && bun run typecheck
+
+# build the userscript
+build:
+    cd userscript && bun run start
+
+# typecheck the userscript
+check:
+    cd userscript && bunx tsc --noEmit
