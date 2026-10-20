@@ -1,13 +1,20 @@
-import { Button, Checkbox, Feature, ImgButton, InputField } from "lib";
+import {
+  AudioEffects,
+  Button,
+  Checkbox,
+  Feature,
+  ImgButton,
+  InputField,
+  MemberBrowserScrollbar,
+  UITheme,
+} from "lib";
 import { app, App, FontStyle, Layer, PIXI } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
-import config from "./config";
-import Scrollbar from "./ui/scrollbar";
 import { cloneTextStyle } from "./utils";
 
 export default function hookModMenu() {
-  const menu = Ninja.activeMenu();
+  let menu = Ninja.activeMenu();
 
   // just replace the utils button with the mods button
   function hookUtilsButton() {
@@ -26,8 +33,11 @@ export default function hookModMenu() {
   hookUtilsButton();
 
   App.Layer.on(Layer.Events.MODS_ACCESS, () => {
+    menu = Ninja.activeMenu();
     menu.emit(Layer.Events.MENU_ACCESS);
     menu.playButton.setActive(false);
+    // the menu hides before mouseout can fire, so un-hover the button
+    app.menu?.utilsIcon.draw(false);
     modsMenu.show();
     App.Layer.addChild(modsMenu);
     App.Layer.emit(Layer.Events.HIDE_MENU);
@@ -35,108 +45,139 @@ export default function hookModMenu() {
   });
 
   class ModsMenu extends Feature {
-    ox = 40;
-    oy = 20;
-    marginTop = 0;
-    marginLeft = 0;
-    showInstalled = false;
+    panelWidth = 844;
+    panelHeight = 524;
+    rowWidth = 750;
     modItemHeight = 110;
+    showInstalled = false;
     shownConfig: Mod | null = null;
 
-    background = new PIXI.Graphics();
+    background: PIXI.Graphics;
     closeButton = new ImgButton();
-    titleText = new PIXI.Text({
-      text: "Mods",
-      style: FontStyle.MediumOrangeText,
-    });
+    titleText: PIXI.Text;
     modContainer = new PIXI.Container();
     configContainer = new PIXI.Container();
     filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
-    scroller = new (Scrollbar())(460);
+    scroller: MemberBrowserScrollbar;
 
     constructor() {
       super();
 
+      this.background = UITheme.createUIPanel(
+        this.panelWidth,
+        this.panelHeight,
+      );
       this.background.x = 0;
       this.background.y = 40;
-      this.background
-        .rect(0, 0, 660, 524)
-        .setFillStyle({ color: 3355443, alpha: 1 })
-        .fill();
-      this.background
-        .rect(10, 10, 640, 504)
-        .setFillStyle({ color: 0, alpha: 0.3 })
-        .fill();
-      this.background.stroke({
-        width: 1,
-        color: 16777215,
-        alpha: 0.1,
-        alignment: 0,
-      });
       this.container.addChild(this.background);
 
-      this.titleText.x = 0.5 * this.width - 20;
-      this.titleText.y = this.oy + 36;
-      this.titleText.anchor.x = 0.5;
+      const contentPanel = UITheme.createUIPanel(this.panelWidth - 42, 446, 4);
+      contentPanel.x = 21;
+      contentPanel.y = 104;
+      contentPanel.alpha = 0.54;
+      this.container.addChild(contentPanel);
+
+      const headerLine = new PIXI.Graphics();
+      headerLine
+        .rect(24, 92, this.panelWidth - 48, 1)
+        .fill({ color: UITheme.MenuColors.panelStroke, alpha: 0.32 });
+      this.container.addChild(headerLine);
+
+      this.titleText = new PIXI.Text("Mods", <any>{
+        fontFamily: "Teko",
+        fontSize: 28,
+        fontWeight: "500",
+        fill: "#ff9f00",
+        letterSpacing: 0.5,
+        stroke: { color: 0, width: 2 },
+        lineJoin: "round",
+      });
+      this.titleText.x = 24;
+      this.titleText.y = 58;
       this.titleText.resolution = 2;
       this.container.addChild(this.titleText);
 
       this.closeButton = new ImgButton();
-      this.closeButton.x = this.background.width - 40;
-      this.closeButton.y = this.oy + 34;
+      this.closeButton.x = this.panelWidth - 44;
+      this.closeButton.y = 58;
       this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
       this.closeButton.on("mousedown", () =>
-        this.shownConfig ? this.show() : App.Layer.onMenuAccess(),
+        this.shownConfig
+          ? this.show()
+          : Ninja.activeMenu().emit(Layer.Events.MENU_ACCESS),
       );
       this.container.addChild(this.closeButton);
 
-      this.marginLeft += 20;
-      this.marginTop = this.titleText.height * 3.25;
-      this.filterBox.x = this.marginLeft + 6;
-      this.filterBox.y = this.marginTop;
+      // top right, like the name search field on the clan/players pages
+      this.filterBox.x = this.panelWidth - this.filterBox.width - 56;
+      this.filterBox.y = 62;
       this.filterBox.addEventListener(Checkbox.CHANGE, () => {
         this.showInstalled = this.filterBox.checked;
         this.indexList();
       });
       this.container.addChild(this.filterBox);
 
-      this.configContainer.x = this.marginLeft + 4;
-      this.configContainer.y = this.marginTop;
+      this.configContainer.x = 32;
+      this.configContainer.y = 116;
       this.container.addChild(this.configContainer);
 
-      this.marginTop += 8;
-      this.modContainer.x = this.marginLeft;
-      this.modContainer.y = this.marginTop + this.filterBox.height;
+      this.modContainer.x = 32;
+      this.modContainer.y = 130;
       this.container.addChild(this.modContainer);
 
-      this.scroller.x = this.background.width - 36;
-      this.scroller.y =
-        this.background.y + this.closeButton.height + this.oy + 3;
-      this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
+      this.scroller = new MemberBrowserScrollbar(390);
+      this.scroller.x = this.panelWidth - 54;
+      this.scroller.y = 130;
+      this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog: number) => {
         this.scrollTop = prog;
         this.indexList();
       });
       this.container.addChild(this.scroller);
 
-      this.container.x = 0.5 * -this.width;
-      this.reposition();
+      this.container.x = 0.5 * -this.panelWidth;
     }
-    reposition() {
-      this.marginTop = 0;
-    }
-    constructModItem(mod: Mod) {
+    constructModItem(mod: Mod, index: number) {
       const iconSize = 52,
         maxDesc = 150,
         container = new PIXI.Graphics();
-      container
-        .clear()
-        .beginPath()
-        .setFillStyle({
-          color: mod.isInstalled() ? config.Colors.green : config.Colors.white,
-          alpha: 0.1,
-        })
-        .roundRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6)
-        .fill();
+
+      const paintRow = (hovered: boolean) => {
+        const even = index % 2 === 0;
+        container
+          .clear()
+          .roundRect(0, 0, this.rowWidth, this.modItemHeight, 4)
+          .fill({
+            color: hovered
+              ? even
+                ? UITheme.MenuColors.rowHoverEven
+                : UITheme.MenuColors.rowHoverOdd
+              : even
+                ? UITheme.MenuColors.rowEven
+                : UITheme.MenuColors.rowOdd,
+            alpha: hovered ? 0.8 : 0.78,
+          })
+          .stroke({
+            color: hovered
+              ? UITheme.MenuColors.accentStrong
+              : UITheme.MenuColors.panelStroke,
+            width: 1,
+            alpha: hovered ? 0.24 : 0.18,
+          })
+          .roundRect(0, 0, 5, this.modItemHeight, 4)
+          .fill({
+            color: mod.isInstalled()
+              ? UITheme.MenuColors.success
+              : UITheme.MenuColors.accent,
+            alpha: hovered ? 0.35 : 0.16,
+          });
+      };
+      paintRow(false);
+      container.eventMode = "static";
+      container.on("mouseover", () => {
+        paintRow(true);
+        AudioEffects.ButtonHover.audio.play();
+      });
+      container.on("mouseout", () => paintRow(false));
 
       let pl = 0,
         pt = 0;
@@ -146,8 +187,8 @@ export default function hookModMenu() {
         .clear()
         .beginPath()
         .setFillStyle({
-          color: config.Colors.black,
-          alpha: 0.2,
+          color: UITheme.MenuColors.panelDeep,
+          alpha: 0.5,
         })
         .roundRect((pl += 10), (pt = pl), iconSize, iconSize, 8)
         .fill();
@@ -187,7 +228,7 @@ export default function hookModMenu() {
         ).trim(),
         style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
           wordWrap: true,
-          wordWrapWidth: 550,
+          wordWrapWidth: 640,
         }),
       });
       description.x = pl = 12;
@@ -200,8 +241,11 @@ export default function hookModMenu() {
         const button = new Button("installer");
         button.setText(mod.isInstalled() ? "Uninstall" : "Install");
         button.setTint(
-          mod.isInstalled() ? config.Colors.red : config.Colors.green,
+          mod.isInstalled()
+            ? UITheme.MenuColors.danger
+            : UITheme.MenuColors.success,
         );
+        button.edge.stroke({ color: 0xffffff, width: 1.5 });
         button.scale.x = button.scale.y = 0.8;
         button.x = pl -= button.width;
         button.y = pt;
@@ -253,6 +297,11 @@ export default function hookModMenu() {
         ico.x = button.width * -0.2;
         ico.y = button.height * 0.1;
         button.addChild(ico);
+        // hover border in the standard button gray
+        button.edge.stroke({
+          color: UITheme.MenuColors.border,
+          width: 1.5,
+        });
         container.addChild(button);
       }
 
@@ -287,7 +336,7 @@ export default function hookModMenu() {
         )
         .slice(top, top + this.maxMods)
         .forEach((m, i) => {
-          const item = this.constructModItem(m);
+          const item = this.constructModItem(m, top + i);
           item.y = (this.modItemHeight + 8) * i;
           this.modContainer.addChild(item);
         });
@@ -440,11 +489,12 @@ export default function hookModMenu() {
           const listBackground = new PIXI.Graphics();
           listBackground
             .clear()
-            .beginPath()
-            .roundRect(0, 0, listWidth, listHeight, 6)
-            .fill({
-              color: 0x000000,
-              alpha: 0.3,
+            .roundRect(0, 0, listWidth, listHeight, 4)
+            .fill({ color: UITheme.MenuColors.panelDeep, alpha: 0.5 })
+            .stroke({
+              color: UITheme.MenuColors.panelStroke,
+              width: 1,
+              alpha: 0.34,
             });
           listBackground.y = label.height + 10;
           container.addChild(listBackground);
@@ -467,13 +517,13 @@ export default function hookModMenu() {
           const scrollContent = new PIXI.Container();
           scrollContainer.addChild(scrollContent);
 
-          const scrollbar = new (Scrollbar())(listHeight);
+          const scrollbar = new MemberBrowserScrollbar(listHeight);
           scrollbar.x = listWidth - scrollbar.width + 5;
           scrollbar.y = listBackground.y + 4;
           container.addChild(scrollbar);
           let scrollProgress = 0;
 
-          scrollbar.on(Scrollbar().SCROLL, (prog) => {
+          scrollbar.on(MemberBrowserScrollbar.SCROLL, (prog) => {
             scrollProgress = prog;
             scrollContent.y = -Math.round(
               (scrollContent.height - listHeight) * prog,
@@ -499,7 +549,7 @@ export default function hookModMenu() {
               if (data.removableElements) {
                 const removeButton = new Button("remove");
                 removeButton.setText("Delete");
-                removeButton.setTint(config.Colors.red);
+                removeButton.setTint(UITheme.MenuColors.danger);
                 removeButton.scale.set(0.7);
                 removeButton.x = listWidth - removeButton.width - 10;
                 removeButton.addListener(Button.BUTTON_RELEASED, () => {

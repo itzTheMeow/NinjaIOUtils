@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      3.11
+// @version      0.1b
 // ==/UserScript==
 
 /*
@@ -2207,7 +2207,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "3.11",
+    ver: "0.1b",
     api: "https://utils.xela.codes",
     customDelimiter: "__custom",
     settingsKey: "nutils_settings",
@@ -2287,110 +2287,6 @@
   
   
 
-  // src/ui/scrollbar.ts
-  
-  
-  function Scrollbar() {
-    class _Scrollbar extends PIXI.Container {
-      constructor(h, start = 0) {
-        super();
-        this.h = h;
-        this.start = start;
-        this.scrollBar.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
-        this.scrollBar.roundRect(0, -5, 20, this.h, 4);
-        this.scrollBar.fill();
-        this.scrollBar.x = 0;
-        this.scrollBar.y = 0;
-        this.scrollBar.interactive = true;
-        this.scrollBar.alpha = 0.5;
-        this.addChild(this.scrollBar);
-        this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
-        this.scrollButton.setStrokeStyle({
-          width: 1,
-          color: 16777215,
-          alpha: 0.4
-        });
-        this.scrollButton.roundRect(0, 0, 16, 32, 4);
-        this.scrollButton.fill({ color: 16777215, alpha: 0.2 });
-        this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
-        this.addChild(this.scrollButton);
-        this.scrollButton.x = 2;
-        this.scrollButton.y = -3 + (this.h - 39) * this.start;
-        this.scrollBar.on("mouseover", () => {
-          this.scrollBar.alpha = 1;
-        });
-        this.scrollBar.on("mouseout", () => {
-          this.scrollBar.alpha = 0.5;
-        });
-        this.scrollBar.on("mouseupoutside", () => {
-          this.scrolling = false;
-        });
-        this.scrollBar.on("mousedown", (c) => {
-          c.stopPropagation();
-          this.scrolling = true;
-          this.oy = c.data.global.y / App.Scale;
-        });
-        this.scrollBar.on("mouseup", (c) => {
-          c.stopPropagation();
-          this.scrolling = false;
-        });
-        this.scrollBar.on("mousemove", (c) => {
-          this.scroll(c.data.global.y / App.Scale);
-        });
-        this.scrollBar.on("pointerup", () => {
-          this.scrolling = false;
-        });
-        this.scrollBar.on("pointerupoutside", () => {
-          this.scrolling = false;
-        });
-        this.scrollBar.on("pointerdown", (c) => {
-          this.scrolling = true;
-          this.oy = c.data.global.y / App.Scale;
-          this.scroll(c.data.global.y / App.Scale);
-        });
-        this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y / App.Scale));
-        this.wheelListener = (c) => {
-          this.scrolling = true;
-          this.scroll(this.oy + 0.2 * c.data.delta);
-          this.scrolling = false;
-        };
-      }
-      scrolling = false;
-      oy = 0;
-      scrollBar = new PIXI.Graphics();
-      scrollButton = new PIXI.Graphics();
-      wheelListener;
-      enableWheel() {
-        UserInput.hasListener(UserInput.WHEEL, this.wheelListener) || UserInput.addListener(UserInput.WHEEL, this.wheelListener);
-      }
-      disableWheel() {
-        UserInput.removeListener(UserInput.WHEEL, this.wheelListener);
-      }
-      scroll(a) {
-        if (this.scrolling) {
-          let b = this.scrollButton.y + (a - this.oy);
-          -3 > b ? b = -3 : b > this.h - 39 && (b = this.h - 39);
-          let c = this.h / (this.h - 39);
-          this.scrollButton.y = b;
-          this.oy = a;
-          this.emit(Scrollbar2.SCROLL, 1 / this.h * (b + 3) * c);
-        }
-      }
-      reset() {
-        this.scrollButton.y = -3 + (this.h - 39) * this.start;
-      }
-      onMouseOver() {
-        this.scrollButton.alpha = 1;
-      }
-      onMouseOut() {
-        this.scrollButton.alpha = 0.5;
-      }
-    }
-    const Scrollbar2 = _Scrollbar;
-    Scrollbar2.SCROLL = "scroll";
-    return Scrollbar2;
-  }
-
   // src/utils.ts
   function clickContainer(container) {
     container._events.mousedown.forEach((f) => f.fn());
@@ -2405,7 +2301,7 @@
 
   // src/hookModMenu.ts
   function hookModMenu() {
-    const menu = Ninja_default.activeMenu();
+    let menu = Ninja_default.activeMenu();
     function hookUtilsButton() {
       if (!app.menu)
         return;
@@ -2419,95 +2315,113 @@
     });
     hookUtilsButton();
     App.Layer.on(Layer.Events.MODS_ACCESS, () => {
+      menu = Ninja_default.activeMenu();
       menu.emit(Layer.Events.MENU_ACCESS);
       menu.playButton.setActive(false);
+      app.menu?.utilsIcon.draw(false);
       modsMenu.show();
       App.Layer.addChild(modsMenu);
       App.Layer.emit(Layer.Events.HIDE_MENU);
       app.onResize();
     });
     class ModsMenu extends Feature {
-      ox = 40;
-      oy = 20;
-      marginTop = 0;
-      marginLeft = 0;
-      showInstalled = false;
+      panelWidth = 844;
+      panelHeight = 524;
+      rowWidth = 750;
       modItemHeight = 110;
+      showInstalled = false;
       shownConfig = null;
-      background = new PIXI.Graphics();
+      background;
       closeButton = new ImgButton();
-      titleText = new PIXI.Text({
-        text: "Mods",
-        style: FontStyle.MediumOrangeText
-      });
+      titleText;
       modContainer = new PIXI.Container();
       configContainer = new PIXI.Container();
       filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
-      scroller = new (Scrollbar())(460);
+      scroller;
       constructor() {
         super();
+        this.background = UITheme.createUIPanel(this.panelWidth, this.panelHeight);
         this.background.x = 0;
         this.background.y = 40;
-        this.background.rect(0, 0, 660, 524).setFillStyle({ color: 3355443, alpha: 1 }).fill();
-        this.background.rect(10, 10, 640, 504).setFillStyle({ color: 0, alpha: 0.3 }).fill();
-        this.background.stroke({
-          width: 1,
-          color: 16777215,
-          alpha: 0.1,
-          alignment: 0
-        });
         this.container.addChild(this.background);
-        this.titleText.x = 0.5 * this.width - 20;
-        this.titleText.y = this.oy + 36;
-        this.titleText.anchor.x = 0.5;
+        const contentPanel = UITheme.createUIPanel(this.panelWidth - 42, 446, 4);
+        contentPanel.x = 21;
+        contentPanel.y = 104;
+        contentPanel.alpha = 0.54;
+        this.container.addChild(contentPanel);
+        const headerLine = new PIXI.Graphics();
+        headerLine.rect(24, 92, this.panelWidth - 48, 1).fill({ color: UITheme.MenuColors.panelStroke, alpha: 0.32 });
+        this.container.addChild(headerLine);
+        this.titleText = new PIXI.Text("Mods", {
+          fontFamily: "Teko",
+          fontSize: 28,
+          fontWeight: "500",
+          fill: "#ff9f00",
+          letterSpacing: 0.5,
+          stroke: { color: 0, width: 2 },
+          lineJoin: "round"
+        });
+        this.titleText.x = 24;
+        this.titleText.y = 58;
         this.titleText.resolution = 2;
         this.container.addChild(this.titleText);
         this.closeButton = new ImgButton();
-        this.closeButton.x = this.background.width - 40;
-        this.closeButton.y = this.oy + 34;
+        this.closeButton.x = this.panelWidth - 44;
+        this.closeButton.y = 58;
         this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
-        this.closeButton.on("mousedown", () => this.shownConfig ? this.show() : App.Layer.onMenuAccess());
+        this.closeButton.on("mousedown", () => this.shownConfig ? this.show() : Ninja_default.activeMenu().emit(Layer.Events.MENU_ACCESS));
         this.container.addChild(this.closeButton);
-        this.marginLeft += 20;
-        this.marginTop = this.titleText.height * 3.25;
-        this.filterBox.x = this.marginLeft + 6;
-        this.filterBox.y = this.marginTop;
+        this.filterBox.x = this.panelWidth - this.filterBox.width - 56;
+        this.filterBox.y = 62;
         this.filterBox.addEventListener(Checkbox.CHANGE, () => {
           this.showInstalled = this.filterBox.checked;
           this.indexList();
         });
         this.container.addChild(this.filterBox);
-        this.configContainer.x = this.marginLeft + 4;
-        this.configContainer.y = this.marginTop;
+        this.configContainer.x = 32;
+        this.configContainer.y = 116;
         this.container.addChild(this.configContainer);
-        this.marginTop += 8;
-        this.modContainer.x = this.marginLeft;
-        this.modContainer.y = this.marginTop + this.filterBox.height;
+        this.modContainer.x = 32;
+        this.modContainer.y = 130;
         this.container.addChild(this.modContainer);
-        this.scroller.x = this.background.width - 36;
-        this.scroller.y = this.background.y + this.closeButton.height + this.oy + 3;
-        this.scroller.on(Scrollbar().SCROLL, (prog) => {
+        this.scroller = new MemberBrowserScrollbar(390);
+        this.scroller.x = this.panelWidth - 54;
+        this.scroller.y = 130;
+        this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog) => {
           this.scrollTop = prog;
           this.indexList();
         });
         this.container.addChild(this.scroller);
-        this.container.x = 0.5 * -this.width;
-        this.reposition();
+        this.container.x = 0.5 * -this.panelWidth;
       }
-      reposition() {
-        this.marginTop = 0;
-      }
-      constructModItem(mod) {
+      constructModItem(mod, index) {
         const iconSize = 52, maxDesc = 150, container = new PIXI.Graphics();
-        container.clear().beginPath().setFillStyle({
-          color: mod.isInstalled() ? config_default.Colors.green : config_default.Colors.white,
-          alpha: 0.1
-        }).roundRect(0, 0, 620 - this.scroller.width, this.modItemHeight, 6).fill();
+        const paintRow = (hovered) => {
+          const even = index % 2 === 0;
+          container.clear().roundRect(0, 0, this.rowWidth, this.modItemHeight, 4).fill({
+            color: hovered ? even ? UITheme.MenuColors.rowHoverEven : UITheme.MenuColors.rowHoverOdd : even ? UITheme.MenuColors.rowEven : UITheme.MenuColors.rowOdd,
+            alpha: hovered ? 0.8 : 0.78
+          }).stroke({
+            color: hovered ? UITheme.MenuColors.accentStrong : UITheme.MenuColors.panelStroke,
+            width: 1,
+            alpha: hovered ? 0.24 : 0.18
+          }).roundRect(0, 0, 5, this.modItemHeight, 4).fill({
+            color: mod.isInstalled() ? UITheme.MenuColors.success : UITheme.MenuColors.accent,
+            alpha: hovered ? 0.35 : 0.16
+          });
+        };
+        paintRow(false);
+        container.eventMode = "static";
+        container.on("mouseover", () => {
+          paintRow(true);
+          AudioEffects.ButtonHover.audio.play();
+        });
+        container.on("mouseout", () => paintRow(false));
         let pl = 0, pt = 0;
         const icon = new PIXI.Graphics();
         icon.clear().beginPath().setFillStyle({
-          color: config_default.Colors.black,
-          alpha: 0.2
+          color: UITheme.MenuColors.panelDeep,
+          alpha: 0.5
         }).roundRect(pl += 10, pt = pl, iconSize, iconSize, 8).fill();
         const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
         iconSprite.width = iconSprite.height = iconSize - 10;
@@ -2535,7 +2449,7 @@
           text: (mod.details.description.slice(0, maxDesc) + (mod.details.description.length > maxDesc ? "..." : "")).trim(),
           style: cloneTextStyle(FontStyle.SmallMenuTextWhite2, {
             wordWrap: true,
-            wordWrapWidth: 550
+            wordWrapWidth: 640
           })
         });
         description.x = pl = 12;
@@ -2546,7 +2460,8 @@
         if (!mod.details.core) {
           const button = new Button("installer");
           button.setText(mod.isInstalled() ? "Uninstall" : "Install");
-          button.setTint(mod.isInstalled() ? config_default.Colors.red : config_default.Colors.green);
+          button.setTint(mod.isInstalled() ? UITheme.MenuColors.danger : UITheme.MenuColors.success);
+          button.edge.stroke({ color: 16777215, width: 1.5 });
           button.scale.x = button.scale.y = 0.8;
           button.x = pl -= button.width;
           button.y = pt;
@@ -2597,6 +2512,10 @@
           ico.x = button.width * -0.2;
           ico.y = button.height * 0.1;
           button.addChild(ico);
+          button.edge.stroke({
+            color: UITheme.MenuColors.border,
+            width: 1.5
+          });
           container.addChild(button);
         }
         return container;
@@ -2615,7 +2534,7 @@
         const mods = Ninja_default.mods.filter((m) => this.showInstalled ? m.isInstalled() : true), top = Math.max(0, Math.round((mods.length - this.maxMods) * this.scrollTop));
         this.modContainer.removeChildren();
         mods.sort((m1, m2) => m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1).slice(top, top + this.maxMods).forEach((m, i) => {
-          const item = this.constructModItem(m);
+          const item = this.constructModItem(m, top + i);
           item.y = (this.modItemHeight + 8) * i;
           this.modContainer.addChild(item);
         });
@@ -2729,7 +2648,7 @@
                 if (data.removableElements) {
                   const removeButton = new Button("remove");
                   removeButton.setText("Delete");
-                  removeButton.setTint(config_default.Colors.red);
+                  removeButton.setTint(UITheme.MenuColors.danger);
                   removeButton.scale.set(0.7);
                   removeButton.x = listWidth - removeButton.width - 10;
                   removeButton.addListener(Button.BUTTON_RELEASED, () => {
@@ -2765,9 +2684,10 @@
             const listWidth = 300;
             const listHeight = 150;
             const listBackground = new PIXI.Graphics();
-            listBackground.clear().beginPath().roundRect(0, 0, listWidth, listHeight, 6).fill({
-              color: 0,
-              alpha: 0.3
+            listBackground.clear().roundRect(0, 0, listWidth, listHeight, 4).fill({ color: UITheme.MenuColors.panelDeep, alpha: 0.5 }).stroke({
+              color: UITheme.MenuColors.panelStroke,
+              width: 1,
+              alpha: 0.34
             });
             listBackground.y = label.height + 10;
             container.addChild(listBackground);
@@ -2782,12 +2702,12 @@
             scrollContainer.mask = mask;
             const scrollContent = new PIXI.Container();
             scrollContainer.addChild(scrollContent);
-            const scrollbar = new (Scrollbar())(listHeight);
+            const scrollbar = new MemberBrowserScrollbar(listHeight);
             scrollbar.x = listWidth - scrollbar.width + 5;
             scrollbar.y = listBackground.y + 4;
             container.addChild(scrollbar);
             let scrollProgress = 0;
-            scrollbar.on(Scrollbar().SCROLL, (prog) => {
+            scrollbar.on(MemberBrowserScrollbar.SCROLL, (prog) => {
               scrollProgress = prog;
               scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
             });
@@ -3415,10 +3335,10 @@
     TexTab.prototype.onShow = function() {
       if (!this.scroller) {
         const off = this.parent.texTabButton.height + 32;
-        this.scroller = new (Scrollbar())(this.parent.height - off - 12 - this.parent.applyButton.height);
+        this.scroller = new MemberBrowserScrollbar(this.parent.height - off - 12 - this.parent.applyButton.height);
         this.scroller.x = this.parent.width - this.scroller.width * 1.75;
         this.scroller.y = off;
-        this.scroller.on(Scrollbar().SCROLL, (prog) => {
+        this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog) => {
           this.packIndex = Math.round((this.packList.length - maxPacks) * prog);
           this.runPacks();
         });

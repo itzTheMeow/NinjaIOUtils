@@ -58,7 +58,9 @@ Runtime layout under `src/`:
   UIURLs). `mods/` — optional, user-installable mods. Both are auto-registered
   from their `index.ts` exports.
 - Support: `config.ts` (version placeholder + game constants: Colors,
-  MapIDs, WeaponReloadTimes), `hookModMenu.ts`, `ui/`, `utils.ts`.
+  MapIDs, WeaponReloadTimes), `hookModMenu.ts`, `globals.ts`, `utils.ts`.
+  Prefer the game's own themed UI primitives (`UITheme.createUIPanel`,
+  `MemberBrowserScrollbar`, ...) over hand-drawn styling.
 
 ## Adding a mod
 

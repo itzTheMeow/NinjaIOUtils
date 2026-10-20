@@ -1,11 +1,16 @@
-import { AudioEffects, Button, EventDispatcher, SettingsPanel } from "lib";
+import {
+  AudioEffects,
+  Button,
+  EventDispatcher,
+  MemberBrowserScrollbar,
+  SettingsPanel,
+} from "lib";
 import localForage from "localforage";
 import { App, FontStyle, PIXI, app } from "lib";
 import type { TexturePack } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";
-import Scrollbar from "../ui/scrollbar";
 
 export class TexturePackMod extends Mod {
   constructor() {
@@ -383,12 +388,12 @@ function getTexTab() {
   TexTab.prototype.onShow = function () {
     if (!this.scroller) {
       const off = this.parent.texTabButton.height + 32;
-      this.scroller = new (Scrollbar())(
+      this.scroller = new MemberBrowserScrollbar(
         this.parent.height - off - 12 - this.parent.applyButton.height,
       );
       this.scroller.x = this.parent.width - this.scroller.width * 1.75;
       this.scroller.y = off;
-      this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
+      this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog: number) => {
         this.packIndex = Math.round((this.packList.length - maxPacks) * prog);
         this.runPacks();
       });
