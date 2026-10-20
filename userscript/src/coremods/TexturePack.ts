@@ -1,10 +1,4 @@
-import {
-  AudioEffects,
-  Button,
-  EventDispatcher,
-  SettingsPanel,
-  Text,
-} from "lib";
+import { AudioEffects, Button, EventDispatcher, SettingsPanel } from "lib";
 import localForage from "localforage";
 import { App, FontStyle, PIXI, app } from "lib";
 import type { TexturePack } from "../../../shared";
@@ -225,8 +219,8 @@ function getTexTab() {
     public marginLeft = 40;
     public marginTop = 52;
     public offset = this.marginTop + 6;
-    public texTitle: Text;
-    public texHint: Text;
+    public texTitle: PIXI.Text;
+    public texHint: PIXI.Text;
 
     constructor() {
       super();

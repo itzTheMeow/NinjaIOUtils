@@ -82,11 +82,6 @@ const VERSION_DETECTORS: VersionDetector[] = [
  *  code relies on per-member types. */
 const MEMBER_FOLD_NAMES = ["FontStyle"];
 
-/** pixi.js names that userscript sources import directly; re-exported from
- *  lib.d.ts so the userscript needs no pixi dependency of its own. */
-const PIXI_REEXPORT_TYPES = ["TextStyle", "TextStyleOptions"];
-const PIXI_REEXPORT_VALUES = ["Text"];
-
 /** Loosely-typed acorn AST node (the walkers reach into many node shapes). */
 type Node = any;
 
@@ -879,17 +874,7 @@ function buildGameTs(
     .filter((name) => !["PIXI", "Howl", "Howler"].includes(name))
     .sort();
   const exportBlock = `export { ${exports.join(", ")} };`;
-  const pixiExports = [
-    `export * as PIXI from "pixi.js";`,
-    PIXI_REEXPORT_TYPES.length
-      ? `export { ${PIXI_REEXPORT_TYPES.join(", ")} } from "pixi.js";`
-      : "",
-    PIXI_REEXPORT_VALUES.length
-      ? `export { ${PIXI_REEXPORT_VALUES.join(", ")} } from "pixi.js";`
-      : "",
-  ]
-    .filter(Boolean)
-    .join("\n");
+  const pixiExports = `export * as PIXI from "pixi.js";`;
 
   console.log(
     `exporting ${exports.length} top-level names from the game chunk`,

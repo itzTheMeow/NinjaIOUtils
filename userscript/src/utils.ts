@@ -1,4 +1,4 @@
-import type { TextStyle, TextStyleOptions } from "lib";
+import type { PIXI } from "lib";
 
 export function clickContainer(container: any) {
   container._events.mousedown.forEach((f) => f.fn());
@@ -10,8 +10,8 @@ export function clickContainer(container: any) {
  * @returns The new TextStyle instance.
  */
 export function cloneTextStyle(
-  style: TextStyle,
-  newProps: Partial<TextStyleOptions>,
+  style: PIXI.TextStyle,
+  newProps: Partial<PIXI.TextStyleOptions>,
 ) {
   const newStyle = style.clone();
   Object.keys(newProps).forEach((key) => {
