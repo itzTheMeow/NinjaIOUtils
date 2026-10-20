@@ -1,11 +1,4 @@
-import {
-  Button,
-  Checkbox,
-  Feature,
-  ImgButton,
-  InputField,
-  MemberMenuButton,
-} from "lib";
+import { Button, Checkbox, Feature, ImgButton, InputField } from "lib";
 import { app, App, FontStyle, Layer, PIXI } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
@@ -15,137 +8,29 @@ import { cloneTextStyle } from "./utils";
 
 export default function hookModMenu() {
   const menu = Ninja.activeMenu();
-  //TODO: figure out why this is wrong
-  menu.memberButton.parent.removeChild(<any>menu.memberButton);
-  menu.clanButton.parent.removeChild(<any>menu.clanButton);
 
-  let menuClanState: 0 | 1 | 2 = 0;
-  const memberclanButton = new MemberMenuButton("", 16763904, 18);
-  memberclanButton.x = 0;
-  memberclanButton.y = menu.rankingButton.y + 70;
-  menu.on(<any>(Layer.Events.MEMBER_ACCESS + "f"), () => {
-    menuClanState = 0;
-    memberclanButton.emit(MemberMenuButton.BUTTON_PRESSED, true);
+  // just replace the utils button with the mods button
+  function hookUtilsButton() {
+    if (!app.menu) return;
+    (<any>app.menu.utilsIcon).label.text = "MODS";
+    app.menu.utilsIcon.off("mousedown");
+    app.menu.utilsIcon.on("mousedown", () => menu.emit("modacc"));
+  }
+  // showMenu rebuilds the button every time it runs
+  Ninja.hookMethod(App.prototype, "showMenu", {
+    priority: 10,
+    callback: hookUtilsButton,
   });
-  menu.on(<any>(Layer.Events.CLAN_BROWSER_ACCESS + "f"), () => {
-    menuClanState = 1;
-    memberclanButton.emit(MemberMenuButton.BUTTON_PRESSED, true);
-  });
-  memberclanButton.on(MemberMenuButton.BUTTON_PRESSED, (force = false) => {
-    if (!["member", "clan"].includes(menu.mode) && !force) menuClanState = 0;
-    menuClanState++;
-    if (menuClanState == 3) menuClanState = 0;
-    title1.style.fill = title2.style.fill = FontStyle.MenuTitle.fill;
-    switch (menuClanState) {
-      case 0:
-        menu.emit(Layer.Events.MENU_ACCESS);
-        break;
-      case 1:
-        menu.emit(Layer.Events.MEMBER_ACCESS);
-        title1.style.fill = config.Colors.white;
-        break;
-      case 2:
-        menu.emit(Layer.Events.CLAN_BROWSER_ACCESS);
-        title2.style.fill = config.Colors.white;
-        break;
-    }
-  });
-  menu.memberButton.setActive = (n) => {
-    if (menuClanState == 1 || (!menuClanState && !n)) {
-      memberclanButton.setActive(n);
-      if (!n) title1.style.fill = FontStyle.MenuTitle.fill;
-    }
-  };
-  menu.clanButton.setActive = (n) => {
-    if (menuClanState == 2 || (!menuClanState && !n)) {
-      memberclanButton.setActive(n);
-      if (!n) title2.style.fill = FontStyle.MenuTitle.fill;
-    }
-  };
+  hookUtilsButton();
 
-  const ico1 = new PIXI.Sprite(App.CombinedTextures["menu_icon_players"]);
-  ico1.x = 0.25 * memberclanButton.rectWidth;
-  memberclanButton.addChild(ico1);
-  const ico2 = new PIXI.Sprite(App.CombinedTextures["menu_icon_clans"]);
-  ico2.x = 0.75 * memberclanButton.rectWidth;
-  memberclanButton.addChild(ico2);
-  ico1.scale.x = ico1.scale.y = ico2.scale.x = ico2.scale.y = 0.25;
-  ico1.anchor.x = ico1.anchor.y = ico2.anchor.x = ico2.anchor.y = 0.5;
-  ico1.tint = ico2.tint = config.Colors.white;
-  ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
-  const icosep = new PIXI.Text({
-    text: "/",
-    style: cloneTextStyle(FontStyle.MenuTitle, {
-      fontSize: 16,
-      fill: config.Colors.white,
-    }),
-  });
-  icosep.x = 0.5 * memberclanButton.rectWidth;
-  icosep.y = 0.37 * memberclanButton.rectHeight;
-  icosep.anchor.x = icosep.anchor.y = 0.5;
-  memberclanButton.addChild(icosep);
-
-  const title1 = new PIXI.Text({
-    text: "Players",
-    style: cloneTextStyle(FontStyle.MenuTitle, {
-      fontSize: 10,
-    }),
-  });
-  title1.x = 0.25 * memberclanButton.rectWidth;
-  memberclanButton.addChild(title1);
-  const title2 = new PIXI.Text({
-    text: "Clans",
-    style: cloneTextStyle(FontStyle.MenuTitle, {
-      fontSize: 14,
-    }),
-  });
-  title2.x = 0.75 * memberclanButton.rectWidth;
-  memberclanButton.addChild(title2);
-  const titlesep = new PIXI.Text({
-    text: "/",
-    style: cloneTextStyle(FontStyle.MenuTitle, {
-      fontSize: 14,
-      fill: config.Colors.white,
-    }),
-  });
-  titlesep.x = 0.5 * memberclanButton.rectWidth;
-  memberclanButton.addChild(titlesep);
-  title1.y = title2.y = titlesep.y = 0.7 * memberclanButton.rectHeight;
-  title1.anchor.x =
-    title1.anchor.y =
-    title2.anchor.x =
-    title2.anchor.y =
-    titlesep.anchor.x =
-    titlesep.anchor.y =
-      0.5;
-  menu.container.addChild(memberclanButton);
-
-  const setActive = menu.clanButton.setActive.bind(menu.clanButton);
-  menu.clanButton.setActive = (n) => {
-    setActive(n);
-    if (!n) utilsButton.setActive(false);
-  };
-  const utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
-  utilsButton.x = 0;
-  utilsButton.y = menu.memberButton.y + 70;
-  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () =>
-    menu.emit(<any>"modacc"),
-  );
-  menu.on(<any>"modacc", () => {
-    if (utilsButton.active) {
-      utilsButton.setActive(false);
-      menu.emit(Layer.Events.MENU_ACCESS);
-      return;
-    }
+  menu.on("modacc", () => {
     menu.emit(Layer.Events.MENU_ACCESS, "mod");
     menu.playButton.setActive(false);
-    utilsButton.setActive(true);
     modsMenu.show();
     App.Layer.addChild(modsMenu);
     App.Layer.emit(Layer.Events.HIDE_MENU);
     app.onResize();
   });
-  menu.container.addChild(utilsButton);
 
   class ModsMenu extends Feature {
     ox = 40;
@@ -502,10 +387,10 @@ export default function hookModMenu() {
         case "bool": {
           const box = new Checkbox(`config_${data.key}`, data.name, data.value);
           box.addEventListener(Checkbox.CHANGE, () => {
-            mod.config.set(<any>data.key, box.checked);
-            mod.configChanged(<any>data.key);
+            mod.config.set(data.key, box.checked);
+            mod.configChanged(data.key);
           });
-          container.addChild(<any>box);
+          container.addChild(box);
           break;
         }
         case "str":
@@ -532,8 +417,8 @@ export default function hookModMenu() {
           );
           input.addListener(InputField.CHANGE, function (d) {
             const val = d.data.value || "";
-            mod.config.set(<any>data.key, isNum ? Number(val) : val);
-            mod.configChanged(<any>data.key);
+            mod.config.set(data.key, isNum ? Number(val) : val);
+            mod.configChanged(data.key);
           });
           container.addChild(input);
           break;
@@ -617,8 +502,8 @@ export default function hookModMenu() {
                 removeButton.x = listWidth - removeButton.width - 10;
                 removeButton.addListener(Button.BUTTON_RELEASED, () => {
                   data.value.splice(index, 1);
-                  mod.config.set(<any>data.key, data.value);
-                  mod.configChanged(<any>data.key);
+                  mod.config.set(data.key, data.value);
+                  mod.configChanged(data.key);
                   refreshList();
                 });
                 itemRow.addChild(removeButton);
@@ -652,24 +537,26 @@ export default function hookModMenu() {
 
   const modsMenu = new ModsMenu();
   App.Layer.mainMenuHides.push(<any>modsMenu);
-  [
-    "loginMenu",
-    "memberBrowserMenu",
-    "clanBrowserMenu",
-    "registerMenu",
-    "upResetMenu",
-    "profileMenu",
-    "userMenu",
-    "rankingMenu",
-    "newsMenu",
-    "partnerMenu",
-    "serverListMenu",
-    "clanMenu",
-    "serverCreationMenu",
-    "renameMenu",
-    "logoutMenu",
-    "guestProfileMenu",
-    "contentMenu",
-  ].forEach((e) => App.Layer[e].hides.push(modsMenu));
+  (
+    [
+      "loginMenu",
+      "memberBrowserMenu",
+      "clanBrowserMenu",
+      "registerMenu",
+      "upResetMenu",
+      "profileMenu",
+      "userMenu",
+      "rankingMenu",
+      "newsMenu",
+      "partnerMenu",
+      "serverListMenu",
+      "clanMenu",
+      "serverCreationMenu",
+      "renameMenu",
+      "logoutMenu",
+      "guestProfileMenu",
+      "contentMenu",
+    ] as const
+  ).forEach((e) => App.Layer[e].hides.push(modsMenu));
   App.Layer.features.push(<any>modsMenu);
 }
