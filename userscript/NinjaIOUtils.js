@@ -2980,13 +2980,17 @@
       this.hookMethod(PlayerDropdown.prototype, "onMute", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, { detail: { sid: this.target.sid, name: this.target.name } }));
+          ninja.events.dispatchEvent(new CustomEvent("pm" /* PLAYER_MUTED */, {
+            detail: { sid: this.target.sid, name: this.target.name }
+          }));
         }
       });
       this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, { detail: { name: this.target.name } }));
+          ninja.events.dispatchEvent(new CustomEvent("pum" /* PLAYER_UNMUTED */, {
+            detail: { name: this.target.name }
+          }));
         }
       });
       this.hookMethod(App.prototype, "leaveGame", {

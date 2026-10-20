@@ -26,4 +26,4 @@
 */
 
 /* This script is used for development testing. */
-fetch("http://localhost:8000").then(r => r.text()).then(r => eval(r))
+fetch("http://localhost:8080/NinjaIOUtils.js").then(r => r.text()).then(r => eval(r))
