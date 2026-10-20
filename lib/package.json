@@ -19,9 +19,11 @@
   },
   "homepage": "https://github.com/itzTheMeow/NinjaIOUtils#readme",
   "devDependencies": {
-    "@types/howler": "2.2",
+    "@jridgewell/trace-mapping": "^0.3.31",
+    "@types/howler": "^2.2",
     "acorn": "8.14.0",
     "pixi.js": "8.22.0",
+    "sourcemap-codec": "^1.4.8",
     "typescript": "7.0.2"
   }
 }

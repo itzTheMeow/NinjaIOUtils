@@ -15156,3 +15156,4 @@ export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprit
 export * as PIXI from "pixi.js";
 export { TextStyle, TextStyleOptions } from "pixi.js";
 export { Text } from "pixi.js";
+//# sourceMappingURL=lib.d.ts.map
