@@ -1,24 +1,20 @@
 // ==UserScript==
-// @name         NinjaIOUtils
-// @namespace    https://itsmeow.cat
-// @description  A modloader for Ninja.io.
+// @name         FragUtils (formerly NinjaIOUtils)
+// @namespace    https://xela.codes
+// @description  A modloader for fragline.com (formerly ninja.io). Direct successor to NinjaIOUtils (Fragline Utils)
 // @author       Meow
-// @match        https://ninjabattle.io
-// @match        https://www.ninjabattle.io
-// @match        https://ninjabattle.io/*
-// @match        https://*.ninjabattle.io/*
-// @match        https://ninja.io/*
-// @match        https://ninja.io
-// @match        http://ninja.io/*
-// @match        http://ninja.io
-// @match        https://*.ninja.io/*
-// @match        http://*.ninja.io/*
-// @match        https://*.ninja.io
-// @match        http://*.ninja.io
-// @icon         https://www.google.com/s2/favicons?domain=ninja.io
+// @match        https://fragline.com/*
+// @match        https://fragline.com
+// @match        http://fragline.com/*
+// @match        http://fragline.com
+// @match        https://*.fragline.com/*
+// @match        http://*.fragline.com/*
+// @match        https://*.fragline.com
+// @match        http://*.fragline.com
+// @icon         https://www.google.com/s2/favicons?domain=fragline.com
 // @require      https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.1/socket.io.min.js
-// @homepageURL  https://utils.xela.codes
-// @supportURL   https://github.com/itzTheMeow/NinjaIOUtils/issues
+// @homepageURL  https://fragline.xela.codes
+// @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
 // @version      3.11
 // ==/UserScript==
