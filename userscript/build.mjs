@@ -47,7 +47,7 @@ ${Object.entries(meta)
     "dev.js",
     metaString +
       `/* This script is used for development testing. */
-fetch("http://localhost:8000").then(r => r.text()).then(r => eval(r))\n`,
+fetch("http://localhost:8080/NinjaIOUtils.js").then(r => r.text()).then(r => eval(r))\n`,
   );
 
   console.log(`NinjaIOUtils v${ver} built successfully!`);
