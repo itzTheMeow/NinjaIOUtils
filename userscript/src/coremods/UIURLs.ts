@@ -70,8 +70,12 @@ export class UIURLMod extends Mod {
     if (!window.location.hash.substring(1)) window.location.hash = "/";
 
     // Menu
-    menu.addListener(Layer.Events.MENU_ACCESS, (m) =>
-      this.switchHash(m == "mod" ? HashPaths.mods : HashPaths.menu),
+    menu.addListener(Layer.Events.MENU_ACCESS, () =>
+      this.switchHash(HashPaths.menu),
+    );
+    // Mods
+    App.Layer.addListener(Layer.Events.MODS_ACCESS, () =>
+      this.switchHash(HashPaths.mods),
     );
     // Profile
     let profCurTab = "";
@@ -214,7 +218,7 @@ export class UIURLMod extends Mod {
           break;
         }
         case HashPaths.mods: {
-          menu.emit(<any>"modacc");
+          App.Layer.emit(Layer.Events.MODS_ACCESS);
           break;
         }
       }

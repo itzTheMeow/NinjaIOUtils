@@ -1,5 +1,6 @@
 import { APIClient } from "lib";
 import { app } from "lib";
+import "./globals";
 import Ninja from "./api/Ninja";
 import config from "./config";
 import * as CoreMods from "./coremods/index";

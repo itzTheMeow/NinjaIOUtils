@@ -5006,7 +5006,7 @@ declare namespace Layer {
     var MODE_GAME: string;
     var SETUP_GUEST: string;
     var SETUP_MEMBER: string;
-    var Events: {
+    interface Events {
         DISCONNECT: string;
         LOGIN_ACCESS: string;
         LOGIN_SUBMIT: string;
@@ -5089,7 +5089,8 @@ declare namespace Layer {
         REWARDS_CLAIMED: string;
         REWARDS_CANCEL: string;
         PVP_RESULT_CANCEL: string;
-    };
+    }
+    var Events: Events;
 }
 declare var assetloader: {};
 declare class AssetLoader {

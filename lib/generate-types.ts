@@ -988,6 +988,25 @@ function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
     tracker.replaceRange(anchor, anchor, `${source}\n\n`);
     console.log(`interface: injected ${name}`);
   }
+  // Layer.Events is emitted as an inline object-literal var; retype it as a
+  // named interface (var Events: Events) so consumers can merge additional
+  // events into it via global declaration merging. Type-level refactor only -
+  // runtime value shape is untouched.
+  const eventsMatch =
+    /\n    var Events: \{\n((?:        [^\n]*\n)+)    \};/.exec(tracker.text);
+  if (eventsMatch) {
+    tracker.replaceRange(
+      eventsMatch.index,
+      eventsMatch.index + eventsMatch[0].length,
+      `\n    interface Events {\n${eventsMatch[1]}    }\n    var Events: Events;`,
+    );
+    console.log("override: merged Layer.Events into mergeable interface");
+  } else {
+    console.log(
+      "override: Layer.Events object literal not found, skipping merge",
+    );
+  }
+
   // retype `<whitespace+static?><readonly ...> member: <old>;` inside a class
   // body; instance/static bodies carry the leading 4-space indent.
   const retypeMember = (

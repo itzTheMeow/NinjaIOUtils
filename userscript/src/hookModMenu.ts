@@ -14,7 +14,9 @@ export default function hookModMenu() {
     if (!app.menu) return;
     app.menu.utilsIcon.label.text = "MODS";
     app.menu.utilsIcon.off("mousedown");
-    app.menu.utilsIcon.on("mousedown", () => menu.emit("modacc"));
+    app.menu.utilsIcon.on("mousedown", () =>
+      App.Layer.emit(Layer.Events.MODS_ACCESS),
+    );
   }
   // showMenu rebuilds the button every time it runs
   Ninja.hookMethod(App.prototype, "showMenu", {
@@ -23,8 +25,8 @@ export default function hookModMenu() {
   });
   hookUtilsButton();
 
-  menu.on("modacc", () => {
-    menu.emit(Layer.Events.MENU_ACCESS, "mod");
+  App.Layer.on(Layer.Events.MODS_ACCESS, () => {
+    menu.emit(Layer.Events.MENU_ACCESS);
     menu.playButton.setActive(false);
     modsMenu.show();
     App.Layer.addChild(modsMenu);
@@ -537,26 +539,8 @@ export default function hookModMenu() {
 
   const modsMenu = new ModsMenu();
   App.Layer.mainMenuHides.push(<any>modsMenu);
-  (
-    [
-      "loginMenu",
-      "memberBrowserMenu",
-      "clanBrowserMenu",
-      "registerMenu",
-      "upResetMenu",
-      "profileMenu",
-      "userMenu",
-      "rankingMenu",
-      "newsMenu",
-      "partnerMenu",
-      "serverListMenu",
-      "clanMenu",
-      "serverCreationMenu",
-      "renameMenu",
-      "logoutMenu",
-      "guestProfileMenu",
-      "contentMenu",
-    ] as const
-  ).forEach((e) => App.Layer[e].hides.push(modsMenu));
+  // register as a hide on all features
+  for (const feature of Object.values(App.Layer))
+    if (feature instanceof Feature) feature.hides.push(modsMenu);
   App.Layer.features.push(<any>modsMenu);
 }

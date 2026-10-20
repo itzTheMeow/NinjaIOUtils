@@ -2197,6 +2197,10 @@
   
   
 
+  // src/globals.ts
+  
+  Layer.Events.MODS_ACCESS = "-utils_mods_access";
+
   // src/api/Ninja.ts
   
   
@@ -2407,15 +2411,15 @@
         return;
       app.menu.utilsIcon.label.text = "MODS";
       app.menu.utilsIcon.off("mousedown");
-      app.menu.utilsIcon.on("mousedown", () => menu.emit("modacc"));
+      app.menu.utilsIcon.on("mousedown", () => App.Layer.emit(Layer.Events.MODS_ACCESS));
     }
     Ninja_default.hookMethod(App.prototype, "showMenu", {
       priority: 10,
       callback: hookUtilsButton
     });
     hookUtilsButton();
-    menu.on("modacc", () => {
-      menu.emit(Layer.Events.MENU_ACCESS, "mod");
+    App.Layer.on(Layer.Events.MODS_ACCESS, () => {
+      menu.emit(Layer.Events.MENU_ACCESS);
       menu.playButton.setActive(false);
       modsMenu.show();
       App.Layer.addChild(modsMenu);
@@ -2796,25 +2800,9 @@
     }
     const modsMenu = new ModsMenu();
     App.Layer.mainMenuHides.push(modsMenu);
-    [
-      "loginMenu",
-      "memberBrowserMenu",
-      "clanBrowserMenu",
-      "registerMenu",
-      "upResetMenu",
-      "profileMenu",
-      "userMenu",
-      "rankingMenu",
-      "newsMenu",
-      "partnerMenu",
-      "serverListMenu",
-      "clanMenu",
-      "serverCreationMenu",
-      "renameMenu",
-      "logoutMenu",
-      "guestProfileMenu",
-      "contentMenu"
-    ].forEach((e) => App.Layer[e].hides.push(modsMenu));
+    for (const feature of Object.values(App.Layer))
+      if (feature instanceof Feature)
+        feature.hides.push(modsMenu);
     App.Layer.features.push(modsMenu);
   }
 
@@ -3489,7 +3477,8 @@
       };
       if (!window.location.hash.substring(1))
         window.location.hash = "/";
-      menu.addListener(Layer.Events.MENU_ACCESS, (m) => this.switchHash(m == "mod" ? "mods" /* mods */ : "" /* menu */));
+      menu.addListener(Layer.Events.MENU_ACCESS, () => this.switchHash("" /* menu */));
+      App.Layer.addListener(Layer.Events.MODS_ACCESS, () => this.switchHash("mods" /* mods */));
       let profCurTab = "";
       menu.on(Layer.Events.PROFILE_ACCESS, () => this.switchHash("profile" /* profile */, ProfilePaths[profCurTab]));
       const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
@@ -3578,7 +3567,7 @@
             break;
           }
           case "mods" /* mods */: {
-            menu.emit("modacc");
+            App.Layer.emit(Layer.Events.MODS_ACCESS);
             break;
           }
         }

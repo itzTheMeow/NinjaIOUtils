@@ -51,6 +51,9 @@ Runtime layout under `src/`:
   (`pagestart` loads before the game, `appstart` the default),
   `implementConfig` for per-mod settings, load/unload lifecycle.
   `api/Settings.ts` — localStorage-backed store used for all settings.
+  `globals.ts` — userscript extensions to the game's `Layer.Events`
+  registry (e.g. `MODS_ACCESS`), typed via module augmentation of the
+  mergeable `interface Events` emitted by the lib generator.
 - `coremods/` — built-in mods registered unconditionally (TexturePack,
   UIURLs). `mods/` — optional, user-installable mods. Both are auto-registered
   from their `index.ts` exports.

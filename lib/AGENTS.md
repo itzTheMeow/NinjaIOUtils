@@ -66,8 +66,10 @@ TypeScript executed by bun directly — no build step for the generator itself.
 5. **Post-emit patches** — all via `EditTracker` (every edit = one pass):
    - `applyMemberOverrides`: widens the injected `?: null` params to
      `?: any`, injects `INTERFACE_INJECTIONS` interfaces (payloads like
-     `Credential`, widget shapes like `SubmenuButton`), applies
-     `MEMBER_OVERRIDES` (namespace vars retyped in
+     `Credential`, widget shapes like `SubmenuButton`), retypes `Layer.Events`
+     from an inline object literal into a mergeable `interface Events` +
+     `var Events: Events` (consumers add events via declaration merging),
+     applies `MEMBER_OVERRIDES` (namespace vars retyped in
      place; machine-alias pairs `var _x: any; export { _x as Member };`
      stripped in favor of a clean class static; otherwise a class static is
      stubbed), retargets the `//# sourceMappingURL=` comment to
