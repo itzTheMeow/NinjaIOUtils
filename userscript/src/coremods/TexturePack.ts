@@ -1,7 +1,12 @@
-import { AudioEffects, Button, EventDispatcher, SettingsPanel } from "lib";
+import {
+  AudioEffects,
+  Button,
+  EventDispatcher,
+  SettingsPanel,
+  Text,
+} from "lib";
 import localForage from "localforage";
-import { Text } from "pixi.js";
-import { App, FontStyle, PIXI, app } from "typings";
+import { App, FontStyle, PIXI, app } from "lib";
 import type { TexturePack } from "../../../shared";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
@@ -13,7 +18,8 @@ export class TexturePackMod extends Mod {
     super({
       id: "TexturePack",
       name: "Texture Packs",
-      description: "Adds in the texture pack settings tab and allows packs to load.",
+      description:
+        "Adds in the texture pack settings tab and allows packs to load.",
       author: "builtin",
       icon: "menu_icon_settings",
       core: true,
@@ -33,7 +39,12 @@ export class TexturePackMod extends Mod {
       // expected data, must be validated - example data:
       // {"data":["https://ninja.io/assets-dev/combined/combined.png"],"uuid":0,"id":"loadImageBitmap"}
       newPostMessage(
-        data: { bypass?: boolean; data: [string | Request]; uuid: number; id: "loadImageBitmap" },
+        data: {
+          bypass?: boolean;
+          data: [string | Request];
+          uuid: number;
+          id: "loadImageBitmap";
+        },
         ...args: any
       ) {
         if (texturePack && !(window as any).SKIP_TEX_LOAD && !data?.bypass) {
@@ -51,14 +62,16 @@ export class TexturePackMod extends Mod {
                   const isCustom = texturePack == config.customDelimiter;
                   if (
                     (pack.hasCombined || isCustom) &&
-                    (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) &&
+                    (orig.includes("ninja.io") ||
+                      orig.includes("ninjabattle.io")) &&
                     orig.includes("combined") &&
                     orig.includes(".png")
                   )
                     data.data[0] = `${config.api}/packs/${texturePack}/combined.png?v=${Ninja.GameVersion}`;
                   if (
                     (pack.hasSeamless || isCustom) &&
-                    (orig.includes("ninja.io") || orig.includes("ninjabattle.io")) &&
+                    (orig.includes("ninja.io") ||
+                      orig.includes("ninjabattle.io")) &&
                     orig.includes("seamless") &&
                     orig.includes(".png")
                   )
@@ -109,11 +122,14 @@ export class TexturePackMod extends Mod {
         tab: {
           new (): void;
           prototype: any;
-        }
+        },
       ) {
         name = `${name}Tab`;
         pan[name] = new tab();
-        pan[`${name}Button`] = new PIXI.Text(title, FontStyle.MediumMenuTextOrange);
+        pan[`${name}Button`] = new PIXI.Text(
+          title,
+          FontStyle.MediumMenuTextOrange,
+        );
         pan[`${name}Button`].resolution = 1.5 * App.DevicePixelRatio;
         pan[`${name}Button`].anchor.x = pan[`${name}Button`].anchor.y = 0.5;
         pan[`${name}Button`].x = x + 56;
@@ -128,11 +144,19 @@ export class TexturePackMod extends Mod {
         pan[`${name}ButtonBackground`].interactive = !0;
         pan[`${name}ButtonBackground`].on(
           "touchstart",
-          pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES)
+          //TODO:frag fix
+          pan.displayTab.bind(
+            pan,
+            <string>(SettingsPanel.Tabs as any).TEXTURES,
+          ),
         );
         pan[`${name}ButtonBackground`].on(
           "mousedown",
-          pan.displayTab.bind(pan, SettingsPanel.Tabs.TEXTURES)
+          //TODO:frag fix
+          pan.displayTab.bind(
+            pan,
+            <string>(SettingsPanel.Tabs as any).TEXTURES,
+          ),
         );
         pan[`${name}ButtonBackground`].on("mouseover", function () {
           pan[`${name}ButtonBackground`].tint = 11184810;
@@ -171,13 +195,16 @@ export class TexturePackMod extends Mod {
       this[`${name}TabButtonBackground`].alpha = 0;
       this.addChild(t);
       if (t.onShow) t.onShow();
-      app.menu.settingsPanel.selectedTab = name;
+      app.menu.settingsPanel.activeTab = name;
       Ninja.activeMenu().emit(<any>"open_tab", name);
     };
     Object.values(SettingsPanel.Tabs).forEach((d) => {
       // add our new mousedown listener and remove the old one (because we removed the old settings panel)
       const tab = app.menu.settingsPanel[`${d}TabButtonBackground`];
-      tab.on("mousedown", app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d));
+      tab.on(
+        "mousedown",
+        app.menu.settingsPanel.displayTab.bind(app.menu.settingsPanel, d),
+      );
       tab._events.mousedown.shift();
     });
   }
@@ -230,21 +257,27 @@ function getTexTab() {
       this.addChild(this.texHint);
       this.offset += 30;
 
-      const customTitle = new PIXI.Text("Custom Pack (read docs for tutorial)", {
-        fontSize: 16,
-        fill: config.Colors.white,
-        stroke: { width: 2, join: "round", color: config.Colors.black },
-      });
+      const customTitle = new PIXI.Text(
+        "Custom Pack (read docs for tutorial)",
+        {
+          fontSize: 16,
+          fill: config.Colors.white,
+          stroke: { width: 2, join: "round", color: config.Colors.black },
+        },
+      );
       customTitle.x = this.marginLeft;
       customTitle.y = this.offset;
       this.addChild(customTitle);
       this.offset += 20;
 
-      const customDesc = new PIXI.Text("Upload a zip file containing your textures.", {
-        fontSize: 14,
-        fill: config.Colors.yellow,
-        stroke: { width: 2, join: "round", color: config.Colors.black },
-      });
+      const customDesc = new PIXI.Text(
+        "Upload a zip file containing your textures.",
+        {
+          fontSize: 14,
+          fill: config.Colors.yellow,
+          stroke: { width: 2, join: "round", color: config.Colors.black },
+        },
+      );
       customDesc.x = this.marginLeft;
       customDesc.y = this.offset;
       this.addChild(customDesc);
@@ -275,11 +308,16 @@ function getTexTab() {
           this.hadPacks = [];
           const packs: TexturePack[] =
             this.packList ||
-            (this.packList = (await fetch(`${config.api}/packs`).then((r) => r && r.json())) || []);
+            (this.packList =
+              (await fetch(`${config.api}/packs`).then((r) => r && r.json())) ||
+              []);
           const custom: File | true =
-            this.hasCust || (this.hasCust = (await localForage.getItem("custom_pack")) || true);
+            this.hasCust ||
+            (this.hasCust = (await localForage.getItem("custom_pack")) || true);
           const packList = packs
-            .sort((a, b) => (a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1))
+            .sort((a, b) =>
+              a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
+            )
             .slice(this.packIndex, this.packIndex + maxPacks);
 
           if (custom && custom !== true) {
@@ -306,7 +344,7 @@ function getTexTab() {
                 fontSize: 16,
                 fill: config.Colors.white,
                 stroke: { width: 2, join: "round", color: config.Colors.black },
-              }
+              },
             );
             packName.x = this.marginLeft;
             packName.y = this.offset += 28;
@@ -322,7 +360,7 @@ function getTexTab() {
                 fontSize: 14,
                 fill: config.Colors.white,
                 stroke: { width: 2, join: "round", color: config.Colors.black },
-              }
+              },
             );
             packDescription.x = this.marginLeft;
             packDescription.y = this.offset += packName.height + 2;
@@ -331,7 +369,9 @@ function getTexTab() {
             packButton.x = packName.x + packName.width + 12;
             packButton.y = this.offset - packName.height;
             packButton.setText(hasPack ? "Remove" : "Use");
-            packButton.setTint(hasPack ? config.Colors.red : config.Colors.green);
+            packButton.setTint(
+              hasPack ? config.Colors.red : config.Colors.green,
+            );
             packButton.scale.x = packButton.scale.y = 0.5;
             packButton.addListener(Button.BUTTON_RELEASED, async () => {
               Ninja.settings.set("texturePack", hasPack ? "" : pak.id);
@@ -350,7 +390,7 @@ function getTexTab() {
     if (!this.scroller) {
       const off = this.parent.texTabButton.height + 32;
       this.scroller = new (Scrollbar())(
-        this.parent.height - off - 12 - this.parent.applyButton.height
+        this.parent.height - off - 12 - this.parent.applyButton.height,
       );
       this.scroller.x = this.parent.width - this.scroller.width * 1.75;
       this.scroller.y = off;

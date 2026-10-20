@@ -1,5 +1,5 @@
 import { AudioEffects, InputField } from "lib";
-import { App } from "typings";
+import { App } from "lib";
 import Mod from "../api/Mod";
 
 export class SoundEffectsMod extends Mod {
@@ -18,7 +18,10 @@ export class SoundEffectsMod extends Mod {
     super.load();
   }
   public unload() {
-    App.Console.consoleInput.removeListener(InputField.CHANGE, this.consoleTyped);
+    App.Console.consoleInput.removeListener(
+      InputField.CHANGE,
+      this.consoleTyped,
+    );
     super.unload();
   }
 

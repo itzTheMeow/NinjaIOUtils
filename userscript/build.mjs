@@ -37,8 +37,6 @@ ${Object.entries(meta)
       scriptFile
         // R E G E X - removes the imports for the .d.ts files so the script actually works
         .replace(/import_lib\d*\.?/g, "")
-        .replace(/import_typings\d*\.?/g, "")
-        .replace(/var  ?= __require\("typings"\);/g, "")
         .replace(/var  ?= __require\("lib"\);/g, "")
   );
   fs.writeFileSync(

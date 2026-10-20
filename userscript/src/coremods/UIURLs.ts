@@ -7,7 +7,7 @@ import {
   Protocol,
   SettingsPanel,
 } from "lib";
-import { App, Layer, app } from "typings";
+import { App, Layer, app } from "lib";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";
@@ -59,7 +59,8 @@ export class UIURLMod extends Mod {
         [SettingsPanel.Tabs.CONTROLS]: "controls",
         [SettingsPanel.Tabs.GRAPHICS]: "graphics",
         [SettingsPanel.Tabs.SOUND]: "sound",
-        [SettingsPanel.Tabs.TEXTURES || "tex"]: "textures",
+        //TODO:frag fix
+        [(SettingsPanel.Tabs as any).TEXTURES || "tex"]: "textures",
       },
       ContentPaths = {
         [ContentMenu.MAPS]: "maps",
@@ -70,12 +71,12 @@ export class UIURLMod extends Mod {
 
     // Menu
     menu.addListener(Layer.Events.MENU_ACCESS, (m) =>
-      this.switchHash(m == "mod" ? HashPaths.mods : HashPaths.menu)
+      this.switchHash(m == "mod" ? HashPaths.mods : HashPaths.menu),
     );
     // Profile
     let profCurTab = "";
     menu.on(Layer.Events.PROFILE_ACCESS, () =>
-      this.switchHash(HashPaths.profile, ProfilePaths[profCurTab])
+      this.switchHash(HashPaths.profile, ProfilePaths[profCurTab]),
     );
     const openTab = App.Layer.profileMenu.openTab.bind(App.Layer.profileMenu);
     App.Layer.profileMenu.openTab = (tab, audio) => {
@@ -85,44 +86,62 @@ export class UIURLMod extends Mod {
     };
     // Shop
     menu.on(Layer.Events.CUSTOMIZATION_ACCESS, () =>
-      this.switchHash(HashPaths.shop, ShopPaths[App.Layer.customizationMenu.display])
+      this.switchHash(
+        HashPaths.shop,
+        ShopPaths[App.Layer.customizationMenu.display],
+      ),
     );
     App.Layer.customizationMenu.playerCustomizationButton.on("mousedown", () =>
-      this.switchHash(HashPaths.shop, ShopPaths[CustomizationMenu.PLAYER])
+      this.switchHash(HashPaths.shop, ShopPaths[CustomizationMenu.PLAYER]),
     );
     App.Layer.customizationMenu.weaponCustomizationButton.on("mousedown", () =>
-      this.switchHash(HashPaths.shop, ShopPaths[CustomizationMenu.WEAPONS])
+      this.switchHash(HashPaths.shop, ShopPaths[CustomizationMenu.WEAPONS]),
     );
     // Ranking
-    menu.on(Layer.Events.RANKING_ACCESS, () => this.switchHash(HashPaths.ranks));
+    menu.on(Layer.Events.RANKING_ACCESS, () =>
+      this.switchHash(HashPaths.ranks),
+    );
     // Players
-    menu.on(Layer.Events.MEMBER_ACCESS, () => this.switchHash(HashPaths.players));
+    menu.on(Layer.Events.MEMBER_ACCESS, () =>
+      this.switchHash(HashPaths.players),
+    );
     // Clans
-    menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () => this.switchHash(HashPaths.clans));
+    menu.on(Layer.Events.CLAN_BROWSER_ACCESS, () =>
+      this.switchHash(HashPaths.clans),
+    );
     // Content
     menu.on(Layer.Events.CONTENT_ACCESS, () =>
-      this.switchHash(HashPaths.content, App.Layer.contentMenu.display)
+      this.switchHash(HashPaths.content, App.Layer.contentMenu.display),
     );
     App.Layer.contentMenu.mapsButton.on("mousedown", () => {
       this.switchHash(HashPaths.content, ContentPaths[ContentMenu.MAPS]);
     });
     App.Layer.contentMenu.weaponButton.on("mousedown", () => {
-      this.switchHash(HashPaths.content, ContentPaths[CustomizationMenu.WEAPONS]);
+      this.switchHash(
+        HashPaths.content,
+        ContentPaths[CustomizationMenu.WEAPONS],
+      );
     });
     // Settings
     menu.on(Layer.Events.SETTINGS_ACCESS, () =>
       this.switchHash(
         HashPaths.settings,
-        SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]
-      )
+        SettingsPaths[
+          app.menu.settingsPanel.activeTab || SettingsPanel.Tabs.CONTROLS
+        ],
+      ),
     );
     menu.on(<any>"open_tab", (tab: string) =>
-      this.switchHash(HashPaths.settings, SettingsPaths[tab])
+      this.switchHash(HashPaths.settings, SettingsPaths[tab]),
     );
     // Login / Signup / Recovery
     menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash(HashPaths.login));
-    menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash(HashPaths.register));
-    menu.on(Layer.Events.RECOVER_ACCESS, () => this.switchHash(HashPaths.recover));
+    menu.on(Layer.Events.REGISTER_ACCESS, () =>
+      this.switchHash(HashPaths.register),
+    );
+    menu.on(Layer.Events.RECOVER_ACCESS, () =>
+      this.switchHash(HashPaths.recover),
+    );
 
     // timeout is needed for at least settings page
     setTimeout(() => {
@@ -130,7 +149,9 @@ export class UIURLMod extends Mod {
       switch (curPath[0]) {
         case HashPaths.profile: {
           menu.emit(Layer.Events.PROFILE_ACCESS);
-          const profPath = Object.entries(ProfilePaths).find((p) => p[1] == curPath[1]);
+          const profPath = Object.entries(ProfilePaths).find(
+            (p) => p[1] == curPath[1],
+          );
           if (profPath) App.Layer.profileMenu.openTab(profPath[0], false);
           break;
         }
@@ -139,7 +160,7 @@ export class UIURLMod extends Mod {
           clickContainer(
             curPath[1] == ShopPaths[CustomizationMenu.WEAPONS]
               ? App.Layer.customizationMenu.weaponCustomizationButton
-              : App.Layer.customizationMenu.playerCustomizationButton
+              : App.Layer.customizationMenu.playerCustomizationButton,
           );
           break;
         }
@@ -157,13 +178,17 @@ export class UIURLMod extends Mod {
         }
         case HashPaths.settings: {
           menu.emit(Layer.Events.SETTINGS_ACCESS);
-          const settPath = Object.entries(SettingsPaths).find((p) => p[1] == curPath[1]);
+          const settPath = Object.entries(SettingsPaths).find(
+            (p) => p[1] == curPath[1],
+          );
           if (settPath) app.menu.settingsPanel.displayTab(settPath[0]);
           break;
         }
         case HashPaths.content: {
           menu.emit(Layer.Events.CONTENT_ACCESS);
-          const conPath = Object.entries(ContentPaths).find((p) => p[1] == curPath[1]);
+          const conPath = Object.entries(ContentPaths).find(
+            (p) => p[1] == curPath[1],
+          );
           if (conPath) {
             switch (conPath[0]) {
               case CustomizationMenu.WEAPONS:
@@ -198,7 +223,8 @@ export class UIURLMod extends Mod {
     this.hook();
 
     const [_id, _name, _pass] =
-      window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
+      window.location.hash.substring(1)?.split("&").map(decodeURIComponent) ||
+      [];
     if (_id && Number(_id) && _name) this.tryJoin(_id, _name, _pass);
     else if (window.location.hash.startsWith(`#/${HashPaths.game}/`)) {
       const [id, name, pass] = window.location.hash
@@ -230,7 +256,7 @@ export class UIURLMod extends Mod {
         name.startsWith("#") ? HashPaths.pvp : HashPaths.game,
         id,
         name,
-        Ninja.gamePassword
+        Ninja.gamePassword,
       ) + "/");
   }
 
@@ -247,7 +273,7 @@ export class UIURLMod extends Mod {
         mod.setGameHash(
           app.gameClient.server.id,
           a.data.info.substring("You joined ".length),
-          Ninja.gamePassword
+          Ninja.gamePassword,
         );
     });
 
@@ -268,7 +294,7 @@ export class UIURLMod extends Mod {
       serverName,
       serverPass,
       customData,
-      auth
+      auth,
     ) {
       /* Saves created info to URL. */
       mod.setGameHash(serverID, serverName, serverPass);
@@ -280,7 +306,7 @@ export class UIURLMod extends Mod {
         serverName,
         serverPass,
         customData,
-        auth
+        auth,
       );
     };
   }
@@ -292,7 +318,9 @@ export class UIURLMod extends Mod {
     /* Shows loading menu. */
     App.Layer.addChild(loadingMenu);
     loadingMenu.show();
-    loadingMenu.setTitle(`Click to ${spec ? "spectate" : "join"} server.\n${name}`);
+    loadingMenu.setTitle(
+      `Click to ${spec ? "spectate" : "join"} server.\n${name}`,
+    );
     loadingMenu.cancelCount = -1;
 
     const joinButton = new Button("join");
@@ -304,7 +332,8 @@ export class UIURLMod extends Mod {
       /* Joins the game using the specified details. */
       App.Layer.emit(Layer.Events.JOIN_GAME, name, id, pass || "", spec);
     });
-    joinButton.x = loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
+    joinButton.x =
+      loadingMenu.title.x + 0.5 * (loadingMenu.title.width - joinButton.width);
     joinButton.y = loadingMenu.title.y + 40;
     joinButton.setTint(config.Colors.green);
     loadingMenu.container.addChild(joinButton);

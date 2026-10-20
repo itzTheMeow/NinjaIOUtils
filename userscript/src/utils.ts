@@ -1,4 +1,4 @@
-import { TextStyle, TextStyleOptions } from "pixi.js";
+import type { TextStyle, TextStyleOptions } from "lib";
 
 export function clickContainer(container: any) {
   container._events.mousedown.forEach((f) => f.fn());
@@ -9,7 +9,10 @@ export function clickContainer(container: any) {
  * @param newProps New properties to set on the cloned style.
  * @returns The new TextStyle instance.
  */
-export function cloneTextStyle(style: TextStyle, newProps: Partial<TextStyleOptions>) {
+export function cloneTextStyle(
+  style: TextStyle,
+  newProps: Partial<TextStyleOptions>,
+) {
   const newStyle = style.clone();
   Object.keys(newProps).forEach((key) => {
     newStyle[key] = newProps[key];

@@ -1,5 +1,5 @@
 import { APIClient } from "lib";
-import { app } from "typings";
+import { app } from "lib";
 import Ninja from "./api/Ninja";
 import config from "./config";
 import * as CoreMods from "./coremods/index";
@@ -8,7 +8,7 @@ import * as Mods from "./mods/index";
 //@ts-ignore
 if (Worker.prototype.newPostMessage)
   alert(
-    "NinjaIOUtils is already loaded! Please disable other instances of the script before loading."
+    "NinjaIOUtils is already loaded! Please disable other instances of the script before loading.",
   );
 
 (<any>window).Ninja = Ninja;
@@ -49,9 +49,11 @@ const tester = setInterval(() => {
   if (Ninja.isGuest())
     alert(
       `NinjaIOUtils works best when you are logged in!
-No support will be provided to logged out users experiencing issues, sorry.`
+No support will be provided to logged out users experiencing issues, sorry.`,
     );
 
   Ninja.log(`NinjaIOUtils ${config.ver} Loaded Successfully!`);
-  Ninja.log(`This is a beta version of NinjaIOUtils. Not all features are implemented.`);
+  Ninja.log(
+    `This is a beta version of NinjaIOUtils. Not all features are implemented.`,
+  );
 });

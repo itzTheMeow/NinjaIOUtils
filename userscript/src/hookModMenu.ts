@@ -1,5 +1,12 @@
-import { Button, Checkbox, Feature, ImgButton, InputField, MemberMenuButton } from "lib";
-import { app, App, FontStyle, Layer, PIXI } from "typings";
+import {
+  Button,
+  Checkbox,
+  Feature,
+  ImgButton,
+  InputField,
+  MemberMenuButton,
+} from "lib";
+import { app, App, FontStyle, Layer, PIXI } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import config from "./config";
@@ -68,7 +75,10 @@ export default function hookModMenu() {
   ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
   const icosep = new PIXI.Text({
     text: "/",
-    style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 16, fill: config.Colors.white }),
+    style: cloneTextStyle(FontStyle.MenuTitle, {
+      fontSize: 16,
+      fill: config.Colors.white,
+    }),
   });
   icosep.x = 0.5 * memberclanButton.rectWidth;
   icosep.y = 0.37 * memberclanButton.rectHeight;
@@ -93,7 +103,10 @@ export default function hookModMenu() {
   memberclanButton.addChild(title2);
   const titlesep = new PIXI.Text({
     text: "/",
-    style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 14, fill: config.Colors.white }),
+    style: cloneTextStyle(FontStyle.MenuTitle, {
+      fontSize: 14,
+      fill: config.Colors.white,
+    }),
   });
   titlesep.x = 0.5 * memberclanButton.rectWidth;
   memberclanButton.addChild(titlesep);
@@ -115,7 +128,9 @@ export default function hookModMenu() {
   const utilsButton = new MemberMenuButton("Mods", 16763904, 15, "gears_icon");
   utilsButton.x = 0;
   utilsButton.y = menu.memberButton.y + 70;
-  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () => menu.emit(<any>"modacc"));
+  utilsButton.on(MemberMenuButton.BUTTON_PRESSED, () =>
+    menu.emit(<any>"modacc"),
+  );
   menu.on(<any>"modacc", () => {
     if (utilsButton.active) {
       utilsButton.setActive(false);
@@ -143,7 +158,10 @@ export default function hookModMenu() {
 
     background = new PIXI.Graphics();
     closeButton = new ImgButton();
-    titleText = new PIXI.Text({ text: "Mods", style: FontStyle.MediumOrangeText });
+    titleText = new PIXI.Text({
+      text: "Mods",
+      style: FontStyle.MediumOrangeText,
+    });
     modContainer = new PIXI.Container();
     configContainer = new PIXI.Container();
     filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
@@ -154,9 +172,20 @@ export default function hookModMenu() {
 
       this.background.x = 0;
       this.background.y = 40;
-      this.background.rect(0, 0, 660, 524).setFillStyle({ color: 3355443, alpha: 1 }).fill();
-      this.background.rect(10, 10, 640, 504).setFillStyle({ color: 0, alpha: 0.3 }).fill();
-      this.background.stroke({ width: 1, color: 16777215, alpha: 0.1, alignment: 0 });
+      this.background
+        .rect(0, 0, 660, 524)
+        .setFillStyle({ color: 3355443, alpha: 1 })
+        .fill();
+      this.background
+        .rect(10, 10, 640, 504)
+        .setFillStyle({ color: 0, alpha: 0.3 })
+        .fill();
+      this.background.stroke({
+        width: 1,
+        color: 16777215,
+        alpha: 0.1,
+        alignment: 0,
+      });
       this.container.addChild(this.background);
 
       this.titleText.x = 0.5 * this.width - 20;
@@ -170,7 +199,7 @@ export default function hookModMenu() {
       this.closeButton.y = this.oy + 34;
       this.closeButton.scale.x = this.closeButton.scale.y = 0.4;
       this.closeButton.on("mousedown", () =>
-        this.shownConfig ? this.show() : App.Layer.onMenuAccess()
+        this.shownConfig ? this.show() : App.Layer.onMenuAccess(),
       );
       this.container.addChild(this.closeButton);
 
@@ -194,7 +223,8 @@ export default function hookModMenu() {
       this.container.addChild(this.modContainer);
 
       this.scroller.x = this.background.width - 36;
-      this.scroller.y = this.background.y + this.closeButton.height + this.oy + 3;
+      this.scroller.y =
+        this.background.y + this.closeButton.height + this.oy + 3;
       this.scroller.on(Scrollbar().SCROLL, (prog: number) => {
         this.scrollTop = prog;
         this.indexList();
@@ -234,7 +264,9 @@ export default function hookModMenu() {
         })
         .roundRect((pl += 10), (pt = pl), iconSize, iconSize, 8)
         .fill();
-      const iconSprite = new PIXI.Sprite(App.CombinedTextures[mod.details.icon]);
+      const iconSprite = new PIXI.Sprite(
+        App.CombinedTextures[mod.details.icon],
+      );
       iconSprite.width = iconSprite.height = iconSize - 10;
       iconSprite.anchor.x = iconSprite.anchor.y = 0.5;
       iconSprite.x = iconSize / 2 + pl;
@@ -251,7 +283,10 @@ export default function hookModMenu() {
       label.y = pt += 8;
       container.addChild(label);
       const authorLabel = new PIXI.Text({
-        text: mod.details.author == "builtin" ? "Built-In" : "by " + mod.details.author,
+        text:
+          mod.details.author == "builtin"
+            ? "Built-In"
+            : "by " + mod.details.author,
         style: cloneTextStyle(FontStyle.SmallMenuTextYellow, { fontSize: 20 }),
       });
       authorLabel.x = pl + label.width + 4;
@@ -277,7 +312,9 @@ export default function hookModMenu() {
       if (!mod.details.core) {
         const button = new Button("installer");
         button.setText(mod.isInstalled() ? "Uninstall" : "Install");
-        button.setTint(mod.isInstalled() ? config.Colors.red : config.Colors.green);
+        button.setTint(
+          mod.isInstalled() ? config.Colors.red : config.Colors.green,
+        );
         button.scale.x = button.scale.y = 0.8;
         button.x = pl -= button.width;
         button.y = pt;
@@ -340,17 +377,27 @@ export default function hookModMenu() {
     show() {
       this.shownConfig = null;
       this.titleText.text = "Mods";
-      this.modContainer.visible = this.filterBox.visible = this.scroller.visible = true;
+      this.modContainer.visible =
+        this.filterBox.visible =
+        this.scroller.visible =
+          true;
       this.configContainer.visible = false;
       this.scroller.enableWheel();
       this.indexList();
     }
     indexList() {
-      const mods = Ninja.mods.filter((m) => (this.showInstalled ? m.isInstalled() : true)),
-        top = Math.max(0, Math.round((mods.length - this.maxMods) * this.scrollTop));
+      const mods = Ninja.mods.filter((m) =>
+          this.showInstalled ? m.isInstalled() : true,
+        ),
+        top = Math.max(
+          0,
+          Math.round((mods.length - this.maxMods) * this.scrollTop),
+        );
       this.modContainer.removeChildren();
       mods
-        .sort((m1, m2) => (m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1))
+        .sort((m1, m2) =>
+          m1.name.toLowerCase() > m2.name.toLowerCase() ? 1 : -1,
+        )
         .slice(top, top + this.maxMods)
         .forEach((m, i) => {
           const item = this.constructModItem(m);
@@ -364,7 +411,10 @@ export default function hookModMenu() {
     showConfig(mod: Mod) {
       this.shownConfig = mod;
       this.scroller.disableWheel();
-      this.modContainer.visible = this.filterBox.visible = this.scroller.visible = false;
+      this.modContainer.visible =
+        this.filterBox.visible =
+        this.scroller.visible =
+          false;
       this.configContainer.visible = true;
       this.titleText.text = mod.name + " Config";
       this.configContainer.removeChildren();
@@ -378,7 +428,9 @@ export default function hookModMenu() {
           else return typeof n == "string" ? n : n.name;
         };
         store
-          .sort((e1, e2) => (name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1))
+          .sort((e1, e2) =>
+            name(e1[0]).toLowerCase() > name(e2[0]).toLowerCase() ? 1 : -1,
+          )
           .forEach(([key, value]) => {
             const cfgname = mod.configNames[key],
               item = mnu.constructConfigItem(
@@ -390,29 +442,34 @@ export default function hookModMenu() {
                       key,
                       value,
                       removableElements:
-                        typeof cfgname === "object" ? cfgname.removableElements ?? false : false,
+                        typeof cfgname === "object"
+                          ? (cfgname.removableElements ?? false)
+                          : false,
                     }
                   : typeof value === "boolean"
-                  ? {
-                      type: "bool",
-                      name: name(key),
-                      key,
-                      value,
-                    }
-                  : typeof value == "number"
-                  ? {
-                      type: "num",
-                      name: name(key),
-                      key,
-                      value,
-                    }
-                  : {
-                      type: "str",
-                      name: name(key),
-                      key,
-                      value,
-                      maxLength: typeof cfgname == "object" ? cfgname.maxLength || 0 : 0,
-                    }
+                    ? {
+                        type: "bool",
+                        name: name(key),
+                        key,
+                        value,
+                      }
+                    : typeof value == "number"
+                      ? {
+                          type: "num",
+                          name: name(key),
+                          key,
+                          value,
+                        }
+                      : {
+                          type: "str",
+                          name: name(key),
+                          key,
+                          value,
+                          maxLength:
+                            typeof cfgname == "object"
+                              ? cfgname.maxLength || 0
+                              : 0,
+                        },
               );
             item.y = off;
             off += item.height + 10;
@@ -422,12 +479,12 @@ export default function hookModMenu() {
       doKeys(
         Object.entries(mod.configNames)
           .filter((e) => typeof e[1] == "object")
-          .map(([k]) => [k, mod.config.get(k)])
+          .map(([k]) => [k, mod.config.get(k)]),
       );
       doKeys(
         Object.entries(mod.configNames)
           .filter((e) => typeof e[1] !== "object")
-          .map(([k]) => [k, mod.config.get(k)])
+          .map(([k]) => [k, mod.config.get(k)]),
       );
     }
 
@@ -438,7 +495,7 @@ export default function hookModMenu() {
         | { type: "num"; value: number }
         | { type: "str"; value: string }
         | { type: "list"; value: any[]; removableElements: boolean }
-      )
+      ),
     ) {
       const container = new PIXI.Container();
       switch (data.type) {
@@ -456,7 +513,9 @@ export default function hookModMenu() {
           const isNum = data.type == "num";
           const label = new PIXI.Text({
             text: data.name,
-            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, {
+              fontSize: 16,
+            }),
           });
           label.y = 6;
           container.addChild(label);
@@ -469,7 +528,7 @@ export default function hookModMenu() {
             isNum
               ? "0123456789-"
               : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
-            false
+            false,
           );
           input.addListener(InputField.CHANGE, function (d) {
             const val = d.data.value || "";
@@ -482,7 +541,9 @@ export default function hookModMenu() {
         case "list": {
           const label = new PIXI.Text({
             text: data.name,
-            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 }),
+            style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, {
+              fontSize: 16,
+            }),
           });
           label.y = 6;
           container.addChild(label);
@@ -490,10 +551,14 @@ export default function hookModMenu() {
           const listWidth = 300;
           const listHeight = 150;
           const listBackground = new PIXI.Graphics();
-          listBackground.clear().beginPath().roundRect(0, 0, listWidth, listHeight, 6).fill({
-            color: 0x000000,
-            alpha: 0.3,
-          });
+          listBackground
+            .clear()
+            .beginPath()
+            .roundRect(0, 0, listWidth, listHeight, 6)
+            .fill({
+              color: 0x000000,
+              alpha: 0.3,
+            });
           listBackground.y = label.height + 10;
           container.addChild(listBackground);
 
@@ -523,7 +588,9 @@ export default function hookModMenu() {
 
           scrollbar.on(Scrollbar().SCROLL, (prog) => {
             scrollProgress = prog;
-            scrollContent.y = -Math.round((scrollContent.height - listHeight) * prog);
+            scrollContent.y = -Math.round(
+              (scrollContent.height - listHeight) * prog,
+            );
           });
 
           function refreshList() {
@@ -535,7 +602,9 @@ export default function hookModMenu() {
               itemRow.y = offY;
               const itemName = new PIXI.Text({
                 text: item,
-                style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 }),
+                style: cloneTextStyle(FontStyle.SmallMenuTextWhite, {
+                  fontSize: 16,
+                }),
               });
               itemName.x = 10;
               itemRow.addChild(itemName);
@@ -562,7 +631,9 @@ export default function hookModMenu() {
             if (scrollContent.height > listHeight) {
               scrollbar.enableWheel();
               scrollbar.visible = true;
-              scrollContent.y = -Math.round((scrollContent.height - listHeight) * scrollProgress);
+              scrollContent.y = -Math.round(
+                (scrollContent.height - listHeight) * scrollProgress,
+              );
             } else {
               scrollbar.disableWheel();
               scrollbar.visible = false;

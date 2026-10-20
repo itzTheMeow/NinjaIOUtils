@@ -1,5 +1,5 @@
 import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
-import { app, App, Layer } from "typings";
+import { app, App, Layer } from "lib";
 import config from "../config";
 import hookModMenu from "../hookModMenu";
 import Mod from "./Mod";

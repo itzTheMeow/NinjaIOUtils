@@ -1,5 +1,5 @@
 import { UserInput } from "lib";
-import { App, PIXI } from "typings";
+import { App, PIXI } from "lib";
 
 export default function Scrollbar() {
   class _Scrollbar extends PIXI.Container {
@@ -9,7 +9,10 @@ export default function Scrollbar() {
     private scrollButton = new PIXI.Graphics();
     private wheelListener: (c: { data: { delta: number } }) => any;
 
-    constructor(public h: number, public start = 0) {
+    constructor(
+      public h: number,
+      public start = 0,
+    ) {
       super();
 
       this.scrollBar.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
@@ -22,7 +25,11 @@ export default function Scrollbar() {
       this.addChild(this.scrollBar);
       this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
 
-      this.scrollButton.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+      this.scrollButton.setStrokeStyle({
+        width: 1,
+        color: 16777215,
+        alpha: 0.4,
+      });
       this.scrollButton.roundRect(0, 0, 16, 32, 4);
       this.scrollButton.fill({ color: 16777215, alpha: 0.2 });
       this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
@@ -61,7 +68,9 @@ export default function Scrollbar() {
         this.oy = c.data.global.y / App.Scale;
         this.scroll(c.data.global.y / App.Scale);
       });
-      this.scrollBar.on("pointermove", (c) => this.scroll(c.data.global.y / App.Scale));
+      this.scrollBar.on("pointermove", (c) =>
+        this.scroll(c.data.global.y / App.Scale),
+      );
       this.wheelListener = (c) => {
         this.scrolling = !0;
         this.scroll(this.oy + 0.2 * c.data.delta);

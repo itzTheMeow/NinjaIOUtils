@@ -1,5 +1,5 @@
 import { Game, Label } from "lib";
-import { app } from "typings";
+import { app } from "lib";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
 import config from "../config";
@@ -51,7 +51,8 @@ export class AutoMuteMod extends Mod<{
         permanentMuteList: [],
       },
       {
-        muteBelowEnabled: "Enable muting players with level not higher than Level limit",
+        muteBelowEnabled:
+          "Enable muting players with level not higher than Level limit",
         muteBelowLevel: "Level limit",
         enableLogs: "Enable muting logs in chat",
         enableRemoveBubble: "Enable removing chat bubble above muted players",
@@ -61,7 +62,7 @@ export class AutoMuteMod extends Mod<{
           name: "Permanent mute list",
           removableElements: true,
         },
-      }
+      },
     );
   }
 
@@ -87,9 +88,15 @@ export class AutoMuteMod extends Mod<{
       case "ignoreDuels":
         this.ignoreDuels = this.config.get("ignoreDuels");
         if (this.ignoreDuels) {
-          Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
+          Ninja.events.addListener(
+            NinjaEvents.GAME_START,
+            this.onGameStartBound,
+          );
         } else {
-          Ninja.events.removeListener(NinjaEvents.GAME_START, this.onGameStartBound);
+          Ninja.events.removeListener(
+            NinjaEvents.GAME_START,
+            this.onGameStartBound,
+          );
           this.skipPlayersJoinedCheck = false;
         }
         break;
@@ -98,7 +105,9 @@ export class AutoMuteMod extends Mod<{
         break;
       case "permanentMuteList":
         const permMuteList = this.config.get("permanentMuteList");
-        this.permanentMuteList = Array.isArray(permMuteList) ? permMuteList : [];
+        this.permanentMuteList = Array.isArray(permMuteList)
+          ? permMuteList
+          : [];
         break;
     }
   }
@@ -122,9 +131,12 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private mutePlayer(player: { name: string; sid: string }, reason: string): void {
-    if (!Game.Muted.includes(player.sid)) {
-      Game.Muted.push(player.sid);
+  private mutePlayer(
+    player: { name: string; sid: string },
+    reason: string,
+  ): void {
+    if (!Game.Muted.has(player.sid)) {
+      Game.Muted.add(player.sid);
       if (this.enableLogs) {
         Ninja.log(`Muted ${player.name} (${reason}).`, config.Colors.green);
       }
@@ -160,7 +172,10 @@ export class AutoMuteMod extends Mod<{
       this.config.set("permanentMuteList", this.permanentMuteList);
       this.configChanged("permanentMuteList");
       if (this.enableLogs) {
-        Ninja.log(`${player.name} is removed from mute list.`, config.Colors.green);
+        Ninja.log(
+          `${player.name} is removed from mute list.`,
+          config.Colors.green,
+        );
       }
     }
   }
@@ -169,7 +184,7 @@ export class AutoMuteMod extends Mod<{
     if (this.ignoreDuels) {
       Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
     }
-    Game.Muted.length = 0;
+    Game.Muted.clear();
   }
 
   private overrideChatBubble(): void {
@@ -178,7 +193,7 @@ export class AutoMuteMod extends Mod<{
     }
     const original = this.originalDisplayChatBubble;
     Label.prototype.displayChatBubble = async function () {
-      if (this.go && Game.Muted.includes(this.go.sid)) return;
+      if (this.go && Game.Muted.has(this.go.sid)) return;
       await original.apply(this);
     };
   }
@@ -199,20 +214,41 @@ export class AutoMuteMod extends Mod<{
     if (!this.originalDisplayChatBubble) {
       this.originalDisplayChatBubble = Label.prototype.displayChatBubble;
     }
-    Ninja.events.addListener(NinjaEvents.PLAYER_JOINED, this.onPlayerJoinedBound);
+    Ninja.events.addListener(
+      NinjaEvents.PLAYER_JOINED,
+      this.onPlayerJoinedBound,
+    );
     Ninja.events.addListener(NinjaEvents.PLAYER_MUTED, this.onManualMuteBound);
-    Ninja.events.addListener(NinjaEvents.PLAYER_UNMUTED, this.onManualUnmuteBound);
-    Ninja.events.addListener(NinjaEvents.GAMEPLAY_STOPPED, this.onGameplayStoppedBound);
+    Ninja.events.addListener(
+      NinjaEvents.PLAYER_UNMUTED,
+      this.onManualUnmuteBound,
+    );
+    Ninja.events.addListener(
+      NinjaEvents.GAMEPLAY_STOPPED,
+      this.onGameplayStoppedBound,
+    );
 
     super.load();
   }
 
   public unload(): void {
     this.restoreChatBubble();
-    Ninja.events.removeListener(NinjaEvents.PLAYER_JOINED, this.onPlayerJoinedBound);
-    Ninja.events.removeListener(NinjaEvents.PLAYER_MUTED, this.onManualMuteBound);
-    Ninja.events.removeListener(NinjaEvents.PLAYER_UNMUTED, this.onManualUnmuteBound);
-    Ninja.events.removeListener(NinjaEvents.GAMEPLAY_STOPPED, this.onGameplayStoppedBound);
+    Ninja.events.removeListener(
+      NinjaEvents.PLAYER_JOINED,
+      this.onPlayerJoinedBound,
+    );
+    Ninja.events.removeListener(
+      NinjaEvents.PLAYER_MUTED,
+      this.onManualMuteBound,
+    );
+    Ninja.events.removeListener(
+      NinjaEvents.PLAYER_UNMUTED,
+      this.onManualUnmuteBound,
+    );
+    Ninja.events.removeListener(
+      NinjaEvents.GAMEPLAY_STOPPED,
+      this.onGameplayStoppedBound,
+    );
     Ninja.events.removeListener(NinjaEvents.GAME_START, this.onGameStartBound);
 
     super.unload();

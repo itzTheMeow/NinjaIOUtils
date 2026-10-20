@@ -1,5 +1,5 @@
 import { APIClient, LevelBar } from "lib";
-import { app } from "typings";
+import { app } from "lib";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
 import config from "../config";
@@ -32,13 +32,16 @@ export class XPStatsMod extends Mod {
   public async onGameStart() {
     this.startingLevel = 0;
     this.startingLevel = Number(
-      (await APIClient.getUserProfile(app.credential.playerid)).experience
+      (await APIClient.getUserProfile(app.credential.playerid)).experience,
     );
   }
   public gamestart = this.onGameStart.bind(this);
 
   public async onGameEnd() {
-    const xp = Number((await APIClient.getUserProfile(app.credential.playerid))?.experience) || 0;
+    const xp =
+      Number(
+        (await APIClient.getUserProfile(app.credential.playerid))?.experience,
+      ) || 0;
     if (xp && this.startingLevel) {
       const plevel = LevelBar.XPToLevel(this.startingLevel);
       const level = LevelBar.XPToLevel(xp);
@@ -50,10 +53,13 @@ export class XPStatsMod extends Mod {
         `You gained ${gain.toLocaleString()} (${
           Math.round((gain / xpNeeded) * 1000) / 10
         }%) experience this round!`,
-        config.Colors.green
+        config.Colors.green,
       );
       if (level > plevel)
-        Ninja.log(`You leveled up! You are now level ${level}.`, config.Colors.yellow);
+        Ninja.log(
+          `You leveled up! You are now level ${level}.`,
+          config.Colors.yellow,
+        );
     }
     this.startingLevel = 0;
   }

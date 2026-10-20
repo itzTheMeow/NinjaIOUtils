@@ -3,7 +3,11 @@
     "target": "ESNext",
     "module": "CommonJS",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": false,
+    "paths": {
+      "lib": ["../lib/lib.d.ts"]
+    }
   },
   "include": ["src", "version.json", "shared.ts"]
 }

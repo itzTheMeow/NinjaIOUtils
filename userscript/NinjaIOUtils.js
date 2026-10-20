@@ -2301,7 +2301,11 @@
         this.scrollBar.alpha = 0.5;
         this.addChild(this.scrollBar);
         this.scrollBar.hitArea = new PIXI.Rectangle(-4, -4, 32, this.h + 8);
-        this.scrollButton.setStrokeStyle({ width: 1, color: 16777215, alpha: 0.4 });
+        this.scrollButton.setStrokeStyle({
+          width: 1,
+          color: 16777215,
+          alpha: 0.4
+        });
         this.scrollButton.roundRect(0, 0, 16, 32, 4);
         this.scrollButton.fill({ color: 16777215, alpha: 0.2 });
         this.scrollButton.hitArea = new PIXI.Rectangle(0, 0, 0, 0);
@@ -2459,7 +2463,10 @@
     ico1.y = ico2.y = 0.37 * memberclanButton.rectHeight;
     const icosep = new PIXI.Text({
       text: "/",
-      style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 16, fill: config_default.Colors.white })
+      style: cloneTextStyle(FontStyle.MenuTitle, {
+        fontSize: 16,
+        fill: config_default.Colors.white
+      })
     });
     icosep.x = 0.5 * memberclanButton.rectWidth;
     icosep.y = 0.37 * memberclanButton.rectHeight;
@@ -2483,7 +2490,10 @@
     memberclanButton.addChild(title2);
     const titlesep = new PIXI.Text({
       text: "/",
-      style: cloneTextStyle(FontStyle.MenuTitle, { fontSize: 14, fill: config_default.Colors.white })
+      style: cloneTextStyle(FontStyle.MenuTitle, {
+        fontSize: 14,
+        fill: config_default.Colors.white
+      })
     });
     titlesep.x = 0.5 * memberclanButton.rectWidth;
     memberclanButton.addChild(titlesep);
@@ -2525,7 +2535,10 @@
       shownConfig = null;
       background = new PIXI.Graphics();
       closeButton = new ImgButton();
-      titleText = new PIXI.Text({ text: "Mods", style: FontStyle.MediumOrangeText });
+      titleText = new PIXI.Text({
+        text: "Mods",
+        style: FontStyle.MediumOrangeText
+      });
       modContainer = new PIXI.Container();
       configContainer = new PIXI.Container();
       filterBox = new Checkbox("filter", "Show Installed", this.showInstalled);
@@ -2536,7 +2549,12 @@
         this.background.y = 40;
         this.background.rect(0, 0, 660, 524).setFillStyle({ color: 3355443, alpha: 1 }).fill();
         this.background.rect(10, 10, 640, 504).setFillStyle({ color: 0, alpha: 0.3 }).fill();
-        this.background.stroke({ width: 1, color: 16777215, alpha: 0.1, alignment: 0 });
+        this.background.stroke({
+          width: 1,
+          color: 16777215,
+          alpha: 0.1,
+          alignment: 0
+        });
         this.container.addChild(this.background);
         this.titleText.x = 0.5 * this.width - 20;
         this.titleText.y = this.oy + 36;
@@ -2770,7 +2788,9 @@
             const isNum = data.type == "num";
             const label = new PIXI.Text({
               text: data.name,
-              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, {
+                fontSize: 16
+              })
             });
             label.y = 6;
             container.addChild(label);
@@ -2799,7 +2819,9 @@
                 itemRow.y = offY;
                 const itemName = new PIXI.Text({
                   text: item,
-                  style: cloneTextStyle(FontStyle.SmallMenuTextWhite, { fontSize: 16 })
+                  style: cloneTextStyle(FontStyle.SmallMenuTextWhite, {
+                    fontSize: 16
+                  })
                 });
                 itemName.x = 10;
                 itemRow.addChild(itemName);
@@ -2833,7 +2855,9 @@
             };
             const label = new PIXI.Text({
               text: data.name,
-              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, { fontSize: 16 })
+              style: cloneTextStyle(FontStyle.SmallMenuTextOrange3, {
+                fontSize: 16
+              })
             });
             label.y = 6;
             container.addChild(label);
@@ -3349,7 +3373,7 @@
         this.addChild(t);
         if (t.onShow)
           t.onShow();
-        app.menu.settingsPanel.selectedTab = name;
+        app.menu.settingsPanel.activeTab = name;
         Ninja_default.activeMenu().emit("open_tab", name);
       };
       Object.values(SettingsPanel.Tabs).forEach((d) => {
@@ -3586,7 +3610,7 @@
       App.Layer.contentMenu.weaponButton.on("mousedown", () => {
         this.switchHash("content" /* content */, ContentPaths[CustomizationMenu.WEAPONS]);
       });
-      menu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.selectedTab || SettingsPanel.Tabs.CONTROLS]));
+      menu.on(Layer.Events.SETTINGS_ACCESS, () => this.switchHash("settings" /* settings */, SettingsPaths[app.menu.settingsPanel.activeTab || SettingsPanel.Tabs.CONTROLS]));
       menu.on("open_tab", (tab) => this.switchHash("settings" /* settings */, SettingsPaths[tab]));
       menu.on(Layer.Events.LOGIN_ACCESS, () => this.switchHash("login" /* login */));
       menu.on(Layer.Events.REGISTER_ACCESS, () => this.switchHash("register" /* register */));
@@ -3749,7 +3773,6 @@ ${name}`);
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
-    StatTrackerMod: () => StatTrackerMod,
     XPStatsMod: () => XPStatsMod
   });
 
@@ -3852,8 +3875,8 @@ ${name}`);
       }
     }
     mutePlayer(player, reason) {
-      if (!Game.Muted.includes(player.sid)) {
-        Game.Muted.push(player.sid);
+      if (!Game.Muted.has(player.sid)) {
+        Game.Muted.add(player.sid);
         if (this.enableLogs) {
           Ninja_default.log(`Muted ${player.name} (${reason}).`, config_default.Colors.green);
         }
@@ -3896,7 +3919,7 @@ ${name}`);
       if (this.ignoreDuels) {
         Ninja_default.events.addListener("gs" /* GAME_START */, this.onGameStartBound);
       }
-      Game.Muted.length = 0;
+      Game.Muted.clear();
     }
     overrideChatBubble() {
       if (!Label.prototype.displayChatBubble) {
@@ -3904,7 +3927,7 @@ ${name}`);
       }
       const original = this.originalDisplayChatBubble;
       Label.prototype.displayChatBubble = async function() {
-        if (this.go && Game.Muted.includes(this.go.sid))
+        if (this.go && Game.Muted.has(this.go.sid))
           return;
         await original.apply(this);
       };
@@ -4127,84 +4150,6 @@ ${name}`);
       AudioEffects.ButtonHover.audio.play();
     }
     consoleTyped = this._consoleTyped.bind(this);
-  };
-
-  // src/mods/statTracker.ts
-  
-  
-  var StatTrackerMod = class extends Mod {
-    constructor() {
-      super({
-        id: "StatTracker",
-        name: "Stat Tracker",
-        description: "Tracks your stats.",
-        author: "Meow",
-        icon: "",
-        draft: true,
-        recommend: true
-      });
-    }
-    load() {
-      Ninja_default.onClientPacket((type, a) => {
-        const testMap = async (name) => {
-          Ninja_default.activeClient().mapID = 0;
-          const maps = await APIClient.getMaps();
-          const map = maps.find((m) => m.name == name);
-          if (map) {
-            Ninja_default.activeClient().mapID = Number(map.id);
-            Ninja_default.log(`# Identified map as ${map.name} (ID: ${map.id}).`);
-          } else
-            Ninja_default.log(`# Failed to identify map. (name: ${name}) Please report to Meow.`);
-        };
-        if (a.type == Protocol.GAME && a.data.t == Protocol.Game.INFO) {
-          if (a.data.msg.startsWith("Joining "))
-            testMap((a.data.msg.match(/(?: - )(.*)(?: by)/) || [])[1]);
-          else if (a.data.msg.startsWith("loading map: "))
-            testMap(a.data.msg.substring("loading map: ".length));
-        }
-      });
-      Ninja_default.events.addListener("ge" /* GAME_END */, ({ data }) => {
-        if ("apiKey") {
-          Ninja_default.log("Attempting to upload match score...");
-          if (app.game.manager.isRanked) {
-            try {
-              const leaderIndex = data.leaderboard.id.indexOf(app.game.sessionId);
-              const statModel = {
-                id: app.credential.playerid,
-                map: Ninja_default.activeClient().mapID,
-                mode: app.game.mode,
-                kills: data.leaderboard.kills[leaderIndex],
-                deaths: data.leaderboard.deaths[leaderIndex],
-                caps: data.leaderboard.points ? data.leaderboard.points[leaderIndex] : 0
-              };
-              fetch(`${config_default.api}/submit?key=${"APIKEY"}`, {
-                method: "POST",
-                body: JSON.stringify(statModel),
-                headers: {
-                  "Content-Type": "application/json"
-                }
-              }).then((res) => res.json()).then((res) => {
-                if (res.err) {
-                  Ninja_default.log(`Failed to upload match score! ERR_${res.err}`);
-                  Ninja_default.log(`Error: ${res.message}`);
-                } else {
-                  Ninja_default.log("Successfully uploaded match score!");
-                }
-              }).catch((err) => {
-                Ninja_default.log("Failed to upload match score! (check console for errors)");
-                console.error(err);
-              });
-            } catch (err) {
-              Ninja_default.log("Failed to upload match score! (check console for errors)");
-              console.error(err);
-            }
-          } else {
-            Ninja_default.log("Match is unranked or custom, scores not uploaded.");
-          }
-        }
-      });
-      super.load();
-    }
   };
 
   // src/mods/xpStats.ts
