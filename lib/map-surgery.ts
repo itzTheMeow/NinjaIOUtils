@@ -5,23 +5,46 @@
  * coordinates). Passes compose char-offset mappings in BOTH directions:
  *   latest.js offset = gameStart + reverse(chunkPasses)(gameOffset - headerLen)
  *   finalDts offset  = forward(dtsPasses)(prePatchDts offset)
- * The declaration map embeds tsc's mappings in transformed-chunk /
- * unpatched-dts coordinates; the generator rewrites them onto raw latest.js
- * and the patched dts so Zed (vtsls/tsserver) can navigate declarations back
- * into the bundled site script. */
+ * The declaration map embeds tsc's mappings in compiled-chunk /
+ * unpatched-dts coordinates; the generator rewrites them onto the patched dts
+ * so Zed (vtsls/tsserver) can navigate declarations back into the game code.
+ */
 
-/** One pass: [start, end) spans (input coords) replaced by `replacement` text. */
-export function makePass(spans) {
+export interface Span {
+  start: number;
+  end: number;
+  replacement: string;
+}
+
+/** Precomputed pass item: span start, old length, new length, output delta. */
+export interface PassItem {
+  s: number;
+  o: number;
+  n: number;
+  d: number;
+}
+
+export interface Pass {
+  items: PassItem[];
+  forward(p: number): number;
+  reverse(o: number): number;
+}
+
+/** A pass either carries raw spans or precomputed {s, o, n} items. */
+export type PassInput = Span | { s: number; o: number; n: number };
+
+export function makePass(spans: PassInput[]): Pass {
   // accepts {start, end, replacement} spans or precomputed {s, o, n} items
-  const items = spans
+  const items: PassItem[] = spans
     .map((span) =>
-      span.o === undefined
-        ? {
+      "o" in span
+        ? { s: span.s, o: span.o, n: span.n, d: 0 }
+        : {
             s: span.start,
             o: span.end - span.start,
-            n: span.replacement.length ?? 0,
-          }
-        : span,
+            n: span.replacement.length,
+            d: 0,
+          },
     )
     .sort((a, b) => a.s - b.s);
   let delta = 0;
@@ -30,7 +53,7 @@ export function makePass(spans) {
     delta += item.n - item.o;
   }
   // greatest index with keyOf(items[index]) <= p
-  const lastAtMost = (p, keyOf) => {
+  const lastAtMost = (p: number, keyOf: (item: PassItem) => number): number => {
     let lo = 0;
     let hi = items.length - 1;
     let found = -1;
@@ -65,7 +88,10 @@ export function makePass(spans) {
 }
 
 /** Compose passes applied in sequence: text0 -pass0-> text1 -pass1-> ... */
-export function composePasses(passes) {
+export function composePasses(passes: Pass[]): {
+  forward(p: number): number;
+  reverse(p: number): number;
+} {
   return {
     forward(p) {
       for (const pass of passes) p = pass.forward(p);
@@ -79,11 +105,14 @@ export function composePasses(passes) {
   };
 }
 
-export function applySpans(chunk, spans) {
+export function applySpans(
+  chunk: string,
+  spans: Span[],
+): { result: string; pass: Pass } {
   if (spans.length === 0) return { result: chunk, pass: makePass([]) };
   let result = "";
   let cursor = 0;
-  const applied = [];
+  const applied: Span[] = [];
   for (const span of spans.slice().sort((a, b) => a.start - b.start)) {
     if (span.start < cursor) continue;
     result += chunk.slice(cursor, span.start) + span.replacement;
@@ -98,11 +127,17 @@ export function applySpans(chunk, spans) {
  *  records ONE pass for the whole sweep (all matches share the same input
  *  text); individual ranged edits each record a single-span pass. */
 export class EditTracker {
-  constructor(text) {
+  text: string;
+  passes: Pass[] = [];
+
+  constructor(text: string) {
     this.text = text;
-    this.passes = [];
   }
-  replaceAll(pattern, buildReplacement) {
+
+  replaceAll(
+    pattern: RegExp,
+    buildReplacement: (match: RegExpMatchArray) => string,
+  ): void {
     const flags = pattern.flags.includes("g")
       ? pattern.flags
       : pattern.flags + "g";
@@ -110,30 +145,37 @@ export class EditTracker {
     if (matches.length === 0) return;
     this.replaceWith(
       matches.map((match) => ({
-        start: match.index,
-        end: match.index + match[0].length,
+        start: match.index ?? 0,
+        end: (match.index ?? 0) + match[0].length,
         replacement: buildReplacement(match),
       })),
     );
   }
-  replaceRange(start, end, replacement) {
+
+  replaceRange(start: number, end: number, replacement: string): void {
     this.replaceWith([{ start, end, replacement }]);
   }
-  replaceWith(spans) {
+
+  replaceWith(spans: Span[]): void {
     const { result, pass } = applySpans(this.text, spans);
     this.text = result;
     this.passes.push(pass);
   }
 }
 
-export function lineStarts(text) {
+export function lineStarts(text: string): number[] {
   const starts = [0];
   for (let index = 0; index < text.length; index++)
     if (text.charCodeAt(index) === 10) starts.push(index + 1);
   return starts;
 }
 
-export function offsetToPos(starts, offset) {
+export interface LinePos {
+  line: number;
+  column: number;
+}
+
+export function offsetToPos(starts: number[], offset: number): LinePos {
   let low = 0;
   let high = starts.length - 1;
   while (low < high) {
@@ -144,7 +186,11 @@ export function offsetToPos(starts, offset) {
   return { line: low, column: offset - starts[low] };
 }
 
-export function posToOffset(starts, line, column) {
+export function posToOffset(
+  starts: number[],
+  line: number,
+  column: number,
+): number {
   if (starts.length === 0) return 0;
   const clamped = Math.min(Math.max(line, 0), starts.length - 1);
   return starts[clamped] + Math.max(column, 0);

@@ -6,7 +6,7 @@
  * Box2D, ...), pins the detected vendor versions as lib devDependencies and
  * runs tsc over the remaining game code to produce lib/lib.d.ts.
  *
- * Usage: bun run types   (or: bun generate-types.mjs)   from the lib/ directory
+ * Usage: bun run types   (or: bun generate-types.ts)   from the lib/ directory
  * Flags: --no-install  skip bun install after version bump
  *        --no-validate skip the userscript tsc --noEmit validation
  */
@@ -25,7 +25,9 @@ import {
   makePass,
   offsetToPos,
   posToOffset,
-} from "./map-surgery.mjs";
+  type Pass,
+  type Span,
+} from "./map-surgery";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE = path.join(HERE, "latest.js");
@@ -55,7 +57,13 @@ const VENDOR_MARKERS = [
 ];
 
 /** Typed package versions are detected from the bundle banners. */
-const VERSION_DETECTORS = [
+interface VersionDetector {
+  package: string;
+  regex: RegExp;
+  ask: (match: RegExpMatchArray) => string;
+}
+
+const VERSION_DETECTORS: VersionDetector[] = [
   {
     package: "pixi.js",
     regex: /PixiJS - v(\d+\.\d+\.\d+)/,
@@ -79,7 +87,56 @@ const MEMBER_FOLD_NAMES = ["FontStyle"];
 const PIXI_REEXPORT_TYPES = ["TextStyle", "TextStyleOptions"];
 const PIXI_REEXPORT_VALUES = ["Text"];
 
-function fail(message) {
+/** Loosely-typed acorn AST node (the walkers reach into many node shapes). */
+type Node = any;
+
+interface StatementSpan {
+  node: Node;
+  start: number;
+  end: number;
+  leadStart: number;
+}
+
+interface Comment {
+  start: number;
+  end: number;
+  text: string;
+}
+
+interface MemberOverride {
+  class: string;
+  member: string;
+  type: string;
+  static?: boolean;
+}
+
+interface BareAssignment {
+  start: number;
+  end: number;
+  exprStart: number;
+  exprEnd: number;
+}
+
+interface DeclaratorInit {
+  start: number;
+  end: number;
+}
+
+interface MemberAssignment {
+  start: number;
+  end: number;
+  key: string;
+  rightStart: number;
+  rightEnd: number;
+}
+
+interface FnInfo {
+  anchorStart?: number;
+  params: Node[];
+  optionalized: string[];
+}
+
+function fail(message: string): never {
   console.error(`\n[generate-types] ${message}`);
   process.exit(1);
 }
@@ -88,42 +145,45 @@ function fail(message) {
 /* 1. slice                                                            */
 /* ------------------------------------------------------------------ */
 
-function parse(source) {
-  const comments = [];
+function parse(source: string): { program: Node; comments: Comment[] } {
+  const comments: Comment[] = [];
   const program = acorn.parse(source, {
     ecmaVersion: "latest",
     allowReturnOutsideFunction: true,
     allowAwaitOutsideFunction: true,
     allowHashBang: true,
-    onComment: (block, text, start, end) => comments.push({ start, end, text }),
-  });
+    onComment: (block: boolean, text: string, start: number, end: number) =>
+      comments.push({ start, end, text }),
+  } as any);
   return { program, comments };
 }
 
-function extract(source) {
+function extract(source: string): { statements: StatementSpan[] } {
   const { program, comments } = parse(source);
-  const body = program.body;
-  const statements = body.map((statement, index) => {
-    const prevEnd = index === 0 ? 0 : body[index - 1].end;
-    // leading comments: those that end before this statement and start after
-    // the previous statement (or file start for the first one)
-    let leadStart = statement.start;
-    for (const comment of comments) {
-      if (comment.end > statement.start) break;
-      if (comment.start >= prevEnd && comment.start < leadStart)
-        leadStart = comment.start;
-    }
-    return {
-      node: statement,
-      start: statement.start,
-      end: statement.end,
-      leadStart,
-    };
-  });
-  return { statements, comments };
+  const body: Node[] = program.body;
+  const statements: StatementSpan[] = body.map(
+    (statement: Node, index: number) => {
+      const prevEnd = index === 0 ? 0 : body[index - 1].end;
+      // leading comments: those that end before this statement and start after
+      // the previous statement (or file start for the first one)
+      let leadStart = statement.start;
+      for (const comment of comments) {
+        if (comment.end > statement.start) break;
+        if (comment.start >= prevEnd && comment.start < leadStart)
+          leadStart = comment.start;
+      }
+      return {
+        node: statement,
+        start: statement.start,
+        end: statement.end,
+        leadStart,
+      };
+    },
+  );
+  return { statements };
 }
 
-function classify(statements, source) {
+function classify(statements: StatementSpan[], source: string) {
   // game code extends PIXI.Container, so the pixi.js UMD is always the LAST
   // vendor statement: the vendor block is its contiguous prefix.
   const pixiIndex = statements.findIndex((statement) =>
@@ -140,8 +200,11 @@ function classify(statements, source) {
 /* 2. applied AST transforms on the game chunk                         */
 /* ------------------------------------------------------------------ */
 
-function collectGameNames(gameNodes, source) {
-  const declared = new Set();
+function collectGameNames(
+  gameNodes: StatementSpan[],
+  source: string,
+): Set<string> {
+  const declared = new Set<string>();
   for (const statement of gameNodes) {
     const { node } = statement;
     if (node.type === "ClassDeclaration" && node.id) declared.add(node.id.name);
@@ -155,7 +218,7 @@ function collectGameNames(gameNodes, source) {
   return declared;
 }
 
-function collectPattern(pattern, out) {
+function collectPattern(pattern: Node, out: Set<string>): void {
   if (pattern.type === "Identifier") out.add(pattern.name);
   else if (pattern.type === "ObjectPattern")
     for (const property of pattern.properties)
@@ -187,7 +250,7 @@ const DISPATCHER_MIXIN_NAMES = ["UserInput"];
 /** Runtime fields the userscript attaches itself, or pixi/type conflicts we
  *  deliberately loosen. Tuned per generated run; members that genuinely moved
  *  in the bundle should NOT be faked here (port the consumer instead). */
-const MEMBER_OVERRIDES = [
+const MEMBER_OVERRIDES: MemberOverride[] = [
   { class: "Client", member: "mapID", type: "any" }, // userscript-attached on runtime instances
   { class: "PVPClient", member: "mapID", type: "any" },
   { class: "App", member: "credential", type: "any" }, // auth payload shape varies at runtime
@@ -206,15 +269,20 @@ const MEMBER_OVERRIDES = [
  *
  *  All statement offsets are absolute (into the unmodified source); the chunk
  *  is rebuilt exactly once, so no offset bookkeeping can drift. */
-function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
-  const bareAssignStatement = (node) =>
+function rewriteGlobals(
+  gameChunk: string,
+  gameNodes: StatementSpan[],
+  declaredNames: Set<string>,
+  baseOffset: number,
+): { result: string; pass: Pass; converted: string[] } {
+  const bareAssignStatement = (node: Node): boolean =>
     node?.type === "ExpressionStatement" &&
     node.expression?.type === "AssignmentExpression" &&
     node.expression.operator === "=" &&
     node.expression.left?.type === "Identifier";
 
-  const bareAssignments = new Map(); // name -> { start, end, exprStart, exprEnd }
-  const declaratorInits = new Map(); // name -> { start, end } (initializer span)
+  const bareAssignments = new Map<string, BareAssignment>();
+  const declaratorInits = new Map<string, DeclaratorInit>();
   for (const { node } of gameNodes) {
     if (node?.type === "VariableDeclaration") {
       for (const declaration of node.declarations) {
@@ -237,7 +305,7 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
   }
 
   // mixin constructor functions -> class syntax (see CLASSIFY_AS_CLASS)
-  const classRewrites = new Map(); // name -> { start, end, replacement }
+  const classRewrites = new Map<string, Span>();
   for (const { node } of gameNodes) {
     if (node?.type !== "FunctionDeclaration" || !node.id) continue;
     if (!CLASSIFY_AS_CLASS.includes(node.id.name)) continue;
@@ -249,7 +317,7 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
     // `function X(params) { body }` -> `class X { constructor(params) { body } }`
     // feature check: body assigns at least one `this.<prop> =` (mixin pattern)
     const assignsInstanceProps = node.body.body.some(
-      (statement) =>
+      (statement: Node) =>
         statement?.type === "ExpressionStatement" &&
         statement.expression?.type === "AssignmentExpression" &&
         statement.expression.left?.type === "MemberExpression" &&
@@ -269,7 +337,7 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
     ...MEMBER_FOLD_NAMES,
     ...DISPATCHER_MIXIN_NAMES,
   ]);
-  const memberAssignments = new Map(); // name -> [{ start, end, key, rightStart, rightEnd }]
+  const memberAssignments = new Map<string, MemberAssignment[]>();
   for (const { node } of gameNodes) {
     if (node?.type !== "ExpressionStatement") continue;
     const expr = node.expression;
@@ -286,7 +354,7 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
       continue;
     if (expr.left.property?.type !== "Identifier") continue;
     if (!memberAssignments.has(name)) memberAssignments.set(name, []);
-    memberAssignments.get(name).push({
+    memberAssignments.get(name)!.push({
       start: node.start - baseOffset,
       end: node.end - baseOffset,
       key: expr.left.property.name,
@@ -298,9 +366,9 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
   // EventDispatcher.call(X) mixin targets: fold their declared object
   // initializer + later member assignments into `Object.assign(new
   // EventDispatcher(), {...})` and drop the `.call(...)` statements.
-  const mixinReplacements = [];
+  const mixinReplacements: Span[] = [];
   for (const name of DISPATCHER_MIXIN_NAMES) {
-    const callStatements = [];
+    const callStatements: Span[] = [];
     for (const { node } of gameNodes) {
       if (node?.type !== "ExpressionStatement") continue;
       const call = node.expression;
@@ -316,6 +384,7 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
         callStatements.push({
           start: node.start - baseOffset,
           end: node.end - baseOffset,
+          replacement: "",
         });
     }
     if (callStatements.length === 0) continue;
@@ -352,18 +421,14 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
           replacement: "",
         });
       for (const callStatement of callStatements)
-        mixinReplacements.push({
-          start: callStatement.start,
-          end: callStatement.end,
-          replacement: "",
-        });
+        mixinReplacements.push(callStatement);
       console.log(
         `folded ${name} object initializer + ${members.length} member assignment(s) with EventDispatcher.call`,
       );
     }
   }
 
-  const replacements = []; // [{ start, end, replacement }]
+  const replacements: Span[] = [];
   for (const [name, assignment] of bareAssignments) {
     const initText = gameChunk
       .slice(assignment.exprStart, assignment.exprEnd)
@@ -415,17 +480,17 @@ function rewriteGlobals(gameChunk, gameNodes, declaredNames, baseOffset) {
 /* 2b. optional params + mixin classes                                 */
 /* ------------------------------------------------------------------ */
 
-function optionalizeParams(gameChunk) {
+function optionalizeParams(gameChunk: string): { result: string; pass: Pass } {
   const program = acorn.parse(gameChunk, {
     ecmaVersion: "latest",
     sourceType: "module",
-  });
-  const spans = [];
-  const functions = []; // { anchorStart, params, optionalized: Set, docInfo }
-  const collect = (node) => {
+  } as any);
+  const spans: Span[] = [];
+  const functions: FnInfo[] = [];
+  const collect = (node: Node): void => {
     if (!node || typeof node !== "object") return;
     let isFunction = false;
-    let anchor;
+    let anchor: number | undefined;
     if (
       node.type === "FunctionDeclaration" ||
       node.type === "FunctionExpression" ||
@@ -449,7 +514,7 @@ function optionalizeParams(gameChunk) {
       else if (value && typeof value === "object" && value.type) collect(value);
     }
   };
-  for (const statement of program.body) collect(statement, undefined);
+  for (const statement of program.body) collect(statement);
 
   // Reverse walk per function. A `= null` on param[ix] only type-checks when
   // every param after it is already optional, so we add defaults from the END
@@ -480,8 +545,8 @@ function optionalizeParams(gameChunk) {
     if (fn.optionalized.length === 0 || fn.anchorStart === undefined) continue;
     const optionalNames = new Set(fn.optionalized);
     const paramNames = fn.params
-      .filter((param) => param.type === "Identifier")
-      .map((param) =>
+      .filter((param: Node) => param.type === "Identifier")
+      .map((param: Node) =>
         optionalNames.has(param.name)
           ? `{any} [${param.name}]`
           : `{any} ${param.name}`,
@@ -494,7 +559,7 @@ function optionalizeParams(gameChunk) {
     });
   }
 
-  const deduped = [];
+  const deduped: Span[] = [];
   for (const span of spans.sort((a, b) => a.start - b.start))
     if (!deduped.length || deduped[deduped.length - 1].start < span.start)
       deduped.push(span);
@@ -508,12 +573,15 @@ function optionalizeParams(gameChunk) {
  *  the dispatcher API at runtime; rewriting them to `extends EventDispatcher`
  *  puts addListener/removeListener/dispatchEvent on their types (type-level
  *  only: this file is never executed). */
-function classifyMixinClasses(gameChunk) {
+function classifyMixinClasses(gameChunk: string): {
+  result: string;
+  pass: Pass;
+} {
   const program = acorn.parse(gameChunk, {
     ecmaVersion: "latest",
     sourceType: "module",
-  });
-  const spans = [];
+  } as any);
+  const spans: Span[] = [];
   for (const statement of program.body) {
     if (
       statement?.type !== "ClassDeclaration" ||
@@ -523,13 +591,13 @@ function classifyMixinClasses(gameChunk) {
     )
       continue;
     const constructorMethod = statement.body.body.find(
-      (member) =>
+      (member: Node) =>
         member?.type === "MethodDefinition" && member.kind === "constructor",
     );
-    const bodyStatements = constructorMethod?.value?.body?.body;
+    const bodyStatements = (constructorMethod as any)?.value?.body?.body;
     if (!bodyStatements) continue;
     const mixinCall = bodyStatements.some(
-      (inner) =>
+      (inner: Node) =>
         inner?.type === "ExpressionStatement" &&
         inner.expression?.type === "CallExpression" &&
         inner.expression.callee?.type === "MemberExpression" &&
@@ -553,8 +621,8 @@ function classifyMixinClasses(gameChunk) {
 /* 3. version detection + package management (bun)                     */
 /* ------------------------------------------------------------------ */
 
-function detectVersions(source) {
-  const detected = [];
+function detectVersions(source: string) {
+  const detected: { detector: VersionDetector; wanted: string }[] = [];
   for (const detector of VERSION_DETECTORS) {
     const match = source.match(detector.regex);
     if (!match)
@@ -567,7 +635,9 @@ function detectVersions(source) {
   return detected;
 }
 
-function syncPackageVersions(detected) {
+function syncPackageVersions(
+  detected: { detector: VersionDetector; wanted: string }[],
+): boolean {
   const packageJsonPath = path.join(HERE, "package.json");
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   const devDependencies = packageJson.devDependencies ?? {};
@@ -598,7 +668,10 @@ function syncPackageVersions(detected) {
 /* 4. emit                                                             */
 /* ------------------------------------------------------------------ */
 
-function buildGameTs(gameChunk, convertedNames) {
+function buildGameTs(
+  gameChunk: string,
+  convertedNames: string[],
+): { text: string; headerLength: number } {
   const header = [
     `import * as PIXI from "pixi.js";`,
     `import { Howl, Howler } from "howler";`,
@@ -607,19 +680,19 @@ function buildGameTs(gameChunk, convertedNames) {
 
   // everything the userscript imports from "lib" must be exported; the whole
   // game chunk is one module, so list all top-level declared names.
-  let program;
+  let program: Node;
   try {
     program = acorn.parse(gameChunk, {
       ecmaVersion: "latest",
       sourceType: "module",
-    });
+    } as any);
   } catch (error) {
     const lines = gameChunk.split("\n");
     try {
       fs.writeFileSync(path.join(WORK, "game.failed.js"), gameChunk);
     } catch {}
-    console.error(error.message);
-    const line = error.loc?.line ?? 0;
+    console.error((error as Error).message);
+    const line = (error as any).loc?.line ?? 0;
     for (
       let index = Math.max(0, line - 4);
       index < Math.min(lines.length, line + 2);
@@ -628,7 +701,7 @@ function buildGameTs(gameChunk, convertedNames) {
       console.error(`${index + 1}: ${lines[index].slice(0, 200)}`);
     fail("generated game chunk failed to parse - inspect the lines above");
   }
-  const names = new Set();
+  const names = new Set<string>();
   for (const statement of program.body) {
     if (statement.type === "ClassDeclaration" && statement.id)
       names.add(statement.id.name);
@@ -669,7 +742,7 @@ function buildGameTs(gameChunk, convertedNames) {
  * merging. Compiling as .ts would type-check 5.4MB of unpacked JS and lose
  * most of those inferences. */
 
-function runTsc() {
+function runTsc(): { status: number | null; output: string } {
   const tsconfigOut = {
     compilerOptions: {
       target: "ES2022",
@@ -702,7 +775,7 @@ function runTsc() {
 /* 5. post-emit member overrides                                       */
 /* ------------------------------------------------------------------ */
 
-function applyMemberOverrides(dts) {
+function applyMemberOverrides(dts: string): { text: string; passes: Pass[] } {
   // Our injected `= null` defaults infer the param type as literally `null`;
   // the runtime accepts anything, so widen them back to any. (These are the
   // ONLY bare `?: null` params in the emit - game natural unions are `... | null`.)
@@ -713,7 +786,10 @@ function applyMemberOverrides(dts) {
     (match) => `${match[1]}?: any`,
   );
   console.log(`optionalize: widened ${widened} inferred-null param types`);
-  const findBlock = (heading, text) => {
+  const findBlock = (
+    heading: string,
+    text: string,
+  ): { start: number; end: number } | null => {
     const blockStart = text.indexOf(heading);
     if (blockStart < 0) return null;
     const openBrace = text.indexOf("{", blockStart);
@@ -729,7 +805,12 @@ function applyMemberOverrides(dts) {
   };
   // retype `<whitespace+static?><readonly ...> member: <old>;` inside a class
   // body; instance/static bodies carry the leading 4-space indent.
-  const retypeMember = (className, member, type, isStatic) => {
+  const retypeMember = (
+    className: string,
+    member: string,
+    type: string,
+    isStatic: boolean,
+  ): void => {
     const block = findBlock(`declare class ${className} `, tracker.text);
     if (!block) {
       console.log(
@@ -819,7 +900,11 @@ function applyMemberOverrides(dts) {
  * target — but every declaration in the emit comes from the game chunk
  * (never the vendored prefix), which fits at ~3.7MB. */
 
-function rewriteDeclarationMap(options) {
+function rewriteDeclarationMap(options: {
+  dtsBefore: string;
+  dtsAfter: string;
+  dtsPasses: Pass[];
+}): void {
   const { dtsBefore, dtsAfter, dtsPasses } = options;
   const mapPath = path.join(WORK, "game.d.ts.map");
   const map = JSON.parse(fs.readFileSync(mapPath, "utf8"));
@@ -827,7 +912,7 @@ function rewriteDeclarationMap(options) {
     fail(
       `unexpected declaration-map source list: ${JSON.stringify(map.sources)}`,
     );
-  const decoded = decodedMappings(new TraceMap(map));
+  const decoded = decodedMappings(new TraceMap(map)) as any;
 
   const dtsStartsBefore = lineStarts(dtsBefore);
   const dtsStartsAfter = lineStarts(dtsAfter);
@@ -836,14 +921,19 @@ function rewriteDeclarationMap(options) {
   // Re-key rows by TARGET line index: tsserver consults positions in the
   // patched dts, so a row from dtsBefore line N belongs at whichever dtsAfter
   // line its forward-mapped offset lands on (patch inserts shift lines).
-  const rewritten = [];
+  const rewritten: number[][][] = [];
   for (let genLine = 0; genLine < decoded.length; genLine++) {
     for (const segment of decoded[genLine]) {
       const target = offsetToPos(
         dtsStartsAfter,
         dtsForward(posToOffset(dtsStartsBefore, genLine, segment[0])),
       );
-      const output = [target.column, segment[1], segment[2], segment[3]];
+      const output: number[] = [
+        target.column,
+        segment[1],
+        segment[2],
+        segment[3],
+      ];
       if (segment.length > 4) output.push(segment[4]);
       while (rewritten.length < target.line) rewritten.push([]);
       rewritten[target.line] = rewritten[target.line] ?? [];
@@ -856,7 +946,7 @@ function rewriteDeclarationMap(options) {
     file: "lib.d.ts",
     sources: ["./.generate/game.js"],
     names: Array.isArray(map.names) ? map.names : [],
-    mappings: encodeMappings(rewritten),
+    mappings: encodeMappings(rewritten as any),
   };
   fs.writeFileSync(OUT_MAP_FILE, JSON.stringify(finalMap));
   console.log(
@@ -871,16 +961,21 @@ function rewriteDeclarationMap(options) {
   validateDeclarationMap(dtsAfter, map, finalMap);
 }
 
-function validateDeclarationMap(finalDts, tscMap, finalMap) {
+function validateDeclarationMap(
+  finalDts: string,
+  tscMap: any,
+  finalMap: any,
+): void {
   // 1. structural: independent of file content, so it survives bundle
   //    updates. For every original tsc mapping, the final map must carry the
   //    SAME source coordinates at the forward-mapped dts position.
-  const tscDecoded = decodedMappings(new TraceMap(tscMap));
-  const finalDecoded = decodedMappings(new TraceMap(finalMap));
+  const tscDecoded = decodedMappings(new TraceMap(tscMap)) as any;
+  const finalDecoded = decodedMappings(new TraceMap(finalMap)) as any;
+  const linkstate = JSON.parse(
+    fs.readFileSync(path.join(WORK, "linkstate.json"), "utf8"),
+  );
   const dtsForward = composePasses(
-    JSON.parse(
-      fs.readFileSync(path.join(WORK, "linkstate.json"), "utf8"),
-    ).dtsPasses.map((items) => makePass(items)),
+    linkstate.dtsPasses.map((items: any) => makePass(items)),
   ).forward;
   const dtsStartsBefore = lineStarts(
     fs.readFileSync(path.join(WORK, "game.d.ts"), "utf8"),
@@ -896,7 +991,7 @@ function validateDeclarationMap(finalDts, tscMap, finalMap) {
       );
       const rows = finalDecoded[target.line] ?? [];
       const match = rows.some(
-        (row) =>
+        (row: number[]) =>
           row.length >= 4 &&
           row[1] === segment[1] &&
           row[2] === segment[2] &&
@@ -916,7 +1011,7 @@ function validateDeclarationMap(finalDts, tscMap, finalMap) {
   const gameText = fs.readFileSync(path.join(WORK, "game.js"), "utf8");
   const gameStarts = lineStarts(gameText);
   const dtsStarts = dtsStartsAfter;
-  const check = (regex, expected, label) => {
+  const check = (regex: RegExp, expected: string, label: string): boolean => {
     const index = finalDts.search(regex);
     if (index < 0) {
       console.log(`map check: ${label} not found in dts`);
@@ -924,7 +1019,7 @@ function validateDeclarationMap(finalDts, tscMap, finalMap) {
     }
     const position = offsetToPos(dtsStarts, index);
     const segments = decodedFinal[position.line] ?? [];
-    let candidate = null;
+    let candidate: number[] | null = null;
     for (const segment of segments)
       if (segment[0] <= position.column && segment.length >= 4)
         candidate = segment;
@@ -993,7 +1088,7 @@ function validateDeclarationMap(finalDts, tscMap, finalMap) {
 /* 6. main                                                             */
 /* ------------------------------------------------------------------ */
 
-function main() {
+function main(): void {
   if (!fs.existsSync(SOURCE)) fail("lib/latest.js not found");
   fs.rmSync(WORK, { recursive: true, force: true });
   fs.mkdirSync(WORK, { recursive: true });
@@ -1020,7 +1115,7 @@ function main() {
   // game statements that still match vendor markers are game-side references
   // to bundled globals (Box2D physics bindings etc.) - they stay, but shout if
   // a whole vendor-seeming IIFE slipped in.
-  const gameMarkered = [];
+  const gameMarkered: number[] = [];
   for (let index = gameFrom; index < statements.length; index++) {
     const text = source.slice(
       statements[index].leadStart,
@@ -1037,12 +1132,11 @@ function main() {
   const gameStart = gameNodes[0].start;
   const gameEnd = gameNodes[gameNodes.length - 1].end;
   let gameChunk = source.slice(gameStart, gameEnd);
-  const rawChunkLength = gameChunk.length;
 
   const declaredNames = collectGameNames(gameNodes, source);
   // Every chunk rewrite is recorded as a pass so the declaration map can be
-  // rewritten onto raw latest.js coordinates (see rewriteDeclarationMap).
-  const chunkPasses = [];
+  // rewritten onto the patched dts (see rewriteDeclarationMap).
+  const chunkPasses: Pass[] = [];
   const rewritten = rewriteGlobals(
     gameChunk,
     gameNodes,
@@ -1068,7 +1162,7 @@ function main() {
   fs.writeFileSync(path.join(WORK, "game.js"), gameInput.text);
   console.log("emitting declarations (tsc)...");
 
-  const { status, output } = runTsc();
+  const { output } = runTsc();
   const outFile = path.join(WORK, "game.d.ts");
   const outMapFile = path.join(WORK, "game.d.ts.map");
   if (!fs.existsSync(outFile)) {
@@ -1111,7 +1205,7 @@ function main() {
   console.log("\ndone.");
 }
 
-function validate() {
+function validate(): void {
   if (NO_VALIDATE) {
     console.log("validation skipped (--no-validate)");
     return;
