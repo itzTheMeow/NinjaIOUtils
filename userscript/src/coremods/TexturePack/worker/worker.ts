@@ -20,8 +20,11 @@ self.onmessage = async (e: MessageEvent) => {
       err: false,
     };
   function respond<T extends TexWorkerReq>(payload: TexWorkerOutMap[T]) {
-    self.postMessage({ ...base, ...payload });
+    const message = { ...base, payload };
+    console.debug("worker responding with", message);
+    self.postMessage(message);
   }
+  console.debug("worker received message", msg);
 
   try {
     switch (msg.type) {
@@ -42,6 +45,7 @@ self.onmessage = async (e: MessageEvent) => {
         break;
     }
   } catch (err) {
+    console.error(err);
     self.postMessage({
       ...base,
       err: true,

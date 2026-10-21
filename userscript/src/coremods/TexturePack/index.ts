@@ -10,7 +10,7 @@ import {
 } from "lib";
 import Mod from "../../api/Mod";
 import Ninja from "../../api/Ninja";
-import { paintListRow } from "../../utils";
+import { fetchBlob, paintListRow } from "../../utils";
 import { TexturePackModManifest } from "./manifest";
 import { TexturePackModWorker } from "./worker";
 import {
@@ -301,7 +301,7 @@ const createTexTab = (mod: TexturePackMod) =>
           const atlases = await Promise.all(
             Object.values(TextureAtlasType).map(async (type) => {
               const { json, pngURL } = await textureAtlasFetchJSON(type),
-                png = await (await fetch(pngURL)).blob();
+                png = await fetchBlob(pngURL);
               return {
                 type,
                 json,
@@ -489,14 +489,20 @@ const createTexTab = (mod: TexturePackMod) =>
           manageBtn.x = this.rowWidth - manageBtn.width - 8;
           manageBtn.y = this.rowHeight / 2 - manageBtn.height / 2;
           manageBtn.addListener(Button.BUTTON_RELEASED, async () => {
-            mod.store
-              .installPackFromManifest(pak)
-              .catch(() => alert("Failed to install texture pack."))
-              .finally(() => {
-                this.installingManifestPacks.delete(pak.id);
-                this.rerender();
-              });
-            this.installingManifestPacks.add(pak.id);
+            if (isInstalling) return;
+            if (!isInstalled) {
+              // install the pack
+              mod.store
+                .installPackFromManifest(pak)
+                .catch(() => alert("Failed to install texture pack."))
+                .finally(() => {
+                  this.installingManifestPacks.delete(pak.id);
+                  this.rerender();
+                });
+              this.installingManifestPacks.add(pak.id);
+            } else {
+              await mod.store.uninstallPack(pak.id);
+            }
             this.rerender();
           });
           row.addChild(manageBtn);

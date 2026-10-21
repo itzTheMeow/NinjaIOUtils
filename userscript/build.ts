@@ -15,6 +15,7 @@ const scriptPath = "NinjaIOUtils.js",
   isDev = process.argv.includes("--dev");
 console.log("Building utils...");
 const ctx = await context({
+  target: "es2022",
   bundle: true,
   entryPoints: ["src/index.ts"],
   outfile: scriptPath,
@@ -86,6 +87,7 @@ fetch("http://localhost:${DEV_PORT}/NinjaIOUtils.js").then(r => r.text()).then(r
             bundle: true,
             format: "iife",
             write: false,
+            target: "es2022",
           });
           return {
             contents: `export default ${JSON.stringify(res.outputFiles[0].text)};`,

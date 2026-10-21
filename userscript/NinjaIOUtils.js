@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      0.1b
+// @version      0.2b
 // ==/UserScript==
 
 /*
@@ -32,6 +32,10 @@
   var __getOwnPropNames = Object.getOwnPropertyNames;
   var __getProtoOf = Object.getPrototypeOf;
   var __hasOwnProp = Object.prototype.hasOwnProperty;
+  var __knownSymbol = (name, symbol) => (symbol = Symbol[name]) ? symbol : /* @__PURE__ */ Symbol.for("Symbol." + name);
+  var __typeError = (msg) => {
+    throw TypeError(msg);
+  };
   var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
     get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
   }) : x)(function(x) {
@@ -65,6 +69,47 @@
     isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
     mod
   ));
+  var __using = (stack, value, async) => {
+    if (value != null) {
+      if (typeof value !== "object" && typeof value !== "function") __typeError("Object expected");
+      var dispose, inner;
+      if (async) dispose = value[__knownSymbol("asyncDispose")];
+      if (dispose === void 0) {
+        dispose = value[__knownSymbol("dispose")];
+        if (async) inner = dispose;
+      }
+      if (typeof dispose !== "function") __typeError("Object not disposable");
+      if (inner) dispose = function() {
+        try {
+          inner.call(this);
+        } catch (e) {
+          return Promise.reject(e);
+        }
+      };
+      stack.push([async, dispose, value]);
+    } else if (async) {
+      stack.push([async]);
+    }
+    return value;
+  };
+  var __callDispose = (stack, error, hasError) => {
+    var E = typeof SuppressedError === "function" ? SuppressedError : function(e, s, m, _) {
+      return _ = Error(m), _.name = "SuppressedError", _.error = e, _.suppressed = s, _;
+    };
+    var fail = (e) => error = hasError ? new E(e, error, "An error was suppressed during disposal") : (hasError = true, e);
+    var next = (it) => {
+      while (it = stack.pop()) {
+        try {
+          var result = it[1] && it[1].call(it[2]);
+          if (it[0]) return Promise.resolve(result).then(next, (e) => (fail(e), next()));
+        } catch (e) {
+          fail(e);
+        }
+      }
+      if (hasError) throw error;
+    };
+    return next();
+  };
 
   // node_modules/localforage/dist/localforage.js
   var require_localforage = __commonJS({
@@ -2221,7 +2266,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "0.1b",
+    ver: "0.2b",
     api: "https://utils.xela.codes",
     //api: "http://localhost:8907",
     customDelimiter: "__custom",
@@ -2317,6 +2362,16 @@
       newStyle[key] = newProps[key];
     });
     return newStyle;
+  }
+  async function fetchBlob(url) {
+    return await (await fetch(url)).blob();
+  }
+  async function sha256(data) {
+    const digest = await crypto.subtle.digest(
+      "SHA-256",
+      data instanceof Blob ? await data.arrayBuffer() : new TextEncoder().encode(data)
+    );
+    return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
   }
   function paintListRow(gfx, w, h, index, hovered, edgeColor) {
     const even = index % 2 === 0;
@@ -13085,8 +13140,11 @@
       err: false
     };
     function respond(payload) {
-      self.postMessage({ ...base, ...payload });
+      const message = { ...base, payload };
+      console.debug("worker responding with", message);
+      self.postMessage(message);
     }
+    console.debug("worker received message", msg);
     try {
       switch (msg.type) {
         case 0 /* BaseZip */:
@@ -13106,6 +13164,7 @@
           break;
       }
     } catch (err) {
+      console.error(err);
       self.postMessage({
         ...base,
         err: true,
@@ -13224,12 +13283,18 @@
         const id = ++this.reqID;
         this.pending.set(id, { res, rej });
         const base = { id, type };
-        this.worker.postMessage({ ...base, ...payload });
+        this.worker.postMessage({ ...base, payload });
       });
     }
+    /** Generates a zip of the base game textures. */
     async baseTextureZip(data) {
       const res = await this.req(0 /* BaseZip */, data);
       return res.payload.zip;
+    }
+    /** Generate a texture atlas. */
+    async generateAtlas(data) {
+      const res = await this.req(2 /* GenerateAtlas */, data);
+      return res.payload.atlas;
     }
   };
 
@@ -13259,66 +13324,139 @@
 
   // src/coremods/TexturePack/store.ts
   var import_localforage = __toESM(require_localforage());
-  var TexturePackModStore = class {
-    constructor(parent) {
-      this.parent = parent;
+
+  // node_modules/es-toolkit/dist/array/compact.mjs
+  function compact(arr) {
+    const result = [];
+    for (let i = 0; i < arr.length; i++) {
+      const item = arr[i];
+      if (item) result.push(item);
     }
-    parent;
-    instance = import_localforage.default.createInstance({
-      name: "nutils_texpack_store_v1"
-    });
-    _atlases = {};
-    async getAtlas(type) {
-      if (this._atlases?.[type]) return this._atlases[type];
-      throw "Unimplemented.";
+    return result;
+  }
+
+  // node_modules/es-toolkit/dist/promise/semaphore.mjs
+  var Semaphore = class {
+    /**
+    * The maximum number of concurrent operations allowed.
+    * @type {number}
+    */
+    capacity;
+    /**
+    * The number of available permits.
+    * @type {number}
+    */
+    available;
+    deferredTasks = [];
+    /**
+    * Creates an instance of Semaphore.
+    * @param capacity - The maximum number of concurrent operations allowed.
+    *
+    * @example
+    * const sema = new Semaphore(3); // Allows up to 3 concurrent operations.
+    */
+    constructor(capacity) {
+      this.capacity = capacity;
+      this.available = capacity;
     }
-    _installed = null;
-    async getInstalled() {
-      if (this._installed) return this._installed;
-      return this._installed = await this.instance.getItem("installed_packs") || [];
-    }
-    /** Installs a pack from a manifest entry. */
-    async installPackFromManifest(pack) {
-      const zip = await this.parent.manifest.fetchZip(pack);
-      return await this.installPack(pack, zip, true);
-    }
-    /** Install a custom pack from an uploaded zip file. */
-    async installCustomPack(zip) {
-    }
-    /** Installs a pack from a zip file. */
-    async installPack(meta, zip, fromManifest = false) {
-      const pack = {
-        ...meta,
-        fromManifest
-      };
-      await this.instance.setItem(`zip:${pack.hash}`, zip);
-      const installed = await this.getInstalled();
-      installed.push(pack);
-      this.instance.setItem("installed_packs", this._installed = installed);
-      await this.gc();
-    }
-    /** Uninstall a pack given its ID. */
-    async uninstallPack(id) {
-      const installed = await this.getInstalled(), packIndex = installed.findIndex((i) => i.id == id), pack = installed[packIndex];
-      if (packIndex == -1 || !pack) {
-        console.error(`Tried to uninstall pack ${id} that wasnt installed!`);
+    /**
+    * Acquires a semaphore, blocking if necessary until one is available.
+    * @returns A promise that resolves when the semaphore is acquired.
+    *
+    * @example
+    * const sema = new Semaphore(1);
+    *
+    * async function criticalSection() {
+    *   await sema.acquire();
+    *   try {
+    *     // This code section cannot be executed simultaneously
+    *   } finally {
+    *     sema.release();
+    *   }
+    * }
+    */
+    async acquire() {
+      if (this.available > 0) {
+        this.available--;
         return;
       }
-      installed.splice(packIndex, 1);
-      await this.instance.setItem(
-        "installed_packs",
-        this._installed = installed
-      );
-      this.gc();
+      return new Promise((resolve) => {
+        this.deferredTasks.push(resolve);
+      });
     }
-    /** Run garbage-collection and clean up any non-installed zips. */
-    async gc() {
-      const installed = await this.getInstalled();
-      for (const key of await this.instance.keys()) {
-        if (!key.startsWith("zip:")) continue;
-        if (!installed.some((i) => i.hash == key.split(":").pop()))
-          await this.instance.removeItem(key);
+    /**
+    * Releases a semaphore, allowing one more operation to proceed.
+    *
+    * @example
+    * const sema = new Semaphore(1);
+    *
+    * async function task() {
+    *   await sema.acquire();
+    *   try {
+    *     // This code can only be executed by two tasks at the same time
+    *   } finally {
+    *     sema.release(); // Allows another waiting task to proceed.
+    *   }
+    * }
+    */
+    release() {
+      const deferredTask = this.deferredTasks.shift();
+      if (deferredTask != null) {
+        deferredTask();
+        return;
       }
+      if (this.available < this.capacity) this.available++;
+    }
+  };
+
+  // node_modules/es-toolkit/dist/promise/mutex.mjs
+  var Mutex = class {
+    semaphore = new Semaphore(1);
+    /**
+    * Checks if the mutex is currently locked.
+    * @returns True if the mutex is locked, false otherwise.
+    *
+    * @example
+    * const mutex = new Mutex();
+    * console.log(mutex.isLocked); // false
+    * await mutex.acquire();
+    * console.log(mutex.isLocked); // true
+    * mutex.release();
+    * console.log(mutex.isLocked); // false
+    */
+    get isLocked() {
+      return this.semaphore.available === 0;
+    }
+    /**
+    * Acquires the mutex, blocking if necessary until it is available.
+    * @returns A promise that resolves when the mutex is acquired.
+    *
+    * @example
+    * const mutex = new Mutex();
+    * await mutex.acquire();
+    * try {
+    *   // This code section cannot be executed simultaneously
+    * } finally {
+    *   mutex.release();
+    * }
+    */
+    async acquire() {
+      return this.semaphore.acquire();
+    }
+    /**
+    * Releases the mutex, allowing another waiting task to proceed.
+    *
+    * @example
+    * const mutex = new Mutex();
+    * await mutex.acquire();
+    * try {
+    *   // This code section cannot be executed simultaneously
+    * } finally {
+    *   mutex.release(); // Allows another waiting task to proceed.
+    * }
+    */
+    release() {
+      this.semaphore.release();
     }
   };
 
@@ -13330,6 +13468,206 @@
       return [error, null];
     }
   }
+
+  // node_modules/es-toolkit/dist/util/defer.mjs
+  function defer(callback) {
+    return { [Symbol.dispose]: () => {
+      callback();
+    } };
+  }
+
+  // src/coremods/TexturePack/store.ts
+  
+  var TexturePackModStore = class {
+    constructor(parent) {
+      this.parent = parent;
+    }
+    parent;
+    lock = new Mutex();
+    instance = import_localforage.default.createInstance({
+      name: "nutils_texpack_store_v1"
+    });
+    _installed = null;
+    /** Get the currently installed texture packs, optionally by type. */
+    async getInstalled(type) {
+      const list = await (async () => {
+        if (this._installed) return this._installed;
+        return this._installed = await this.instance.getItem("installed_packs") || [];
+      })();
+      return type ? list.filter(
+        (i) => type == "combined" /* Assets */ ? i.hasCombined : i.hasSeamless
+      ) : list;
+    }
+    /** Installs a pack from a manifest entry. */
+    async installPackFromManifest(pack) {
+      const zip = await this.parent.manifest.fetchZip(pack);
+      return await this.installPack(pack, zip, true);
+    }
+    /** Install a custom pack from an uploaded zip file. */
+    async installCustomPack(zip) {
+    }
+    /** Installs a pack from a zip file. */
+    async installPack(meta, zip, fromManifest = false) {
+      var _stack = [];
+      try {
+        await this.lock.acquire();
+        const _ = __using(_stack, defer(() => this.lock.release()));
+        const pack = {
+          ...meta,
+          fromManifest
+        };
+        await this.instance.setItem(`zip:${pack.hash}`, zip);
+        const installed = await this.getInstalled();
+        installed.push(pack);
+        this.instance.setItem("installed_packs", this._installed = installed);
+        this.gc();
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
+      }
+    }
+    /** Uninstall a pack given its ID. */
+    async uninstallPack(id) {
+      var _stack = [];
+      try {
+        await this.lock.acquire();
+        const _ = __using(_stack, defer(() => this.lock.release()));
+        const installed = await this.getInstalled(), packIndex = installed.findIndex((i) => i.id == id), pack = installed[packIndex];
+        if (packIndex == -1 || !pack) {
+          console.error(`Tried to uninstall pack ${id} that wasnt installed!`);
+          return;
+        }
+        installed.splice(packIndex, 1);
+        await this.instance.setItem(
+          "installed_packs",
+          this._installed = installed
+        );
+        await this.reconcileAtlases();
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
+      }
+    }
+    _atlases = {};
+    /** Returns a unique hash key for the specific configuration that will generate a texture atlas. */
+    async atlasKey(type) {
+      const json = await textureAtlasFetchJSON(type), installed = await this.getInstalled(type);
+      return await sha256(
+        JSON.stringify({ json, hashes: installed.map((i) => i.hash) })
+      );
+    }
+    /** Returns a specific texture atlas, or null if it is unmodified. */
+    async getAtlas(type) {
+      var _stack = [];
+      try {
+        await this.lock.acquire();
+        const _ = __using(_stack, defer(() => this.lock.release()));
+        if (this._atlases?.[type]) return this._atlases[type];
+        await this.reconcileAtlases(true);
+        return this._atlases?.[type] ?? null;
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
+      }
+    }
+    /** Regenerates any needed texture atlases. */
+    async reconcileAtlases(force = false) {
+      console.debug(`reconciling atlases, force: ${String(force)}`);
+      if (!force) {
+        var _stack = [];
+        try {
+          await this.lock.acquire();
+          const _2 = __using(_stack, defer(() => this.lock.release()));
+        } catch (_) {
+          var _error = _, _hasError = true;
+        } finally {
+          __callDispose(_stack, _error, _hasError);
+        }
+      }
+      const installed = await this.getInstalled();
+      if (!installed.length) {
+        console.debug("no installed scripts, exiting reconciler");
+        this._atlases = null;
+        return;
+      }
+      for (const type of Object.values(TextureAtlasType)) {
+        console.debug(`reconciling atlas for ${type}`);
+        try {
+          const packs = await this.getInstalled(type);
+          if (!packs.length) {
+            if (this._atlases?.[type]) delete this._atlases[type];
+            console.debug("no pack modifies this atlas");
+            continue;
+          }
+          console.debug("looking up atlas...");
+          const atlasKey = await this.atlasKey(type), existingAtlas = await this.instance.getItem(
+            `atlas:${atlasKey}`
+          );
+          if (existingAtlas) {
+            console.debug("found existing atlas");
+            this._atlases = { ...this._atlases, [type]: existingAtlas };
+            continue;
+          }
+          console.debug("generating new atlas...");
+          const zips = compact(
+            await Promise.all(
+              installed.map(
+                (pack) => this.instance.getItem(`zip:${pack.hash}`)
+              )
+            )
+          ), { json, pngURL } = await textureAtlasFetchJSON(type), original = await fetchBlob(pngURL);
+          console.debug(
+            `extracted all information for atlas generation, size: ${zips.reduce((i, z) => i + z.size, 0)}`
+          );
+          const atlas = await this.parent.worker.generateAtlas({
+            type,
+            original,
+            json,
+            zips
+          });
+          console.debug(`generated new atlas, size: ${atlas.size}`);
+          await this.instance.setItem(`atlas:${atlasKey}`, atlas);
+          this._atlases = { ...this._atlases, [type]: atlas };
+        } catch (err) {
+          console.error(err);
+          Ninja_default.log(
+            `Failed to generate texture atlas for ${type}!`,
+            UITheme.MenuColors.danger
+          );
+        }
+      }
+      this.gc();
+    }
+    /** Run garbage-collection and clean up any non-installed zips. */
+    async gc() {
+      var _stack = [];
+      try {
+        await this.lock.acquire();
+        const _ = __using(_stack, defer(() => this.lock.release()));
+        const installed = await this.getInstalled(), atlasKeys = await Promise.all(
+          Object.values(TextureAtlasType).map((t) => this.atlasKey(t))
+        );
+        for (const key of await this.instance.keys()) {
+          const [prefix, suffix] = key.split(":");
+          if (!prefix || !suffix) continue;
+          if (prefix == "zip:") {
+            if (!installed.some((i) => i.hash == suffix))
+              await this.instance.removeItem(key);
+          } else if (prefix == "atlas:") {
+            if (!atlasKeys.some((k) => k == suffix))
+              await this.instance.removeItem(key);
+          }
+        }
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
+      }
+    }
+  };
 
   // src/coremods/TexturePack/index.ts
   var FileUploader = document.createElement("input");
@@ -13541,7 +13879,7 @@
         try {
           const atlases = await Promise.all(
             Object.values(TextureAtlasType).map(async (type) => {
-              const { json, pngURL } = await textureAtlasFetchJSON(type), png = await (await fetch(pngURL)).blob();
+              const { json, pngURL } = await textureAtlasFetchJSON(type), png = await fetchBlob(pngURL);
               return {
                 type,
                 json,
@@ -13691,11 +14029,16 @@
           manageBtn.x = this.rowWidth - manageBtn.width - 8;
           manageBtn.y = this.rowHeight / 2 - manageBtn.height / 2;
           manageBtn.addListener(Button.BUTTON_RELEASED, async () => {
-            mod.store.installPackFromManifest(pak).catch(() => alert("Failed to install texture pack.")).finally(() => {
-              this.installingManifestPacks.delete(pak.id);
-              this.rerender();
-            });
-            this.installingManifestPacks.add(pak.id);
+            if (isInstalling) return;
+            if (!isInstalled) {
+              mod.store.installPackFromManifest(pak).catch(() => alert("Failed to install texture pack.")).finally(() => {
+                this.installingManifestPacks.delete(pak.id);
+                this.rerender();
+              });
+              this.installingManifestPacks.add(pak.id);
+            } else {
+              await mod.store.uninstallPack(pak.id);
+            }
             this.rerender();
           });
           row.addChild(manageBtn);

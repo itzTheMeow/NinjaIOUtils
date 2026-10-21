@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      0.1b
+// @version      0.2b
 // ==/UserScript==
 
 /*

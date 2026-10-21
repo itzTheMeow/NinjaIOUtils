@@ -58,12 +58,19 @@ export class TexturePackModWorker {
       const id = ++this.reqID;
       this.pending.set(id, { res, rej });
       const base = { id, type } satisfies TexWorkerInBase;
-      this.worker.postMessage({ ...base, ...payload });
+      this.worker.postMessage({ ...base, payload });
     });
   }
 
+  /** Generates a zip of the base game textures. */
   public async baseTextureZip(data: TexWorkerInMap[TexWorkerReq.BaseZip]) {
     const res = await this.req(TexWorkerReq.BaseZip, data);
     return res.payload.zip;
+  }
+
+  /** Generate a texture atlas. */
+  public async generateAtlas(data: TexWorkerInMap[TexWorkerReq.GenerateAtlas]) {
+    const res = await this.req(TexWorkerReq.GenerateAtlas, data);
+    return res.payload.atlas;
   }
 }

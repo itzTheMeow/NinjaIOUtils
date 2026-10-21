@@ -21,6 +21,11 @@ export function cloneTextStyle(
   return newStyle;
 }
 
+/** Shorthand function to fetch a blob from a URL. */
+export async function fetchBlob(url: string): Promise<Blob> {
+  return await (await fetch(url)).blob();
+}
+
 /** SHA256 hash a blob or text data to a hex string. */
 export async function sha256(data: string | Blob): Promise<string> {
   const digest = await crypto.subtle.digest(
