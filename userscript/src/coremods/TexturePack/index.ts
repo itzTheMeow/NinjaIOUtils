@@ -10,15 +10,7 @@ import {
 } from "lib";
 import Mod from "../../api/Mod";
 import Ninja from "../../api/Ninja";
-import config from "../../config";
 import { paintListRow } from "../../utils";
-import {
-  CustomPack,
-  ensureAtlasURL,
-  getCustomPack,
-  isAtlasURL,
-  setCustomPack,
-} from "./engine";
 import { TexturePackModManifest } from "./manifest";
 import { TexturePackModWorker } from "./worker";
 import {
@@ -26,7 +18,8 @@ import {
   TextureAtlasType,
   TexturePackManifestEntry,
 } from "./utils";
-import { TexturePackModStore } from "./store";
+import { InstalledPack, TexturePackModStore } from "./store";
+import { attemptAsync } from "es-toolkit";
 
 declare module "lib" {
   interface ContentMenu {
@@ -35,8 +28,6 @@ declare module "lib" {
     texContainer: PIXI.Container;
   }
 }
-
-const MAX_PACKS = 6;
 
 const FileUploader = document.createElement("input");
 FileUploader.type = "file";
@@ -59,7 +50,7 @@ export class TexturePackMod extends Mod {
   }
 
   public worker = new TexturePackModWorker();
-  public store = new TexturePackModStore();
+  public store = new TexturePackModStore(this);
   public manifest = new TexturePackModManifest(this);
   private texTab: ReturnType<typeof createTexTab> | null = null;
 
@@ -75,7 +66,7 @@ export class TexturePackMod extends Mod {
 
   /** Hooks the `Worker` global. */
   private hookWorkerGlobal() {
-    const activePacks: string[] = Ninja.settings.get("texturePacks") || [];
+    const mod = this;
 
     class WorkerNew extends Worker {
       _postMessage: typeof this.postMessage;
@@ -95,27 +86,29 @@ export class TexturePackMod extends Mod {
         },
         ...args: any
       ) {
-        const orig = data?.data?.[0];
+        const originalURL = data?.data?.[0];
         if (
-          activePacks.length &&
           !(window as any).SKIP_TEX_LOAD &&
           !data?.bypass &&
           data?.id == "loadImageBitmap" &&
-          typeof orig == "string"
+          typeof originalURL == "string"
         ) {
-          const kind = isAtlasURL(orig, "combined")
-            ? "combined"
-            : isAtlasURL(orig, "seamless")
-              ? "seamless"
-              : null;
-          if (kind) {
-            ensureAtlasURL(kind, activePacks)
-              .then((url) => {
-                data.data[0] = url;
+          // figure out which atlas type this URL is
+          const atlasType = Object.values(TextureAtlasType).find(
+            (t) =>
+              originalURL.includes(window.location.hostname) &&
+              originalURL.includes(t) &&
+              originalURL.includes(".png"),
+          );
+          if (atlasType) {
+            mod.store
+              .getAtlas(atlasType)
+              .then((atlas) => {
+                data.data[0] = URL.createObjectURL(atlas);
                 this._postMessage(data, ...args);
               })
               .catch((err) => {
-                console.error("texture pack failed, using vanilla", err);
+                console.error("texture pack injection failed", err);
                 this._postMessage(data, ...args);
               });
             return;
@@ -218,19 +211,24 @@ const texTabViewID = ["installed", "marketplace"] as const;
 // class has to be wrapped in a function so it doesnt crash the global scope
 const createTexTab = (mod: TexturePackMod) =>
   new (class TexTab extends PIXI.Container {
-    packList: TexturePackManifestEntry[] = [];
-    packIndex = 0;
-    custom: CustomPack | null | undefined;
-    hadPacks: PIXI.ContainerChild[] = [];
-    scroller = new MemberBrowserScrollbar(386);
-    uploadBtn = new Button("tex_uploader");
-    downloadBtn = new Button("tex_template");
-    /** Amount of space to leave for the buttons at the top. */
-    packsTop = 36;
-    rowWidth = 745;
+    private scrollIndex = 0;
+    private renderedItems: PIXI.ContainerChild[] = [];
+    private scroller = new MemberBrowserScrollbar(386);
+    private uploadBtn = new Button("tex_uploader");
+    private downloadBtn = new Button("tex_template");
 
-    selectedTab: (typeof texTabViewID)[number] = "installed";
-    viewTabs: {
+    /** Amount of space to leave for the buttons at the top. */
+    private readonly packsTop = 36;
+    /** Amount of packs that can be displayed on one screen. */
+    private get packsToDisplay() {
+      return (
+        (this.scroller.height - this.packsTop) /
+        (this.rowHeight + this.rowPadding)
+      );
+    }
+
+    private selectedTab: (typeof texTabViewID)[number] = "installed";
+    private viewTabs: {
       background: PIXI.Graphics;
       label: PIXI.Text;
     }[] = [];
@@ -240,8 +238,17 @@ const createTexTab = (mod: TexturePackMod) =>
       this.scroller.x = 757;
       this.scroller.y = 0;
       this.scroller.on(MemberBrowserScrollbar.SCROLL, (prog: number) => {
-        this.packIndex = Math.round((this.packList.length - MAX_PACKS) * prog);
-        this.runPacks();
+        this.scrollIndex = Math.max(
+          0,
+          Math.round(
+            ((this.selectedTab == "installed"
+              ? this._installed.length
+              : this._manifest.length) -
+              this.packsToDisplay) *
+              prog,
+          ),
+        );
+        this.rerender();
       });
       this.addChild(this.scroller);
 
@@ -273,6 +280,7 @@ const createTexTab = (mod: TexturePackMod) =>
         tab.on("pointertap", () => {
           this.selectedTab = id;
           this.updateHeader();
+          this.resetScroll();
           AudioEffects.ButtonClick.audio.play();
         });
         this.viewTabs.push({ background, label });
@@ -335,7 +343,13 @@ const createTexTab = (mod: TexturePackMod) =>
       this.addChild(this.uploadBtn);
 
       this.updateHeader();
-      this.runPacks();
+    }
+
+    /** Resets the scrollbar to the top. */
+    private resetScroll() {
+      this.scroller.reset();
+      this.scrollIndex = 0;
+      this.rerender();
     }
 
     /** Reposition/restyle header elements after a change. */
@@ -355,81 +369,66 @@ const createTexTab = (mod: TexturePackMod) =>
       // reposition buttons
       this.uploadBtn.x = this.rowWidth - this.uploadBtn.width;
       this.downloadBtn.x = this.uploadBtn.x - 8 - this.downloadBtn.width;
+
+      this.rerender();
     }
 
-    async runPacks() {
+    private readonly rowWidth = 745;
+    private readonly rowHeight = 50;
+    private readonly rowPadding = 4;
+    private _manifest: TexturePackManifestEntry[] = [];
+    private _installed: InstalledPack[] = [];
+    private installingManifestPacks = new Set<string>();
+    async rerender() {
       try {
-        let y = this.packsTop;
-        this.hadPacks.forEach((p) => p.destroy());
-        this.hadPacks = [];
-        if (!this.packList.length) {
-          try {
-            this.packList = (await mod.manifest.fetchManifest()).packs;
-          } catch (err) {
-            console.error(err);
-          }
-        }
-        this.custom =
-          this.custom === null
-            ? null
-            : (this.custom ?? (await getCustomPack()));
+        const [_, manifest] = await attemptAsync(
+          async () => (await mod.manifest.fetchManifest()).packs,
+        );
+        this._manifest = [...(manifest || [])];
+        this._installed = await mod.store.getInstalled();
 
-        const active = Ninja.settings.get("texturePacks") || [];
-        const packRows = [...this.packList]
+        const packRows = (
+          this.selectedTab == "installed" ? this._installed : this._manifest
+        )
           .sort((a, b) =>
             a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
           )
-          .slice(this.packIndex, this.packIndex + MAX_PACKS);
+          .slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
 
-        if (this.custom) {
-          const files = this.custom.files;
-          packRows.unshift({
-            id: config.customDelimiter,
-            name: "Custom Pack",
-            description: "Custom texture pack: " + this.custom.name,
-            author: "You!",
-            hasCombined:
-              !!files["_usepixel.png"] ||
-              !!files["_useimg.png"] ||
-              Object.keys(files).some((f) => f.startsWith("c_")),
-            hasSeamless:
-              !!files["_usepixel.png"] ||
-              !!files["_useimg.png"] ||
-              Object.keys(files).some((f) => f.startsWith("s_")),
-            version: this.custom.hash,
-            zip: "",
-          });
-          this.uploadBtn.setText("Delete");
-          this.uploadBtn.setTint(UITheme.MenuColors.danger);
-        } else {
-          this.uploadBtn.setTint(UITheme.MenuColors.success);
-        }
-        this.uploadBtn.edge.stroke({ color: 0xffffff, width: 1.5 });
+        let y = this.packsTop;
+        this.renderedItems.forEach((p) => p.destroy());
+        this.renderedItems = [];
 
         if (!packRows.length) {
-          const failed = new PIXI.Text("Failed to load texture packs.", <any>{
-            fontFamily: "Teko",
-            fontSize: 16,
-            fill: UITheme.MenuColors.textMuted,
-          });
+          const failed = new PIXI.Text(
+            this.selectedTab == "installed"
+              ? "No installed packs."
+              : "Failed to load texture packs.",
+            {
+              fontFamily: "Teko",
+              fontSize: 16,
+              fill: UITheme.MenuColors.textMuted,
+            },
+          );
           failed.y = y;
           this.addChild(failed);
-          this.hadPacks.push(failed);
+          this.renderedItems.push(failed);
           return;
         }
 
         packRows.forEach((pak, i) => {
-          const hasPack = active[0] == pak.id;
+          const isInstalled = this._installed.some((p) => p.id == pak.id),
+            isInstalling = this.installingManifestPacks.has(pak.id);
           const row = new PIXI.Graphics();
-          const edgeColor = hasPack
+          const edgeColor = isInstalled
             ? UITheme.MenuColors.success
             : UITheme.MenuColors.accent;
           const paint = (hovered: boolean) =>
             paintListRow(
               row,
               this.rowWidth,
-              44,
-              this.packIndex + i,
+              this.rowHeight,
+              this.scrollIndex + i,
               hovered,
               edgeColor,
             );
@@ -441,54 +440,94 @@ const createTexTab = (mod: TexturePackMod) =>
           });
           row.on("mouseout", () => paint(false));
           row.y = y;
-          y += 46;
+          y += this.rowHeight + this.rowPadding;
 
           const flags = [];
           if (pak.hasCombined) flags.push("textures");
           if (pak.hasSeamless) flags.push("terrain");
           const packName = new PIXI.Text(
             `${pak.name || "Texture Pack"} (by ${pak.author || "Unnamed"})`,
-            <any>{
+            {
               fontFamily: "Teko",
-              fontSize: 16,
+              fontSize: 18,
               fill: UITheme.MenuColors.text,
             },
           );
           packName.x = 12;
-          packName.y = 2;
+          packName.y = 6;
           row.addChild(packName);
           const packDescription = new PIXI.Text(
             `${pak.description || "No Description."}${
               flags.length ? ` (${flags.join(", ")})` : ""
             }`,
-            <any>{
+            {
               fontFamily: "Teko",
-              fontSize: 14,
+              fontSize: 16,
               fill: UITheme.MenuColors.textMuted,
             },
           );
-          packDescription.x = 12;
-          packDescription.y = 21;
+          packDescription.x = packName.x;
+          packDescription.y = packName.y + 20;
           row.addChild(packDescription);
 
-          const packButton = new Button(`pack_btn_${pak.id}`);
-          packButton.setText(hasPack ? "Remove" : "Use");
-          packButton.setTint(
-            hasPack ? UITheme.MenuColors.danger : UITheme.MenuColors.success,
+          const manageBtn = new Button(`pack_btn_${pak.id}`);
+          manageBtn.setText(
+            isInstalling
+              ? "Installing..."
+              : isInstalled
+                ? "Uninstall"
+                : "Install",
           );
-          packButton.edge.stroke({ color: 0xffffff, width: 1.5 });
-          packButton.scale.set(0.5);
-          packButton.x = this.rowWidth - packButton.width - 10;
-          packButton.y = 6;
-          packButton.addListener(Button.BUTTON_RELEASED, async () => {
-            // single-select for now - the engine already layers arrays
-            Ninja.settings.set("texturePacks", hasPack ? [] : [pak.id]);
-            this.runPacks();
+          manageBtn.setTint(
+            isInstalling
+              ? UITheme.MenuColors.accent
+              : isInstalled
+                ? UITheme.MenuColors.danger
+                : UITheme.MenuColors.success,
+          );
+          manageBtn.edge.stroke({ color: 0xffffff, width: 1.5 });
+          manageBtn.x = this.rowWidth - manageBtn.width - 8;
+          manageBtn.y = this.rowHeight / 2 - manageBtn.height / 2;
+          manageBtn.addListener(Button.BUTTON_RELEASED, async () => {
+            mod.store
+              .installPackFromManifest(pak)
+              .catch(() => alert("Failed to install texture pack."))
+              .finally(() => {
+                this.installingManifestPacks.delete(pak.id);
+                this.rerender();
+              });
+            this.installingManifestPacks.add(pak.id);
+            this.rerender();
           });
-          row.addChild(packButton);
+          row.addChild(manageBtn);
+
+          if (this.selectedTab == "installed") {
+            /*
+            const button = new Button("settings");
+            button.scale.x = button.scale.y = 0.8;
+            button.setText("  ");
+            button.x = pl -= button.width + 8;
+            button.y = pt;
+            button.addListener(Button.BUTTON_RELEASED, () => {
+              this.showConfig(mod);
+            });
+            const ico = new PIXI.Sprite(App.CombinedTextures.gears_icon);
+            ico.width = button.width;
+            ico.height = button.height;
+            ico.x = button.width * -0.2;
+            ico.y = button.height * 0.1;
+            button.addChild(ico);
+            // hover border in the standard button gray
+            button.edge.stroke({
+              color: UITheme.MenuColors.border,
+              width: 1.5,
+            });
+            container.addChild(button);
+            */
+          }
 
           this.addChild(row);
-          this.hadPacks.push(row);
+          this.renderedItems.push(row);
         });
       } catch (err) {
         console.error(err);
@@ -501,11 +540,11 @@ const createTexTab = (mod: TexturePackMod) =>
         [...FileUploader.files].forEach(async (f) => {
           if (f.type.startsWith("application/") && f.type.includes("zip")) {
             try {
-              this.custom = await setCustomPack(f);
+              //  this.custom = await setCustomPack(f);
             } catch (err) {
               console.error(err);
             }
-            this.runPacks();
+            this.rerender();
           }
         });
       };
@@ -515,3 +554,22 @@ const createTexTab = (mod: TexturePackMod) =>
       this.scroller.disableWheel();
     }
   })();
+
+/*
+  {
+    id: config.customDelimiter,
+    name: "Custom Pack",
+    description: "Custom texture pack: " + this.custom.name,
+    author: "You!",
+    hasCombined:
+      !!files["_usepixel.png"] ||
+      !!files["_useimg.png"] ||
+      Object.keys(files).some((f) => f.startsWith("c_")),
+    hasSeamless:
+      !!files["_usepixel.png"] ||
+      !!files["_useimg.png"] ||
+      Object.keys(files).some((f) => f.startsWith("s_")),
+    version: this.custom.hash,
+    zip: "",
+  }
+  */

@@ -58,7 +58,7 @@ export interface TexturePack {
 /** A texture pack with additional manifest information provided by the compiled repo. */
 export interface TexturePackManifestEntry extends TexturePack {
   /** SHA hash of the pack zip. */
-  version: string;
+  hash: string;
   /** Path to the pack's zip file relative to the repo. */
   zip: string;
 }

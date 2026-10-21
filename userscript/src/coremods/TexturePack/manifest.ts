@@ -1,6 +1,6 @@
 import type { TexturePackMod } from ".";
 import config from "../../config";
-import { TexturePackManifest } from "./utils";
+import { TexturePackManifest, TexturePackManifestEntry } from "./utils";
 
 export class TexturePackModManifest {
   /** Base GitHub URL. */
@@ -18,9 +18,12 @@ export class TexturePackModManifest {
   }
 
   private readonly MANIFEST_CACHE_TTL = 30 * 60 * 1000; // 30min
+  private _cachedManifest: CachedManifest | null = null;
   public async fetchManifest() {
-    const cached = await this.getItem<CachedManifest>("cached");
+    const cached =
+      this._cachedManifest || (await this.getItem<CachedManifest>("cached"));
     if (cached && Date.now() > cached.expiresAt) return cached.data;
+    this._cachedManifest = null;
 
     try {
       const res = await fetch(
@@ -32,16 +35,19 @@ export class TexturePackModManifest {
       );
       if (res.status == 304 && cached) {
         cached.expiresAt = Date.now() + this.MANIFEST_CACHE_TTL;
-        await this.setItem("cached", cached);
+        await this.setItem("cached", (this._cachedManifest = cached));
         return cached.data;
       }
       if (!res.ok) throw new Error(`manifest fetch failed: ${res.status}`);
       const data = (await res.json()) as TexturePackManifest;
-      await this.setItem("cached", {
-        fetchedAt: Date.now() + this.MANIFEST_CACHE_TTL,
-        etag: res.headers.get("etag") || null,
-        data,
-      });
+      await this.setItem(
+        "cached",
+        (this._cachedManifest = {
+          expiresAt: Date.now() + this.MANIFEST_CACHE_TTL,
+          etag: res.headers.get("etag") || null,
+          data,
+        }),
+      );
       return data;
     } catch (err) {
       console.error(err);
@@ -49,6 +55,13 @@ export class TexturePackModManifest {
       if (cached) return cached.data;
       throw err;
     }
+  }
+
+  /** Fetch a zip file from GitHub given a manifest entry. */
+  public async fetchZip(entry: TexturePackManifestEntry) {
+    const res = await fetch(`${this.baseURL}/${entry.zip}`);
+    if (!res.ok) throw new Error(`pack download failed: ${entry.id}`);
+    return await res.blob();
   }
 }
 

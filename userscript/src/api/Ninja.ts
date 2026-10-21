@@ -55,11 +55,9 @@ export interface NinjaHook {
 export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
-    texturePack: string;
     uiScale: number;
   }>(config.settingsKey, {
     enabledMods: [],
-    texturePack: "",
     uiScale: 0,
   });
   public events: EventDispatcher;

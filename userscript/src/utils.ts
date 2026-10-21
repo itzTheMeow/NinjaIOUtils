@@ -21,6 +21,19 @@ export function cloneTextStyle(
   return newStyle;
 }
 
+/** SHA256 hash a blob or text data to a hex string. */
+export async function sha256(data: string | Blob): Promise<string> {
+  const digest = await crypto.subtle.digest(
+    "SHA-256",
+    data instanceof Blob
+      ? await data.arrayBuffer()
+      : new TextEncoder().encode(data),
+  );
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 /**
  * Paints a themed list row (striped background, border, accent edge) in the
  * style of the game's clan/player lists. Wire mouseover/mouseout to

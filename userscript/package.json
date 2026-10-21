@@ -10,8 +10,9 @@
   "author": "Meow",
   "license": "ISC",
   "dependencies": {
-    "@zip.js/zip.js": "^2.24.0",
-    "esbuild": "^0.28.2",
+    "@zip.js/zip.js": "2.24.0",
+    "es-toolkit": "1.52.0",
+    "esbuild": "0.28.2",
     "localforage": "1.10.0"
   }
 }

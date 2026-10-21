@@ -64,6 +64,6 @@ export class TexturePackModWorker {
 
   public async baseTextureZip(data: TexWorkerInMap[TexWorkerReq.BaseZip]) {
     const res = await this.req(TexWorkerReq.BaseZip, data);
-    return res.zip;
+    return res.payload.zip;
   }
 }
