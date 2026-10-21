@@ -14,8 +14,6 @@ import Ninja from "../../api/Ninja";
 import config from "../../config";
 import { paintListRow } from "../../utils";
 import {
-  buildTemplate,
-  clearCustomPack,
   CustomPack,
   ensureAtlasURL,
   getCustomPack,
@@ -23,6 +21,8 @@ import {
   setCustomPack,
 } from "./engine";
 import { getManifest } from "./manifest";
+import { TexturePackModWorker } from "./worker";
+import { textureAtlasFetchJSON, TextureAtlasType } from "./utils";
 
 declare module "lib" {
   interface ContentMenu {
@@ -54,18 +54,21 @@ export class TexturePackMod extends Mod {
     this.loadon = "pagestart";
   }
 
+  public worker = new TexturePackModWorker();
   private texTab: ReturnType<typeof createTexTab> | null = null;
 
   public load() {
     // worker hook should be the very first thing
-    this.hookWorker();
+    this.hookWorkerGlobal();
+    // also create our zip worker
+    this.worker.init();
 
     super.load();
     Ninja.onready(() => this.init());
   }
 
   /** Hooks the `Worker` global. */
-  private hookWorker() {
+  private hookWorkerGlobal() {
     const activePacks: string[] = Ninja.settings.get("texturePacks") || [];
 
     class WorkerNew extends Worker {
@@ -119,7 +122,7 @@ export class TexturePackMod extends Mod {
   }
 
   public init() {
-    this.texTab = createTexTab();
+    this.texTab = createTexTab(this);
     const menu = App.Layer.contentMenu;
 
     // create the new button for the texture pack tab
@@ -207,7 +210,7 @@ export class TexturePackMod extends Mod {
 const texTabViewID = ["installed", "marketplace"] as const;
 
 // class has to be wrapped in a function so it doesnt crash the global scope
-const createTexTab = () =>
+const createTexTab = (mod: TexturePackMod) =>
   new (class TexTab extends PIXI.Container {
     packList: TexturePackManifestEntry[] = [];
     packIndex = 0;
@@ -276,16 +279,35 @@ const createTexTab = () =>
       this.downloadBtn.setTint(UITheme.MenuColors.accent);
       this.downloadBtn.edge.stroke({ color: 0xffffff, width: 1.5 });
       this.downloadBtn.addListener(Button.BUTTON_RELEASED, async () => {
-        this.downloadBtn.setText("Zipping...");
+        this.downloadBtn.setText("Fetching...");
         this.updateHeader();
+
         try {
-          const url = URL.createObjectURL(await buildTemplate());
+          // grab all the atlases and fetch their PNGs
+          const atlases = await Promise.all(
+            Object.values(TextureAtlasType).map(async (type) => {
+              const { json, pngURL } = await textureAtlasFetchJSON(type),
+                png = await (await fetch(pngURL)).blob();
+              return {
+                type,
+                json,
+                png,
+              };
+            }),
+          );
+
+          this.downloadBtn.setText("Zipping...");
+          const url = URL.createObjectURL(
+            await mod.worker.baseTextureZip({ atlases }),
+          );
+
           const a = document.createElement("a");
           a.href = url;
           a.download = "textures.zip";
           a.click();
           // clear the zip from memory after a bit
           setTimeout(() => URL.revokeObjectURL(url), 10_000);
+
           this.downloadBtn.setText("Download");
           this.updateHeader();
         } catch (err) {

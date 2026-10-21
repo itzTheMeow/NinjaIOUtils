@@ -82,7 +82,7 @@ fetch("http://localhost:${DEV_PORT}/NinjaIOUtils.js").then(r => r.text()).then(r
         }));
         b.onLoad({ filter: /.*/, namespace: "tex-worker" }, async () => {
           const res = await build({
-            entryPoints: ["src/coremods/TexturePack/worker/index.ts"],
+            entryPoints: ["src/coremods/TexturePack/worker/worker.ts"],
             bundle: true,
             format: "iife",
             write: false,
