@@ -4,6 +4,7 @@ import config from "../config";
 import hookModMenu from "../hookModMenu";
 import Mod from "./Mod";
 import Settings from "./Settings";
+import { coremodHooks } from "../hook";
 
 export type Listener = () => any;
 export type PacketListener = (type: "game" | "pvp", packet: any) => any;
@@ -68,6 +69,8 @@ export default new (class Ninja {
     const ninja = this;
     this.ready = true;
     this.events = new EventDispatcher();
+
+    coremodHooks();
 
     this.hookMethod(app, "initGameMode", {
       priority: 10,

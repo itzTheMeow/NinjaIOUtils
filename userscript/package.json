@@ -2,15 +2,16 @@
   "name": "ninjaioutils",
   "version": "0.0.1",
   "description": "The userscript for NinjaIOUtils.",
-  "main": "build.mjs",
+  "main": "build.ts",
   "scripts": {
-    "start": "node .",
-    "dev": "node . --dev"
+    "start": "bun build.ts",
+    "dev": "bun build.ts --dev"
   },
   "author": "Meow",
   "license": "ISC",
   "dependencies": {
-    "esbuild": "0.14.49",
+    "@zip.js/zip.js": "^2.24.0",
+    "esbuild": "^0.28.2",
     "localforage": "1.10.0"
   }
 }

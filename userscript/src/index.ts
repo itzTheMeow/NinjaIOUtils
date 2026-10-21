@@ -1,6 +1,5 @@
-import { APIClient } from "lib";
+import { APIClient, Layer } from "lib";
 import { app } from "lib";
-import "./globals";
 import Ninja from "./api/Ninja";
 import config from "./config";
 import * as CoreMods from "./coremods/index";
@@ -36,7 +35,8 @@ const tester = setInterval(() => {
       !app.menu.joinButton ||
       JSON.stringify(app.status) == "{}" ||
       !APIClient ||
-      !APIClient.postCreateGame
+      !APIClient.postCreateGame ||
+      !Layer
     )
       return;
   } catch {

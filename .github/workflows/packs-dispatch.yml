@@ -1,0 +1,21 @@
+name: Trigger Packs Rebuild
+
+on:
+  push:
+    paths:
+      - "texturepacks/**"
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: repository_dispatch itzTheMeow/NinjaIOUtils-packs
+        run: |
+          curl -fsS -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PACKS_DISPATCH_TOKEN }}" \
+            https://api.github.com/repos/itzTheMeow/NinjaIOUtils-packs/dispatches \
+            -d '{"event_type":"texturepacks"}'

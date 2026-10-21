@@ -15,6 +15,10 @@ lib-check:
 build:
     cd userscript && bun run start
 
+# watch the userscript for changes and rebuild
+dev:
+    cd userscript && bun run dev
+
 # typecheck the userscript
 check:
     cd userscript && bunx tsc --noEmit

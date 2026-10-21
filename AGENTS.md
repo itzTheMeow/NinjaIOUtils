@@ -27,11 +27,6 @@ Dependencies are managed with bun (`bun.lock`).
 
 Build inputs/outputs:
 
-- `build.mjs` — build script: bundles `src/index.ts` → `NinjaIOUtils.js`,
-  prepends the `// ==UserScript==` header generated from `meta.json` +
-  `../version.json` (substitutes the `$$version` placeholder, also used by
-  `src/config.ts`), and strips the type-only `lib` imports. `lib` is
-  esbuild-external and types-only.
 - `--dev` (`bun run dev`): esbuild watch + HTTP server on `:8000`; `dev.js`
   is the loader userscript that fetches the built script from localhost.
 - `meta.json` — userscript manager metadata. The repeated `_match`,
@@ -51,9 +46,6 @@ Runtime layout under `src/`:
   (`pagestart` loads before the game, `appstart` the default),
   `implementConfig` for per-mod settings, load/unload lifecycle.
   `api/Settings.ts` — localStorage-backed store used for all settings.
-  `globals.ts` — userscript extensions to the game's `Layer.Events`
-  registry (e.g. `MODS_ACCESS`), typed via module augmentation of the
-  mergeable `interface Events` emitted by the lib generator.
 - `coremods/` — built-in mods registered unconditionally (TexturePack,
   UIURLs). `mods/` — optional, user-installable mods. Both are auto-registered
   from their `index.ts` exports.

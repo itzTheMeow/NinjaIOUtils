@@ -7,7 +7,6 @@ import initLinkSharer from "./linkSharer";
 import onlineUserConn, { onlineUsers } from "./onlineUserManager";
 import partyManagerConnection from "./party/partyManager";
 import initStatTracker from "./statTracker";
-import texturePackHandler from "./texturePacks/texturePackHandler";
 
 export const config = {
   port: 8907,
@@ -42,7 +41,6 @@ app.get("/ffmpeg.js", cors({ origin: "*" }), (req, res) =>
 );
 initLinkSharer(app);
 initStatTracker(app);
-texturePackHandler(app);
 
 const server = app.listen(config.port, () => {
   console.log(`Server is online and listening on port ${config.port}.`);

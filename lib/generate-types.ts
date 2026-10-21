@@ -279,13 +279,8 @@ const MEMBER_OVERRIDES: MemberOverride[] = [
   { class: "Menu", member: "utilsIcon", type: "SubmenuButton" },
   { class: "Menu", member: "editorIcon", type: "SubmenuButton" },
   { class: "Menu", member: "feedbackIcon", type: "SubmenuButton" },
-  // TexturePack mod injects a third tab into the content menu
   { class: "ContentMenu", member: "mapsButton", type: "ContentMenuTab" },
   { class: "ContentMenu", member: "weaponButton", type: "ContentMenuTab" },
-  { class: "ContentMenu", member: "texButton", type: "ContentMenuTab" },
-  { class: "ContentMenu", member: "texLabel", type: "PIXI.Text" },
-  { class: "ContentMenu", member: "texContainer", type: "PIXI.Container" },
-  { class: "ContentMenu", member: "TEXTURES", type: "string", static: true },
 ];
 
 /** Hand-modeled runtime shapes the bundle never declares (JSON payloads,

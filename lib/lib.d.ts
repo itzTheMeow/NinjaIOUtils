@@ -5206,11 +5206,7 @@ declare class ContentMenu extends Feature {
     update(): void;
     setMode(a: any): void;
     onCancelButtonReleased(): void;
-
-    texButton: ContentMenuTab;
-    texLabel: PIXI.Text;
-    texContainer: PIXI.Container;
-    static TEXTURES: string;}
+}
 declare namespace ContentMenu {
     var MAPS: string;
     var WEAPONS: string;

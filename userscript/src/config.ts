@@ -3,6 +3,8 @@ export default {
   api: "https://utils.xela.codes",
   //api: "http://localhost:8907",
   customDelimiter: "__custom",
+  packRepo: "itzTheMeow/NinjaIOUtils-packs",
+  packBranch: "master",
   settingsKey: "nutils_settings",
   Colors: {
     black: 0x000000,
