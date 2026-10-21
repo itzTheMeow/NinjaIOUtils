@@ -6,8 +6,8 @@
     "skipLibCheck": true,
     "strict": false,
     "paths": {
-      "lib": ["../lib/lib.d.ts"]
-    }
+      "lib": ["../lib/lib.d.ts"],
+    },
   },
-  "include": ["src", "version.json", "shared.ts"]
+  "include": ["src", "version.json"],
 }

@@ -8,7 +8,6 @@ import {
   PIXI,
   UITheme,
 } from "lib";
-import type { TexturePackManifestEntry } from "../../../../shared";
 import Mod from "../../api/Mod";
 import Ninja from "../../api/Ninja";
 import config from "../../config";
@@ -20,9 +19,14 @@ import {
   isAtlasURL,
   setCustomPack,
 } from "./engine";
-import { getManifest } from "./manifest";
+import { TexturePackModManifest } from "./manifest";
 import { TexturePackModWorker } from "./worker";
-import { textureAtlasFetchJSON, TextureAtlasType } from "./utils";
+import {
+  textureAtlasFetchJSON,
+  TextureAtlasType,
+  TexturePackManifestEntry,
+} from "./utils";
+import { TexturePackModStore } from "./store";
 
 declare module "lib" {
   interface ContentMenu {
@@ -55,6 +59,8 @@ export class TexturePackMod extends Mod {
   }
 
   public worker = new TexturePackModWorker();
+  public store = new TexturePackModStore();
+  public manifest = new TexturePackModManifest(this);
   private texTab: ReturnType<typeof createTexTab> | null = null;
 
   public load() {
@@ -358,7 +364,7 @@ const createTexTab = (mod: TexturePackMod) =>
         this.hadPacks = [];
         if (!this.packList.length) {
           try {
-            this.packList = (await getManifest()).packs;
+            this.packList = (await mod.manifest.fetchManifest()).packs;
           } catch (err) {
             console.error(err);
           }

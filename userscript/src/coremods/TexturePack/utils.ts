@@ -45,3 +45,26 @@ export interface TextureAtlasJSON {
     scale: string;
   };
 }
+
+/** A texture pack as-defined in the repo. */
+export interface TexturePack {
+  id: string;
+  name: string;
+  author: string;
+  description: string;
+  hasCombined: boolean;
+  hasSeamless: boolean;
+}
+/** A texture pack with additional manifest information provided by the compiled repo. */
+export interface TexturePackManifestEntry extends TexturePack {
+  /** SHA hash of the pack zip. */
+  version: string;
+  /** Path to the pack's zip file relative to the repo. */
+  zip: string;
+}
+/** The texture pack manifest on the github packs repo. */
+export interface TexturePackManifest {
+  /** ISO date string of when the manifest was last updated. */
+  updated: string;
+  packs: TexturePackManifestEntry[];
+}
