@@ -22,3 +22,8 @@ dev:
 # typecheck the userscript
 check:
     cd userscript && bunx tsc --noEmit
+
+# updates latest.js to the current upstream version
+update:
+    curl https://beta.fragline.com/js/dist/game.js > lib/latest.js
+    prettier lib/latest.js --write
