@@ -52,13 +52,57 @@ export class TexturePackModStore {
     return await this.installPack(pack, zip, true);
   }
   /** Install a custom pack from an uploaded zip file. */
-  public async installCustomPack(zip: Blob) {}
+  public async installCustomPack(zip: File) {
+    console.debug(`installing pack from zip file`, zip);
+    const files = await this.parent.worker.extractZip({ zip }),
+      hash = await sha256(zip);
+    console.debug("successfully extracted/hashed custom zip file");
+
+    const custom: TexturePackManifestEntry = {
+      id: `$custom_pack:${hash}`,
+      name: "Custom Pack",
+      description: `zip file: ${zip.name}`,
+      author: "You!",
+      hasCombined:
+        !!files["_usepixel.png"] ||
+        !!files["_useimg.png"] ||
+        Object.keys(files).some((f) => f.startsWith("c_")),
+      hasSeamless:
+        !!files["_usepixel.png"] ||
+        !!files["_useimg.png"] ||
+        Object.keys(files).some((f) => f.startsWith("s_")),
+      hash,
+      zip: zip.name,
+    };
+    if (files["_meta.json"]) {
+      console.debug("zip contains custom _meta.json, extracting...");
+      try {
+        const text = await files["_meta.json"].text();
+        console.debug("parsing pack metadata JSON", text);
+        const meta = JSON.parse(text);
+        for (const key of Object.keys(meta)) {
+          // cannot override ID, just add to it
+          if (key == "id") custom.id += meta.id;
+          // only override keys that are valid metadata
+          if (key in custom) custom[key] = meta[key];
+        }
+      } catch (err) {
+        console.error(err);
+        Ninja.log(
+          "Failed to parse _meta.json - your pack will use the default metadata.",
+          UITheme.MenuColors.danger,
+        );
+      }
+    }
+    console.debug("installing custom zip pack", custom);
+    await this.installPack(custom, zip, false);
+  }
 
   /** Installs a pack from a zip file. */
   public async installPack(
     meta: TexturePackManifestEntry,
     zip: Blob,
-    fromManifest = false,
+    fromManifest: boolean,
   ) {
     using _ = await this.acquireLock();
     const pack: InstalledPack = {
@@ -73,7 +117,7 @@ export class TexturePackModStore {
 
     // add the pack to the install list
     const installed = await this.getInstalled();
-    installed.push(pack);
+    if (!installed.includes(pack)) installed.push(pack);
     await this.instance.setItem(
       "installed_packs",
       (this._installed = installed),

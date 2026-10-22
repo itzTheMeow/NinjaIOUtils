@@ -2,7 +2,6 @@ export default {
   ver: "$$version",
   api: "https://utils.xela.codes",
   //api: "http://localhost:8907",
-  customDelimiter: "__custom",
   packRepo: "itzTheMeow/NinjaIOUtils-packs",
   packBranch: "master",
   settingsKey: "nutils_settings",

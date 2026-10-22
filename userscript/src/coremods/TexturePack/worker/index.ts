@@ -76,6 +76,12 @@ export class TexturePackModWorker {
     return res.payload.zip;
   }
 
+  /** Extracts a zip file into a flat object. */
+  public async extractZip(data: TexWorkerInMap[TexWorkerReq.ExtractZip]) {
+    const res = await this.req(TexWorkerReq.ExtractZip, data);
+    return res.payload.files;
+  }
+
   /** Generate a texture atlas. */
   public async generateAtlas(data: TexWorkerInMap[TexWorkerReq.GenerateAtlas]) {
     const res = await this.req(TexWorkerReq.GenerateAtlas, data);

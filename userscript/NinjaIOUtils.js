@@ -2269,7 +2269,6 @@
     ver: "0.2b",
     api: "https://utils.xela.codes",
     //api: "http://localhost:8907",
-    customDelimiter: "__custom",
     packRepo: "itzTheMeow/NinjaIOUtils-packs",
     packBranch: "master",
     settingsKey: "nutils_settings",
@@ -13301,6 +13300,11 @@
       const res = await this.req(0 /* BaseZip */, data);
       return res.payload.zip;
     }
+    /** Extracts a zip file into a flat object. */
+    async extractZip(data) {
+      const res = await this.req(1 /* ExtractZip */, data);
+      return res.payload.files;
+    }
     /** Generate a texture atlas. */
     async generateAtlas(data) {
       const res = await this.req(2 /* GenerateAtlas */, data);
@@ -13526,9 +13530,42 @@
     }
     /** Install a custom pack from an uploaded zip file. */
     async installCustomPack(zip) {
+      console.debug(`installing pack from zip file`, zip);
+      const files = await this.parent.worker.extractZip({ zip }), hash = await sha256(zip);
+      console.debug("successfully extracted/hashed custom zip file");
+      const custom = {
+        id: `$custom_pack:${hash}`,
+        name: "Custom Pack",
+        description: `zip file: ${zip.name}`,
+        author: "You!",
+        hasCombined: !!files["_usepixel.png"] || !!files["_useimg.png"] || Object.keys(files).some((f) => f.startsWith("c_")),
+        hasSeamless: !!files["_usepixel.png"] || !!files["_useimg.png"] || Object.keys(files).some((f) => f.startsWith("s_")),
+        hash,
+        zip: zip.name
+      };
+      if (files["_meta.json"]) {
+        console.debug("zip contains custom _meta.json, extracting...");
+        try {
+          const text = await files["_meta.json"].text();
+          console.debug("parsing pack metadata JSON", text);
+          const meta = JSON.parse(text);
+          for (const key of Object.keys(meta)) {
+            if (key == "id") custom.id += meta.id;
+            if (key in custom) custom[key] = meta[key];
+          }
+        } catch (err) {
+          console.error(err);
+          Ninja_default.log(
+            "Failed to parse _meta.json - your pack will use the default metadata.",
+            UITheme.MenuColors.danger
+          );
+        }
+      }
+      console.debug("installing custom zip pack", custom);
+      await this.installPack(custom, zip, false);
     }
     /** Installs a pack from a zip file. */
-    async installPack(meta, zip, fromManifest = false) {
+    async installPack(meta, zip, fromManifest) {
       var _stack = [];
       try {
         const _ = __using(_stack, await this.acquireLock());
@@ -13540,7 +13577,7 @@
         await this.instance.setItem(`zip:${pack.hash}`, zip);
         console.debug(`cached zip: ${pack.hash}`);
         const installed = await this.getInstalled();
-        installed.push(pack);
+        if (!installed.includes(pack)) installed.push(pack);
         await this.instance.setItem(
           "installed_packs",
           this._installed = installed
@@ -14102,8 +14139,13 @@
         [...FileUploader.files].forEach(async (f) => {
           if (f.type.startsWith("application/") && f.type.includes("zip")) {
             try {
+              mod.store.installCustomPack(f);
             } catch (err) {
               console.error(err);
+              Ninja_default.log(
+                "Failed to extract pack zip.",
+                UITheme.MenuColors.danger
+              );
             }
             this.rerender();
           }

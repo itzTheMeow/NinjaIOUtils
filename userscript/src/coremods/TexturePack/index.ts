@@ -557,9 +557,13 @@ const createTexTab = (mod: TexturePackMod) =>
         [...FileUploader.files].forEach(async (f) => {
           if (f.type.startsWith("application/") && f.type.includes("zip")) {
             try {
-              //  this.custom = await setCustomPack(f);
+              mod.store.installCustomPack(f);
             } catch (err) {
               console.error(err);
+              Ninja.log(
+                "Failed to extract pack zip.",
+                UITheme.MenuColors.danger,
+              );
             }
             this.rerender();
           }
@@ -571,22 +575,3 @@ const createTexTab = (mod: TexturePackMod) =>
       this.scroller.disableWheel();
     }
   })();
-
-/*
-  {
-    id: config.customDelimiter,
-    name: "Custom Pack",
-    description: "Custom texture pack: " + this.custom.name,
-    author: "You!",
-    hasCombined:
-      !!files["_usepixel.png"] ||
-      !!files["_useimg.png"] ||
-      Object.keys(files).some((f) => f.startsWith("c_")),
-    hasSeamless:
-      !!files["_usepixel.png"] ||
-      !!files["_useimg.png"] ||
-      Object.keys(files).some((f) => f.startsWith("s_")),
-    version: this.custom.hash,
-    zip: "",
-  }
-  */
