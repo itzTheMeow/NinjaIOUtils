@@ -13423,6 +13423,11 @@
     }
   };
 
+  // node_modules/es-toolkit/dist/array/last.mjs
+  function last(arr) {
+    return arr[arr.length - 1];
+  }
+
   // node_modules/es-toolkit/dist/promise/mutex.mjs
   var Mutex = class {
     semaphore = new Semaphore(1);
@@ -13893,17 +13898,22 @@
     scrollIndex = 0;
     renderedItems = [];
     title;
+    footer;
     scroller = new MemberBrowserScrollbar(386);
     uploadBtn = new Button("tex_uploader");
     downloadBtn = new Button("tex_template");
     /** Amount of space to leave for the buttons at the top. */
-    packsTop = 36;
+    paddingTop = 36;
+    /** Amount of space to leave for the footer at the bottom. */
+    paddingBottom = 18;
     /** Amount of packs that can be displayed on one screen. */
     get packsToDisplay() {
-      return (this.scroller.height - this.packsTop) / (this.rowHeight + this.rowPadding);
+      return (this.scroller.height - (this.paddingTop + this.paddingBottom)) / (this.rowHeight + this.rowPadding);
     }
     selectedTab = "installed";
     viewTabs = [];
+    /** State for the reminder to reload the page for changes to take effect. */
+    hadChangesMade = false;
     constructor() {
       super();
       this.scroller.x = 757;
@@ -13940,6 +13950,7 @@
         tab.addChild(label);
         tab.on("pointertap", () => {
           this.selectedTab = id;
+          this.hadChangesMade = false;
           this.updateHeader();
           this.resetScroll();
           AudioEffects.ButtonClick.audio.play();
@@ -13994,6 +14005,14 @@
       );
       this.uploadBtn.edge.stroke({ color: 16777215, width: 1.5 });
       this.addChild(this.uploadBtn);
+      this.footer = new PIXI.Text("", {
+        fontFamily: "Teko",
+        fontSize: 18,
+        lineHeight: 18
+      });
+      this.footer.y = this.height - this.footer.height;
+      this.footer.resolution = 2;
+      this.addChild(this.footer);
       this.updateHeader();
     }
     /** Resets the scrollbar to the top. */
@@ -14032,11 +14051,13 @@
         );
         this._manifest = [...manifest || []];
         this._installed = await mod.store.getInstalled();
-        const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest).sort(
+        const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest.sort(
           (a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
-        ).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
+        )).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
         this.title.text = `Texture Packs (${mod.store.lock.isLocked ? "updating..." : this.selectedTab == "installed" ? this._installed.length : this._manifest.length})`;
-        let y = this.packsTop;
+        this.footer.text = this.hadChangesMade ? "You must reload the page for any changes to take effect!" : this.selectedTab == "installed" ? "Packs toward the bottom have priority over packs at the top!" : "Want to contribute your own pack to this list? Check out the tutorial on GitHub!";
+        this.footer.style.fill = this.hadChangesMade ? UITheme.MenuColors.accent : UITheme.MenuColors.textSubtle;
+        let y = this.paddingTop;
         this.renderedItems.forEach((p) => p.destroy());
         this.renderedItems = [];
         if (!packRows.length) {
@@ -14115,16 +14136,45 @@
               this.installingManifestPacks.add(pak.id);
               this.rerender();
               mod.store.installPackFromManifest(pak).catch(() => alert("Failed to install texture pack.")).finally(() => {
+                this.hadChangesMade = true;
                 this.installingManifestPacks.delete(pak.id);
                 this.rerender();
               });
             } else {
               await mod.store.uninstallPack(pak.id);
+              this.hadChangesMade = true;
             }
             this.rerender();
           });
           row.addChild(manageBtn);
           if (this.selectedTab == "installed") {
+            let x = manageBtn.x;
+            ["down", "up"].map((dir) => {
+              if (pak == this._installed[0] && dir == "up") return;
+              if (pak == last(this._installed) && dir == "down") return;
+              const button = new Button(`texpack_${pak.id}_${dir}`);
+              button.setText("  ");
+              button.x = x -= button.width + 8;
+              button.y = (this.rowHeight - button.height) / 2;
+              button.edge.stroke({
+                color: 16777215,
+                width: 1.5
+              });
+              button.addListener(Button.BUTTON_RELEASED, () => {
+                this.hadChangesMade = true;
+                this.rerender();
+              });
+              const ico = new PIXI.Sprite(App.CombinedTextures.dropdown_arrow);
+              ico.origin.set(ico.width / 2, ico.height / 2);
+              if (dir == "up") ico.rotation = Math.PI;
+              ico.width = button.width / 2;
+              ico.height = button.height / 2.5;
+              ico.x = -ico.width / 1.5;
+              ico.y = ico.height / 3;
+              console.log(button, ico);
+              button.addChild(ico);
+              row.addChild(button);
+            });
           }
           this.addChild(row);
           this.renderedItems.push(row);

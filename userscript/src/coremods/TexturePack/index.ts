@@ -19,7 +19,7 @@ import {
   TexturePackManifestEntry,
 } from "./utils";
 import { InstalledPack, TexturePackModStore } from "./store";
-import { attemptAsync } from "es-toolkit";
+import { attemptAsync, last } from "es-toolkit";
 
 declare module "lib" {
   interface ContentMenu {
@@ -215,16 +215,19 @@ const createTexTab = (mod: TexturePackMod) =>
     private scrollIndex = 0;
     private renderedItems: PIXI.ContainerChild[] = [];
     private title: PIXI.Text;
+    private footer: PIXI.Text;
     private scroller = new MemberBrowserScrollbar(386);
     private uploadBtn = new Button("tex_uploader");
     private downloadBtn = new Button("tex_template");
 
     /** Amount of space to leave for the buttons at the top. */
-    private readonly packsTop = 36;
+    private readonly paddingTop = 36;
+    /** Amount of space to leave for the footer at the bottom. */
+    private readonly paddingBottom = 18;
     /** Amount of packs that can be displayed on one screen. */
     private get packsToDisplay() {
       return (
-        (this.scroller.height - this.packsTop) /
+        (this.scroller.height - (this.paddingTop + this.paddingBottom)) /
         (this.rowHeight + this.rowPadding)
       );
     }
@@ -234,6 +237,8 @@ const createTexTab = (mod: TexturePackMod) =>
       background: PIXI.Graphics;
       label: PIXI.Text;
     }[] = [];
+    /** State for the reminder to reload the page for changes to take effect. */
+    private hadChangesMade = false;
 
     constructor() {
       super();
@@ -280,6 +285,7 @@ const createTexTab = (mod: TexturePackMod) =>
         tab.addChild(label);
         tab.on("pointertap", () => {
           this.selectedTab = id;
+          this.hadChangesMade = false; // reset the reminder on tab switch
           this.updateHeader();
           this.resetScroll();
           AudioEffects.ButtonClick.audio.play();
@@ -343,6 +349,15 @@ const createTexTab = (mod: TexturePackMod) =>
       this.uploadBtn.edge.stroke({ color: 0xffffff, width: 1.5 });
       this.addChild(this.uploadBtn);
 
+      this.footer = new PIXI.Text("", {
+        fontFamily: "Teko",
+        fontSize: 18,
+        lineHeight: 18,
+      });
+      this.footer.y = this.height - this.footer.height;
+      this.footer.resolution = 2;
+      this.addChild(this.footer);
+
       this.updateHeader();
     }
 
@@ -390,12 +405,12 @@ const createTexTab = (mod: TexturePackMod) =>
         this._installed = await mod.store.getInstalled();
 
         const packRows = (
-          this.selectedTab == "installed" ? this._installed : this._manifest
-        )
-          .sort((a, b) =>
-            a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
-          )
-          .slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
+          this.selectedTab == "installed"
+            ? this._installed
+            : this._manifest.sort((a, b) =>
+                a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
+              )
+        ).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
 
         this.title.text = `Texture Packs (${
           mod.store.lock.isLocked
@@ -404,8 +419,16 @@ const createTexTab = (mod: TexturePackMod) =>
               ? this._installed.length
               : this._manifest.length
         })`;
+        this.footer.text = this.hadChangesMade
+          ? "You must reload the page for any changes to take effect!"
+          : this.selectedTab == "installed"
+            ? "Packs toward the bottom have priority over packs at the top!"
+            : "Want to contribute your own pack to this list? Check out the tutorial on GitHub!";
+        this.footer.style.fill = this.hadChangesMade
+          ? UITheme.MenuColors.accent
+          : UITheme.MenuColors.textSubtle;
 
-        let y = this.packsTop;
+        let y = this.paddingTop;
         this.renderedItems.forEach((p) => p.destroy());
         this.renderedItems = [];
 
@@ -508,39 +531,51 @@ const createTexTab = (mod: TexturePackMod) =>
                 .installPackFromManifest(pak)
                 .catch(() => alert("Failed to install texture pack."))
                 .finally(() => {
+                  this.hadChangesMade = true; // technically fires on catch too but d/c
                   this.installingManifestPacks.delete(pak.id);
                   this.rerender();
                 });
             } else {
               await mod.store.uninstallPack(pak.id);
+              this.hadChangesMade = true;
             }
             this.rerender();
           });
           row.addChild(manageBtn);
 
           if (this.selectedTab == "installed") {
-            /*
-            const button = new Button("settings");
-            button.scale.x = button.scale.y = 0.8;
-            button.setText("  ");
-            button.x = pl -= button.width + 8;
-            button.y = pt;
-            button.addListener(Button.BUTTON_RELEASED, () => {
-              this.showConfig(mod);
+            let x = manageBtn.x;
+            (["down", "up"] as const).map((dir) => {
+              // dont draw up/down buttons if the pack is already at the top/bottom
+              if (pak == this._installed[0] && dir == "up") return;
+              if (pak == last(this._installed) && dir == "down") return;
+
+              const button = new Button(`texpack_${pak.id}_${dir}`);
+              button.setText("  ");
+              button.x = x -= button.width + 8;
+              button.y = (this.rowHeight - button.height) / 2;
+              button.edge.stroke({
+                color: 0xffffff,
+                width: 1.5,
+              });
+              button.addListener(Button.BUTTON_RELEASED, () => {
+                //TODO: move pack
+                this.hadChangesMade = true;
+                this.rerender();
+              });
+              const ico = new PIXI.Sprite(App.CombinedTextures.dropdown_arrow);
+              ico.origin.set(ico.width / 2, ico.height / 2);
+              // gotta rotate the icon to be an "up" arrow
+              if (dir == "up") ico.rotation = Math.PI;
+              ico.width = button.width / 2;
+              ico.height = button.height / 2.5;
+              // dunno why but these are the only values that work properly to center it...
+              ico.x = -ico.width / 1.5;
+              ico.y = ico.height / 3;
+              console.log(button, ico);
+              button.addChild(ico);
+              row.addChild(button);
             });
-            const ico = new PIXI.Sprite(App.CombinedTextures.gears_icon);
-            ico.width = button.width;
-            ico.height = button.height;
-            ico.x = button.width * -0.2;
-            ico.y = button.height * 0.1;
-            button.addChild(ico);
-            // hover border in the standard button gray
-            button.edge.stroke({
-              color: UITheme.MenuColors.border,
-              width: 1.5,
-            });
-            container.addChild(button);
-            */
           }
 
           this.addChild(row);
