@@ -34,6 +34,14 @@ export class TexturePackModWorker {
     }
     if (!this.worker) return;
 
+    this.worker.onerror = (event) => {
+      // reject all pending requests if the worker crashes somehow
+      console.error("texture pack worker error", event);
+      const rejection = `Texture pack worker crashed: ${event.message}`;
+      for (const [, pend] of this.pending) pend.rej(rejection);
+      this.pending.clear();
+    };
+
     this.worker.onmessage = (event) => {
       const msg = <TexWorkerOut | TexWorkerOutError>event.data,
         pend = this.pending.get(msg.id);

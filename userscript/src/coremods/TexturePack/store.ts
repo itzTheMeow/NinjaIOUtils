@@ -131,10 +131,15 @@ export class TexturePackModStore {
   public async reconcileAtlases(force = false) {
     console.debug(`reconciling atlases, force: ${String(force)}`);
 
-    if (!force) {
-      using _ = await this.acquireLock();
-    }
+    // just reconcile
+    if (force) return await this._reconcile();
+    // otherwise wait for the lock
+    using _ = await this.acquireLock();
+    await this._reconcile();
+  }
 
+  /** Runs the reconcile loop. Must be called while the lock is held or with `force`. */
+  private async _reconcile() {
     const installed = await this.getInstalled();
     // stop if nothing installed
     if (!installed.length) {

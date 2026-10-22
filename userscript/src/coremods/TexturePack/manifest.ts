@@ -22,7 +22,7 @@ export class TexturePackModManifest {
   public async fetchManifest() {
     const cached =
       this._cachedManifest || (await this.getItem<CachedManifest>("cached"));
-    if (cached && Date.now() > cached.expiresAt) return cached.data;
+    if (cached && Date.now() < cached.expiresAt) return cached.data;
     this._cachedManifest = null;
     console.debug("fetching new manifest");
 

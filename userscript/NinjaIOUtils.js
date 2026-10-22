@@ -3229,7 +3229,7 @@
     _cachedManifest = null;
     async fetchManifest() {
       const cached = this._cachedManifest || await this.getItem("cached");
-      if (cached && Date.now() > cached.expiresAt) return cached.data;
+      if (cached && Date.now() < cached.expiresAt) return cached.data;
       this._cachedManifest = null;
       console.debug("fetching new manifest");
       try {
@@ -13266,6 +13266,12 @@
         );
       }
       if (!this.worker) return;
+      this.worker.onerror = (event) => {
+        console.error("texture pack worker error", event);
+        const rejection = `Texture pack worker crashed: ${event.message}`;
+        for (const [, pend] of this.pending) pend.rej(rejection);
+        this.pending.clear();
+      };
       this.worker.onmessage = (event) => {
         const msg = event.data, pend = this.pending.get(msg.id);
         if (!pend)
@@ -13595,17 +13601,20 @@
     }
     /** Regenerates any needed texture atlases. */
     async reconcileAtlases(force = false) {
-      console.debug(`reconciling atlases, force: ${String(force)}`);
-      if (!force) {
-        var _stack = [];
-        try {
-          const _2 = __using(_stack, await this.acquireLock());
-        } catch (_) {
-          var _error = _, _hasError = true;
-        } finally {
-          __callDispose(_stack, _error, _hasError);
-        }
+      var _stack = [];
+      try {
+        console.debug(`reconciling atlases, force: ${String(force)}`);
+        if (force) return await this._reconcile();
+        const _ = __using(_stack, await this.acquireLock());
+        await this._reconcile();
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
       }
+    }
+    /** Runs the reconcile loop. Must be called while the lock is held or with `force`. */
+    async _reconcile() {
       const installed = await this.getInstalled();
       if (!installed.length) {
         console.debug("no installed scripts, exiting reconciler");
@@ -13743,7 +13752,7 @@
             );
             if (atlasType) {
               mod.store.getAtlas(atlasType).then((atlas) => {
-                data.data[0] = URL.createObjectURL(atlas);
+                if (atlas) data.data[0] = URL.createObjectURL(atlas);
                 this._postMessage(data, ...args);
               }).catch((err) => {
                 console.error("texture pack injection failed", err);
@@ -14057,13 +14066,14 @@
           manageBtn.x = this.rowWidth - manageBtn.width - 8;
           manageBtn.y = this.rowHeight / 2 - manageBtn.height / 2;
           manageBtn.addListener(Button.BUTTON_RELEASED, async () => {
-            if (isInstalling) return;
             if (!isInstalled) {
+              if (this.installingManifestPacks.has(pak.id)) return;
+              this.installingManifestPacks.add(pak.id);
+              this.rerender();
               mod.store.installPackFromManifest(pak).catch(() => alert("Failed to install texture pack.")).finally(() => {
                 this.installingManifestPacks.delete(pak.id);
                 this.rerender();
               });
-              this.installingManifestPacks.add(pak.id);
             } else {
               await mod.store.uninstallPack(pak.id);
             }

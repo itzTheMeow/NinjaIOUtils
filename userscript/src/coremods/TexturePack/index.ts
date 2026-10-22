@@ -104,7 +104,7 @@ export class TexturePackMod extends Mod {
             mod.store
               .getAtlas(atlasType)
               .then((atlas) => {
-                data.data[0] = URL.createObjectURL(atlas);
+                if (atlas) data.data[0] = URL.createObjectURL(atlas);
                 this._postMessage(data, ...args);
               })
               .catch((err) => {
@@ -495,9 +495,11 @@ const createTexTab = (mod: TexturePackMod) =>
           manageBtn.x = this.rowWidth - manageBtn.width - 8;
           manageBtn.y = this.rowHeight / 2 - manageBtn.height / 2;
           manageBtn.addListener(Button.BUTTON_RELEASED, async () => {
-            if (isInstalling) return;
             if (!isInstalled) {
               // install the pack
+              if (this.installingManifestPacks.has(pak.id)) return;
+              this.installingManifestPacks.add(pak.id);
+              this.rerender();
               mod.store
                 .installPackFromManifest(pak)
                 .catch(() => alert("Failed to install texture pack."))
@@ -505,7 +507,6 @@ const createTexTab = (mod: TexturePackMod) =>
                   this.installingManifestPacks.delete(pak.id);
                   this.rerender();
                 });
-              this.installingManifestPacks.add(pak.id);
             } else {
               await mod.store.uninstallPack(pak.id);
             }
