@@ -13615,60 +13615,67 @@
     }
     /** Runs the reconcile loop. Must be called while the lock is held or with `force`. */
     async _reconcile() {
-      const installed = await this.getInstalled();
-      if (!installed.length) {
-        console.debug("no installed scripts, exiting reconciler");
-        this._atlases = null;
-        return;
-      }
-      for (const type of Object.values(TextureAtlasType)) {
-        console.debug(`reconciling atlas for ${type}`);
-        try {
-          const packs = await this.getInstalled(type);
-          if (!packs.length) {
-            if (this._atlases?.[type]) delete this._atlases[type];
-            console.debug("no pack modifies this atlas");
-            continue;
-          }
-          console.debug("looking up atlas...");
-          const atlasKey = await this.atlasKey(type), existingAtlas = await this.instance.getItem(
-            `atlas:${atlasKey}`
-          );
-          if (existingAtlas) {
-            console.debug(`found existing atlas: ${atlasKey}`);
-            this._atlases = { ...this._atlases, [type]: existingAtlas };
-            continue;
-          }
-          console.debug(`generating new atlas ${atlasKey}...`);
-          const zips = compact(
-            await Promise.all(
-              packs.map(
-                (pack) => this.instance.getItem(`zip:${pack.hash}`)
-              )
-            )
-          ), { json, pngURL } = await textureAtlasFetchJSON(type), original = await fetchBlob(pngURL);
-          console.debug(
-            `extracted all information for atlas generation, size: ${zips.reduce((i, z) => i + z.size, 0)}`
-          );
-          const atlas = await this.parent.worker.generateAtlas({
-            type,
-            original,
-            json,
-            zips
-          });
-          console.debug(`generated new atlas, size: ${atlas.size}`);
-          await this.instance.setItem(`atlas:${atlasKey}`, atlas);
-          this._atlases = { ...this._atlases, [type]: atlas };
-        } catch (err) {
-          console.error(err);
-          Ninja_default.log(
-            `Failed to generate texture atlas for ${type}!`,
-            UITheme.MenuColors.danger
-          );
+      var _stack = [];
+      try {
+        const _ = __using(_stack, defer(() => this.gc()));
+        const installed = await this.getInstalled();
+        if (!installed.length) {
+          console.debug("no installed packs, exiting reconciler");
+          this._atlases = null;
+          return;
         }
+        for (const type of Object.values(TextureAtlasType)) {
+          console.debug(`reconciling atlas for ${type}`);
+          try {
+            const packs = await this.getInstalled(type);
+            if (!packs.length) {
+              if (this._atlases?.[type]) delete this._atlases[type];
+              console.debug("no pack modifies this atlas");
+              continue;
+            }
+            console.debug("looking up atlas...");
+            const atlasKey = await this.atlasKey(type), existingAtlas = await this.instance.getItem(
+              `atlas:${atlasKey}`
+            );
+            if (existingAtlas) {
+              console.debug(`found existing atlas: ${atlasKey}`);
+              this._atlases = { ...this._atlases, [type]: existingAtlas };
+              continue;
+            }
+            console.debug(`generating new atlas ${atlasKey}...`);
+            const zips = compact(
+              await Promise.all(
+                packs.map(
+                  (pack) => this.instance.getItem(`zip:${pack.hash}`)
+                )
+              )
+            ), { json, pngURL } = await textureAtlasFetchJSON(type), original = await fetchBlob(pngURL);
+            console.debug(
+              `extracted all information for atlas generation, size: ${zips.reduce((i, z) => i + z.size, 0)}`
+            );
+            const atlas = await this.parent.worker.generateAtlas({
+              type,
+              original,
+              json,
+              zips
+            });
+            console.debug(`generated new atlas, size: ${atlas.size}`);
+            await this.instance.setItem(`atlas:${atlasKey}`, atlas);
+            this._atlases = { ...this._atlases, [type]: atlas };
+          } catch (err) {
+            console.error(err);
+            Ninja_default.log(
+              `Failed to generate texture atlas for ${type}!`,
+              UITheme.MenuColors.danger
+            );
+          }
+        }
+        console.debug("finished reconciling atlase");
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
       }
-      console.debug("finished reconciling atlase");
-      this.gc();
     }
     /** Run garbage-collection and clean up any non-installed zips. */
     async gc() {
@@ -13685,7 +13692,7 @@
           if (prefix == "zip") {
             if (!installed.some((i) => i.hash == suffix)) {
               await this.instance.removeItem(key);
-              console.debug(`removed stale pack: ${suffix}`);
+              console.debug(`removed stale zip: ${suffix}`);
             }
           } else if (prefix == "atlas") {
             if (!atlasKeys.some((k) => k == suffix)) {
@@ -13991,7 +13998,7 @@
         const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest).sort(
           (a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         ).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
-        this.title.text = mod.store.lock.isLocked ? "Texture Packs (updating...)" : "Texture Packs";
+        this.title.text = `Texture Packs (${mod.store.lock.isLocked ? "updating..." : this.selectedTab == "installed" ? this._installed.length : this._manifest.length})`;
         let y = this.packsTop;
         this.renderedItems.forEach((p) => p.destroy());
         this.renderedItems = [];

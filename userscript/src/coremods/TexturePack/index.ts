@@ -397,9 +397,13 @@ const createTexTab = (mod: TexturePackMod) =>
           )
           .slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
 
-        this.title.text = mod.store.lock.isLocked
-          ? "Texture Packs (updating...)"
-          : "Texture Packs";
+        this.title.text = `Texture Packs (${
+          mod.store.lock.isLocked
+            ? "updating..."
+            : this.selectedTab == "installed"
+              ? this._installed.length
+              : this._manifest.length
+        })`;
 
         let y = this.packsTop;
         this.renderedItems.forEach((p) => p.destroy());

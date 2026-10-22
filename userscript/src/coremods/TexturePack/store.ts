@@ -140,10 +140,12 @@ export class TexturePackModStore {
 
   /** Runs the reconcile loop. Must be called while the lock is held or with `force`. */
   private async _reconcile() {
+    // gc when this is over
+    using _ = defer(() => this.gc());
     const installed = await this.getInstalled();
     // stop if nothing installed
     if (!installed.length) {
-      console.debug("no installed scripts, exiting reconciler");
+      console.debug("no installed packs, exiting reconciler");
       this._atlases = null;
       return;
     }
@@ -203,9 +205,6 @@ export class TexturePackModStore {
     }
 
     console.debug("finished reconciling atlase");
-
-    // gc in the background
-    this.gc();
   }
 
   /** Run garbage-collection and clean up any non-installed zips. */
@@ -225,7 +224,7 @@ export class TexturePackModStore {
         // remove any zips whos hashes we dont have installed
         if (!installed.some((i) => i.hash == suffix)) {
           await this.instance.removeItem(key);
-          console.debug(`removed stale pack: ${suffix}`);
+          console.debug(`removed stale zip: ${suffix}`);
         }
       } else if (prefix == "atlas") {
         // remove any atlases that dont match our atlas keys
