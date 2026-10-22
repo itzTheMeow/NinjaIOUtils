@@ -24,6 +24,7 @@ export class TexturePackModManifest {
       this._cachedManifest || (await this.getItem<CachedManifest>("cached"));
     if (cached && Date.now() > cached.expiresAt) return cached.data;
     this._cachedManifest = null;
+    console.debug("fetching new manifest");
 
     try {
       const res = await fetch(
@@ -36,6 +37,7 @@ export class TexturePackModManifest {
       if (res.status == 304 && cached) {
         cached.expiresAt = Date.now() + this.MANIFEST_CACHE_TTL;
         await this.setItem("cached", (this._cachedManifest = cached));
+        console.debug("got 304 for manifest, updating cache expiry");
         return cached.data;
       }
       if (!res.ok) throw new Error(`manifest fetch failed: ${res.status}`);
@@ -48,6 +50,7 @@ export class TexturePackModManifest {
           data,
         }),
       );
+      console.debug("fetched new manifest");
       return data;
     } catch (err) {
       console.error(err);
@@ -59,6 +62,7 @@ export class TexturePackModManifest {
 
   /** Fetch a zip file from GitHub given a manifest entry. */
   public async fetchZip(entry: TexturePackManifestEntry) {
+    console.debug(`fetching zip for pack: ${entry.id}, ${entry.zip}`);
     const res = await fetch(`${this.baseURL}/${entry.zip}`);
     if (!res.ok) throw new Error(`pack download failed: ${entry.id}`);
     return await res.blob();

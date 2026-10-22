@@ -46,7 +46,9 @@ export class TexturePackModStore {
 
   /** Installs a pack from a manifest entry. */
   public async installPackFromManifest(pack: TexturePackManifestEntry) {
+    console.debug("fetching zip to install from manifest...");
     const zip = await this.parent.manifest.fetchZip(pack);
+    console.debug("installing pack from manifest");
     return await this.installPack(pack, zip, true);
   }
   /** Install a custom pack from an uploaded zip file. */
@@ -63,9 +65,11 @@ export class TexturePackModStore {
       ...meta,
       fromManifest,
     };
+    console.debug(`installing pack: ${pack.id}`);
 
     // save the zip in the cache
     await this.instance.setItem(`zip:${pack.hash}`, zip);
+    console.debug(`cached zip: ${pack.hash}`);
 
     // add the pack to the install list
     const installed = await this.getInstalled();
@@ -74,12 +78,14 @@ export class TexturePackModStore {
       "installed_packs",
       (this._installed = installed),
     );
+    console.debug("updated install list", installed);
 
     this.reconcileAtlases();
   }
   /** Uninstall a pack given its ID. */
   public async uninstallPack(id: string) {
     using _ = await this.acquireLock();
+    console.debug(`uninstalling pack: ${id}`);
 
     const installed = await this.getInstalled(),
       packIndex = installed.findIndex((i) => i.id == id),
@@ -95,6 +101,7 @@ export class TexturePackModStore {
       "installed_packs",
       (this._installed = installed),
     );
+    console.debug("pack uninstalled");
 
     this.reconcileAtlases();
   }
@@ -153,15 +160,15 @@ export class TexturePackModStore {
             `atlas:${atlasKey}`,
           );
         if (existingAtlas) {
-          console.debug("found existing atlas");
+          console.debug(`found existing atlas: ${atlasKey}`);
           this._atlases = { ...this._atlases, [type]: existingAtlas };
           continue;
         }
-        console.debug("generating new atlas...");
+        console.debug(`generating new atlas ${atlasKey}...`);
 
         const zips = compact(
             await Promise.all(
-              installed.map((pack) =>
+              packs.map((pack) =>
                 this.instance.getItem<Blob>(`zip:${pack.hash}`),
               ),
             ),
@@ -190,6 +197,8 @@ export class TexturePackModStore {
       }
     }
 
+    console.debug("finished reconciling atlase");
+
     // gc in the background
     this.gc();
   }
@@ -197,6 +206,7 @@ export class TexturePackModStore {
   /** Run garbage-collection and clean up any non-installed zips. */
   public async gc() {
     using _ = await this.acquireLock();
+    console.debug("running gc...");
 
     const installed = await this.getInstalled(),
       atlasKeys = await Promise.all(
@@ -208,14 +218,19 @@ export class TexturePackModStore {
       if (!prefix || !suffix) continue;
       if (prefix == "zip:") {
         // remove any zips whos hashes we dont have installed
-        if (!installed.some((i) => i.hash == suffix))
+        if (!installed.some((i) => i.hash == suffix)) {
           await this.instance.removeItem(key);
+          console.debug(`removed stale pack: ${suffix}`);
+        }
       } else if (prefix == "atlas:") {
         // remove any atlases that dont match our atlas keys
-        if (!atlasKeys.some((k) => k == suffix))
+        if (!atlasKeys.some((k) => k == suffix)) {
           await this.instance.removeItem(key);
+          console.debug(`removed stale atlas: ${suffix}`);
+        }
       }
     }
+    console.debug("gc complete");
   }
 }
 

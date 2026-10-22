@@ -3231,6 +3231,7 @@
       const cached = this._cachedManifest || await this.getItem("cached");
       if (cached && Date.now() > cached.expiresAt) return cached.data;
       this._cachedManifest = null;
+      console.debug("fetching new manifest");
       try {
         const res = await fetch(
           `${this.baseURL}/manifest.json`,
@@ -3240,6 +3241,7 @@
         if (res.status == 304 && cached) {
           cached.expiresAt = Date.now() + this.MANIFEST_CACHE_TTL;
           await this.setItem("cached", this._cachedManifest = cached);
+          console.debug("got 304 for manifest, updating cache expiry");
           return cached.data;
         }
         if (!res.ok) throw new Error(`manifest fetch failed: ${res.status}`);
@@ -3252,6 +3254,7 @@
             data
           }
         );
+        console.debug("fetched new manifest");
         return data;
       } catch (err) {
         console.error(err);
@@ -3261,6 +3264,7 @@
     }
     /** Fetch a zip file from GitHub given a manifest entry. */
     async fetchZip(entry) {
+      console.debug(`fetching zip for pack: ${entry.id}, ${entry.zip}`);
       const res = await fetch(`${this.baseURL}/${entry.zip}`);
       if (!res.ok) throw new Error(`pack download failed: ${entry.id}`);
       return await res.blob();
@@ -13509,7 +13513,9 @@
     }
     /** Installs a pack from a manifest entry. */
     async installPackFromManifest(pack) {
+      console.debug("fetching zip to install from manifest...");
       const zip = await this.parent.manifest.fetchZip(pack);
+      console.debug("installing pack from manifest");
       return await this.installPack(pack, zip, true);
     }
     /** Install a custom pack from an uploaded zip file. */
@@ -13524,13 +13530,16 @@
           ...meta,
           fromManifest
         };
+        console.debug(`installing pack: ${pack.id}`);
         await this.instance.setItem(`zip:${pack.hash}`, zip);
+        console.debug(`cached zip: ${pack.hash}`);
         const installed = await this.getInstalled();
         installed.push(pack);
         await this.instance.setItem(
           "installed_packs",
           this._installed = installed
         );
+        console.debug("updated install list", installed);
         this.reconcileAtlases();
       } catch (_2) {
         var _error = _2, _hasError = true;
@@ -13543,6 +13552,7 @@
       var _stack = [];
       try {
         const _ = __using(_stack, await this.acquireLock());
+        console.debug(`uninstalling pack: ${id}`);
         const installed = await this.getInstalled(), packIndex = installed.findIndex((i) => i.id == id), pack = installed[packIndex];
         if (packIndex == -1 || !pack) {
           console.error(`Tried to uninstall pack ${id} that wasnt installed!`);
@@ -13553,6 +13563,7 @@
           "installed_packs",
           this._installed = installed
         );
+        console.debug("pack uninstalled");
         this.reconcileAtlases();
       } catch (_2) {
         var _error = _2, _hasError = true;
@@ -13615,14 +13626,14 @@
             `atlas:${atlasKey}`
           );
           if (existingAtlas) {
-            console.debug("found existing atlas");
+            console.debug(`found existing atlas: ${atlasKey}`);
             this._atlases = { ...this._atlases, [type]: existingAtlas };
             continue;
           }
-          console.debug("generating new atlas...");
+          console.debug(`generating new atlas ${atlasKey}...`);
           const zips = compact(
             await Promise.all(
-              installed.map(
+              packs.map(
                 (pack) => this.instance.getItem(`zip:${pack.hash}`)
               )
             )
@@ -13647,6 +13658,7 @@
           );
         }
       }
+      console.debug("finished reconciling atlase");
       this.gc();
     }
     /** Run garbage-collection and clean up any non-installed zips. */
@@ -13654,6 +13666,7 @@
       var _stack = [];
       try {
         const _ = __using(_stack, await this.acquireLock());
+        console.debug("running gc...");
         const installed = await this.getInstalled(), atlasKeys = await Promise.all(
           Object.values(TextureAtlasType).map((t) => this.atlasKey(t))
         );
@@ -13661,13 +13674,18 @@
           const [prefix, suffix] = key.split(":");
           if (!prefix || !suffix) continue;
           if (prefix == "zip:") {
-            if (!installed.some((i) => i.hash == suffix))
+            if (!installed.some((i) => i.hash == suffix)) {
               await this.instance.removeItem(key);
+              console.debug(`removed stale pack: ${suffix}`);
+            }
           } else if (prefix == "atlas:") {
-            if (!atlasKeys.some((k) => k == suffix))
+            if (!atlasKeys.some((k) => k == suffix)) {
               await this.instance.removeItem(key);
+              console.debug(`removed stale atlas: ${suffix}`);
+            }
           }
         }
+        console.debug("gc complete");
       } catch (_2) {
         var _error = _2, _hasError = true;
       } finally {
@@ -13738,6 +13756,7 @@
         }
       }
       window.Worker = Worker = WorkerNew;
+      console.debug("hooked worker global!");
     }
     init() {
       this.texTab = createTexTab(this);

@@ -118,6 +118,7 @@ export class TexturePackMod extends Mod {
       }
     }
     window.Worker = Worker = WorkerNew;
+    console.debug("hooked worker global!");
   }
 
   public init() {
