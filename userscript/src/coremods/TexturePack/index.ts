@@ -52,7 +52,7 @@ export class TexturePackMod extends Mod {
   public worker = new TexturePackModWorker();
   public store = new TexturePackModStore(this);
   public manifest = new TexturePackModManifest(this);
-  private texTab: ReturnType<typeof createTexTab> | null = null;
+  public texTab: ReturnType<typeof createTexTab> | null = null;
 
   public load() {
     // worker hook should be the very first thing
@@ -213,6 +213,7 @@ const createTexTab = (mod: TexturePackMod) =>
   new (class TexTab extends PIXI.Container {
     private scrollIndex = 0;
     private renderedItems: PIXI.ContainerChild[] = [];
+    private title: PIXI.Text;
     private scroller = new MemberBrowserScrollbar(386);
     private uploadBtn = new Button("tex_uploader");
     private downloadBtn = new Button("tex_template");
@@ -253,12 +254,11 @@ const createTexTab = (mod: TexturePackMod) =>
       this.addChild(this.scroller);
 
       // title style copied from the maps content tab
-      const title = new PIXI.Text("Texture Packs", FontStyle.MediumOrangeText);
-      title.tint = 16763904;
-      title.resolution = 2;
-      this.addChild(title);
+      this.title = new PIXI.Text("Texture Packs", FontStyle.MediumOrangeText);
+      this.title.tint = 16763904;
+      this.title.resolution = 2;
+      this.addChild(this.title);
 
-      const names = ["Installed", "Marketplace"] as const;
       texTabViewID.forEach((id, i) => {
         const tab = new PIXI.Container();
         tab.x = 240 + i * 132;
@@ -379,7 +379,8 @@ const createTexTab = (mod: TexturePackMod) =>
     private _manifest: TexturePackManifestEntry[] = [];
     private _installed: InstalledPack[] = [];
     private installingManifestPacks = new Set<string>();
-    async rerender() {
+    public async rerender() {
+      if (this.destroyed) return;
       try {
         const [_, manifest] = await attemptAsync(
           async () => (await mod.manifest.fetchManifest()).packs,
@@ -394,6 +395,10 @@ const createTexTab = (mod: TexturePackMod) =>
             a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1,
           )
           .slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
+
+        this.title.text = mod.store.lock.isLocked
+          ? "Texture Packs (updating...)"
+          : "Texture Packs";
 
         let y = this.packsTop;
         this.renderedItems.forEach((p) => p.destroy());

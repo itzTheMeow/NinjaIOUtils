@@ -13487,6 +13487,15 @@
     instance = import_localforage.default.createInstance({
       name: "nutils_texpack_store_v1"
     });
+    /** Acquire and return a function to release the lock. Also re-renders the texture tab. */
+    async acquireLock() {
+      await this.lock.acquire();
+      this.parent.texTab?.rerender();
+      return defer(() => {
+        this.lock.release();
+        this.parent.texTab?.rerender();
+      });
+    }
     _installed = null;
     /** Get the currently installed texture packs, optionally by type. */
     async getInstalled(type) {
@@ -13510,8 +13519,7 @@
     async installPack(meta, zip, fromManifest = false) {
       var _stack = [];
       try {
-        await this.lock.acquire();
-        const _ = __using(_stack, defer(() => this.lock.release()));
+        const _ = __using(_stack, await this.acquireLock());
         const pack = {
           ...meta,
           fromManifest
@@ -13519,8 +13527,11 @@
         await this.instance.setItem(`zip:${pack.hash}`, zip);
         const installed = await this.getInstalled();
         installed.push(pack);
-        this.instance.setItem("installed_packs", this._installed = installed);
-        this.gc();
+        await this.instance.setItem(
+          "installed_packs",
+          this._installed = installed
+        );
+        this.reconcileAtlases();
       } catch (_2) {
         var _error = _2, _hasError = true;
       } finally {
@@ -13531,8 +13542,7 @@
     async uninstallPack(id) {
       var _stack = [];
       try {
-        await this.lock.acquire();
-        const _ = __using(_stack, defer(() => this.lock.release()));
+        const _ = __using(_stack, await this.acquireLock());
         const installed = await this.getInstalled(), packIndex = installed.findIndex((i) => i.id == id), pack = installed[packIndex];
         if (packIndex == -1 || !pack) {
           console.error(`Tried to uninstall pack ${id} that wasnt installed!`);
@@ -13543,7 +13553,7 @@
           "installed_packs",
           this._installed = installed
         );
-        await this.reconcileAtlases();
+        this.reconcileAtlases();
       } catch (_2) {
         var _error = _2, _hasError = true;
       } finally {
@@ -13562,8 +13572,7 @@
     async getAtlas(type) {
       var _stack = [];
       try {
-        await this.lock.acquire();
-        const _ = __using(_stack, defer(() => this.lock.release()));
+        const _ = __using(_stack, await this.acquireLock());
         if (this._atlases?.[type]) return this._atlases[type];
         await this.reconcileAtlases(true);
         return this._atlases?.[type] ?? null;
@@ -13579,8 +13588,7 @@
       if (!force) {
         var _stack = [];
         try {
-          await this.lock.acquire();
-          const _2 = __using(_stack, defer(() => this.lock.release()));
+          const _2 = __using(_stack, await this.acquireLock());
         } catch (_) {
           var _error = _, _hasError = true;
         } finally {
@@ -13645,8 +13653,7 @@
     async gc() {
       var _stack = [];
       try {
-        await this.lock.acquire();
-        const _ = __using(_stack, defer(() => this.lock.release()));
+        const _ = __using(_stack, await this.acquireLock());
         const installed = await this.getInstalled(), atlasKeys = await Promise.all(
           Object.values(TextureAtlasType).map((t) => this.atlasKey(t))
         );
@@ -13813,6 +13820,7 @@
   var createTexTab = (mod) => new class TexTab extends PIXI.Container {
     scrollIndex = 0;
     renderedItems = [];
+    title;
     scroller = new MemberBrowserScrollbar(386);
     uploadBtn = new Button("tex_uploader");
     downloadBtn = new Button("tex_template");
@@ -13838,11 +13846,10 @@
         this.rerender();
       });
       this.addChild(this.scroller);
-      const title = new PIXI.Text("Texture Packs", FontStyle.MediumOrangeText);
-      title.tint = 16763904;
-      title.resolution = 2;
-      this.addChild(title);
-      const names = ["Installed", "Marketplace"];
+      this.title = new PIXI.Text("Texture Packs", FontStyle.MediumOrangeText);
+      this.title.tint = 16763904;
+      this.title.resolution = 2;
+      this.addChild(this.title);
       texTabViewID.forEach((id, i) => {
         const tab = new PIXI.Container();
         tab.x = 240 + i * 132;
@@ -13946,6 +13953,7 @@
     _installed = [];
     installingManifestPacks = /* @__PURE__ */ new Set();
     async rerender() {
+      if (this.destroyed) return;
       try {
         const [_, manifest] = await attemptAsync(
           async () => (await mod.manifest.fetchManifest()).packs
@@ -13955,6 +13963,7 @@
         const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest).sort(
           (a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         ).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
+        this.title.text = mod.store.lock.isLocked ? "Texture Packs (updating...)" : "Texture Packs";
         let y = this.packsTop;
         this.renderedItems.forEach((p) => p.destroy());
         this.renderedItems = [];

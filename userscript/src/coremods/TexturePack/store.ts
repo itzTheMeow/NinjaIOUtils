@@ -17,6 +17,16 @@ export class TexturePackModStore {
   });
   constructor(private parent: TexturePackMod) {}
 
+  /** Acquire and return a function to release the lock. Also re-renders the texture tab. */
+  public async acquireLock() {
+    await this.lock.acquire();
+    this.parent.texTab?.rerender();
+    return defer(() => {
+      this.lock.release();
+      this.parent.texTab?.rerender();
+    });
+  }
+
   private _installed: InstalledPack[] | null = null;
   /** Get the currently installed texture packs, optionally by type. */
   public async getInstalled(type?: TextureAtlasType) {
@@ -48,8 +58,7 @@ export class TexturePackModStore {
     zip: Blob,
     fromManifest = false,
   ) {
-    await this.lock.acquire();
-    using _ = defer(() => this.lock.release());
+    using _ = await this.acquireLock();
     const pack: InstalledPack = {
       ...meta,
       fromManifest,
@@ -61,14 +70,16 @@ export class TexturePackModStore {
     // add the pack to the install list
     const installed = await this.getInstalled();
     installed.push(pack);
-    this.instance.setItem("installed_packs", (this._installed = installed));
+    await this.instance.setItem(
+      "installed_packs",
+      (this._installed = installed),
+    );
 
-    this.gc();
+    this.reconcileAtlases();
   }
   /** Uninstall a pack given its ID. */
   public async uninstallPack(id: string) {
-    await this.lock.acquire();
-    using _ = defer(() => this.lock.release());
+    using _ = await this.acquireLock();
 
     const installed = await this.getInstalled(),
       packIndex = installed.findIndex((i) => i.id == id),
@@ -85,7 +96,7 @@ export class TexturePackModStore {
       (this._installed = installed),
     );
 
-    await this.reconcileAtlases();
+    this.reconcileAtlases();
   }
 
   private _atlases: { [key in TextureAtlasType]?: Blob } = {};
@@ -102,8 +113,7 @@ export class TexturePackModStore {
   }
   /** Returns a specific texture atlas, or null if it is unmodified. */
   public async getAtlas(type: TextureAtlasType): Promise<Blob | null> {
-    await this.lock.acquire();
-    using _ = defer(() => this.lock.release());
+    using _ = await this.acquireLock();
 
     if (this._atlases?.[type]) return this._atlases[type];
     // we have to force here so we dont get softlocked
@@ -115,8 +125,7 @@ export class TexturePackModStore {
     console.debug(`reconciling atlases, force: ${String(force)}`);
 
     if (!force) {
-      await this.lock.acquire();
-      using _ = defer(() => this.lock.release());
+      using _ = await this.acquireLock();
     }
 
     const installed = await this.getInstalled();
@@ -187,8 +196,7 @@ export class TexturePackModStore {
 
   /** Run garbage-collection and clean up any non-installed zips. */
   public async gc() {
-    await this.lock.acquire();
-    using _ = defer(() => this.lock.release());
+    using _ = await this.acquireLock();
 
     const installed = await this.getInstalled(),
       atlasKeys = await Promise.all(
