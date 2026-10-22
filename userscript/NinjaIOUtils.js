@@ -13682,12 +13682,12 @@
         for (const key of await this.instance.keys()) {
           const [prefix, suffix] = key.split(":");
           if (!prefix || !suffix) continue;
-          if (prefix == "zip:") {
+          if (prefix == "zip") {
             if (!installed.some((i) => i.hash == suffix)) {
               await this.instance.removeItem(key);
               console.debug(`removed stale pack: ${suffix}`);
             }
-          } else if (prefix == "atlas:") {
+          } else if (prefix == "atlas") {
             if (!atlasKeys.some((k) => k == suffix)) {
               await this.instance.removeItem(key);
               console.debug(`removed stale atlas: ${suffix}`);

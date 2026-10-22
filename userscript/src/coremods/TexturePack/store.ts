@@ -221,13 +221,13 @@ export class TexturePackModStore {
     for (const key of await this.instance.keys()) {
       const [prefix, suffix] = key.split(":");
       if (!prefix || !suffix) continue;
-      if (prefix == "zip:") {
+      if (prefix == "zip") {
         // remove any zips whos hashes we dont have installed
         if (!installed.some((i) => i.hash == suffix)) {
           await this.instance.removeItem(key);
           console.debug(`removed stale pack: ${suffix}`);
         }
-      } else if (prefix == "atlas:") {
+      } else if (prefix == "atlas") {
         // remove any atlases that dont match our atlas keys
         if (!atlasKeys.some((k) => k == suffix)) {
           await this.instance.removeItem(key);
