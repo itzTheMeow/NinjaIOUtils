@@ -412,8 +412,10 @@ const createTexTab = (mod: TexturePackMod) =>
               )
         ).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
 
+        /** If the store is currently locked and processing something. */
+        const storeLocked = mod.store.lock.isLocked;
         this.title.text = `Texture Packs (${
-          mod.store.lock.isLocked
+          storeLocked
             ? "updating..."
             : this.selectedTab == "installed"
               ? this._installed.length
@@ -427,6 +429,12 @@ const createTexTab = (mod: TexturePackMod) =>
         this.footer.style.fill = this.hadChangesMade
           ? UITheme.MenuColors.accent
           : UITheme.MenuColors.textSubtle;
+
+        if (storeLocked) {
+          this.uploadBtn.disable();
+        } else {
+          this.uploadBtn.enable();
+        }
 
         let y = this.paddingTop;
         this.renderedItems.forEach((p) => p.destroy());
@@ -504,6 +512,7 @@ const createTexTab = (mod: TexturePackMod) =>
           row.addChild(packDescription);
 
           const manageBtn = new Button(`pack_btn_${pak.id}`);
+          if (storeLocked) manageBtn.disable();
           manageBtn.setText(
             isInstalling
               ? "Installing..."
@@ -546,11 +555,8 @@ const createTexTab = (mod: TexturePackMod) =>
           if (this.selectedTab == "installed") {
             let x = manageBtn.x;
             (["down", "up"] as const).map((dir) => {
-              // dont draw up/down buttons if the pack is already at the top/bottom
-              if (pak == this._installed[0] && dir == "up") return;
-              if (pak == last(this._installed) && dir == "down") return;
-
               const button = new Button(`texpack_${pak.id}_${dir}`);
+              if (storeLocked) button.disable();
               button.setText("  ");
               button.x = x -= button.width + 8;
               button.y = (this.rowHeight - button.height) / 2;
@@ -558,8 +564,8 @@ const createTexTab = (mod: TexturePackMod) =>
                 color: 0xffffff,
                 width: 1.5,
               });
-              button.addListener(Button.BUTTON_RELEASED, () => {
-                //TODO: move pack
+              button.addListener(Button.BUTTON_RELEASED, async () => {
+                await mod.store.movePack(pak.id, dir);
                 this.hadChangesMade = true;
                 this.rerender();
               });
@@ -572,7 +578,14 @@ const createTexTab = (mod: TexturePackMod) =>
               // dunno why but these are the only values that work properly to center it...
               ico.x = -ico.width / 1.5;
               ico.y = ico.height / 3;
-              console.log(button, ico);
+
+              // hide the button if the pack is already at the top/bottom
+              if (
+                (pak == this._installed[0] && dir == "up") ||
+                (pak == last(this._installed) && dir == "down")
+              )
+                button.visible = false;
+
               button.addChild(ico);
               row.addChild(button);
             });

@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      0.2b
+// @version      0.3b
 // ==/UserScript==
 
 /*
@@ -2266,7 +2266,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "0.2b",
+    ver: "0.3b",
     api: "https://utils.xela.codes",
     //api: "http://localhost:8907",
     packRepo: "itzTheMeow/NinjaIOUtils-packs",
@@ -13428,6 +13428,17 @@
     return arr[arr.length - 1];
   }
 
+  // node_modules/es-toolkit/dist/array/uniqBy.mjs
+  function uniqBy(arr, mapper) {
+    const map = /* @__PURE__ */ new Map();
+    for (let i = 0; i < arr.length; i++) {
+      const item = arr[i];
+      const key = mapper(item, i, arr);
+      if (!map.has(key)) map.set(key, item);
+    }
+    return Array.from(map.values());
+  }
+
   // node_modules/es-toolkit/dist/promise/mutex.mjs
   var Mutex = class {
     semaphore = new Semaphore(1);
@@ -13526,6 +13537,41 @@
         (i) => type == "combined" /* Assets */ ? i.hasCombined : i.hasSeamless
       ) : list;
     }
+    /** Set the installed pack list. */
+    async setInstalled(list) {
+      await this.instance.setItem(
+        "installed_packs",
+        this._installed = uniqBy(list, (i) => i.id)
+      );
+    }
+    /** Move a pack in a specific direction in the install list. */
+    async movePack(id, direction) {
+      var _stack = [];
+      try {
+        const _ = __using(_stack, await this.acquireLock());
+        const installed = await this.getInstalled();
+        const i = installed.findIndex((p) => p.id == id);
+        if (i == -1) {
+          console.debug(
+            `tried to move pack '${id}' ${direction} but it wasn't found`
+          );
+          return;
+        }
+        const newI = i + (direction == "up" ? -1 : 1);
+        if (newI < 0) return;
+        if (newI >= installed.length) return;
+        console.debug(`moving pack '${id}' ${direction}`);
+        const [pack] = installed.splice(i, 1);
+        if (!pack) return;
+        installed.splice(newI, 0, pack);
+        await this.setInstalled(installed);
+        this.reconcileAtlases();
+      } catch (_2) {
+        var _error = _2, _hasError = true;
+      } finally {
+        __callDispose(_stack, _error, _hasError);
+      }
+    }
     /** Installs a pack from a manifest entry. */
     async installPackFromManifest(pack) {
       console.debug("fetching zip to install from manifest...");
@@ -13583,10 +13629,7 @@
         console.debug(`cached zip: ${pack.hash}`);
         const installed = await this.getInstalled();
         if (!installed.includes(pack)) installed.push(pack);
-        await this.instance.setItem(
-          "installed_packs",
-          this._installed = installed
-        );
+        await this.setInstalled(installed);
         console.debug("updated install list", installed);
         this.reconcileAtlases();
       } catch (_2) {
@@ -13607,10 +13650,7 @@
           return;
         }
         installed.splice(packIndex, 1);
-        await this.instance.setItem(
-          "installed_packs",
-          this._installed = installed
-        );
+        await this.setInstalled(installed);
         console.debug("pack uninstalled");
         this.reconcileAtlases();
       } catch (_2) {
@@ -14054,9 +14094,15 @@
         const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest.sort(
           (a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         )).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
-        this.title.text = `Texture Packs (${mod.store.lock.isLocked ? "updating..." : this.selectedTab == "installed" ? this._installed.length : this._manifest.length})`;
+        const storeLocked = mod.store.lock.isLocked;
+        this.title.text = `Texture Packs (${storeLocked ? "updating..." : this.selectedTab == "installed" ? this._installed.length : this._manifest.length})`;
         this.footer.text = this.hadChangesMade ? "You must reload the page for any changes to take effect!" : this.selectedTab == "installed" ? "Packs toward the bottom have priority over packs at the top!" : "Want to contribute your own pack to this list? Check out the tutorial on GitHub!";
         this.footer.style.fill = this.hadChangesMade ? UITheme.MenuColors.accent : UITheme.MenuColors.textSubtle;
+        if (storeLocked) {
+          this.uploadBtn.disable();
+        } else {
+          this.uploadBtn.enable();
+        }
         let y = this.paddingTop;
         this.renderedItems.forEach((p) => p.destroy());
         this.renderedItems = [];
@@ -14121,6 +14167,7 @@
           packDescription.y = packName.y + 20;
           row.addChild(packDescription);
           const manageBtn = new Button(`pack_btn_${pak.id}`);
+          if (storeLocked) manageBtn.disable();
           manageBtn.setText(
             isInstalling ? "Installing..." : isInstalled ? "Uninstall" : "Install"
           );
@@ -14150,9 +14197,8 @@
           if (this.selectedTab == "installed") {
             let x = manageBtn.x;
             ["down", "up"].map((dir) => {
-              if (pak == this._installed[0] && dir == "up") return;
-              if (pak == last(this._installed) && dir == "down") return;
               const button = new Button(`texpack_${pak.id}_${dir}`);
+              if (storeLocked) button.disable();
               button.setText("  ");
               button.x = x -= button.width + 8;
               button.y = (this.rowHeight - button.height) / 2;
@@ -14160,7 +14206,8 @@
                 color: 16777215,
                 width: 1.5
               });
-              button.addListener(Button.BUTTON_RELEASED, () => {
+              button.addListener(Button.BUTTON_RELEASED, async () => {
+                await mod.store.movePack(pak.id, dir);
                 this.hadChangesMade = true;
                 this.rerender();
               });
@@ -14171,7 +14218,8 @@
               ico.height = button.height / 2.5;
               ico.x = -ico.width / 1.5;
               ico.y = ico.height / 3;
-              console.log(button, ico);
+              if (pak == this._installed[0] && dir == "up" || pak == last(this._installed) && dir == "down")
+                button.visible = false;
               button.addChild(ico);
               row.addChild(button);
             });

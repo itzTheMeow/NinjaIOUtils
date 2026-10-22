@@ -6,7 +6,7 @@ import {
   TexturePackManifestEntry,
 } from "./utils";
 import { fetchBlob, sha256 } from "../../utils";
-import { compact, defer, Mutex } from "es-toolkit";
+import { compact, defer, Mutex, uniqBy } from "es-toolkit";
 import Ninja from "../../api/Ninja";
 import { UITheme } from "lib";
 
@@ -42,6 +42,39 @@ export class TexturePackModStore {
           type == TextureAtlasType.Assets ? i.hasCombined : i.hasSeamless,
         )
       : list;
+  }
+  /** Set the installed pack list. */
+  public async setInstalled(list: InstalledPack[]) {
+    await this.instance.setItem(
+      "installed_packs",
+      (this._installed = uniqBy(list, (i) => i.id)),
+    );
+  }
+  /** Move a pack in a specific direction in the install list. */
+  public async movePack(id: string, direction: "up" | "down") {
+    using _ = await this.acquireLock();
+    const installed = await this.getInstalled();
+
+    const i = installed.findIndex((p) => p.id == id);
+    if (i == -1) {
+      console.debug(
+        `tried to move pack '${id}' ${direction} but it wasn't found`,
+      );
+      return;
+    }
+
+    const newI = i + (direction == "up" ? -1 : 1);
+    // enforce bounds
+    if (newI < 0) return;
+    if (newI >= installed.length) return;
+
+    console.debug(`moving pack '${id}' ${direction}`);
+    const [pack] = installed.splice(i, 1);
+    if (!pack) return;
+    installed.splice(newI, 0, pack);
+    await this.setInstalled(installed);
+
+    this.reconcileAtlases();
   }
 
   /** Installs a pack from a manifest entry. */
@@ -118,10 +151,7 @@ export class TexturePackModStore {
     // add the pack to the install list
     const installed = await this.getInstalled();
     if (!installed.includes(pack)) installed.push(pack);
-    await this.instance.setItem(
-      "installed_packs",
-      (this._installed = installed),
-    );
+    await this.setInstalled(installed);
     console.debug("updated install list", installed);
 
     this.reconcileAtlases();
@@ -141,10 +171,7 @@ export class TexturePackModStore {
 
     // remove from install list
     installed.splice(packIndex, 1);
-    await this.instance.setItem(
-      "installed_packs",
-      (this._installed = installed),
-    );
+    await this.setInstalled(installed);
     console.debug("pack uninstalled");
 
     this.reconcileAtlases();
