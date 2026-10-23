@@ -444,7 +444,7 @@ export default function hookModMenu() {
           input.setText(String(data.value));
           input.setFilter(
             isNum
-              ? "0123456789-"
+              ? "0123456789.-"
               : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
             false,
           );
