@@ -62,8 +62,9 @@ export class HotkeyMessagesMod extends Mod<{
 
   public handleKeyDown(e: KeyboardEvent) {
     if (e.repeat) return;
-    const letter = e.key.toUpperCase();
-    const message = this.keyBindings[letter];
+    // use e.code for macos / other keyboards
+    const match = /^Key([A-Z])$/.exec(e.code)?.[1] ?? e.key.toUpperCase();
+    const message = this.keyBindings[match];
     if (e.altKey && message) {
       this.sendChatMessage(message);
       e.stopImmediatePropagation();
