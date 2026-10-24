@@ -42,6 +42,7 @@
               "*.ts"
               "*.js"
               "*.json"
+              "*.md"
             ];
             excludes = [
               "old/*"

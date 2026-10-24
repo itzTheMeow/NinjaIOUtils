@@ -1,4 +1,5 @@
 # Ninja.io was shut down in 2025.
+
 # Check the [discord](https://discord.gg/yAYmSWZ) for the latest updates.
 
 # NinjaIOUtils Repository
