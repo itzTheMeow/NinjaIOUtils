@@ -11,7 +11,7 @@ import { App, Layer, app } from "lib";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";
-import { clickContainer } from "../utils";
+import { clickContainer, safeDecode } from "../utils";
 
 enum HashPaths {
   menu = "",
@@ -234,20 +234,19 @@ export class UIURLMod extends Mod {
     this.hook();
 
     const [_id, _name, _pass] =
-      window.location.hash.substring(1)?.split("&").map(decodeURIComponent) ||
-      [];
+      window.location.hash.substring(1)?.split("&").map(safeDecode) || [];
     if (_id && Number(_id) && _name) this.tryJoin(_id, _name, _pass);
     else if (window.location.hash.startsWith(`#/${HashPaths.game}/`)) {
       const [id, name, pass] = window.location.hash
         .substring(`#/${HashPaths.game}/`.length)
         .split("/")
-        .map(decodeURIComponent);
+        .map(safeDecode);
       if (id && name) this.tryJoin(id, name, pass);
     } else if (window.location.hash.startsWith(`#/${HashPaths.pvp}/`)) {
       const [id, name, pass] = window.location.hash
         .substring(`#/${HashPaths.pvp}/`.length)
         .split("/")
-        .map(decodeURIComponent);
+        .map(safeDecode);
       if (id && name) this.tryJoin(id, name, pass, true);
     }
 

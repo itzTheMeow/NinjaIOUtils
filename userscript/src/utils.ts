@@ -40,6 +40,17 @@ export async function sha256(data: string | Blob): Promise<string> {
 }
 
 /**
+ * Decodes a URL component, falling back to the raw string on malformed data.
+ */
+export function safeDecode(part: string): string {
+  try {
+    return decodeURIComponent(part);
+  } catch {
+    return part;
+  }
+}
+
+/**
  * Paints a themed list row (striped background, border, accent edge) in the
  * style of the game's clan/player lists. Wire mouseover/mouseout to
  * `paintListRow(gfx, w, h, index, true/false)` to update the hover state.
