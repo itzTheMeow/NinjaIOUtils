@@ -14646,7 +14646,6 @@ ${name}`
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
-    UIScaleMod: () => UIScaleMod,
     XPStatsMod: () => XPStatsMod
   });
 
@@ -15061,68 +15060,6 @@ ${name}`
       AudioEffects.ButtonHover.audio.play();
     }
     consoleTyped = this._consoleTyped.bind(this);
-  };
-
-  // src/mods/uiScale.ts
-  
-  var UIScaleMod = class extends Mod {
-    originalOnResize = null;
-    constructor() {
-      super({
-        id: "UIScale",
-        name: "UI Scale",
-        description: "Overrides the scale of the game's UI.",
-        author: "Meow",
-        icon: "spectate"
-      });
-      this.implementConfig(
-        {
-          uiScale: 0
-        },
-        {
-          uiScale: "UI Scale (0 = default)"
-        }
-      );
-    }
-    loadConfig(key) {
-      switch (key) {
-        case "uiScale":
-          app._uiscalemodUIScale = this.config.get("uiScale") || 0;
-          break;
-      }
-    }
-    load() {
-      this.patchOnResize();
-      super.load();
-    }
-    unload() {
-      if (this.originalOnResize) {
-        app.onResize = this.originalOnResize;
-        this.originalOnResize = null;
-      }
-      delete app._uiscalemodUIScale;
-      app.onResize();
-      super.unload();
-    }
-    /** Rewrites `App.Scale=<var>` inside the minified `app.onResize` source. */
-    patchOnResize() {
-      const source = app.onResize.toString();
-      const patched = source.replace(
-        /App\.Scale\s*=\s*([a-z])/,
-        "$1=app._uiscalemodUIScale||$1,App.Scale=$1"
-      );
-      if (patched == source) {
-        console.warn(
-          "UIScale: failed to patch app.onResize, no 'App.Scale=' target found. Skipping.",
-          source
-        );
-        this.log("Failed to apply UI Scale setting.", UITheme.MenuColors.warning);
-        return;
-      }
-      this.originalOnResize = app.onResize;
-      app.onResize = window.eval(`(function ${patched})`);
-      app.onResize();
-    }
   };
 
   // src/mods/xpStats.ts

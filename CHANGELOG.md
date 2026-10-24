@@ -3,7 +3,7 @@
 v0.4b
 
 - Various performance improvements.
-- Added back "UI Scale" setting as its own mod.
+- Removed "UI Scale" setting. (doesn't work anymore)
 - Fixed the XP Stats mod.
 
 v0.3b
