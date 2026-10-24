@@ -93,6 +93,8 @@ export default class Mod<cfg = any> {
       if (typeof names[key] === "object") {
         this.configNames[key] = {
           name: names[key].name,
+          priority: names[key].priority,
+          maxLength: names[key].maxLength,
           removableElements: names[key].removableElements ?? false,
         };
       } else {
