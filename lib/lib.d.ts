@@ -5812,7 +5812,285 @@ declare var audiofx: {};
 declare const MAX_SIMULTANEOUS_SOUND_INSTANCES = 3, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES = 10, RawHowl: typeof Howl;
 declare function createCappedHowl(a: any, b?: number): Howl;
 declare function createWeaponHowl(a: any): Howl;
-declare const AudioEffects: {};
+declare const AudioEffects: {
+    MainMenuAmbient: {
+        audio: Howl;
+    };
+    ZombieHit: {
+        audio: Howl;
+    }[];
+    ZombieDeath: {
+        audio: Howl;
+    }[];
+    ZombieApproach: {
+        audio: Howl;
+    }[];
+    SoldierHit: {
+        audio: Howl;
+    }[];
+    SoldierDeath: {
+        audio: Howl;
+    }[];
+    ZombieWaveStart: {
+        audio: Howl;
+    };
+    ZombieWaveAmbient: {
+        audio: Howl;
+    };
+    RainAmbient: {
+        audio: Howl;
+    };
+    Strike: {
+        audio: Howl;
+    };
+    Victory: {
+        audio: Howl;
+    };
+    Match: {
+        audio: Howl;
+    };
+    ButtonHover: {
+        audio: Howl;
+    };
+    SubmenuHover: {
+        audio: Howl;
+    };
+    ButtonClick: {
+        audio: Howl;
+    };
+    SMGFire: {
+        audio: Howl;
+    };
+    MAC10Fire: {
+        audio: Howl;
+    };
+    ShotgunFire: {
+        audio: Howl;
+    };
+    ShotgunPump: {
+        audio: Howl;
+    };
+    BarrettFire: {
+        audio: Howl;
+    };
+    RifleFire: {
+        audio: Howl;
+    };
+    AK47Fire: {
+        audio: Howl;
+    };
+    BowFire: {
+        audio: Howl;
+    };
+    CarbineFire: {
+        audio: Howl;
+    };
+    ShockrifleFire: {
+        audio: Howl;
+    };
+    ShockrifleRemove: {
+        audio: Howl;
+    };
+    RLRocketFire: {
+        audio: Howl;
+    };
+    DeagleFire: {
+        audio: Howl;
+    };
+    UziFire: {
+        audio: Howl;
+    };
+    M60Fire: {
+        audio: Howl;
+    };
+    FlamethrowerFire: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    Boomerang: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    BoomerangImpact: {
+        audio: Howl;
+    };
+    BoomerangSlice: {
+        audio: Howl;
+    };
+    EnergyJetFeet: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    ArrowImpact: {
+        audio: Howl;
+    }[];
+    RLImpact: {
+        audio: Howl;
+    }[];
+    X75Fire: {
+        audio: Howl;
+    };
+    X75Impact: {
+        audio: Howl;
+    }[];
+    Walk: {
+        audio: Howl;
+    };
+    Flip: {
+        audio: Howl;
+    };
+    Tap: {
+        audio: Howl;
+        delta: number;
+    };
+    ChainsawNeutral: {
+        audio: Howl;
+    };
+    ChainsawEngaged: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    MinigunEngaged: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+        immediate: boolean;
+    };
+    Fly: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    ExplosionCluster: {
+        audio: Howl;
+    }[];
+    ExplosionNade: {
+        audio: Howl;
+    }[];
+    ExplosionNadeLauncher: {
+        audio: Howl;
+    }[];
+    ShurikenDrop: {
+        audio: Howl;
+        delta: number;
+        single: boolean;
+    };
+    LawLaunch: {
+        audio: Howl;
+    };
+    NadeLauncher: {
+        audio: Howl;
+    };
+    Reload: {
+        audio: Howl;
+    };
+    AmmoPickup: {
+        audio: Howl;
+    }[];
+    RicochetTiny: {
+        audio: Howl;
+    };
+    Thud: {
+        audio: Howl;
+        delta: number;
+    }[];
+    LightThud: {
+        audio: Howl;
+        delta: number;
+    };
+    HeavyThud: {
+        audio: Howl;
+        delta: number;
+    };
+    LaserGunShot1: {
+        audio: Howl;
+    };
+    LaserGunImpact: {
+        audio: Howl;
+    }[];
+    LaserImpact1: {
+        audio: Howl;
+    };
+    PulseGunShot: {
+        audio: Howl;
+    };
+    BotZap: {
+        audio: Howl;
+    };
+    BotDeath: {
+        audio: Howl;
+    };
+    LinkGunEngaged: {
+        audio: Howl;
+        single: boolean;
+        sub_start: number;
+        sub_end: number;
+    };
+    PulseGunImpact: {
+        audio: Howl;
+    };
+    Rico: {
+        audio: Howl;
+    }[];
+    BodyImpact: {
+        audio: Howl;
+    }[];
+    HeavyBodyImpact: {
+        audio: Howl;
+        delta: number;
+        contactVolumeScale: number;
+        contactMaximumVolume: number;
+    }[];
+    Throw: {
+        audio: Howl;
+    }[];
+    WaterSplash: {
+        audio: Howl;
+    }[];
+    SnowballImpact: {
+        audio: Howl;
+    }[];
+    GoldPickup: {
+        audio: Howl;
+    }[];
+    GoldDrop: {
+        audio: Howl;
+    };
+    Objective: {
+        audio: Howl;
+    };
+    GrabObjective: {
+        audio: Howl;
+    };
+    Powerup: {
+        audio: Howl;
+    };
+    Teleport: {
+        audio: Howl;
+    };
+    Spawn: {
+        audio: Howl;
+    };
+    Jump: {
+        audio: Howl;
+    };
+    ItemSpawn: {
+        audio: Howl;
+    };
+    BallBounce: {
+        audio: Howl;
+    };
+};
 declare function InitializeAudioEffects(a?: boolean): void;
 declare class App extends PIXI.Container {
     credential: Credential;
@@ -6567,7 +6845,9 @@ declare class Ghost {
         onDamage: any[];
     };
     audio: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     constructor(a: any);
 }
@@ -6585,7 +6865,9 @@ declare namespace Ghost {
         d: number;
     }[];
     var _k: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _k as Audio };
 }
@@ -7146,8 +7428,13 @@ declare class Player extends Agent {
     clanId: any;
     clanName: any;
     audio: {
-        onContact: any[];
-        onAdded: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[][];
+        onAdded: {
+            audio: Howl;
+        }[];
     };
     input: InputState;
     gearContainer: PIXI.Container<PIXI.ContainerChild>;
@@ -7400,8 +7687,13 @@ declare class Player extends Agent {
 }
 declare namespace Player {
     var _m: {
-        onContact: any[];
-        onAdded: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[][];
+        onAdded: {
+            audio: Howl;
+        }[];
     };
     export { _m as Audio };
     export var Input: InputState;
@@ -11695,16 +11987,24 @@ declare namespace GameAttribute {
 declare function Gold(a: any): void;
 declare namespace Gold {
     var _t: {
-        onAdded: any[];
-        onRemove: any[];
-        onContact: any[];
+        onAdded: {
+            audio: Howl;
+        }[][];
+        onRemove: {
+            audio: Howl;
+        }[][];
+        onContact: {
+            audio: Howl;
+        }[];
     };
     export { _t as Audio };
 }
 declare function Bouncyball(a: any): void;
 declare namespace Bouncyball {
     var _u: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[];
     };
     export { _u as Audio };
 }
@@ -11767,176 +12067,264 @@ declare namespace Flag {
 declare function AK47Ammo(a: any): void;
 declare namespace AK47Ammo {
     var _w: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _w as Audio };
 }
 declare function BarrettAmmo(a: any): void;
 declare namespace BarrettAmmo {
     var _x: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _x as Audio };
 }
 declare function ChainsawAmmo(a: any): void;
 declare namespace ChainsawAmmo {
     var _y: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _y as Audio };
 }
 declare function ClusterNadeBox(a: any): void;
 declare namespace ClusterNadeBox {
     var _z: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _z as Audio };
 }
 declare function DesertEagleAmmo(a: any): void;
 declare namespace DesertEagleAmmo {
     var _0: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _0 as Audio };
 }
 declare function FlameThrowerAmmo(a: any): void;
 declare namespace FlameThrowerAmmo {
     var _6: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _6 as Audio };
 }
 declare function HealthBox(a: any): void;
 declare namespace HealthBox {
     var _7: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _7 as Audio };
 }
 declare function LaserGunAmmo(a: any): void;
 declare namespace LaserGunAmmo {
     var _8: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _8 as Audio };
 }
 declare function LinkGunAmmo(a: any): void;
 declare namespace LinkGunAmmo {
     var _9: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _9 as Audio };
 }
 declare function MAC10Ammo(a: any): void;
 declare namespace MAC10Ammo {
     var _10: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _10 as Audio };
 }
 declare function MinigunAmmo(a: any): void;
 declare namespace MinigunAmmo {
     var _11: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _11 as Audio };
 }
 declare function NadeBox(a: any): void;
 declare namespace NadeBox {
     var _12: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _12 as Audio };
 }
 declare function NadeLauncherAmmo(a: any): void;
 declare namespace NadeLauncherAmmo {
     var _13: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _13 as Audio };
 }
 declare function PulseGunAmmo(a: any): void;
 declare namespace PulseGunAmmo {
     var _14: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _14 as Audio };
 }
 declare function RifleAmmo(a: any): void;
 declare namespace RifleAmmo {
     var _15: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _15 as Audio };
 }
 declare function RPGAmmo(a: any): void;
 declare namespace RPGAmmo {
     var _16: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _16 as Audio };
 }
 declare function ShockRifleAmmo(a: any): void;
 declare namespace ShockRifleAmmo {
     var _17: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _17 as Audio };
 }
 declare function ShotgunAmmo(a: any): void;
 declare namespace ShotgunAmmo {
     var _18: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _18 as Audio };
 }
 declare function ShurikenBox(a: any): void;
 declare namespace ShurikenBox {
     var _19: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _19 as Audio };
 }
 declare function SMGAmmo(a: any): void;
 declare namespace SMGAmmo {
     var _20: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _20 as Audio };
 }
 declare function SnowballBox(a: any): void;
 declare namespace SnowballBox {
     var _21: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _21 as Audio };
 }
 declare function X75Ammo(a: any): void;
 declare namespace X75Ammo {
     var _22: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _22 as Audio };
 }
@@ -11953,7 +12341,10 @@ declare namespace AK47 {
         d: number;
     }[];
     var _23: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _23 as Audio };
 }
@@ -11970,7 +12361,10 @@ declare namespace Barrett {
         d: number;
     }[];
     var _24: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _24 as Audio };
 }
@@ -11989,7 +12383,10 @@ declare namespace BoomerangGun {
         d: number;
     }[];
     var _25: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _25 as Audio };
 }
@@ -12008,7 +12405,10 @@ declare namespace Bow {
         d: number;
     }[];
     var _26: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _26 as Audio };
 }
@@ -12025,7 +12425,10 @@ declare namespace Carbine {
         d: number;
     }[];
     var _27: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _27 as Audio };
 }
@@ -12042,7 +12445,10 @@ declare namespace Chainsaw {
         d: number;
     }[];
     var _28: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _28 as Audio };
 }
@@ -12060,7 +12466,10 @@ declare namespace DesertEagle {
         d: number;
     }[];
     var _29: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _29 as Audio };
 }
@@ -12077,7 +12486,10 @@ declare namespace FlameThrower {
         d: number;
     }[];
     var _30: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _30 as Audio };
 }
@@ -12094,7 +12506,10 @@ declare namespace LaserGun {
         d: number;
     }[];
     var _31: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
         checkAltContact: boolean;
     };
     export { _31 as Audio };
@@ -12112,7 +12527,10 @@ declare namespace LinkGun {
         d: number;
     }[];
     var _32: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _32 as Audio };
 }
@@ -12129,7 +12547,10 @@ declare namespace M60 {
         d: number;
     }[];
     var _33: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _33 as Audio };
 }
@@ -12146,7 +12567,10 @@ declare namespace MAC10 {
         d: number;
     }[];
     var _34: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _34 as Audio };
 }
@@ -12163,7 +12587,10 @@ declare namespace Minigun {
         d: number;
     }[];
     var _35: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _35 as Audio };
 }
@@ -12180,7 +12607,10 @@ declare namespace NadeLauncher {
         d: number;
     }[];
     var _36: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _36 as Audio };
 }
@@ -12197,7 +12627,10 @@ declare namespace PulseGun {
         d: number;
     }[];
     var _37: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _37 as Audio };
 }
@@ -12214,7 +12647,10 @@ declare namespace Rifle {
         d: number;
     }[];
     var _38: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _38 as Audio };
 }
@@ -12231,7 +12667,10 @@ declare namespace RocketLauncher {
         d: number;
     }[];
     var _39: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _39 as Audio };
 }
@@ -12248,7 +12687,10 @@ declare namespace RPG {
         d: number;
     }[];
     var _40: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _40 as Audio };
 }
@@ -12265,7 +12707,10 @@ declare namespace ShockRifle {
         d: number;
     }[];
     var _41: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _41 as Audio };
 }
@@ -12282,7 +12727,10 @@ declare namespace Shotgun {
         d: number;
     }[];
     var _42: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _42 as Audio };
 }
@@ -12299,7 +12747,10 @@ declare namespace SubmachineGun {
         d: number;
     }[];
     var _43: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _43 as Audio };
 }
@@ -12316,7 +12767,10 @@ declare namespace Uzi {
         d: number;
     }[];
     var _44: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _44 as Audio };
 }
@@ -12333,7 +12787,10 @@ declare namespace X75 {
         d: number;
     }[];
     var _45: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
     };
     export { _45 as Audio };
 }
@@ -12349,7 +12806,9 @@ declare namespace Prefab {
 declare function AK47Bullet(a: any): void;
 declare namespace AK47Bullet {
     var _46: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _46 as Audio };
@@ -12357,7 +12816,9 @@ declare namespace AK47Bullet {
 declare function Arrow(a: any): void;
 declare namespace Arrow {
     var _47: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _47 as Audio };
@@ -12365,8 +12826,12 @@ declare namespace Arrow {
 declare function BarrettBullet(a: any): void;
 declare namespace BarrettBullet {
     var _48: {
-        onContact: any[];
-        onAgentContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
+        onAgentContact: {
+            audio: Howl;
+        }[];
         checkAltContact: boolean;
     };
     export { _48 as Audio };
@@ -12375,15 +12840,21 @@ declare function Boomerang(a: any): void;
 declare namespace Boomerang {
     export var Update: (a: any, b?: any) => void;
     var _49: {
-        onContact: any[];
-        onAgentContact: any[];
+        onContact: {
+            audio: Howl;
+        }[];
+        onAgentContact: {
+            audio: Howl;
+        }[];
     };
     export { _49 as Audio };
 }
 declare function CarbineBullet(a: any): void;
 declare namespace CarbineBullet {
     var _50: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _50 as Audio };
@@ -12391,7 +12862,9 @@ declare namespace CarbineBullet {
 declare function DesertEagleBullet(a: any): void;
 declare namespace DesertEagleBullet {
     var _51: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _51 as Audio };
@@ -12410,15 +12883,21 @@ declare namespace FlameThrowerLiquid {
 declare function GhostLaser(a: any): void;
 declare namespace GhostLaser {
     var _52: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _52 as Audio };
 }
 declare function LaserGunBullet(a: any): void;
 declare namespace LaserGunBullet {
     var _53: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _53 as Audio };
@@ -12426,14 +12905,18 @@ declare namespace LaserGunBullet {
 declare function LauncherNade(a: any): void;
 declare namespace LauncherNade {
     var _54: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _54 as Audio };
 }
 declare function M60Bullet(a: any): void;
 declare namespace M60Bullet {
     var _55: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _55 as Audio };
@@ -12441,7 +12924,9 @@ declare namespace M60Bullet {
 declare function MAC10Bullet(a: any): void;
 declare namespace MAC10Bullet {
     var _56: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _56 as Audio };
@@ -12449,7 +12934,9 @@ declare namespace MAC10Bullet {
 declare function MinigunBullet(a: any): void;
 declare namespace MinigunBullet {
     var _57: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _57 as Audio };
@@ -12458,7 +12945,9 @@ declare function PulseGunBullet(a: any): void;
 declare namespace PulseGunBullet {
     export var Update: (a: any, b?: any) => void;
     var _58: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[];
         checkAltContact: boolean;
     };
     export { _58 as Audio };
@@ -12466,7 +12955,9 @@ declare namespace PulseGunBullet {
 declare function RifleBullet(a: any): void;
 declare namespace RifleBullet {
     var _59: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _59 as Audio };
@@ -12475,7 +12966,9 @@ declare function RLRocket(a: any): void;
 declare namespace RLRocket {
     export var Update: (a: any, b?: any) => void;
     var _60: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _60 as Audio };
@@ -12484,7 +12977,9 @@ declare function RPGRocket(a: any): void;
 declare namespace RPGRocket {
     export var Update: (a: any, b?: any) => void;
     var _61: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _61 as Audio };
@@ -12493,7 +12988,9 @@ declare function ShockRifleBullet(a: any): void;
 declare namespace ShockRifleBullet {
     export var Update: (a: any, b?: any) => void;
     var _62: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[];
     };
     export { _62 as Audio };
 }
@@ -12503,7 +13000,9 @@ declare namespace ShotgunPellet {
         damage: number;
     };
     var _63: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _63 as Audio };
@@ -12511,7 +13010,9 @@ declare namespace ShotgunPellet {
 declare function SubmachineGunBullet(a: any): void;
 declare namespace SubmachineGunBullet {
     var _64: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _64 as Audio };
@@ -12519,7 +13020,9 @@ declare namespace SubmachineGunBullet {
 declare function UziBullet(a: any): void;
 declare namespace UziBullet {
     var _65: {
-        onContact: any[];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _65 as Audio };
@@ -12533,31 +13036,46 @@ declare namespace X75Nade {
         mod: string;
     };
     var _66: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _66 as Audio };
 }
 declare function ClusterNade(a: any): void;
 declare namespace ClusterNade {
     var _67: {
-        onAdded: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[][];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _67 as Audio };
 }
 declare function ClusterNadeFragment(a: any): void;
 declare namespace ClusterNadeFragment {
     var _68: {
-        onRemove: any[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _68 as Audio };
 }
 declare function Nade(a: any): void;
 declare namespace Nade {
     var _69: {
-        onAdded: any[];
-        onContact: any[];
-        onRemove: any[];
+        onAdded: {
+            audio: Howl;
+        }[][];
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
+        onRemove: {
+            audio: Howl;
+        }[][];
     };
     export { _69 as Audio };
 }
@@ -12575,8 +13093,14 @@ declare namespace ShurikenBlade {
         re: number;
     }[];
     var _70: {
-        onAdded: any[];
-        onContact: any[];
+        onAdded: {
+            audio: Howl;
+        }[][];
+        onContact: {
+            audio: Howl;
+            delta: number;
+            single: boolean;
+        }[];
         checkAltContact: boolean;
     };
     export { _70 as Audio };
@@ -12584,8 +13108,12 @@ declare namespace ShurikenBlade {
 declare function SnowballProjectile(a: any): void;
 declare namespace SnowballProjectile {
     var _71: {
-        onAdded: any[];
-        onContact: any[];
+        onAdded: {
+            audio: Howl;
+        }[][];
+        onContact: {
+            audio: Howl;
+        }[][];
         checkAltContact: boolean;
     };
     export { _71 as Audio };

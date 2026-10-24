@@ -49,6 +49,16 @@ TypeScript executed by bun directly — no build step for the generator itself.
      `Object.assign(new EventDispatcher(), ...)` (`DISPATCHER_MIXIN_NAMES`);
      rewrites mixin constructor functions (`CLASSIFY_AS_CLASS`, currently
      `EventDispatcher`) to `class X { constructor() {...} }`.
+   - `foldInitializerLiterals`: for globals in `LITERAL_INIT_FOLD_NAMES`
+     (currently `AudioEffects`) whose runtime members are seeded by an object
+     literal assigned inside an initializer function and merged via
+     `for (... of Object.entries(<ident>))` (as of the Oct 2026 bundle,
+     `InitializeAudioEffects`), splices the seed literal's verbatim source
+     text into the top-level initializer (`Object.assign(<init>, <seed>)`) so
+     tsc can infer the full member type (`audio: Howl`, `delta`,
+     `single`, ...). Type-level only — the chunk is never executed. If the
+     bundle reverts to top-level member assignments the fingerprint no longer
+     matches and the fold no-ops with a log.
    - `classifyMixinClasses`: classes seeding `EventDispatcher.call(this)` get
      `extends EventDispatcher`.
    - `optionalizeParams`: trailing `= null` params + JSDoc headers so legacy
@@ -121,7 +131,9 @@ TypeScript executed by bun directly — no build step for the generator itself.
 
 ## Extension points
 
-- New global needing member folding → `MEMBER_FOLD_NAMES`; new
+- New global with its member seed literal inside an initializer function →
+  `LITERAL_INIT_FOLD_NAMES`; new global needing member folding (top-level
+  assignments) → `MEMBER_FOLD_NAMES`; new
   EventDispatcher mixin → `DISPATCHER_MIXIN_NAMES` or `CLASSIFY_AS_CLASS`;
   new vendor bundle → `VENDOR_MARKERS` (+ `VERSION_DETECTORS` if typed).
 - New runtime shape the bundle never declares (JSON payload or dynamically

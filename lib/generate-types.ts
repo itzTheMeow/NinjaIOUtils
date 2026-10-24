@@ -700,6 +700,145 @@ function classifyMixinClasses(gameChunk: string): {
 }
 
 /* ------------------------------------------------------------------ */
+/* 2b2. initializer-literal folding                                    */
+/* ------------------------------------------------------------------ */
+
+/** Globals whose runtime members are seeded by a big object literal inside an
+ *  initializer function (assigned to a parameter/local, then merged into the
+ *  global via a `for (... of Object.entries(<ident>))` loop) instead of
+ *  through top-level member assignments. tsc only lifts top-level member
+ *  assignments, so the emit loses every member (`declare const X: {}`).
+ *  Folding splices the seed literal's verbatim source text into the global's
+ *  initializer as `Object.assign(<init>, <seed literal>)` - type-level only:
+ *  the chunk is compiled for the declaration emit, never executed. If the
+ *  bundle reverts to top-level member assignments, the fingerprint no longer
+ *  matches (tsc infers natively again) and the fold no-ops with a log. */
+const LITERAL_INIT_FOLD_NAMES = ["AudioEffects"];
+
+function foldInitializerLiterals(
+  gameChunk: string,
+): { result: string; pass: Pass } {
+  if (LITERAL_INIT_FOLD_NAMES.length === 0)
+    return applySpans(gameChunk, []);
+  const program = acorn.parse(gameChunk, {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  } as any);
+  const foldNames = new Set(LITERAL_INIT_FOLD_NAMES);
+
+  // top-level initializers for the fold targets
+  const inits = new Map<string, Node>();
+  for (const statement of program.body) {
+    if (statement?.type !== "VariableDeclaration") continue;
+    for (const declaration of statement.declarations) {
+      if (declaration.id?.type !== "Identifier") continue;
+      if (foldNames.has(declaration.id.name))
+        inits.set(declaration.id.name, declaration);
+    }
+  }
+
+  /* Fingerprint of a fold target, evaluated per top-level statement (the
+   * initializer is one FunctionDeclaration):
+   * - seed:    `<ident> = { ...entries... }` assignment
+   * - iterate: `Object.entries(<same ident>)` call
+   * - merge:   `AudioEffects[<computed key>] = ...` assignment */
+  interface FoldCandidate {
+    name: string;
+    literal: Node;
+    start: number;
+    end: number;
+  }
+  const candidates: FoldCandidate[] = [];
+  const merged = new Set<string>();
+  const walkStatement = (node: Node, candidatesInStatement: FoldCandidate[]): void => {
+    if (!node || typeof node !== "object") return;
+    if (
+      node.type === "AssignmentExpression" &&
+      node.operator === "=" &&
+      node.left?.type === "Identifier" &&
+      node.right?.type === "ObjectExpression" &&
+      node.right.properties.length > 0
+    )
+      candidatesInStatement.push({
+        name: node.left.name,
+        literal: node.right,
+        start: node.right.start,
+        end: node.right.end,
+      });
+    else if (
+      node.type === "AssignmentExpression" &&
+      node.operator === "=" &&
+      node.left?.type === "MemberExpression" &&
+      node.left.computed &&
+      node.left.object?.type === "Identifier" &&
+      foldNames.has(node.left.object.name)
+    )
+      merged.add(node.left.object.name);
+    else if (
+      node.type === "CallExpression" &&
+      node.callee?.type === "MemberExpression" &&
+      !node.callee.computed &&
+      node.callee.object?.name === "Object" &&
+      node.callee.property?.name === "entries" &&
+      node.arguments?.[0]?.type === "Identifier"
+    )
+      // entries are consumed from this identifier
+      candidatesInStatement.push({ name: node.arguments[0].name, literal: null, start: -1, end: -1 });
+    for (const key of Object.keys(node)) {
+      const value = node[key];
+      if (Array.isArray(value)) value.forEach((child: Node) => walkStatement(child, candidatesInStatement));
+      else if (value && typeof value === "object" && value.type) walkStatement(value, candidatesInStatement);
+    }
+  };
+  for (const statement of program.body) {
+    const statementCandidates: FoldCandidate[] = [];
+    walkStatement(statement, statementCandidates);
+    if (!statementCandidates.length || statementCandidates.every((c) => c.literal === null)) continue;
+    // a seed literal whose ident is also consumed by Object.entries in the
+    // same statement marks the initializer pattern for ONE merge target -
+    // match it against the fold names actually merged here
+    const consumed = new Set(
+      statementCandidates.filter((c) => c.literal === null).map((c) => c.name),
+    );
+    for (const candidate of statementCandidates) {
+      if (candidate.literal === null || !consumed.has(candidate.name)) continue;
+      for (const name of merged) {
+        if (!foldNames.has(name) || !inits.has(name)) continue;
+        const declaration = inits.get(name)!;
+        if (!declaration.init) continue;
+        candidates.push({
+          name,
+          literal: candidate.literal,
+          start: declaration.init.start,
+          end: declaration.init.end,
+        });
+      }
+    }
+  }
+
+  const spans: Span[] = [];
+  const folded = new Set<string>();
+  for (const candidate of candidates) {
+    if (folded.has(candidate.name)) continue;
+    folded.add(candidate.name);
+    spans.push({
+      start: candidate.start,
+      end: candidate.end,
+      replacement: `Object.assign(${gameChunk.slice(candidate.start, candidate.end)}, ${gameChunk.slice(candidate.literal.start, candidate.literal.end)})`,
+    });
+    console.log(
+      `fold: folded ${candidate.literal.properties.length}-entry seed literal into ${candidate.name} initializer`,
+    );
+  }
+  for (const name of LITERAL_INIT_FOLD_NAMES)
+    if (!folded.has(name))
+      console.warn(
+        `fold: no seed-literal fingerprint found for ${name}, members stay untyped (bundle shape may have changed)`,
+      );
+  return applySpans(gameChunk, spans);
+}
+
+/* ------------------------------------------------------------------ */
 /* 2c. static member collection                                        */
 /* ------------------------------------------------------------------ */
 
@@ -1548,6 +1687,10 @@ async function main(): Promise<void> {
   );
   gameChunk = rewritten.result;
   chunkPasses.push(rewritten.pass);
+  // seed literals assigned inside initializer functions (audio effects etc.)
+  const folded = foldInitializerLiterals(gameChunk);
+  gameChunk = folded.result;
+  chunkPasses.push(folded.pass);
   const classified = classifyMixinClasses(gameChunk);
   gameChunk = classified.result;
   chunkPasses.push(classified.pass);
