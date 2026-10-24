@@ -55,10 +55,8 @@ export interface NinjaHook {
 export default new (class Ninja {
   public settings = new Settings<{
     enabledMods: string[];
-    uiScale: number;
   }>(config.settingsKey, {
     enabledMods: [],
-    uiScale: 0,
   });
   public events: EventDispatcher;
 
@@ -141,16 +139,6 @@ export default new (class Ninja {
         ninja.serverLatency = args[0];
       },
     });
-
-    app.onResize = window.eval(
-      `(function ${app.onResize
-        .toString()
-        .replace(
-          `App.Scale=b`,
-          `b=Ninja.settings.get("uiScale")||b,App.Scale=b`,
-        )})`,
-    );
-    app.onResize();
 
     Client.prototype.onMessage = function (_a) {
       const a: any = Client.decompress(_a.data);

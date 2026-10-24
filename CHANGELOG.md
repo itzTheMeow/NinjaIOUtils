@@ -1,5 +1,25 @@
 # Changelog
 
+v0.4b
+
+- Various performance improvements.
+- Added back "UI Scale" setting as its own mod.
+
+v0.3b
+
+- Revamped texture packs.
+- You can now upload multiple zip files, reorder packs, and install multiple packs at once.
+
+v0.2b
+
+- Implemented texture packs (only GitHub for now).
+
+v0.1b
+
+- Updated to work with latest FragLine.com game.
+- Mods button has been moved to the bottom footer.
+- Texture packs (unimplemented) are in the "CONTENT" menu now.
+
 v3.11
 
 - Apply script to new ninjabattle.io domain.
