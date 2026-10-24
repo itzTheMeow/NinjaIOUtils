@@ -58,9 +58,23 @@ export default new (class Ninja {
   }>(config.settingsKey, {
     enabledMods: [],
   });
-  public events: EventDispatcher;
 
   constructor() {}
+
+  public events: EventDispatcher;
+  private dispatchCache: { [key: string]: CustomEvent } = {};
+  /**
+   * Dispatches a NinjaEvent using a shared CustomEvent cache.
+   * This is to avoid re-allocating hundreds of CustomEvent objects per frame.
+   */
+  protected dispatch(type: NinjaEvents, detail?: any) {
+    if (!this.events) return;
+    if (this.dispatchCache[type] === void 0)
+      this.dispatchCache[type] = new CustomEvent(type);
+    if (detail !== void 0) (<any>this.dispatchCache[type]).detail = detail;
+    this.events.dispatchEvent(this.dispatchCache[type]);
+  }
+
   public init() {
     const ninja = this;
     this.ready = true;
@@ -71,66 +85,57 @@ export default new (class Ninja {
     this.hookMethod(app, "initGameMode", {
       priority: 10,
       callback() {
-        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAMEPLAY_START));
+        ninja.dispatch(NinjaEvents.GAMEPLAY_START);
         app.game.on(Game.MATCH_START, () =>
-          ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_START)),
+          ninja.dispatch(NinjaEvents.GAME_START),
         );
       },
     });
     ninja.hookMethod(Game.prototype, "playerJoined", {
       priority: 10,
       callback({ args }) {
-        ninja.events.dispatchEvent(
-          new CustomEvent(NinjaEvents.PLAYER_JOINED, { detail: args[0] }),
-        );
+        ninja.dispatch(NinjaEvents.PLAYER_JOINED, args[0]);
         if (args[0]?.sid == app.game.sessionId)
-          ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.GAME_JOIN));
+          ninja.dispatch(NinjaEvents.GAME_JOIN);
       },
     });
     ninja.hookMethod(Game.prototype, "endGame", {
       priority: -10,
       callback({ args }) {
-        ninja.events.dispatchEvent(
-          new CustomEvent(NinjaEvents.GAME_END, args[0]),
-        );
+        ninja.dispatch(NinjaEvents.GAME_END, args[0]);
       },
     });
 
     this.hookMethod(PlayerDropdown.prototype, "onMute", {
       priority: 10,
       callback() {
-        ninja.events.dispatchEvent(
-          new CustomEvent(NinjaEvents.PLAYER_MUTED, {
-            detail: { sid: this.target.sid, name: this.target.name },
-          }),
-        );
+        ninja.dispatch(NinjaEvents.PLAYER_MUTED, {
+          sid: this.target.sid,
+          name: this.target.name,
+        });
       },
     });
 
     this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
       priority: 10,
       callback() {
-        ninja.events.dispatchEvent(
-          new CustomEvent(NinjaEvents.PLAYER_UNMUTED, {
-            detail: { name: this.target.name },
-          }),
-        );
+        ninja.dispatch(NinjaEvents.PLAYER_UNMUTED, {
+          name: this.target.name,
+        });
       },
     });
 
     this.hookMethod(App.prototype, "leaveGame", {
       priority: 10,
       callback() {
-        ninja.events.dispatchEvent(
-          new CustomEvent(NinjaEvents.GAMEPLAY_STOPPED),
-        );
+        ninja.dispatch(NinjaEvents.GAMEPLAY_STOPPED);
       },
     });
 
     this.hookMethod(app, "stepCallback", {
       priority: -10,
       callback() {
-        ninja.events.dispatchEvent(new CustomEvent(NinjaEvents.STEP));
+        ninja.dispatch(NinjaEvents.STEP);
       },
     });
     this.hookMethod(App.Stats, "setPing", {
@@ -245,14 +250,11 @@ export default new (class Ninja {
     return this.hooks.find((h) => h.hook === method);
   }
   private runHook(hook: NinjaHookState, scope: any, args: any[]): any {
-    const sortedCallbacks = hook.callbacks.sort(
-      (a, b) => a.priority - b.priority,
-    );
+    const callbacks = hook.callbacks;
     let returnValue: any = void 0;
     // run "lower" priority first
-    for (const { callback } of sortedCallbacks.filter(
-      (cb) => cb.priority < 0,
-    )) {
+    for (const { callback, priority } of callbacks) {
+      if (priority >= 0) continue;
       const res = callback.call(scope, { args, returnValue });
       if (typeof res == "object" && "returnValue" in res)
         returnValue = res.returnValue;
@@ -260,14 +262,19 @@ export default new (class Ninja {
     // run original function and catch the return value if needed
     const response = (<any>hook.original).call(scope, ...args);
     if (returnValue === void 0) returnValue = response;
-    for (const { callback } of sortedCallbacks.filter(
-      (cb) => cb.priority >= 0,
-    )) {
+    for (const { callback, priority } of callbacks) {
+      if (priority < 0) continue;
       const res = callback.call(scope, { args, returnValue });
       if (typeof res == "object" && "returnValue" in res)
         returnValue = res.returnValue;
     }
     return returnValue;
+  }
+  /** Inserts a hook callback into a list sorted by ascending priority. */
+  private insertHookCallback(callbacks: NinjaHook[], hook: NinjaHook) {
+    const i = callbacks.findIndex((cb) => cb.priority > hook.priority);
+    if (i == -1) callbacks.push(hook);
+    else callbacks.splice(i, 0, hook);
   }
   public hookMethod<T extends any>(
     scope: T,
@@ -284,7 +291,7 @@ export default new (class Ninja {
       return void 0;
     }
     const ref = this.findHookReference(method);
-    if (ref) ref.callbacks.push(hook);
+    if (ref) this.insertHookCallback(ref.callbacks, hook);
     else {
       const ninja = this;
       const state: NinjaHookState = {
