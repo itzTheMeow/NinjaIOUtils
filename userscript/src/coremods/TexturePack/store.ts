@@ -1,10 +1,11 @@
 import localForage from "localforage";
 import type { TexturePackMod } from ".";
 import {
-  textureAtlasFetchJSON,
+  TextureAtlasJSON,
   TextureAtlasType,
   TexturePackManifestEntry,
 } from "./utils";
+import { App } from "lib";
 import { fetchBlob, sha256 } from "../../utils";
 import { compact, defer, Mutex, uniqBy } from "es-toolkit";
 import Ninja from "../../api/Ninja";
@@ -177,11 +178,33 @@ export class TexturePackModStore {
     this.reconcileAtlases();
   }
 
+  private _atlasInfo = new Map<
+    TextureAtlasType,
+    { json: TextureAtlasJSON; pngURL: string }
+  >();
+  /** Gets the texture atlas JSON and image URL (cached) */
+  public async getAtlasInfo(type: TextureAtlasType) {
+    const cached = this._atlasInfo.get(type);
+    if (cached) return cached;
+    const folder = String(App.RESOURCE_FOLDER || "./assets").replace(
+      /^\.?\//,
+      "",
+    );
+    const entry = App.RESOURCES[type][0];
+    const base = `${location.origin}/${folder}/${entry.id}`;
+    const json = (await (
+      await fetch(`${base}/${entry.file}`)
+    ).json()) as TextureAtlasJSON;
+    const info = { json, pngURL: `${base}/${json.meta.image}` };
+    this._atlasInfo.set(type, info);
+    return info;
+  }
+
   private _atlases: { [key in TextureAtlasType]?: Blob } = {};
   /** Returns a unique hash key for the specific configuration that will generate a texture atlas. */
   public async atlasKey(type: TextureAtlasType) {
     // to be unique we have to combine the metadata JSON and the current installed pack hashes
-    const json = await textureAtlasFetchJSON(type),
+    const { json } = await this.getAtlasInfo(type),
       installed = await this.getInstalled(type);
 
     // hash the json and the hashes of the installed packs in order
@@ -251,7 +274,7 @@ export class TexturePackModStore {
               ),
             ),
           ),
-          { json, pngURL } = await textureAtlasFetchJSON(type),
+          { json, pngURL } = await this.getAtlasInfo(type),
           original = await fetchBlob(pngURL);
         console.debug(
           `extracted all information for atlas generation, size: ${zips.reduce((i, z) => i + z.size, 0)}`,

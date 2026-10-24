@@ -13,11 +13,7 @@ import Ninja from "../../api/Ninja";
 import { fetchBlob, paintListRow } from "../../utils";
 import { TexturePackModManifest } from "./manifest";
 import { TexturePackModWorker } from "./worker";
-import {
-  textureAtlasFetchJSON,
-  TextureAtlasType,
-  TexturePackManifestEntry,
-} from "./utils";
+import { TextureAtlasType, TexturePackManifestEntry } from "./utils";
 import { InstalledPack, TexturePackModStore } from "./store";
 import { attemptAsync, last } from "es-toolkit";
 
@@ -307,7 +303,7 @@ const createTexTab = (mod: TexturePackMod) =>
           // grab all the atlases and fetch their PNGs
           const atlases = await Promise.all(
             Object.values(TextureAtlasType).map(async (type) => {
-              const { json, pngURL } = await textureAtlasFetchJSON(type),
+              const { json, pngURL } = await mod.store.getAtlasInfo(type),
                 png = await fetchBlob(pngURL);
               return {
                 type,
