@@ -363,10 +363,29 @@ export class UIURLMod extends Mod {
 
     loadingMenu.title.y -= 36;
 
+    this.joinCleanup = () => removeJoinStuff();
+    this.hookLoadingMenuHide();
+
+    let joinStuffAdded = true;
     function removeJoinStuff() {
+      if (!joinStuffAdded) return;
+      joinStuffAdded = false;
       loadingMenu.title.y += 36;
       loadingMenu.container.removeChild(joinButton);
       loadingMenu.container.removeChild(cancelButton);
     }
+  }
+
+  /** Ran whenever the loading menu hides. */
+  private joinCleanup: (() => void) | null = null;
+  private loadingMenuHideHooked = false;
+  /** Cleanup our join button when the loading menu hides. */
+  private hookLoadingMenuHide() {
+    if (this.loadingMenuHideHooked) return;
+    this.loadingMenuHideHooked = true;
+    Ninja.hookMethod(App.Layer.loadingMenu, "hide", {
+      priority: -10,
+      callback: () => this.joinCleanup?.(),
+    });
   }
 }
