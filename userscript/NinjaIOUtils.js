@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      0.3b
+// @version      0.4b
 // ==/UserScript==
 
 /*
@@ -2266,7 +2266,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "0.3b",
+    ver: "0.4b",
     api: "https://utils.xela.codes",
     //api: "http://localhost:8907",
     packRepo: "itzTheMeow/NinjaIOUtils-packs",
@@ -2371,6 +2371,13 @@
       data instanceof Blob ? await data.arrayBuffer() : new TextEncoder().encode(data)
     );
     return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+  function safeDecode(part) {
+    try {
+      return decodeURIComponent(part);
+    } catch {
+      return part;
+    }
   }
   function paintListRow(gfx, w, h, index, hovered, edgeColor) {
     const even = index % 2 === 0;
@@ -2726,7 +2733,7 @@
             input.setMaxChars(data.maxLength || Infinity);
             input.setText(String(data.value));
             input.setFilter(
-              isNum ? "0123456789-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
+              isNum ? "0123456789.-" : "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890 <>?!@#$%^&*()-_+=[]{}:~|/.",
               false
             );
             input.addListener(InputField.CHANGE, function(d) {
@@ -2842,11 +2849,32 @@
     constructor(key = "niou_settings", defaults) {
       this.key = key;
       this.defaults = defaults;
+      window.addEventListener("storage", (e) => {
+        if (e.key == null || e.key == this.key) this.invalidateCache();
+      });
     }
     key;
     defaults;
+    storeCache = null;
+    /** Invalidate the in-memory kv cache. */
+    invalidateCache() {
+      this.storeCache = null;
+    }
+    parseStore() {
+      let store;
+      try {
+        store = JSON.parse(localStorage.getItem(this.key) || "{}");
+      } catch (err) {
+        console.error(
+          `Failed to parse settings stored at '${this.key}', resetting to defaults.`,
+          err
+        );
+        store = {};
+      }
+      return this.storeCache = store;
+    }
     getStore(fillDefaults = false) {
-      const store = JSON.parse(localStorage.getItem(this.key) || "{}");
+      const store = this.storeCache ?? this.parseStore();
       if (fillDefaults) return { ...this.defaults, ...store };
       else return store;
     }
@@ -2854,10 +2882,13 @@
       return this.getStore()[key] ?? this.defaults[key];
     }
     set(key, value) {
-      return localStorage.setItem(
-        this.key,
-        JSON.stringify({ ...this.getStore(), [key]: value })
-      );
+      const store = { ...this.getStore(), [key]: value };
+      try {
+        localStorage.setItem(this.key, JSON.stringify(store));
+      } catch (err) {
+        console.error(`Failed to persist settings at '${this.key}'.`, err);
+      }
+      this.storeCache = store;
     }
   };
 
@@ -2871,11 +2902,22 @@
   // src/api/Ninja.ts
   var Ninja_default = new class Ninja {
     settings = new Settings(config_default.settingsKey, {
-      enabledMods: [],
-      uiScale: 0
+      enabledMods: []
     });
-    events;
     constructor() {
+    }
+    events;
+    dispatchCache = {};
+    /**
+     * Dispatches a NinjaEvent using a shared CustomEvent cache.
+     * This is to avoid re-allocating hundreds of CustomEvent objects per frame.
+     */
+    dispatch(type, detail) {
+      if (!this.events) return;
+      if (this.dispatchCache[type] === void 0)
+        this.dispatchCache[type] = new CustomEvent(type);
+      if (detail !== void 0) this.dispatchCache[type].detail = detail;
+      this.events.dispatchEvent(this.dispatchCache[type]);
     }
     init() {
       const ninja = this;
@@ -2885,63 +2927,54 @@
       this.hookMethod(app, "initGameMode", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(new CustomEvent("gameplayStarted" /* GAMEPLAY_START */));
+          ninja.dispatch("gameplayStarted" /* GAMEPLAY_START */);
           app.game.on(
             Game.MATCH_START,
-            () => ninja.events.dispatchEvent(new CustomEvent("gs" /* GAME_START */))
+            () => ninja.dispatch("gs" /* GAME_START */)
           );
         }
       });
       ninja.hookMethod(Game.prototype, "playerJoined", {
         priority: 10,
         callback({ args }) {
-          ninja.events.dispatchEvent(
-            new CustomEvent("pj" /* PLAYER_JOINED */, { detail: args[0] })
-          );
+          ninja.dispatch("pj" /* PLAYER_JOINED */, args[0]);
           if (args[0]?.sid == app.game.sessionId)
-            ninja.events.dispatchEvent(new CustomEvent("gj" /* GAME_JOIN */));
+            ninja.dispatch("gj" /* GAME_JOIN */);
         }
       });
       ninja.hookMethod(Game.prototype, "endGame", {
         priority: -10,
         callback({ args }) {
-          ninja.events.dispatchEvent(
-            new CustomEvent("ge" /* GAME_END */, args[0])
-          );
+          ninja.dispatch("ge" /* GAME_END */, args[0]);
         }
       });
       this.hookMethod(PlayerDropdown.prototype, "onMute", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(
-            new CustomEvent("pm" /* PLAYER_MUTED */, {
-              detail: { sid: this.target.sid, name: this.target.name }
-            })
-          );
+          ninja.dispatch("pm" /* PLAYER_MUTED */, {
+            sid: this.target.sid,
+            name: this.target.name
+          });
         }
       });
       this.hookMethod(PlayerDropdown.prototype, "onUnmute", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(
-            new CustomEvent("pum" /* PLAYER_UNMUTED */, {
-              detail: { name: this.target.name }
-            })
-          );
+          ninja.dispatch("pum" /* PLAYER_UNMUTED */, {
+            name: this.target.name
+          });
         }
       });
       this.hookMethod(App.prototype, "leaveGame", {
         priority: 10,
         callback() {
-          ninja.events.dispatchEvent(
-            new CustomEvent("gameplayStopped" /* GAMEPLAY_STOPPED */)
-          );
+          ninja.dispatch("gameplayStopped" /* GAMEPLAY_STOPPED */);
         }
       });
       this.hookMethod(app, "stepCallback", {
         priority: -10,
         callback() {
-          ninja.events.dispatchEvent(new CustomEvent("st" /* STEP */));
+          ninja.dispatch("st" /* STEP */);
         }
       });
       this.hookMethod(App.Stats, "setPing", {
@@ -2950,29 +2983,26 @@
           ninja.serverLatency = args[0];
         }
       });
-      app.onResize = window.eval(
-        `(function ${app.onResize.toString().replace(
-          `App.Scale=b`,
-          `b=Ninja.settings.get("uiScale")||b,App.Scale=b`
-        )})`
-      );
-      app.onResize();
       Client.prototype.onMessage = function(_a) {
         const a = Client.decompress(_a.data);
-        try {
-          ninja.clientPacketListeners.forEach((l) => l("game", a));
-        } catch (err) {
-          console.error(err);
-        }
+        ninja.clientPacketListeners.forEach((l) => {
+          try {
+            l("game", a);
+          } catch (err) {
+            console.error(err);
+          }
+        });
         this.dispatchEvent(a);
       };
       PVPClient.prototype.onMessage = function(_a) {
         const a = PVPClient.decompress(_a.data);
-        try {
-          ninja.clientPacketListeners.forEach((l) => l("pvp", a));
-        } catch (err) {
-          console.error(err);
-        }
+        ninja.clientPacketListeners.forEach((l) => {
+          try {
+            l("pvp", a);
+          } catch (err) {
+            console.error(err);
+          }
+        });
         this.dispatchEvent(a);
       };
       this.hookMethod(App.Layer.memberMenu, "onLogout", {
@@ -3038,27 +3068,29 @@
       return this.hooks.find((h) => h.hook === method);
     }
     runHook(hook, scope, args) {
-      const sortedCallbacks = hook.callbacks.sort(
-        (a, b) => a.priority - b.priority
-      );
+      const callbacks = hook.callbacks;
       let returnValue = void 0;
-      for (const { callback } of sortedCallbacks.filter(
-        (cb) => cb.priority < 0
-      )) {
+      for (const { callback, priority } of callbacks) {
+        if (priority >= 0) continue;
         const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
       const response = hook.original.call(scope, ...args);
       if (returnValue === void 0) returnValue = response;
-      for (const { callback } of sortedCallbacks.filter(
-        (cb) => cb.priority >= 0
-      )) {
+      for (const { callback, priority } of callbacks) {
+        if (priority < 0) continue;
         const res = callback.call(scope, { args, returnValue });
         if (typeof res == "object" && "returnValue" in res)
           returnValue = res.returnValue;
       }
       return returnValue;
+    }
+    /** Inserts a hook callback into a list sorted by ascending priority. */
+    insertHookCallback(callbacks, hook) {
+      const i = callbacks.findIndex((cb) => cb.priority > hook.priority);
+      if (i == -1) callbacks.push(hook);
+      else callbacks.splice(i, 0, hook);
     }
     hookMethod(scope, methodName, hook) {
       const method = scope[methodName];
@@ -3071,7 +3103,7 @@
         return void 0;
       }
       const ref = this.findHookReference(method);
-      if (ref) ref.callbacks.push(hook);
+      if (ref) this.insertHookCallback(ref.callbacks, hook);
       else {
         const ninja = this;
         const state = {
@@ -3197,6 +3229,8 @@
         if (typeof names[key] === "object") {
           this.configNames[key] = {
             name: names[key].name,
+            priority: names[key].priority,
+            maxLength: names[key].maxLength,
             removableElements: names[key].removableElements ?? false
           };
         } else {
@@ -13313,31 +13347,15 @@
   };
 
   // src/coremods/TexturePack/utils.ts
-  
   var TextureAtlasType = /* @__PURE__ */ ((TextureAtlasType2) => {
     TextureAtlasType2["Assets"] = "combined";
     TextureAtlasType2["Terrain"] = "seamless";
     return TextureAtlasType2;
   })(TextureAtlasType || {});
-  function textureAtlasJSON(type) {
-    const folder = String(App.RESOURCE_FOLDER || "./assets").replace(
-      /^\.?\//,
-      ""
-    );
-    const entry = App.RESOURCES[type][0];
-    const base = `${location.origin}/${folder}/${entry.id}`;
-    return { base, url: `${base}/${entry.file}` };
-  }
-  async function textureAtlasFetchJSON(type) {
-    const { base, url } = textureAtlasJSON(type), data = await (await fetch(url)).json();
-    return {
-      json: data,
-      pngURL: `${base}/${data.meta.image}`
-    };
-  }
 
   // src/coremods/TexturePack/store.ts
   var import_localforage = __toESM(require_localforage());
+  
 
   // node_modules/es-toolkit/dist/array/compact.mjs
   function compact(arr) {
@@ -13437,6 +13455,40 @@
       if (!map.has(key)) map.set(key, item);
     }
     return Array.from(map.values());
+  }
+
+  // node_modules/es-toolkit/dist/_internal/globalThis.mjs
+  var globalThis_ = typeof globalThis === "object" && globalThis || typeof window === "object" && window || typeof self === "object" && self || typeof global === "object" && global || /* @__PURE__ */ (function() {
+    return this;
+  })();
+
+  // node_modules/es-toolkit/dist/_internal/DOMException.mjs
+  var DOMException = typeof globalThis_.DOMException !== "undefined" ? globalThis_.DOMException : Error;
+
+  // node_modules/es-toolkit/dist/error/AbortError.mjs
+  var AbortError = class extends DOMException {
+    constructor(message = "The operation was aborted") {
+      super(message);
+    }
+  };
+
+  // node_modules/es-toolkit/dist/promise/delay.mjs
+  function delay(ms, { signal } = {}) {
+    return new Promise((resolve, reject) => {
+      const abortError = () => {
+        reject(new AbortError());
+      };
+      const abortHandler = () => {
+        clearTimeout(timeoutId);
+        abortError();
+      };
+      if (signal?.aborted) return abortError();
+      const timeoutId = setTimeout(() => {
+        signal?.removeEventListener("abort", abortHandler);
+        resolve();
+      }, ms);
+      signal?.addEventListener("abort", abortHandler, { once: true });
+    });
   }
 
   // node_modules/es-toolkit/dist/promise/mutex.mjs
@@ -13659,10 +13711,26 @@
         __callDispose(_stack, _error, _hasError);
       }
     }
+    _atlasInfo = /* @__PURE__ */ new Map();
+    /** Gets the texture atlas JSON and image URL (cached) */
+    async getAtlasInfo(type) {
+      const cached = this._atlasInfo.get(type);
+      if (cached) return cached;
+      const folder = String(App.RESOURCE_FOLDER || "./assets").replace(
+        /^\.?\//,
+        ""
+      );
+      const entry = App.RESOURCES[type][0];
+      const base = `${location.origin}/${folder}/${entry.id}`;
+      const json = await (await fetch(`${base}/${entry.file}`)).json();
+      const info = { json, pngURL: `${base}/${json.meta.image}` };
+      this._atlasInfo.set(type, info);
+      return info;
+    }
     _atlases = {};
     /** Returns a unique hash key for the specific configuration that will generate a texture atlas. */
     async atlasKey(type) {
-      const json = await textureAtlasFetchJSON(type), installed = await this.getInstalled(type);
+      const { json } = await this.getAtlasInfo(type), installed = await this.getInstalled(type);
       return await sha256(
         JSON.stringify({ json, hashes: installed.map((i) => i.hash) })
       );
@@ -13731,7 +13799,7 @@
                   (pack) => this.instance.getItem(`zip:${pack.hash}`)
                 )
               )
-            ), { json, pngURL } = await textureAtlasFetchJSON(type), original = await fetchBlob(pngURL);
+            ), { json, pngURL } = await this.getAtlasInfo(type), original = await fetchBlob(pngURL);
             console.debug(
               `extracted all information for atlas generation, size: ${zips.reduce((i, z) => i + z.size, 0)}`
             );
@@ -14009,7 +14077,7 @@
         try {
           const atlases = await Promise.all(
             Object.values(TextureAtlasType).map(async (type) => {
-              const { json, pngURL } = await textureAtlasFetchJSON(type), png = await fetchBlob(pngURL);
+              const { json, pngURL } = await mod.store.getAtlasInfo(type), png = await fetchBlob(pngURL);
               return {
                 type,
                 json,
@@ -14083,14 +14151,19 @@
     _manifest = [];
     _installed = [];
     installingManifestPacks = /* @__PURE__ */ new Set();
+    /** Render token used to drop stale renders. */
+    _renderToken = 0;
     async rerender() {
       if (this.destroyed) return;
+      const token = ++this._renderToken;
       try {
         const [_, manifest] = await attemptAsync(
           async () => (await mod.manifest.fetchManifest()).packs
         );
+        if (token !== this._renderToken || this.destroyed) return;
         this._manifest = [...manifest || []];
         this._installed = await mod.store.getInstalled();
+        if (token !== this._renderToken || this.destroyed) return;
         const packRows = (this.selectedTab == "installed" ? this._installed : this._manifest.sort(
           (a, b) => a.name.toLowerCase() > b.name.toLowerCase() ? 1 : -1
         )).slice(this.scrollIndex, this.scrollIndex + this.packsToDisplay);
@@ -14450,13 +14523,13 @@
         }
       }, 150);
       this.hook();
-      const [_id, _name, _pass] = window.location.hash.substring(1)?.split("&").map(decodeURIComponent) || [];
+      const [_id, _name, _pass] = window.location.hash.substring(1)?.split("&").map(safeDecode) || [];
       if (_id && Number(_id) && _name) this.tryJoin(_id, _name, _pass);
       else if (window.location.hash.startsWith(`#/${"play" /* game */}/`)) {
-        const [id, name, pass] = window.location.hash.substring(`#/${"play" /* game */}/`.length).split("/").map(decodeURIComponent);
+        const [id, name, pass] = window.location.hash.substring(`#/${"play" /* game */}/`.length).split("/").map(safeDecode);
         if (id && name) this.tryJoin(id, name, pass);
       } else if (window.location.hash.startsWith(`#/${"spectate" /* pvp */}/`)) {
-        const [id, name, pass] = window.location.hash.substring(`#/${"spectate" /* pvp */}/`.length).split("/").map(decodeURIComponent);
+        const [id, name, pass] = window.location.hash.substring(`#/${"spectate" /* pvp */}/`.length).split("/").map(safeDecode);
         if (id && name) this.tryJoin(id, name, pass, true);
       }
       super.load();
@@ -14541,11 +14614,28 @@ ${name}`
       cancelButton.setTint(config_default.Colors.red);
       loadingMenu.container.addChild(cancelButton);
       loadingMenu.title.y -= 36;
+      this.joinCleanup = () => removeJoinStuff();
+      this.hookLoadingMenuHide();
+      let joinStuffAdded = true;
       function removeJoinStuff() {
+        if (!joinStuffAdded) return;
+        joinStuffAdded = false;
         loadingMenu.title.y += 36;
         loadingMenu.container.removeChild(joinButton);
         loadingMenu.container.removeChild(cancelButton);
       }
+    }
+    /** Ran whenever the loading menu hides. */
+    joinCleanup = null;
+    loadingMenuHideHooked = false;
+    /** Cleanup our join button when the loading menu hides. */
+    hookLoadingMenuHide() {
+      if (this.loadingMenuHideHooked) return;
+      this.loadingMenuHideHooked = true;
+      Ninja_default.hookMethod(App.Layer.loadingMenu, "hide", {
+        priority: -10,
+        callback: () => this.joinCleanup?.()
+      });
     }
   };
 
@@ -14556,6 +14646,7 @@ ${name}`
     FPSDisplayMod: () => FPSDisplayMod,
     HotkeyMessagesMod: () => HotkeyMessagesMod,
     SoundEffectsMod: () => SoundEffectsMod,
+    UIScaleMod: () => UIScaleMod,
     XPStatsMod: () => XPStatsMod
   });
 
@@ -14616,7 +14707,8 @@ ${name}`
           this.muteEnabled = this.config.get("muteBelowEnabled");
           break;
         case "muteBelowLevel":
-          this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+          const limit = Number(this.config.get("muteBelowLevel"));
+          this.levelLimit = Number.isFinite(limit) ? limit : this.config.defaults.muteBelowLevel;
           break;
         case "enableLogs":
           this.enableLogs = this.config.get("enableLogs");
@@ -14653,7 +14745,7 @@ ${name}`
           break;
       }
     }
-    async checkAndMutePlayer(player) {
+    checkAndMutePlayer(player) {
       try {
         if (this.permanentMuteList.includes(player.name)) {
           this.mutePlayer(player, "mute list");
@@ -14667,8 +14759,8 @@ ${name}`
       }
     }
     mutePlayer(player, reason) {
-      if (!Game.Muted.has(player.sid)) {
-        Game.Muted.add(player.sid);
+      if (!Game.IsPlayerMuted(player)) {
+        Game.SetPlayerMuted(player, true);
         if (this.enableLogs) {
           Ninja_default.log(`Muted ${player.name} (${reason}).`, config_default.Colors.green);
         }
@@ -14676,14 +14768,14 @@ ${name}`
     }
     onPlayerJoined(e) {
       if (this.skipPlayersJoinedCheck) return;
-      const player = e.data.detail;
+      const player = e.detail;
       if (this.doNotMuteSpectators && player.spec) return;
       if (player.name !== app.credential.username) {
         this.checkAndMutePlayer(player);
       }
     }
     onManualMute(e) {
-      const player = e.data.detail;
+      const player = e.detail;
       if (!this.permanentMuteList.includes(player.name)) {
         this.permanentMuteList.push(player.name);
         this.config.set("permanentMuteList", this.permanentMuteList);
@@ -14694,7 +14786,7 @@ ${name}`
       }
     }
     onManualUnmute(e) {
-      const player = e.data.detail;
+      const player = e.detail;
       const ind = this.permanentMuteList.indexOf(player.name);
       if (ind !== -1) {
         this.permanentMuteList.splice(ind, 1);
@@ -14712,7 +14804,6 @@ ${name}`
       if (this.ignoreDuels) {
         Ninja_default.events.addListener("gs" /* GAME_START */, this.onGameStartBound);
       }
-      Game.Muted.clear();
     }
     overrideChatBubble() {
       if (!Label.prototype.displayChatBubble) {
@@ -14720,7 +14811,7 @@ ${name}`
       }
       const original = this.originalDisplayChatBubble;
       Label.prototype.displayChatBubble = async function() {
-        if (this.go && Game.Muted.has(this.go.sid)) return;
+        if (this.go && Game.IsPlayerMuted(this.go)) return;
         await original.apply(this);
       };
     }
@@ -14922,8 +15013,8 @@ ${name}`
     }
     handleKeyDown(e) {
       if (e.repeat) return;
-      const letter = e.key.toUpperCase();
-      const message = this.keyBindings[letter];
+      const match = /^Key([A-Z])$/.exec(e.code)?.[1] ?? e.key.toUpperCase();
+      const message = this.keyBindings[match];
       if (e.altKey && message) {
         this.sendChatMessage(message);
         e.stopImmediatePropagation();
@@ -14972,8 +15063,69 @@ ${name}`
     consoleTyped = this._consoleTyped.bind(this);
   };
 
-  // src/mods/xpStats.ts
+  // src/mods/uiScale.ts
   
+  var UIScaleMod = class extends Mod {
+    originalOnResize = null;
+    constructor() {
+      super({
+        id: "UIScale",
+        name: "UI Scale",
+        description: "Overrides the scale of the game's UI.",
+        author: "Meow",
+        icon: "spectate"
+      });
+      this.implementConfig(
+        {
+          uiScale: 0
+        },
+        {
+          uiScale: "UI Scale (0 = default)"
+        }
+      );
+    }
+    loadConfig(key) {
+      switch (key) {
+        case "uiScale":
+          app._uiscalemodUIScale = this.config.get("uiScale") || 0;
+          break;
+      }
+    }
+    load() {
+      this.patchOnResize();
+      super.load();
+    }
+    unload() {
+      if (this.originalOnResize) {
+        app.onResize = this.originalOnResize;
+        this.originalOnResize = null;
+      }
+      delete app._uiscalemodUIScale;
+      app.onResize();
+      super.unload();
+    }
+    /** Rewrites `App.Scale=<var>` inside the minified `app.onResize` source. */
+    patchOnResize() {
+      const source = app.onResize.toString();
+      const patched = source.replace(
+        /App\.Scale\s*=\s*([a-z])/,
+        "$1=app._uiscalemodUIScale||$1,App.Scale=$1"
+      );
+      if (patched == source) {
+        console.warn(
+          "UIScale: failed to patch app.onResize, no 'App.Scale=' target found. Skipping.",
+          source
+        );
+        this.log("Failed to apply UI Scale setting.", UITheme.MenuColors.warning);
+        return;
+      }
+      this.originalOnResize = app.onResize;
+      app.onResize = window.eval(`(function ${patched})`);
+      app.onResize();
+    }
+  };
+
+  // src/mods/xpStats.ts
   
   var XPStatsMod = class extends Mod {
     constructor() {
@@ -14986,9 +15138,9 @@ ${name}`
         recommend: true
       });
     }
-    startingLevel = 0;
+    startingXP = 0;
     load() {
-      this.startingLevel = 0;
+      this.startingXP = 0;
       Ninja_default.events.addListener("gs" /* GAME_START */, this.gamestart);
       Ninja_default.events.addListener("ge" /* GAME_END */, this.gameend);
       super.load();
@@ -14999,41 +15151,51 @@ ${name}`
       super.unload();
     }
     async onGameStart() {
-      this.startingLevel = 0;
-      this.startingLevel = Number(
+      this.startingXP = 0;
+      this.startingXP = Number(
         (await APIClient.getUserProfile(app.credential.playerid)).experience
       );
     }
     gamestart = this.onGameStart.bind(this);
     async onGameEnd() {
-      const xp = Number(
-        (await APIClient.getUserProfile(app.credential.playerid))?.experience
-      ) || 0;
-      if (xp && this.startingLevel) {
-        const plevel = LevelBar.XPToLevel(this.startingLevel);
-        const level = LevelBar.XPToLevel(xp);
-        const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
-        const gain = xp - this.startingLevel;
-        Ninja_default.log(
-          `You gained ${gain.toLocaleString()} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`,
-          config_default.Colors.green
-        );
-        if (level > plevel)
-          Ninja_default.log(
-            `You leveled up! You are now level ${level}.`,
-            config_default.Colors.yellow
-          );
+      if (!this.startingXP) return;
+      for (let attempt = 0; attempt < 4; attempt++) {
+        if (attempt > 0) await delay(1e3 * attempt);
+        const xp = Number(
+          (await APIClient.getUserProfile(app.credential.playerid))?.experience
+        ) || 0;
+        if (xp > this.startingXP) {
+          this.reportGain(this.startingXP, xp);
+          break;
+        }
       }
-      this.startingLevel = 0;
+      this.startingXP = 0;
     }
     gameend = this.onGameEnd.bind(this);
+    reportGain(startingLevel, xp) {
+      if (!xp) return;
+      const prev_level = XPProgression.levelFromXP(startingLevel), level = XPProgression.levelFromXP(xp);
+      const xpNeeded = 15.625 * Math.pow((level + 1) / 0.2, 2) - (1 === level ? 0 : 15.625 * Math.pow(level / 0.2, 2));
+      const gain = xp - startingLevel;
+      Ninja_default.log(
+        `You gained ${(0, numberWithPeriods)(gain)} (${Math.round(gain / xpNeeded * 1e3) / 10}%) experience this round!`,
+        UITheme.MenuColors.success
+      );
+      if (level > prev_level)
+        Ninja_default.log(
+          `You leveled up! You are now level ${level}.`,
+          UITheme.MenuColors.accent
+        );
+    }
   };
 
   // src/index.ts
-  if (Worker.prototype.newPostMessage)
+  if (Worker.prototype.newPostMessage) {
     alert(
       "NinjaIOUtils is already loaded! Please disable other instances of the script before loading."
     );
+    throw new Error("NinjaIOUtils is already loaded!");
+  }
   window.Ninja = Ninja_default;
   window.addEventListener("keydown", (e) => {
     if (e.key == "F11") {
