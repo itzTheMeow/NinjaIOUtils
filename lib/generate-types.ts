@@ -10,12 +10,12 @@
  * Flags: --no-install  skip bun install after version bump
  *        --no-validate skip the userscript tsc --noEmit validation
  */
+import { decodedMappings, TraceMap } from "@jridgewell/trace-mapping";
+import * as acorn from "acorn";
+import { execFileSync, spawnSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { execFileSync, spawnSync } from "node:child_process";
-import * as acorn from "acorn";
-import { TraceMap, decodedMappings } from "@jridgewell/trace-mapping";
 import { encode as encodeMappings } from "sourcemap-codec";
 import {
   applySpans,
@@ -715,11 +715,11 @@ function classifyMixinClasses(gameChunk: string): {
  *  matches (tsc infers natively again) and the fold no-ops with a log. */
 const LITERAL_INIT_FOLD_NAMES = ["AudioEffects"];
 
-function foldInitializerLiterals(
-  gameChunk: string,
-): { result: string; pass: Pass } {
-  if (LITERAL_INIT_FOLD_NAMES.length === 0)
-    return applySpans(gameChunk, []);
+function foldInitializerLiterals(gameChunk: string): {
+  result: string;
+  pass: Pass;
+} {
+  if (LITERAL_INIT_FOLD_NAMES.length === 0) return applySpans(gameChunk, []);
   const program = acorn.parse(gameChunk, {
     ecmaVersion: "latest",
     sourceType: "module",
@@ -750,7 +750,10 @@ function foldInitializerLiterals(
   }
   const candidates: FoldCandidate[] = [];
   const merged = new Set<string>();
-  const walkStatement = (node: Node, candidatesInStatement: FoldCandidate[]): void => {
+  const walkStatement = (
+    node: Node,
+    candidatesInStatement: FoldCandidate[],
+  ): void => {
     if (!node || typeof node !== "object") return;
     if (
       node.type === "AssignmentExpression" &&
@@ -783,17 +786,30 @@ function foldInitializerLiterals(
       node.arguments?.[0]?.type === "Identifier"
     )
       // entries are consumed from this identifier
-      candidatesInStatement.push({ name: node.arguments[0].name, literal: null, start: -1, end: -1 });
+      candidatesInStatement.push({
+        name: node.arguments[0].name,
+        literal: null,
+        start: -1,
+        end: -1,
+      });
     for (const key of Object.keys(node)) {
       const value = node[key];
-      if (Array.isArray(value)) value.forEach((child: Node) => walkStatement(child, candidatesInStatement));
-      else if (value && typeof value === "object" && value.type) walkStatement(value, candidatesInStatement);
+      if (Array.isArray(value))
+        value.forEach((child: Node) =>
+          walkStatement(child, candidatesInStatement),
+        );
+      else if (value && typeof value === "object" && value.type)
+        walkStatement(value, candidatesInStatement);
     }
   };
   for (const statement of program.body) {
     const statementCandidates: FoldCandidate[] = [];
     walkStatement(statement, statementCandidates);
-    if (!statementCandidates.length || statementCandidates.every((c) => c.literal === null)) continue;
+    if (
+      !statementCandidates.length ||
+      statementCandidates.every((c) => c.literal === null)
+    )
+      continue;
     // a seed literal whose ident is also consumed by Object.entries in the
     // same statement marks the initializer pattern for ONE merge target -
     // match it against the fold names actually merged here

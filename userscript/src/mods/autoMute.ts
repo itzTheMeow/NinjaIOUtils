@@ -1,5 +1,4 @@
-import { Game, Label } from "lib";
-import { app } from "lib";
+import { app, Game, Label } from "lib";
 import Mod from "../api/Mod";
 import Ninja, { NinjaEvents } from "../api/Ninja";
 import config from "../config";

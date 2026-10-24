@@ -1,10 +1,18 @@
-import { Client, EventDispatcher, Game, PlayerDropdown, PVPClient } from "lib";
-import { app, App, Layer } from "lib";
+import {
+  app,
+  App,
+  Client,
+  EventDispatcher,
+  Game,
+  Layer,
+  PlayerDropdown,
+  PVPClient,
+} from "lib";
 import config from "../config";
+import { coremodHooks } from "../hook";
 import hookModMenu from "../hookModMenu";
 import Mod from "./Mod";
 import Settings from "./Settings";
-import { coremodHooks } from "../hook";
 
 export type Listener = () => any;
 export type PacketListener = (type: "game" | "pvp", packet: any) => any;

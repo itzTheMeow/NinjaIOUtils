@@ -1,14 +1,18 @@
 import {
+  app,
+  App,
   AudioEffects,
   Button,
   Checkbox,
   Feature,
+  FontStyle,
   ImgButton,
   InputField,
+  Layer,
   MemberBrowserScrollbar,
+  PIXI,
   UITheme,
 } from "lib";
-import { app, App, FontStyle, Layer, PIXI } from "lib";
 import Mod from "./api/Mod";
 import Ninja from "./api/Ninja";
 import { cloneTextStyle, paintListRow } from "./utils";

@@ -23,7 +23,8 @@ at the end of every run (see validate below).
 ## Commands
 
 ```sh
-just lib            # from repo root: full regen (bun run types in lib/)
+just lib            # from repo root: full regen (bun run types in lib/); does NOT format latest.js
+just update         # fetch latest.js and lint/format it (nix fmt)
 cd lib && bun run types            # same thing directly
 cd lib && bun run typecheck        # tsc --noEmit over the two .ts scripts
 ```

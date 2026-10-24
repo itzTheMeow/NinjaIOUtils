@@ -14,6 +14,7 @@ lib-check:
 # build the userscript
 build:
     cd userscript && bun run start
+    nix fmt userscript/NinjaIOUtils.js
 
 # watch the userscript for changes and rebuild
 dev:
@@ -23,7 +24,11 @@ dev:
 check:
     cd userscript && bunx tsc --noEmit
 
+# format the whole tree via treefmt (flake.nix); pass paths to restrict
+fmt *paths:
+    nix fmt {{paths}}
+
 # updates latest.js to the current upstream version
 update:
     curl https://beta.fragline.com/js/dist/game.js > lib/latest.js
-    prettier lib/latest.js --write
+    nix fmt lib/latest.js

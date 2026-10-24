@@ -1,15 +1,14 @@
+import { compact, defer, Mutex, uniqBy } from "es-toolkit";
+import { App, UITheme } from "lib";
 import localForage from "localforage";
 import type { TexturePackMod } from ".";
+import Ninja from "../../api/Ninja";
+import { fetchBlob, sha256 } from "../../utils";
 import {
   TextureAtlasJSON,
   TextureAtlasType,
   TexturePackManifestEntry,
 } from "./utils";
-import { App } from "lib";
-import { fetchBlob, sha256 } from "../../utils";
-import { compact, defer, Mutex, uniqBy } from "es-toolkit";
-import Ninja from "../../api/Ninja";
-import { UITheme } from "lib";
 
 export class TexturePackModStore {
   public lock = new Mutex();

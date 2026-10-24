@@ -1,0 +1,12 @@
+old/
+backend/
+texturepacks/
+docs/
+lib/.generate/
+lib/node_modules/
+lib/bun.lock
+lib/lib.d.ts
+lib/lib.d.ts.map
+userscript/node_modules/
+userscript/bun.lock
+userscript/NinjaIOUtils.js

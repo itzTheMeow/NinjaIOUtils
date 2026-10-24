@@ -67,10 +67,29 @@ Runtime layout under `src/`:
 ## Commands
 
 ```sh
-just build   # production build -> userscript/NinjaIOUtils.js
+just build   # production build -> userscript/NinjaIOUtils.js (formatted after build)
 just check   # typecheck userscript/ (tsc --noEmit)
 just lib     # regenerate lib/lib.d.ts — see lib/AGENTS.md
+just fmt ... # format via nix fmt (treefmt); no args = whole tree, paths restrict it
+just update  # fetch the current site bundle into lib/latest.js, then nix fmt it
 ```
+
+## Formatting
+
+- `nix fmt` (flake.nix: treefmt) formats TS/JS/JSON with prettier
+  (+ prettier-plugin-organize-imports) and Nix files with nixfmt.
+- Prettier + organize-imports + typescript live in the repo-root
+  `package.json`/`bun.lock` (`bun install` when bumping); flake.nix only
+  supplies the bun runtime, so editor formatting and `nix fmt` are identical.
+- Generated/artifact files are excluded from formatting (`lib/lib.d.ts` —
+  prettier would invalidate its declaration map, `lib/bun.lock`,
+  `userscript/NinjaIOUtils.js`, `lib/.generate/`, `node_modules/`) via both
+  flake.nix excludes and `.prettierignore`; keep the two in sync.
+- `lib/latest.js` is included and formatted by `just update`; `just lib` does
+  NOT format it.
+- Paths passed to `just fmt` are relative to the repo root (justfile recipes
+  always run there; run `nix fmt` manually from the repo root for the same
+  reason).
 
 Dev loop: `cd userscript && bun run dev` (watch + serve on :8000), then load
 `dev.js` in your userscript manager.

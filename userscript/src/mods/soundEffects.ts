@@ -1,5 +1,4 @@
-import { AudioEffects, InputField } from "lib";
-import { App } from "lib";
+import { App, AudioEffects, InputField } from "lib";
 import Mod from "../api/Mod";
 
 export class SoundEffectsMod extends Mod {

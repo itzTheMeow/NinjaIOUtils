@@ -1,6 +1,6 @@
+import { UITheme } from "lib";
 import composerSource from "virtual:tex-worker";
 import Ninja from "../../../api/Ninja";
-import { UITheme } from "lib";
 import {
   TexWorkerInBase,
   TexWorkerInMap,

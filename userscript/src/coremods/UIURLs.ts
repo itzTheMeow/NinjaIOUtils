@@ -1,13 +1,15 @@
 import {
   APIClient,
+  App,
   Button,
   ContentMenu,
   CustomizationMenu,
+  Layer,
   ProfileMenu,
   Protocol,
   SettingsPanel,
+  app,
 } from "lib";
-import { App, Layer, app } from "lib";
 import Mod from "../api/Mod";
 import Ninja from "../api/Ninja";
 import config from "../config";

@@ -7,7 +7,7 @@
     "types": ["node"],
     "strict": true,
     "skipLibCheck": true,
-    "noEmit": true,
+    "noEmit": true
   },
-  "include": ["generate-types.ts", "map-surgery.ts"],
+  "include": ["generate-types.ts", "map-surgery.ts"]
 }

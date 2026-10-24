@@ -1,3 +1,4 @@
+import { attemptAsync, last } from "es-toolkit";
 import {
   App,
   AudioEffects,
@@ -12,10 +13,9 @@ import Mod from "../../api/Mod";
 import Ninja from "../../api/Ninja";
 import { fetchBlob, paintListRow } from "../../utils";
 import { TexturePackModManifest } from "./manifest";
-import { TexturePackModWorker } from "./worker";
-import { TextureAtlasType, TexturePackManifestEntry } from "./utils";
 import { InstalledPack, TexturePackModStore } from "./store";
-import { attemptAsync, last } from "es-toolkit";
+import { TextureAtlasType, TexturePackManifestEntry } from "./utils";
+import { TexturePackModWorker } from "./worker";
 
 declare module "lib" {
   interface ContentMenu {
