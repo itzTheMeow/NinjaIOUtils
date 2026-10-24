@@ -405,7 +405,7 @@ export type CombinedTexturesMap = { [K in CombinedTextureName]: PIXI.Texture };
 declare var servicebase: {};
 declare class ServiceBase {
     xhrGet(a: any): Promise<any>;
-    xhrPost(a: any, b: any, c?: boolean): Promise<any>;
+    xhrPost(a: any, b: any, c?: boolean, d?: number): Promise<any>;
     xhrError /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
 }
 declare namespace ServiceBase {
@@ -462,7 +462,7 @@ declare class UserService extends ServiceBase {
     postPurchase /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
     postUsername /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
     postFriendGold /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
-    postCreateGame /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any): Promise<any>;
+    postCreateGame /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): Promise<any>;
     postSocial /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
 }
 declare var serverservice: {};
@@ -551,7 +551,7 @@ declare class APIClient {
     static postPurchase /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
     static postUsername /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
     static postFriendGold /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
-    static postCreateGame /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any): Promise<any>;
+    static postCreateGame /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): Promise<any>;
     static postSocial /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): Promise<any>;
     static getClanByClanId(a: any): Promise<any>;
     static getClanByAccountId(a: any): Promise<any>;
@@ -581,9 +581,9 @@ declare namespace TextCache {
     export { _a as Cache };
     export var Renderer: any;
     export var GetUniquePrefix: () => string;
-    export var UpdateText: (a: any, b?: any, c?: any, e?: any) => void;
+    export var UpdateText: (a: any, b?: any, c?: any, d?: any) => void;
     export var GetKeyForStyle: (a: any) => string;
-    export var GetText: (a: any, b: any, c?: any, e?: boolean) => any;
+    export var GetText: (a: any, b: any, c?: any, d?: boolean) => any;
     export var GetTextSprite: (a: any) => any;
 }
 declare var eventdispatcher: {};
@@ -600,7 +600,6 @@ declare class Client extends EventDispatcher {
     pinger: number | null;
     socket: WebSocket | null;
     roundTripTime: number;
-    time: number;
     serverSwitch: boolean;
     onCloseForImmediateReconnect: any;
     server: {
@@ -625,20 +624,28 @@ declare class Client extends EventDispatcher {
     };
     connectionTimeout: number | null;
     allowNextAttempt: boolean;
+    echoNonce: number;
+    echoes: Map<any, any>;
+    pendingInput: any[];
+    inputFlushTimer: number | null;
+    jitter: number | undefined;
     constructor();
     setServer(a: any): void;
     connect(): void;
     disconnect(a?: boolean): void;
-    onOpen(a: any): void;
+    onOpen /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onError(a: any): void;
     onMessage(a: any): void;
+    discardPendingInput(): void;
     onClose(a: any): void;
     emit(a: any): void;
+    scheduleInputFlush(): void;
     isConnected(): boolean;
-    onEchoResponse(): void;
+    onEchoResponse(a: any): void;
 
     mapID: any;}
 declare namespace Client {
+    var MAX_BUFFERED_INPUT_BYTES: number;
     var compress: (a: any) => Uint8Array<ArrayBuffer>;
     var decompress: (a: any) => {
         data: {
@@ -717,10 +724,14 @@ declare class InputState {
         A: number;
         D: number;
     };
+    physicalHeld: any;
+    touchHeld: any;
     flagBindingKeys: string[] | undefined;
     constructor();
     reset(): void;
     update /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    updateTouch /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    setControl /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     setBindings(a: any): {};
     updateFlagBinding /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     updateHorizontal /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
@@ -886,60 +897,24 @@ declare class Feature extends PIXI.Graphics {
     resize /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     update(): void;
 }
-declare var movementjoystick: {};
-declare class MovementJoystick extends PIXI.Graphics {
-    hitArea: PIXI.Circle;
-    interactive: boolean;
-    ny: number;
-    nx: number;
-    pointerId: number;
-    jump: boolean;
-    prone: boolean;
-    crouch: boolean;
-    fly: boolean;
-    right: boolean;
-    left: boolean;
-    stick: PIXI.Graphics;
-    knob: PIXI.Graphics;
-    label: PIXI.Text;
-    constructor();
-    onStart(a: any): void;
-    onEnd(a: any): void;
-    onMove(a: any): void;
-    update /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-}
-declare namespace MovementJoystick {
-    var POINTER_DOWN: string;
-    var POINTER_DOWN: string;
-}
-declare var targetingjoystick: {};
-declare class TargetingJoystick extends PIXI.Graphics {
-    hitArea: PIXI.Circle | undefined;
-    interactive: boolean;
-    throwing: boolean;
-    pointerCount: number;
-    pointerId: number;
-    ny: number;
-    nx: number;
-    stick: PIXI.Graphics;
-    knob: PIXI.Graphics;
-    switchWeaponKey: PIXI.Graphics;
-    tapTime: number;
-    label: PIXI.Text;
-    constructor();
-    onSwitch(a: any): void;
-    onStart(a: any): void;
-    onEnd(a: any): void;
-    onMove(a: any): void;
-    update /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+declare var inputdevice: {};
+declare class InputDevice {
+    static safeAreaProbe: HTMLDivElement | undefined;
+    static detect(a?: Navigator, b?: (c: any) => boolean): boolean;
+    static usesTouch(a: any): boolean;
+    static touchEnabled(a: any): boolean;
+    static safeArea(): {
+        top: number;
+        right: number;
+        bottom: number;
+        left: number;
+    };
 }
 declare var gamemenu: {};
 declare class GameMenu extends Feature {
     overlayButtons: PIXI.Container<PIXI.ContainerChild>;
     discButton: PIXI.Container<PIXI.ContainerChild>;
     helpButton: PIXI.Container<PIXI.ContainerChild>;
-    movementJoystick: MovementJoystick | undefined;
-    targetingJoystick: TargetingJoystick | undefined;
     minmax: PIXI.Container<PIXI.ContainerChild> | undefined;
     fullscreenIcon: PIXI.Graphics | undefined;
     syncFullscreen: (() => void) | undefined;
@@ -996,7 +971,7 @@ declare class GuestMenuButton extends PIXI.Container {
     rectHeight: number;
     hitArea: PIXI.Rectangle;
     cursor: string;
-    constructor(a: any, b: any, c: any, e?: any, f?: any, g?: any, h?: any);
+    constructor(a: any, b: any, c: any, d?: any, e?: any, f?: any, g?: any);
     setActive(a?: boolean): void;
     updateIconState(): void;
 }
@@ -1044,7 +1019,7 @@ declare class MemberMenuButton extends PIXI.Container {
     rectHeight: number;
     hitArea: PIXI.Rectangle;
     cursor: string;
-    constructor(a: any, b: any, c: any, e?: any, f?: any, g?: any, h?: any);
+    constructor(a: any, b: any, c: any, d?: any, e?: any, f?: any, g?: any);
     setActive(a?: boolean): void;
     updateIconState(): void;
 }
@@ -1097,8 +1072,8 @@ declare class MemberBrowserMenu extends Feature {
     search(): Promise<void>;
 }
 declare namespace MemberBrowserMenu {
-    var paintRowBackground: (a: any, b: any, c: any, e: any, f?: boolean) => void;
-    var drawRowBackground: (a: any, b?: any, c?: any, e?: any) => void;
+    var paintRowBackground: (a: any, b: any, c: any, d: any, e?: boolean) => void;
+    var drawRowBackground: (a: any, b?: any, c?: any, d?: any) => void;
     var drawScrollbar: (a: any, b?: any, c?: any) => void;
 }
 declare class MemberTableRow extends PIXI.Container {
@@ -1109,7 +1084,7 @@ declare class MemberTableRow extends PIXI.Container {
     nameText: PIXI.Text;
     skillRankText: PIXI.Text;
     rankText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any);
 }
 declare class MemberBrowserScrollbar extends PIXI.Container {
     scrolling: boolean;
@@ -1118,6 +1093,7 @@ declare class MemberBrowserScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -1143,8 +1119,8 @@ declare const Clamp: (a: any, b?: any, c?: any) => number, ToPrecision: (a: any,
     y: number;
 }) => any[], getDir: (a: any, b?: any, c?: any) => -1 | 1;
 /** @param {any} a @param {any} [b] */ declare function fastAtan2(a: any, b?: any): number;
-/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] */ declare function Intersect(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any): boolean;
-/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] */ declare function Intersect3(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any): -1 | 0 | 1;
+/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] */ declare function Intersect(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any): boolean;
+/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */ declare function Intersect3(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): -1 | 0 | 1;
 declare var polyBounds: (a: any, b?: any) => {
     x: number;
     y: number;
@@ -1233,7 +1209,7 @@ declare class ClanTableRow extends PIXI.Container {
     membersText: PIXI.Text;
     skillText: PIXI.Text;
     experienceText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any);
     setIndex(a?: number): void;
 }
 declare class ClanBrowserScrollbar extends PIXI.Container {
@@ -1243,6 +1219,7 @@ declare class ClanBrowserScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -1263,6 +1240,7 @@ declare class Button extends PIXI.Graphics {
     interactiveChildren: boolean;
     interactive: boolean;
     pressed: boolean;
+    pointerId: any;
     clickInterval: any;
     hoverImage: PIXI.Sprite | null;
     image: PIXI.Sprite | null;
@@ -1270,13 +1248,14 @@ declare class Button extends PIXI.Graphics {
     edge: PIXI.Graphics;
     text: any;
     themeTint: any;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     setText /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     redraw(): void;
     draw(): void;
     withinClickInterval(): boolean;
     onMouseDown(a: any): void;
     onMouseUp(a: any): void;
+    cancelPress(): void;
     onMouseOver(): void;
     onMouseOut(): void;
     disable(): void;
@@ -1352,6 +1331,7 @@ declare class LoginActionButton extends PIXI.Container {
     icon: PIXI.Sprite | null;
     label: PIXI.Text;
     cursor: PIXI.Cursor | (string & {}) | undefined;
+    pressPointerId: any;
     constructor(a: any, b?: any);
     setText(a: any): void;
     setTint(a: any): void;
@@ -1379,7 +1359,6 @@ declare class Checkbox extends PIXI.Container {
     label: any;
     mouseOutListener: (() => void) | null;
     mouseOverListener: (() => void) | null;
-    pointerDownListener: ((a: any) => void) | null;
     mouseDownListener: ((a: any) => void) | null;
     hitArea: PIXI.Rectangle;
     constructor(a: any, b?: any, c?: any);
@@ -1551,12 +1530,12 @@ declare class Visualizer extends PIXI.Container {
         body: any;
         ref: any;
     } | undefined;
-    constructor(a: any, b: any, c?: boolean, e?: boolean, f?: boolean, g?: string, h?: {});
+    constructor(a: any, b: any, c?: boolean, d?: boolean, e?: boolean, f?: string, g?: {});
     resetScene(): void;
     clearCanvas(): void;
     generateCharacter(a?: {}): void;
     randomizeWeapons(): void;
-    setWeapons(a: any, b: any, c?: any, e?: boolean): void;
+    setWeapons(a: any, b: any, c?: any, d?: boolean): void;
     setPreviewWeaponAngle(a?: number): void;
     getWeaponCustomizationTexture /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     static getWeaponCustomizationKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
@@ -1639,6 +1618,7 @@ declare class ProfileActionButton extends PIXI.Container {
     background: PIXI.Graphics;
     label: PIXI.Text;
     cursor: PIXI.Cursor | (string & {}) | undefined;
+    pressPointerId: any;
     constructor(a: any, b?: number, c?: number);
     setText(a: any): void;
     setTint(a: any): void;
@@ -1902,6 +1882,7 @@ declare class WeaponListScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -1929,7 +1910,7 @@ declare class MatchItem extends PIXI.Container {
     nameLabel: PIXI.Text;
     pointsLabel: PIXI.Text;
     dateLabel: PIXI.Text;
-    constructor(a: any, b: any, c: any, e: number | undefined, f: any, g?: number);
+    constructor(a: any, b: any, c: any, d: number | undefined, e: any, f?: number);
     drawBackground(a: any): void;
 }
 declare namespace MatchItem {
@@ -1972,6 +1953,8 @@ declare class OverviewTab extends Feature {
     weaponData: any[];
     background: PIXI.Graphics;
     socialPanel: PIXI.Graphics;
+    socialLinks: {};
+    socialLoadVersion: number;
     generalStatsButton: PIXI.Graphics;
     generalStatsLabel: PIXI.Text;
     historyButton: PIXI.Graphics;
@@ -2014,22 +1997,16 @@ declare class OverviewTab extends Feature {
     weaponTitle: PIXI.Text;
     weaponNameLabel: PIXI.Text;
     weaponKillsLabel: PIXI.Text;
-    youtubeLogo: PIXI.Sprite;
-    youtubeTitle: PIXI.Text;
-    youtubeField: InputField;
-    pasteYoutubeButton: ProfileActionButton;
-    saveYoutubeButton: ProfileActionButton;
-    twitchLogo: PIXI.Sprite;
-    twitchTitle: PIXI.Text;
-    twitchField: InputField;
-    pasteTwitchButton: ProfileActionButton;
-    saveTwitchButton: ProfileActionButton;
     listContainer: PIXI.Container<PIXI.ContainerChild>;
     weaponListContainer: PIXI.Container<PIXI.ContainerChild>;
     weaponListMask: PIXI.Graphics;
     scrollbar: WeaponListScrollbar;
     constructor(a: any, b?: any);
-    submitSocial /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
+    createSocialLink /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static normalizeSocialUrl /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    updateSocialLink(a: any, b?: string, c?: boolean): void;
+    pasteSocialLink(a: any): Promise<void>;
+    submitSocial(a: any, b?: any): Promise<boolean>;
     load(): Promise<void>;
     hide(): void;
     maskWeaponList(a: any): void;
@@ -2065,8 +2042,8 @@ declare class Thumbnail extends PIXI.Sprite {
     interactiveChildren: boolean;
     eventMode: string;
     hitArea: PIXI.Rectangle;
-    constructor(a: any, b: any, c?: boolean, e?: boolean, f?: {});
-    static getVisualizer /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): any;
+    constructor(a: any, b: any, c?: boolean, d?: boolean, e?: {});
+    static getVisualizer /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     static update(a?: number): void;
     randomizeWeapons(): void;
     refreshTexture(a?: number, b?: number): void;
@@ -2121,8 +2098,8 @@ declare class ClanPhotoPanel extends PIXI.Container {
     drawStage(): void;
     drawPhotoMask(): void;
     drawPhotoFrame(): void;
-    drawSunGlow /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    drawSkyStreaks /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    drawSunGlow /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    drawSkyStreaks /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
     setMembers(a: any, b?: string): void;
     show(): void;
     loadBackground(): Promise<void>;
@@ -2166,7 +2143,7 @@ declare class ClanPhotoPanel extends PIXI.Container {
         ground: number;
         grass: number;
     };
-    drawHillLayer /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any): void;
+    drawHillLayer /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
     hashString(a: any): number;
     createRandom(a: any): () => number;
     randRange /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
@@ -2178,7 +2155,7 @@ declare class ClanPhotoPanel extends PIXI.Container {
     onMemberSelected /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     stopInteractionEvent(a: any): void;
     showMemberLabel /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    onMemberHover /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    onMemberHover /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     onMemberHoverOut /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     moveMemberLabel(a: any): void;
     hideMemberLabel(): void;
@@ -2266,7 +2243,7 @@ declare namespace ClanTab {
     var CLAN_PHOTO_SHOW: string;
     var CLAN_PHOTO_HIDE: string;
     var drawScrollbar: (a: any, b?: any, c?: any) => void;
-    var drawMemberRowBackground: (a: any, b: any, c?: boolean, e?: number) => void;
+    var drawMemberRowBackground: (a: any, b: any, c?: boolean, d?: number) => void;
 }
 declare class MemberListScrollbar extends PIXI.Container {
     scrolling: boolean;
@@ -2276,6 +2253,7 @@ declare class MemberListScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     constructor(a: any, b?: number);
     scroll(a: any): void;
     reset(): void;
@@ -2297,7 +2275,7 @@ declare class MemberItem extends PIXI.Container {
     background: PIXI.Graphics;
     nameLabel: PIXI.Text;
     roleLabel: PIXI.Text | undefined;
-    constructor(a: any, b: any, c: any, e: any, f: any, g?: number);
+    constructor(a: any, b: any, c: any, d: any, e: any, f?: number);
 }
 declare namespace MemberItem {
     var RowWidth: number;
@@ -2322,7 +2300,7 @@ declare class MemberDropdownActionRow extends PIXI.Container {
     confirming: boolean;
     interactive: boolean;
     hitArea: PIXI.Rectangle;
-    constructor(a: any, b: any, c: any, e?: boolean);
+    constructor(a: any, b: any, c: any, d?: boolean);
 }
 declare namespace MemberDropdownActionRow {
     var CONFIRM: string;
@@ -2442,7 +2420,7 @@ declare class ItemOverview extends PIXI.Container {
     select(a: any): void;
     selectAndReveal(a: any, b?: boolean): void;
     revealItem(a: any): void;
-    loadItems(a: any, b: string | undefined, c: any, e: any, f?: boolean): void;
+    loadItems(a: any, b: string | undefined, c: any, d: any, e?: boolean): void;
     onItemSelected(a: any): void;
 }
 declare namespace ItemOverview {
@@ -2454,6 +2432,7 @@ declare class IOScrollbar extends PIXI.Container {
     bh: number;
     oy: number;
     scrollBar: PIXI.Graphics;
+    scrollPointerId: number | null;
     scrollButton: PIXI.Graphics;
     wheelListener: (b: any) => void;
     constructor(a?: number);
@@ -2531,7 +2510,7 @@ declare class ItemPicker extends PIXI.Container {
         x: number;
         y: number;
     } | undefined;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     select(): void;
     deselect(): void;
     draw(): void;
@@ -2625,7 +2604,7 @@ declare class PurchasePanel extends PIXI.Container {
     successTitleDesc: PIXI.Text;
     successContainerItemIcon: PIXI.Sprite;
     closeButton: LoginActionButton;
-    static fitSprite(a: any, b: any, c: any, e?: number): any;
+    static fitSprite(a: any, b: any, c: any, d?: number): any;
     constructor();
     display(a: any): Promise<void>;
     onCancelButtonReleased(): void;
@@ -2672,7 +2651,7 @@ declare class WeaponContainer extends PIXI.Container {
     saveStatus: PIXI.Text;
     buyButton: LoginActionButton;
     noWeaponsText: PIXI.Text | undefined;
-    constructor(a: any, b: any, c: any, e: any, f?: number);
+    constructor(a: any, b: any, c: any, d: any, e?: number);
     show(): void;
     hide(): void;
     updateWheelTarget(a: any): void;
@@ -2760,7 +2739,7 @@ declare class ParticleContainer extends PIXI.Container {
     configureVelocityStretch /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     updateVelocityStretch(a: any): void;
     updateCollidingParticle /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    checkCollision(a: any, b: any, c: any, e: any, f: any, g?: number): void;
+    checkCollision(a: any, b: any, c: any, d: any, e: any, f?: number): void;
     clear(): void;
     destroy(a: any): void;
 }
@@ -2784,7 +2763,7 @@ declare class CustomizationSuccessFX extends PIXI.Container {
     constructor();
     play /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     stop(): void;
-    spark(a: any, b: any, c: any, e: any, f: any, g: any, h?: boolean): void;
+    spark(a: any, b: any, c: any, d: any, e: any, f: any, g?: boolean): void;
     update(a: any): void;
 }
 declare var customizationmenu: {};
@@ -2983,6 +2962,7 @@ declare class InputField extends PIXI.Container {
     centerInput: boolean;
     forceUpperCase: boolean;
     forceLowerCase: boolean;
+    autoScaleText: boolean;
     autoResize: boolean;
     configuredWidth: number;
     configuredHeight: number;
@@ -2990,9 +2970,9 @@ declare class InputField extends PIXI.Container {
     caretBlinkInterval: number | null;
     caretVisible: boolean;
     menuStyle: boolean | undefined;
-    constructor(a: any, b?: boolean, c?: number, e?: boolean);
+    constructor(a: any, b?: boolean, c?: number, d?: boolean);
     onInput(a: any): Promise<void>;
-    applyInput /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    applyInput /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     preProcessInput(a: any): string;
     isFiltered(a: any): boolean;
     setFilter /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -3088,6 +3068,7 @@ declare class SocialMenu extends Feature {
     friendText: PIXI.Text;
     infoText: PIXI.Text;
     collapseButton: SocialMenuToggleButton;
+    dragPointerId: number;
     chatWindow: ChatWindow;
     goldWindow: GoldWindow;
     loadConversationInterval: number | null;
@@ -3180,7 +3161,7 @@ declare class FriendItem extends PIXI.Graphics {
     clan: any;
     interactive: boolean;
     nameLabel: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
 }
 declare class ClanMemberItem extends PIXI.Graphics {
     id: any;
@@ -3226,6 +3207,7 @@ declare class SocialMenuScrollbar extends PIXI.Graphics {
     interactive: boolean;
     hitArea: PIXI.Rectangle;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3267,7 +3249,7 @@ declare class FriendDropdownActionRow extends PIXI.Container {
     confirming: boolean;
     interactive: boolean;
     hitArea: PIXI.Rectangle;
-    constructor(a: any, b: any, c: any, e?: boolean);
+    constructor(a: any, b: any, c: any, d?: boolean);
 }
 declare namespace FriendDropdownActionRow {
     var CONFIRM: string;
@@ -3294,7 +3276,7 @@ declare class SocialMemberDropdownActionRow extends PIXI.Container {
     confirming: boolean;
     interactive: boolean;
     hitArea: PIXI.Rectangle;
-    constructor(a: any, b: any, c: any, e?: boolean);
+    constructor(a: any, b: any, c: any, d?: boolean);
 }
 declare namespace SocialMemberDropdownActionRow {
     var CONFIRM: string;
@@ -3414,8 +3396,8 @@ declare namespace RankingMenu {
         twitch: number;
         kills: number;
     };
-    var paintRowBackground: (a: any, b: any, c: any, e: any, f?: boolean) => void;
-    var drawRowBackground: (a: any, b?: any, c?: any, e?: any) => void;
+    var paintRowBackground: (a: any, b: any, c: any, d: any, e?: boolean) => void;
+    var drawRowBackground: (a: any, b?: any, c?: any, d?: any) => void;
     var drawScrollbar: (a: any, b?: any, c?: any) => void;
 }
 declare class GlobalRankingTableRow extends PIXI.Container {
@@ -3429,7 +3411,7 @@ declare class GlobalRankingTableRow extends PIXI.Container {
     experienceText: PIXI.Text;
     ytIcon: PIXI.Sprite;
     twIcon: PIXI.Sprite;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any);
 }
 declare class GlobalRankingScrollbar extends PIXI.Container {
     scrolling: boolean;
@@ -3438,6 +3420,7 @@ declare class GlobalRankingScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3461,7 +3444,7 @@ declare class SkillRankingTableRow extends PIXI.Container {
     skillText: PIXI.Text;
     ytIcon: PIXI.Sprite;
     twIcon: PIXI.Sprite;
-    constructor(a: any, b: any, c: any, e: any, f: any, g?: string, h?: string);
+    constructor(a: any, b: any, c: any, d: any, e: any, f?: string, g?: string);
 }
 declare class SkillRankingScrollbar extends PIXI.Container {
     scrolling: boolean;
@@ -3470,6 +3453,7 @@ declare class SkillRankingScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3499,6 +3483,7 @@ declare class WeaponStatsScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3519,7 +3504,7 @@ declare class WeaponTypeStatsTableRow extends PIXI.Container {
     indexText: PIXI.Text;
     nameText: PIXI.Text;
     killsText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
 }
 declare class WeaponTypeStatsScrollbar extends PIXI.Container {
     scrolling: boolean;
@@ -3528,6 +3513,7 @@ declare class WeaponTypeStatsScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3591,7 +3577,7 @@ declare class NewsItem extends PIXI.Container {
     title: PIXI.Text;
     message: PIXI.Text;
     itemHeight: number;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any);
 }
 declare class NewsScrollbar extends PIXI.Container {
     start: number;
@@ -3610,6 +3596,7 @@ declare class NewsScrollbar extends PIXI.Container {
     scrollButton: PIXI.Graphics;
     interactive: boolean;
     hitArea: PIXI.Rectangle;
+    scrollPointerId: number;
     wheelListener: (c: any) => void;
     scrollable: boolean | undefined;
     constructor(a: any, b?: number);
@@ -3783,8 +3770,8 @@ declare class ServerListMenu extends Feature {
     show(): void;
     hide(): void;
     refresh(): Promise<void>;
-    sort(a?: string, b?: string, c?: string, e?: string): void;
-    filter(a?: string, b?: string, c?: string, e?: string, f?: string): void;
+    sort(a?: string, b?: string, c?: string, d?: string): void;
+    filter(a?: string, b?: string, c?: string, d?: string, e?: string): void;
     setPasswordInvalid(): void;
 }
 declare namespace ServerListMenu {
@@ -3817,7 +3804,7 @@ declare namespace ServerListMenu {
     var COL_PLAYERS: string;
     var drawRowBackground: (a: any, b: any, c?: boolean) => void;
     var normalizeGameList: (a: any) => any;
-    var matchesFilters: (a: any, b?: any, c?: any, e?: any, f?: any, g?: any) => boolean;
+    var matchesFilters: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => boolean;
     var drawScrollbar: (a: any, b?: any, c?: any) => void;
 }
 declare class ServerListTableRow extends PIXI.Container {
@@ -3842,7 +3829,7 @@ declare class ServerListTableRow extends PIXI.Container {
     spectatorText: any;
     mapImageLoaded: boolean;
     mapImage: PIXI.Sprite;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any);
     loadMapImage(a: any): Promise<void>;
     onImageLoaded(a: any): void;
     displayMapDetails(a: any): void;
@@ -3862,6 +3849,7 @@ declare class ServerListScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -3935,7 +3923,7 @@ declare class ServerCustomizationMenu extends Feature {
 }
 declare namespace ServerCustomizationMenu {
     var TitleTextStyle: () => PIXI.TextStyle;
-    var drawSelectionRowBackground: (a: any, b: any, c: any, e?: boolean) => void;
+    var drawSelectionRowBackground: (a: any, b: any, c: any, d?: boolean) => void;
     var updateSelectionRowVisual: (a: any) => void;
     var ACCEPT: string;
     var CANCEL: string;
@@ -3966,7 +3954,7 @@ declare class MapSelectionListTableRow extends PIXI.Container {
     background: PIXI.Graphics;
     icon: PIXI.Sprite;
     nameText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     change(): void;
 }
 declare namespace MapSelectionListTableRow {
@@ -3983,7 +3971,7 @@ declare class DropSelectionListTableRow extends PIXI.Container {
     background: PIXI.Graphics;
     icon: any;
     nameText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     change(): void;
 }
 declare namespace DropSelectionListTableRow {
@@ -3996,6 +3984,7 @@ declare class SelectionListScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -4170,6 +4159,7 @@ declare class ClanChatMenu extends Feature {
     inputField: InputField;
     sendButton: ProfileActionButton;
     closeButton: ImgButton;
+    dragPointerId: any;
     ox: number | undefined;
     oy: any;
     constructor();
@@ -4269,6 +4259,7 @@ declare class ClanMemberListScrollbar extends PIXI.Container {
     oy: number;
     scrollBar: PIXI.Graphics;
     scrollButton: PIXI.Graphics;
+    scrollPointerId: number | null;
     wheelListener: (c: any) => void;
     constructor(a: any, b?: number);
     enableWheel(): void;
@@ -4291,7 +4282,7 @@ declare class ClanMemberMenuItem extends PIXI.Container {
     background: PIXI.Graphics;
     nameLabel: PIXI.Text;
     roleLabel: PIXI.BitmapText | undefined;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any);
 }
 declare namespace ClanMemberMenuItem {
     var RowHeight: number;
@@ -4413,7 +4404,7 @@ declare class FastDebugLineRenderer extends PIXI.Mesh {
     interactive: boolean;
     constructor(a?: number);
     begin(): void;
-    line(a: any, b: any, c: any, e: any, f: any, g?: number): void;
+    line(a: any, b: any, c: any, d: any, e: any, f?: number): void;
     end(): void;
     ensureVertexCapacity(a: any): void;
     destroy(a: any): void;
@@ -4470,6 +4461,52 @@ declare namespace Box2DDebugDraw {
     };
     var LegendText: string;
 }
+declare var touchcontrols: {};
+declare class TouchStick extends PIXI.Container {
+    aim: any;
+    onChange: any;
+    pointerId: number | null;
+    radius: number;
+    localPoint: PIXI.Point;
+    eventMode: string;
+    interactiveChildren: boolean;
+    hitArea: PIXI.Circle;
+    ring: PIXI.Graphics;
+    knob: PIXI.Graphics;
+    label: any;
+    constructor(a: any, b?: any, c?: any);
+    move(a: any): void;
+    release(a?: number | null): void;
+}
+declare class TouchControls extends PIXI.Container {
+    onAction: any;
+    onAim: any;
+    onInterface: any;
+    onCommit: () => void;
+    actionSources: any;
+    buttons: any;
+    enabled: boolean;
+    eventMode: string;
+    gameplay: PIXI.Container<PIXI.ContainerChild>;
+    movement: TouchStick;
+    targeting: TouchStick;
+    toolbar: PIXI.Container<PIXI.ContainerChild>;
+    utilityButtons: any[];
+    nativeRelease: (e: any) => void;
+    resetListener: () => void;
+    layoutSettings: any;
+    layoutWidth: number | undefined;
+    layoutHeight: number | undefined;
+    constructor(a: any, b: any, c: any, d?: () => void);
+    static label /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    static capture(a: any): void;
+    createAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    setAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    releasePointer(a: any): void;
+    reset(): void;
+    sync /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    layout(a?: {}): void;
+}
 declare var game: {};
 declare class Game extends PIXI.Container {
     sessionId: any;
@@ -4489,13 +4526,8 @@ declare class Game extends PIXI.Container {
     onKeyUpListener: (b: any) => void;
     onDisplayAdButton: any;
     mode: any;
-    ignoreMovementJoystickViewing: boolean;
-    readyToSpawn: boolean;
-    lastJoystickNV: {
-        x: number;
-        y: number;
-    };
     mutePref: boolean;
+    readyToSpawn: boolean;
     lastSent: string;
     inputSeq: number;
     hud: Hud;
@@ -4508,6 +4540,8 @@ declare class Game extends PIXI.Container {
     gameover: boolean;
     debugDrawLegend: any;
     input: InputState;
+    touchControls: TouchControls;
+    touchInputChanged: boolean;
     interpreter: Interpreter;
     onGameDataMap: {
         [x: string]: (b: any) => void;
@@ -4529,6 +4563,7 @@ declare class Game extends PIXI.Container {
     player: any;
     timeSinceLastUpdate: number;
     wheelListener: (a: any) => void;
+    fireHeld: boolean | undefined;
     roleChangeAt: any;
     joinSpawnAt: any;
     lastRoleTimerSecond: any;
@@ -4538,10 +4573,11 @@ declare class Game extends PIXI.Container {
     step(a: any): void;
     showReticleLine(): void;
     hideReticleLine(): void;
-    dispatchInput(): void;
-    dispatchInputIfInDelta(): void;
+    dispatchInput(a?: boolean): void;
+    predictFireFeedback(a: any): void;
     onBinData(a: any): void;
     onData(a: any): void;
+    onResync(a: any): void;
     onInfo(a: any): void;
     onDebug(a: any): void;
     onWaypoints(a: any): void;
@@ -4591,8 +4627,8 @@ declare class Game extends PIXI.Container {
     onKeyDown(a: any): void;
     requestDisplayChatBubble(): void;
     requestHideChatBubble(): void;
-    updateJoystickMoveState(a: any): void;
-    updateJoystickTargetState(a: any): void;
+    syncTouchControls(): void;
+    onTouchInterface(a: any): void;
     onEscapeMenuAccess(): void;
     onMute(a: any): void;
     onCmdMessage(a: any): void;
@@ -4767,7 +4803,7 @@ declare class ServerDetailMenu extends Feature {
     filterMaps(a: any): void;
 }
 declare namespace ServerDetailMenu {
-    var drawDisplayRowBackground: (a: any, b: any, c: any, e?: boolean) => void;
+    var drawDisplayRowBackground: (a: any, b: any, c: any, d?: boolean) => void;
 }
 declare class WeaponDisplayTableRow extends PIXI.Container {
     id: any;
@@ -4777,7 +4813,7 @@ declare class WeaponDisplayTableRow extends PIXI.Container {
     background: PIXI.Graphics;
     icon: any;
     nameText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
 }
 declare class MapDisplayTableRow extends PIXI.Container {
     id: any;
@@ -4787,7 +4823,7 @@ declare class MapDisplayTableRow extends PIXI.Container {
     background: PIXI.Graphics;
     icon: PIXI.Sprite;
     nameText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any);
 }
 declare namespace MapDisplayTableRow {
     var HOVER: string;
@@ -4801,7 +4837,7 @@ declare class DropDisplayTableRow extends PIXI.Container {
     background: PIXI.Graphics;
     icon: any;
     nameText: PIXI.Text;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any);
 }
 declare var guestprofilemenu: {};
 declare class GuestProfileMenu extends Feature {
@@ -5009,11 +5045,11 @@ declare var UITheme: {
         panelHeight: number;
     };
     createUIPanel(a: any, b: any, c?: number): PIXI.Graphics;
-    resizeUIPanel(a: any, b: any, c: any, e?: number): void;
-    drawMenuPanel(a: any, b: any, c: any, e?: number, f?: number): void;
-    drawMenuButton(a: any, b: any, c: any, e: any, f?: boolean, g?: any, h?: boolean, k?: number): void;
-    drawMenuTab(a: any, b: any, c: any, e: any, f?: boolean): void;
-    styleMenuTab(a: any, b: any, c: any, e: any, f: any, g?: boolean, h?: any): void;
+    resizeUIPanel(a: any, b: any, c: any, d?: number): void;
+    drawMenuPanel(a: any, b: any, c: any, d?: number, e?: number): void;
+    drawMenuButton(a: any, b: any, c: any, d: any, e?: boolean, f?: any, g?: boolean, h?: number): void;
+    drawMenuTab(a: any, b: any, c: any, d: any, e?: boolean): void;
+    styleMenuTab(a: any, b: any, c: any, d: any, e: any, f?: boolean, g?: any): void;
     paintMenuTab(a: any): void;
     createFooterIcon(a: any): PIXI.Graphics;
     createActionIcon(a: any): PIXI.Graphics;
@@ -5138,9 +5174,9 @@ declare class PVPResultMenu extends Feature {
     cancelButton: ProfileActionButton;
     resultRequest: number;
     constructor();
-    addPanel /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    addText(a: any, b: any, c: any, e: any, f?: number): any;
-    addIcon /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    addPanel /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    addText(a: any, b: any, c: any, d: any, e?: number): any;
+    addIcon /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     addRankBadge(a: any): PIXI.Sprite;
     fitText /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     setOutcome(a: any, b: any, c?: number): void;
@@ -5255,6 +5291,7 @@ declare class ContentActionButton extends PIXI.Container {
     background: PIXI.Graphics;
     accentGlyph: PIXI.Graphics;
     label: PIXI.Text;
+    pressPointerId: any;
     constructor(a: any);
     setText(a: any): void;
     setTint(a: any): void;
@@ -5358,7 +5395,7 @@ declare class Layer extends PIXI.Container {
     onServerListingShow(): void;
     onServerListClose(): void;
     onServerListRefresh(): void;
-    onServerListJoinGame(a: any, b: any, c: any, e?: boolean): Promise<void>;
+    onServerListJoinGame(a: any, b: any, c: any, d?: boolean): Promise<void>;
     onJoinGameMode(): void;
     onServerCreationJoinGame /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     onCustomizationShow(): void;
@@ -5483,8 +5520,6 @@ declare namespace Layer {
         RENAME_COMPLETED: string;
         LOGOUT_CANCEL: string;
         LOGOUT_ACCESS: string;
-        JOYSTICK_MOVE_STATE: string;
-        JOYSTICK_TARGET_STATE: string;
         DISPLAY_HELP: string;
         MUTE_TOGGLE: string;
         SERVER_DETAIL_ACCESS: string;
@@ -5551,6 +5586,7 @@ declare var Protocol: {
         WAYPOINTS: string;
         DEBUG: string;
         TRANSFORM: string;
+        RESYNC: string;
     };
     SIGNAL_FULL: string;
 };
@@ -5650,7 +5686,7 @@ declare class RendererFactory {
     };
     static PushRecent /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static DescribeBufferUsage(a: any): string;
-    static ReplaceMethod /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): boolean;
+    static ReplaceMethod /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
     static GetAdapterInfo(a: any): {} | null;
     static GetDeviceLimits(a: any): {} | null;
     static GetBindGroupBackingBuffer(a: any): any;
@@ -5697,7 +5733,7 @@ declare class ClientPerformanceTracker {
         avgMs: number | null;
         maxMs: number | null;
     };
-    record(a: any, b: any, c: any, e: any, f?: number): any;
+    record(a: any, b: any, c: any, d: any, e?: number): any;
     static round(a: any, b?: number): number;
 }
 declare namespace ClientPerformanceTracker {
@@ -5807,7 +5843,8 @@ declare class App extends PIXI.Container {
     onMouseUpListener: (a: any) => void;
     onRightDownListener: (a: any) => void;
     onRightUpListener: (a: any) => void;
-    onCanvasPointerDownCaptureListener: () => void;
+    onCanvasPointerDownCaptureListener: (a: any) => void;
+    activePointerTargets: Map<any, any>;
     inCommercialBreak: boolean;
     startTime: number;
     autoJoinGame: {
@@ -5866,8 +5903,6 @@ declare class App extends PIXI.Container {
     applyServerSettings(a: any): Promise<void>;
     onLayerCreateServer(a: any): void;
     onLayerRenameCompleted(): void;
-    onJoystickMoveState(a: any): void;
-    onJoystickTargetState(a: any): void;
     onRegisterFailed(): void;
     onClientDisconnectForImmediateReconnect(): void;
     onRequestJoinGameMode(a: any): Promise<void>;
@@ -5912,7 +5947,7 @@ declare class App extends PIXI.Container {
     onLayerDisplayHelp(): void;
     onLayerHideMenu(): void;
     onLayerShowMenu(): void;
-    onLayerJoinGame(a: any, b: any, c: any, e?: boolean): void;
+    onLayerJoinGame(a: any, b: any, c: any, d?: boolean): void;
     onGuestNameChange(a: any): Promise<void>;
     onLayerUpdateCredential /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<void>;
     adStarted(): void;
@@ -5920,7 +5955,9 @@ declare class App extends PIXI.Container {
     adError(): void;
     muteIfRequired(a: any): void;
     onMouseDown(a: any): void;
-    onCanvasPointerDownCapture(): void;
+    cancelPointer(a: any, b?: any): void;
+    releaseMousePointer(a: any): void;
+    onCanvasPointerDownCapture(a: any): void;
     onMouseMove(a: any): void;
     onMouseUp(a: any): void;
     onRightDown(a: any): void;
@@ -5955,7 +5992,8 @@ declare namespace App {
     export var PokiSDK: any;
     export { aiptag as AIP };
     export var WhiteLabel: string;
-    export var IsMobile: any;
+    export var IsMobile: boolean;
+    export var TouchActive: boolean;
     export var CMD_CONNECT: string;
     export var CMD_DISCONNECT: string;
     export var CMD_UNLINK: string;
@@ -6060,8 +6098,6 @@ declare namespace App {
     export var DefaultServers: any;
 }
 declare let whitelabel: string | boolean;
-declare let mobileDetect: any;
-declare const isNewIpad: 0 | boolean | null;
 declare class AudioManager {
     muted: boolean;
     parent: any;
@@ -6163,8 +6199,8 @@ declare class Background extends PIXI.Container {
     stepHeight: number | undefined;
     varyX: number | undefined;
     varyY: number | undefined;
-    constructor(a?: number, b?: number, c?: number, e?: number, f?: number, g?: number);
-    setup(a?: number, b?: number, c?: number, e?: number, f?: number, g?: number): void;
+    constructor(a?: number, b?: number, c?: number, d?: number, e?: number, f?: number);
+    setup(a?: number, b?: number, c?: number, d?: number, e?: number, f?: number): void;
     center /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     update(a: any): void;
     draw /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
@@ -6186,7 +6222,7 @@ declare class Background extends PIXI.Container {
     finishPrewarm(a: any): void;
     requestGeneration(): void;
     generateNextChunk(): void;
-    createChunk(a: any, b: any, c: any, e?: number): {
+    createChunk(a: any, b: any, c: any, d?: number): {
         chunkIndex: any;
         texture: any;
         croppedTexture: PIXI.ContainerChild;
@@ -6197,15 +6233,15 @@ declare class Background extends PIXI.Container {
     };
     sampleSilhouette /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     wrap /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
-    terrainNoise /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): number;
+    terrainNoise /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): number;
     getHeightAt /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     smoothPoints(a: any, b?: number): any;
-    addShadowBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
-    addFillShape /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
-    addHighlightBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
-    addRidgeCap /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
-    addDetailBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    createBandGraphic(a: any, b: any, c: any, e: any, f?: boolean): PIXI.Mesh<any, PIXI.TextureShader>;
+    addShadowBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    addFillShape /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    addHighlightBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
+    addRidgeCap /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
+    addDetailBand /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    createBandGraphic(a: any, b: any, c: any, d: any, e?: boolean): PIXI.Mesh<any, PIXI.TextureShader>;
     createAmbientBands /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): PIXI.Mesh<any, PIXI.TextureShader>[];
     createProfile /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
         default: {
@@ -6359,7 +6395,7 @@ declare class Background extends PIXI.Container {
     computeSeed /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     createChunkRng /** @param {any} a @param {any} [b] */(a: any, b?: any): () => number;
     createIndexedRng /** @param {any} a @param {any} [b] */(a: any, b?: any): () => number;
-    fractalNoise /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): number;
+    fractalNoise /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number;
     valueNoise /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     hash /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
 }
@@ -6574,7 +6610,7 @@ declare class EnergyDragon extends PIXI.Sprite {
     torsoloweremitter2: any;
     torsoloweremitter3: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyDragon {
@@ -6590,7 +6626,7 @@ declare class EnergyVacuum extends PIXI.Sprite {
     torsoloweremitter1: any;
     torsoloweremitter2: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyVacuum {
@@ -6604,7 +6640,7 @@ declare class EnergyJetFeet extends PIXI.Sprite {
     leftlegemitter: any;
     rightlegemitter: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyJetFeet {
@@ -6618,7 +6654,7 @@ declare class EnergyJetFeet2 extends PIXI.Sprite {
     leftlegemitter: any;
     rightlegemitter: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyJetFeet2 {
@@ -6632,7 +6668,7 @@ declare class EnergyJetFeet3 extends PIXI.Sprite {
     leftlegemitter: any;
     rightlegemitter: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyJetFeet3 {
@@ -6726,7 +6762,7 @@ declare class EnergyJetFeetRope extends PIXI.Container {
     leftFlame: any;
     rightFlame: any;
     keepAlive: boolean | undefined;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     createFlames(): void;
     start(): void;
     stop(): void;
@@ -6748,7 +6784,7 @@ declare class EnergyChaos extends PIXI.Sprite {
     torsoloweremitter1: any;
     torsoloweremitter2: any;
     emitter: any[];
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     update(a: any): void;
 }
 declare namespace EnergyChaos {
@@ -6760,7 +6796,7 @@ declare class Energy extends PIXI.Sprite {
     target: any;
     trail: any;
     emitter: any;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any);
     update(a: any): void;
 }
 declare namespace Energy {
@@ -6823,40 +6859,42 @@ declare class Agent extends GameObject {
     bandana: any;
     face: any;
     stateChangeMap: {
-        [StateChange.Agent.ALIVE]: (h: any) => {
+        [StateChange.Agent.ALIVE]: (g: any) => {
             i: any;
         };
-        [StateChange.Agent.TELEPORT]: (h: any) => void;
+        [StateChange.Agent.TELEPORT]: (g: any) => void;
         [StateChange.Agent.JET_START]: () => void;
         [StateChange.Agent.JET_STOP]: () => void;
-        [StateChange.Agent.HEALTH]: (h: any) => void;
-        [StateChange.Agent.BURN]: (h: any) => void;
-        [StateChange.Item.RELOAD]: (h: any) => void;
-        [StateChange.Item.INIT_USE]: (h: any) => {
+        [StateChange.Agent.HEALTH]: (g: any) => void;
+        [StateChange.Agent.BURN]: (g: any) => void;
+        [StateChange.Agent.BALL_CHARGE]: (g: any) => void;
+        [StateChange.Item.RELOAD]: (g: any) => void;
+        [StateChange.Item.INIT_USE]: (g: any) => {
             i: any;
             bowTensionStarted: any;
         } | undefined;
-        [StateChange.Item.USE]: (h: any) => {
+        [StateChange.Item.USE]: (g: any) => {
             i: any;
             bowTensionStarted: null;
-        };
-        [StateChange.Item.STOP_USE]: () => {
+        } | undefined;
+        [StateChange.Item.STOP_USE]: (g: any) => {
             i: any;
             bowTensionStarted: null;
-        };
-        [StateChange.Item.EQUIP]: (h: any) => void;
-        [StateChange.Item.CARRY_PRIMARY]: (h: any) => void;
-        [StateChange.Item.CARRY_SECONDARY]: (h: any) => void;
-        [StateChange.Item.CARRY_BELT]: (h: any) => void;
-        [StateChange.Item.DROP]: (h: any) => void;
-        [StateChange.Item.REMOVE_PRIMARY]: (h: any) => void;
-        [StateChange.Item.REMOVE_SECONDARY]: (h: any) => void;
-        [StateChange.Item.REMOVE_BELT]: (h: any) => void;
-        [StateChange.Item.GORE]: (h: any) => void;
+        } | undefined;
+        [StateChange.Item.EQUIP]: (g: any) => void;
+        [StateChange.Item.CARRY_PRIMARY]: (g: any) => void;
+        [StateChange.Item.CARRY_SECONDARY]: (g: any) => void;
+        [StateChange.Item.CARRY_BELT]: (g: any) => void;
+        [StateChange.Item.DROP]: (g: any) => void;
+        [StateChange.Item.REMOVE_PRIMARY]: (g: any) => void;
+        [StateChange.Item.REMOVE_SECONDARY]: (g: any) => void;
+        [StateChange.Item.REMOVE_BELT]: (g: any) => void;
+        [StateChange.Item.GORE]: (g: any) => void;
     };
+    ballCharge: boolean;
     suppressTerrainGore: boolean | undefined;
     jetting: boolean | undefined;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any);
     init(): void;
     applyState(a: any): void | null;
     setAnimations(a: any): void;
@@ -6927,7 +6965,7 @@ declare class TerrainSeams {
         m_fixtureA: null;
         m_fixtureB: null;
         GetManifold(): any;
-        GetWorldManifold(e: any): void;
+        GetWorldManifold(d: any): void;
     };
     step: number;
     playerFixture: any;
@@ -6936,27 +6974,27 @@ declare class TerrainSeams {
     intervalCount: number | undefined;
     static hasCeilingContact /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     static groundFollowState(a: any): any;
-    static groundFollowSupport /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): boolean;
+    static groundFollowSupport /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
     static isGroundLocomotion /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    static getGroundWalkForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): any;
+    static getGroundWalkForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     static groundFollowWeight(a: any): number;
     static groundFollowLength /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     static groundFollowLengthWeight(a: any): number;
-    static followGroundVelocity /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): boolean;
-    static groundFollowRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | null;
-    static updateCrouchAngle(a: any, b: any, c: any, e: any, f?: number): boolean;
+    static followGroundVelocity /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): boolean;
+    static groundFollowRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
+    static updateCrouchAngle(a: any, b: any, c: any, d: any, e?: number): boolean;
     static updateProneSupport(a: any): boolean;
-    static getProneCrawlForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): any;
-    static getProneAngle(a: any, b: any, c: any, e: any, f?: number, g?: boolean, h?: boolean): any;
-    static proneSupportRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | null;
-    static setRollAngle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    static setRollAngleStep /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    static rollSurfacePose /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any): boolean;
+    static getProneCrawlForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
+    static getProneAngle(a: any, b: any, c: any, d: any, e?: number, f?: boolean, g?: boolean): any;
+    static proneSupportRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
+    static setRollAngle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static setRollAngleStep /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static rollSurfacePose /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): boolean;
     static rollSurfaceFixture(a: any): boolean;
-    static rollSurfaceVertex /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any): void;
-    static rollSurfaceRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | null;
+    static rollSurfaceVertex /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
+    static rollSurfaceRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
     static rollSupportRay /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): -1 | 0;
-    static rollSupport /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): number;
+    static rollSupport /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number;
     constructor(a: any, b?: any);
     beginStep(): void;
     eligible(a: any): any;
@@ -6969,20 +7007,20 @@ declare class TerrainSeams {
     filter(a: any): any;
     collectFloorFaces(a: any): void;
     hasCoplanarFloor(): boolean;
-    filterJunctionCircle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): boolean;
+    filterJunctionCircle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
     orderContacts(a: any): void;
     compatible /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    consolidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): boolean;
+    consolidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
     buildPatch /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    reconstruct(a: any, b: any, c: any, e: any, f: any, g?: number): boolean;
+    reconstruct(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
     liveSupport /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     edge /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     parameter /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     behind /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     connected /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     recoverFeatures /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    coveredFeature /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): boolean;
-    coveredInterval(a: any, b: any, c: any, e: any, f: any, g?: any, h?: boolean): boolean;
+    coveredFeature /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
+    coveredInterval(a: any, b: any, c: any, d: any, e: any, f?: any, g?: boolean): boolean;
 
     static ceilingManifold: any;
     static ceilingSupport: any;
@@ -6995,7 +7033,7 @@ declare class TerrainSeams {
 declare var actorhitboxes: {};
 declare class ActorHitboxes {
     static proneSlopeLowering /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
-    static create(a: any, b: any, c: any, e: any, f: any, g: any, h?: number): {
+    static create(a: any, b: any, c: any, d: any, e: any, f: any, g?: number): {
         scale: number;
         simplified: boolean;
         dimensions: number;
@@ -7070,6 +7108,28 @@ declare class ActorHitboxes {
 }
 declare namespace ActorHitboxes {
     var NextContactKey: number;
+}
+declare var ballcharge: {};
+declare class BallCharge {
+    static wantsCharge /** @param {any} a @param {any} [b] */(a: any, b?: any): b is never;
+    static consumeAmmo /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    static damageFraction /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
+    static trackContact /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
+    static flushImpacts /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static trackThrownContact /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static rise /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static sync /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static areEnemies /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    static solveContact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+}
+declare namespace BallCharge {
+    var RESTITUTION: number;
+    var AMMO: number;
+    var BOUNCE_COST: number;
+    var DURATION: number;
+    var RELOAD_SECONDS: number;
+    var RISE_SPEED: number;
+    var RISE_ACCELERATION: number;
 }
 declare var player: {};
 declare class Player extends Agent {
@@ -7199,6 +7259,7 @@ declare class Player extends Agent {
     _gearArmHiddenForProneEnd: boolean | undefined;
     simulationEffectScope: any;
     presentationPending: boolean | undefined;
+    ballChargeEmitters: any[] | null | undefined;
     secondaryGearSway: number | undefined;
     reloadAnimationStopped: boolean | undefined;
     weaponBashFrame: number | undefined;
@@ -7231,7 +7292,7 @@ declare class Player extends Agent {
         x: number;
         y: number;
     } | undefined;
-    constructor(a: any, b: any, c: any, e: any, f: any, g: any, h: any, k: any, l: any, m?: string, n?: boolean);
+    constructor(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h: any, k: any, l?: string, m?: boolean);
     setHostile(a: any): void;
     updateHostileHeadGlowVisibility(): void;
     applyMapVisualStyle(): void;
@@ -7260,6 +7321,7 @@ declare class Player extends Agent {
     doMagic(): void;
     doToss(): void;
     setLimbGoreTexture /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    restoreDeadUpperArmOrientation(): void;
     setAlive(a: any): {
         i: any;
     };
@@ -7276,7 +7338,7 @@ declare class Player extends Agent {
     static getPistolUpperArmLength /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     getPistolShoulder /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     calculatePistolPose(a?: boolean): any;
-    getSimulationPistolPoint(a: any, b?: any, c?: any, e?: number): any;
+    getSimulationPistolPoint(a: any, b?: any, c?: any, d?: number): any;
     syncPistolGrip(): void;
     isPistolGestureActive(): any;
     syncPistolGesture(): void;
@@ -7295,12 +7357,14 @@ declare class Player extends Agent {
     get simulationEffects(): any;
     set simulationEffects(a: any);
     update /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    stopBallChargeVisual(): void;
+    updateBallChargeVisual(a: any): void;
     advanceSimulation(a: any): void;
     calculateWeaponPose(a: any, b?: boolean): {};
-    getWeaponPoseUpperArmRotation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): null;
+    getWeaponPoseUpperArmRotation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): null;
     getSimulationWeaponPoint(a: any, b?: any): any;
-    static transformPosePoint /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any): null;
-    present(a: any, b: any, c: any, e?: boolean): void;
+    static transformPosePoint /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): null;
+    present(a: any, b: any, c: any, d?: boolean): void;
     presentBreathing(a: any): void;
     updateFacing(a: any): void;
     updateFacingDir(a: any, b?: boolean): void;
@@ -7321,14 +7385,14 @@ declare class Player extends Agent {
     static getMovementAwareRagdollAnimationId /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     static resetRagdollMotion(a: any): void;
     static getRagdollScratch(a: any): any;
-    static isDetailedRagdollPoseVisible(a: any, b: any, c: any, e?: number): boolean;
+    static isDetailedRagdollPoseVisible(a: any, b: any, c: any, d?: number): boolean;
     static updateRagdollSolverLOD(a: any): void;
     static requiresContinuousRagdollPose(a: any): any;
     static shouldUpdateDetailedRagdollPose /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    static getProneEndShoulderTarget /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): number;
+    static getProneEndShoulderTarget /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): number;
     static updateProneEnd /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static isGroundedStanding(a: any): boolean;
-    static projectStandingJoint(a: any, b: any, c: any, e: any, f?: number, g?: number, h?: boolean): void;
+    static projectStandingJoint(a: any, b: any, c: any, d: any, e?: number, f?: number, g?: boolean): void;
     static sampleBowDraw /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     static restoreRagdollPose /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static animateRagdoll(a: any, b?: boolean, c?: boolean): void;
@@ -7396,13 +7460,13 @@ declare namespace Player {
 }
 declare var trainer: {};
 declare class Trainer extends Player {
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any);
 }
 declare var zombie: {};
 declare class Zombie extends Player {
     isZombie: boolean;
     contrastGlow: PIXI.Graphics;
-    constructor(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any);
+    constructor(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any);
     createContrastGlow(): PIXI.Graphics;
     updateContrastGlowVisibility(): void;
     setAlive(a: any): any;
@@ -7589,7 +7653,7 @@ declare class ShockwaveFilter extends PIXI.Filter {
     time: any;
     uniforms: any;
     constructor(a: any);
-    apply /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    apply /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     get center(): any;
     set center(a: any);
     get centerX(): any;
@@ -7799,7 +7863,7 @@ declare class GoreRibbon extends PIXI.MeshRope {
     update(): void;
     getTargetAlpha(): number;
     syncTargetFade(): void;
-    rebuildLowSpeedPoints /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    rebuildLowSpeedPoints /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     clearNodes(): void;
     prependNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     sampleMovement(a: any): void;
@@ -7829,8 +7893,8 @@ declare namespace GoreRibbon {
 declare var lightningbeamshader: {};
 declare class LightningBeamShader {
     static Create(a: any): PIXI.Shader;
-    static CreateBeam /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): PIXI.Mesh<PIXI.MeshGeometry, PIXI.Shader>;
-    static UpdateGeometry /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): number;
+    static CreateBeam /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): PIXI.Mesh<PIXI.MeshGeometry, PIXI.Shader>;
+    static UpdateGeometry /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number;
 }
 declare namespace LightningBeamShader {
     var HALF_WIDTH: number;
@@ -8053,7 +8117,7 @@ declare class Canvas extends PIXI.EventEmitter {
     setDebugDrawEnabled(a: any): boolean;
     emitEmitterEffect /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     getEmitterVisualPosition(a: any): any;
-    createPointEffect /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    createPointEffect /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     attachStaticVisual(a: any): void;
     detachStaticVisual(a: any): void;
     tickStaticUniforms(a: any, b?: number): void;
@@ -8073,9 +8137,9 @@ declare class Canvas extends PIXI.EventEmitter {
     initCTFVictoryAnimation(a: any): void;
     endVictoryAnimation(): void;
     onUpdateEnvironment(a: any): void;
-    setBackgroundGradient /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    setBackgroundGradient /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     getDarkestColor /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-    setZombieBackgroundGradient /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    setZombieBackgroundGradient /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     setParallax(a: any): void;
     setZombieSurvivalMode(a: any): void;
     setZombieWave(a: any): void;
@@ -8093,7 +8157,7 @@ declare class Canvas extends PIXI.EventEmitter {
     onGameObjectAdded(a: any): void;
     processStaticBuffer(): void;
     buildTerrainOutlines(): void;
-    updateVisibleTerrainOutlines /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    updateVisibleTerrainOutlines /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     clearTerrainOutlines(): void;
     addPlayer(a: any): void;
     addDynamicObject(a: any): void;
@@ -8102,7 +8166,7 @@ declare class Canvas extends PIXI.EventEmitter {
     clearTerrainMesh(): void;
     static buildTerrainIndex(a: any): any;
     processTerrainMesh(): void;
-    isOverlappingLineSegment(a: any, b: any, c: any, e?: number): boolean;
+    isOverlappingLineSegment(a: any, b: any, c: any, d?: number): boolean;
     getPlayerFromObject(a: any): any;
     getClosestTerrainSurface /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
         x: number;
@@ -8116,7 +8180,7 @@ declare class Canvas extends PIXI.EventEmitter {
         poly: any;
     } | null;
     getPolygonArea(a: any): number;
-    getLineIntersection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): {
+    getLineIntersection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): {
         x: any;
         y: any;
     };
@@ -8143,7 +8207,7 @@ declare class Canvas extends PIXI.EventEmitter {
     isFlameThrowerDamageSource(a: any): boolean;
     suppressPlayerDamageDecals(a: any, b: any, c?: any): boolean;
     isAlliedExplosionTarget /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    onPlayerDamage /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    onPlayerDamage /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     onBotDamage /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     addEmitter /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     updateEmitters(a: any, b?: boolean, c?: number): number;
@@ -8173,9 +8237,9 @@ declare class Canvas extends PIXI.EventEmitter {
     removeBurnFlame(a: any): boolean;
     getExplosionBurnTarget /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     onBurnFlameSpark(a: any): void;
-    createLinkGunBeam(a: any, b: any, c: any, e: any, f?: number): void;
-    presentLinkGunBeam /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any): void;
-    createEffect(a: any, b: any, c: any, e?: any): void;
+    createLinkGunBeam(a: any, b: any, c: any, d: any, e?: number): void;
+    presentLinkGunBeam /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
+    createEffect(a: any, b: any, c: any, d?: any): void;
     submitEffect(a: any): void;
     presentEffects(): void;
     presentEffect(a: any): void;
@@ -8279,7 +8343,7 @@ declare class FastRope extends PIXI.Mesh {
     vx: number;
     alphaDrop: number;
     delta: number;
-    constructor(a: any, b: any, c?: any, e?: any, f?: any);
+    constructor(a: any, b: any, c?: any, d?: any, e?: any);
     update(a?: number): void;
     getTargetPosition(): any;
 }
@@ -8317,9 +8381,9 @@ declare class BlackCape extends FastRope {
     constructor(a: any, b?: any);
     update(): void;
     updateOffscreen(): void;
-    integrateCloth /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    integrateCloth /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
     installWidthDeformation(): void;
-    updateWidthDynamics /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
+    updateWidthDynamics /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     getClothDamping /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     getMotionBlend /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     solveClothConstraints(): void;
@@ -8809,7 +8873,7 @@ declare namespace ShockRifleTailRope {
         tex: string;
     };
 }
-/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] */ declare function ParticleEmitter(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any): void;
+/** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] */ declare function ParticleEmitter(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any): void;
 declare function AnchorBase(): void;
 declare var basesprite: {};
 declare class BaseSprite extends PIXI.Container {
@@ -8827,16 +8891,16 @@ declare class BaseSprite extends PIXI.Container {
     update(): void;
     updateGraphics(): void;
     constructTexturedMesh(a: any): void;
-    constructPolyMesh /** @param {any} a @param {any} [c] @param {any} [e] */(a: any, b?: number[], c?: any, e?: any): any;
-    constructRectMesh /** @param {any} a @param {any} [c] @param {any} [e] */(a: any, b?: number[], c?: any, e?: any): any;
-    constructCircleMesh /** @param {any} a @param {any} [c] @param {any} [e] */(a: any, b?: number[], c?: any, e?: any): any;
+    constructPolyMesh /** @param {any} a @param {any} [c] @param {any} [d] */(a: any, b?: number[], c?: any, d?: any): any;
+    constructRectMesh /** @param {any} a @param {any} [c] @param {any} [d] */(a: any, b?: number[], c?: any, d?: any): any;
+    constructCircleMesh /** @param {any} a @param {any} [c] @param {any} [d] */(a: any, b?: number[], c?: any, d?: any): any;
     constructColoredMesh(a: any): void;
 
     static SurfacePrograms: any;}
 declare namespace BaseSprite {
     var MeshIDMap: any;
     var DefaultUVs: number[];
-    var CreateColoredShapeMesh: (a: any, b?: any, c?: any, e?: any, f?: any, g?: any) => PIXI.Mesh<any, any>;
+    var CreateColoredShapeMesh: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => PIXI.Mesh<any, any>;
     var MeshIDGroups: any[];
     var TextureIDMap: any[];
     var ColorMap: any[];
@@ -8849,7 +8913,7 @@ declare namespace BaseSprite {
     var GetBasicShader: (a: any, b?: any, c?: any) => any;
     var Create: (a: any) => any;
     var CreateMesh: (a: any) => any[] | PIXI.Mesh<PIXI.Geometry, any>;
-    var MergeVertices: (a: any, b?: any, c?: any, e?: any) => {
+    var MergeVertices: (a: any, b?: any, c?: any, d?: any) => {
         vertices: any[];
         uvs: any[];
         indices: any[];
@@ -8899,9 +8963,9 @@ declare namespace BaseSprite {
     var UVRotateGpuProgram: PIXI.GpuProgram;
     var TransformUVRotateGpuProgram: PIXI.GpuProgram;
     var CollectSurfaceEffects: (a: any, b?: any) => void;
-    var SurfaceNumber: (a: any, b?: any, c?: any, e?: any) => any;
+    var SurfaceNumber: (a: any, b?: any, c?: any, d?: any) => any;
     var SyncSurfaceAnchors: (a: any) => void;
-    var CreateSurfaceShader: (a: any, b?: any, c?: any, e?: any) => PIXI.Shader;
+    var CreateSurfaceShader: (a: any, b?: any, c?: any, d?: any) => PIXI.Shader;
     var InitSurfacePrograms: () => void;
 }
 declare class GoldSprite extends PIXI.Sprite {
@@ -8910,10 +8974,16 @@ declare class GoldSprite extends PIXI.Sprite {
     init(): void;
 }
 declare class BallSprite extends PIXI.Sprite {
+    charge: number;
+    heldLeft: boolean;
+    chargeCount: number;
+    recharging: boolean;
     constructor();
     pointLeft(): void;
     pointRight(): void;
     setHeldScale(a: any): void;
+    advanceCharge /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    setAmmoState(a: any): void;
     animate(a: any): void;
     init(): void;
 }
@@ -10016,7 +10086,7 @@ declare class Label extends PIXI.Container {
     markerTime: number | undefined;
     healthBar: PIXI.Sprite | undefined;
     chatTeam: any;
-    constructor(a: any, b?: any, c?: any, e?: any);
+    constructor(a: any, b?: any, c?: any, d?: any);
     displayChatBubble(): void;
     hideChatBubble(): void;
     setText(a: any): void;
@@ -10027,7 +10097,7 @@ declare class Label extends PIXI.Container {
     hideSubTitle(): void;
     stealthMode(a: any): void;
     updateHealth(): void;
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
 }
 declare namespace Label {
     var HealthBarTextures: any[];
@@ -10051,7 +10121,7 @@ declare class LabelContainer extends PIXI.Container {
     updateFlagIndicators /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     clear(): void;
     onUpdateLabel(a: any): void;
-    addLabel /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    addLabel /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     onRemoveLabel(a: any): void;
     setVisibleTeam(a: any): void;
 }
@@ -10252,7 +10322,7 @@ declare class AmmoBar extends PIXI.Container {
     setValue(a: any): void;
     positionAmmoCount(): void;
     getValue(): number;
-    setShotCooldown(a: any, b: any, c: any, e?: number): void;
+    setShotCooldown(a: any, b: any, c: any, d?: number): void;
     setReloadProgress(a: any, b: any, c?: number): void;
     setMaxValue(a: any): void;
     subtract(): void;
@@ -10314,7 +10384,7 @@ declare class EscapeMenu extends PIXI.Graphics {
     constructor();
     drawPanel(): void;
     createCloseButton(): ImgButton;
-    setRoleAction(a: any, b: any, c: any, e?: boolean): void;
+    setRoleAction(a: any, b: any, c: any, d?: boolean): void;
     getSoundStatus(): "AUDIO ENABLED" | "AUDIO MUTED";
     onMute(): void;
     setMuted(a: any): void;
@@ -10347,7 +10417,7 @@ declare class EscapeMenuButton extends PIXI.Graphics {
     shortcut: PIXI.Text;
     icon: PIXI.Sprite | undefined;
     eventMode: PIXI.EventMode | undefined;
-    constructor(a: any, b: any, c: any, e?: any, f?: boolean, g?: boolean);
+    constructor(a: any, b: any, c: any, d?: any, e?: boolean, f?: boolean);
     drawBackground(): void;
     scaleIcon(): void;
     setEnabled(a: any): void;
@@ -10456,15 +10526,15 @@ declare namespace Leaderboard {
         titleField: string;
         hintField: PIXI.Text;
     };
-    var DrawTableHeader: (a: any, b?: any, c?: any, e?: any) => PIXI.Graphics;
-    var DrawTeamCard: (a: any, b?: any, c?: any, e?: any, f?: any, g?: any) => PIXI.Graphics;
+    var DrawTableHeader: (a: any, b?: any, c?: any, d?: any) => PIXI.Graphics;
+    var DrawTeamCard: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => PIXI.Graphics;
     var DrawInfoCard: (a: any, b?: any, c?: any) => void;
     var StyleInfoCard: (a: any) => void;
     var PositionInfoCardIcons: (a: any) => void;
     var StyleTitle: (a: any, b?: any) => void;
     var StyleColumns: (...a: any[]) => void;
     var StyleTeamTitle: (a: any, b?: any) => void;
-    var ConfigureRow: (a: any, b?: any, c?: any, e?: any, f?: any, g?: any) => void;
+    var ConfigureRow: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => void;
     var AddDeathIndicator: (a: any, b?: any) => void;
     var AddMuteIndicator: (a: any) => void;
     var RefreshMuteIndicator: (a: any) => void;
@@ -10511,7 +10581,7 @@ declare class RowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var playerdropdown: {};
 declare class PlayerDropdown extends PIXI.Container {
@@ -10636,7 +10706,7 @@ declare class DMRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var tdm_leaderboard: {};
 declare class LeaderboardTDM extends Leaderboard {
@@ -10751,7 +10821,7 @@ declare class TDMRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var ctf_leaderboard: {};
 declare class LeaderboardCTF extends Leaderboard {
@@ -10872,7 +10942,7 @@ declare class CTFRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var db_leaderboard: {};
 declare class LeaderboardDB extends Leaderboard {
@@ -10988,7 +11058,7 @@ declare class DBRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var tr_leaderboard: {};
 declare class LeaderboardTR extends Leaderboard {
@@ -11084,7 +11154,7 @@ declare class TRRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare var onevone_leaderboard: {};
 declare class Leaderboard1V1 extends Leaderboard {
@@ -11181,7 +11251,7 @@ declare class OneVOneRowLabel extends PIXI.Container {
     ratingTag: PIXI.Sprite | null;
     skillTag: PIXI.Sprite | null;
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
 }
 declare class Hud extends PIXI.Container {
     manager: any;
@@ -11339,9 +11409,9 @@ declare class Hud extends PIXI.Container {
     resetTextbarPresentation(): void;
     drawPlainTextBar(a: any): void;
     layoutTextbarVerticalPosition(): void;
-    configureBottomSplash(a: any, b: any, c: any, e: any, f: any, g?: boolean): void;
-    configureKillSplash(a: any, b: any, c: any, e: any, f?: boolean): void;
-    configureObjectiveSplash(a: any, b: any, c: any, e: any, f?: boolean): void;
+    configureBottomSplash(a: any, b: any, c: any, d: any, e: any, f?: boolean): void;
+    configureKillSplash(a: any, b: any, c: any, d: any, e?: boolean): void;
+    configureObjectiveSplash(a: any, b: any, c: any, d: any, e?: boolean): void;
     displayObjectiveMessage(a: any): void;
     textBarMessage /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     displayScoredBy(a: any): void;
@@ -11370,6 +11440,25 @@ declare class Hud extends PIXI.Container {
 declare namespace Hud {
     var STATUS_BAR_WIDTH: number;
     var STATUS_BAR_HEIGHT: number;
+    var TouchBindings: {
+        ctrl_jump: string;
+        ctrl_move_left: string;
+        ctrl_move_right: string;
+        ctrl_crouch: string;
+        ctrl_prone: string;
+        ctrl_fly: string;
+        ctrl_throw: string;
+        ctrl_flag: string;
+        ctrl_fire: string;
+        ctrl_reload: string;
+        ctrl_drop: string;
+        ctrl_swap: string;
+        ctrl_chat: string;
+        ctrl_team_chat: string;
+        ctrl_help: string;
+        ctrl_weapon: string;
+        ctrl_leader: string;
+    };
     var COMPACT_STATUS_BAR_WIDTH: number;
     var COMPACT_STATUS_BAR_HEIGHT: number;
     var ZOMBIE_STATUS_WIDTH: number;
@@ -12553,11 +12642,11 @@ declare class NetworkUpdateBuffer {
     values: string | undefined;
     constructor();
     grow(): void;
-    allocate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): any;
+    allocate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     remove(a: any): void;
     getKey /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     append /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    appendTransform /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
+    appendTransform /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     finishAppend /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     hasEssentialData(a: any): boolean;
     coalesce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
@@ -12591,7 +12680,7 @@ declare class Manager extends PIXI.EventEmitter {
     lastAppliedTick: number;
     networkBodies: {};
     pendingNetworkUpdates: {};
-    removedNetworkIds: {};
+    retiredNetworkRanges: any[];
     lastAckedInputSeq: number;
     debugClientPerformance: boolean;
     lastPhysicsUpdateMs: number | null;
@@ -12669,11 +12758,16 @@ declare class Manager extends PIXI.EventEmitter {
         [StateChange.Model.RANGE]: (a: any, b?: any) => boolean;
         [StateChange.Item.RANGE]: (a: any, b?: any) => any;
     } | undefined;
+    pendingOwnerUpdate: any;
     networkUpdateScratch: {} | undefined;
     camera: any;
     transformIds: Uint32Array<any> | undefined;
     transformMasks: Uint16Array<any> | undefined;
     transformValues: Float64Array<ArrayBuffer> | undefined;
+    awaitingResync: boolean | undefined;
+    networkPackets: any[] | undefined;
+    networkPacketBytes: number | undefined;
+    lastResyncRequestAt: number | undefined;
     worldInitialized: boolean | undefined;
     waypoints: {} | undefined;
     simulationInProgress: boolean | undefined;
@@ -12714,7 +12808,7 @@ declare class Manager extends PIXI.EventEmitter {
     getPendingBodyConnectionKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
     clearPendingBodyConnection /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     attachObjectiveToCarrier(a: any): boolean;
-    resolvePendingBodyConnections(): void;
+    resolvePendingBodyConnections(a?: number): void;
     preContact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     contact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     processBuffer(a?: number, b?: number): void;
@@ -12726,15 +12820,18 @@ declare class Manager extends PIXI.EventEmitter {
     smoothPresentationCorrection /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static translatePresentationSamples /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static decayPresentationCorrection(a: any): void;
+    findRetiredNetworkRange(a: any): number;
+    isNetworkIdRetired(a: any): boolean;
+    setNetworkIdRetired /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     registerNetworkBody /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     _processNetworkUpdate(a: any, b?: boolean): boolean;
     getMissingStateDependency(a: any): any;
     queueMissingSyncOp /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    retryPendingSyncOps(): void;
+    retryPendingSyncOps(a?: number): void;
     _processRemove(a: any): void;
     _scAgentHostile /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     queueBodyExplosion(a: any, b?: any): boolean;
-    _processExplosions(): void;
+    _processExplosions(a?: number): void;
     createLocalPlayer /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     createAgent /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     setCamera(a: any): void;
@@ -12756,6 +12853,9 @@ declare class Manager extends PIXI.EventEmitter {
     pushTransformPacket(a: any, b?: any): boolean;
     ensureTransformCapacity(a: any): void;
     appendUpdates(a: any): void;
+    requestNetworkResync(): void;
+    enqueueNetworkPacket /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    ingestNetworkPackets(): void;
     requestLocalObject(a: any): void;
     applyStateChange(a: any): false | ((a: any, b?: any) => any) | null;
     clear(): void;
@@ -12785,15 +12885,15 @@ declare class Manager extends PIXI.EventEmitter {
     captureProjectileImpact(a: any, b: any, c?: any): void;
     applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUpdateObject(a: any): void;
-    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [p] @param {any} [r] @param {any} [t] @param {any} [q] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any, r?: any, t?: any, q?: any): void;
+    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [q] @param {any} [r] @param {any} [p] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, q?: any, r?: any, p?: any): void;
     preparePresentationSmoothing(a: any): void;
-    capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     isActorPresentationVisible(a: any): boolean;
-    static isPresentationBodyInView /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): boolean;
+    static isPresentationBodyInView /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
     updateActorPresentationVisibility(a: any): void;
     resetActorPresentationBody(a: any): void;
     presentPhysicsBodies(a: any): void;
-    static applyPhysicsPresentation(a: any, b: any, c?: number, e?: number): void;
+    static applyPhysicsPresentation(a: any, b: any, c?: number, d?: number): void;
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     finalizePhysicsPresentation(a: any): void;
     updateRagdollPresentation(a: any): void;
@@ -12834,6 +12934,8 @@ declare namespace Manager {
     var NETWORK_MOTION_MASK: number;
     var NETWORK_PROCESS_BUDGET_MS: number;
     var NETWORK_PROCESS_MAX_OPS: number;
+    var NETWORK_MAX_QUEUED_OPS: number;
+    var NETWORK_MAX_QUEUED_BYTES: number;
     var NETWORK_UPDATE_MARKER: number;
     var NETWORK_UPDATE_VERSION: number;
     var NETWORK_BINARY_MAX_DEPTH: number;
@@ -12949,7 +13051,7 @@ declare class RayParticle {
     wd: number;
     gi: number;
     r: number;
-    constructor(a: any, b?: number, c?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, r?: any);
+    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: any);
 }
 declare var shapeplayer: {};
 declare class ShapePlayer {
@@ -12993,9 +13095,9 @@ declare var BodyFactory: {
     };
     getBodyDef: (a: any) => any;
     createRagdoll: (a: any, b: any, c?: number) => number;
-    joinBodies: (a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any, k?: any) => any;
-    weldJoinBodies: (a: any, b?: any, c?: any, e?: any, f?: any) => any;
-    createJoint: (a: any, b?: any, c?: any, e?: any, f?: any) => any;
+    joinBodies: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any) => any;
+    weldJoinBodies: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
+    createJoint: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
 } & {
     ShapeMap: (typeof ShapePlayer | null)[];
 };
@@ -14055,27 +14157,27 @@ declare class DamageVolumeIndex {
     synchronizePoseDefinition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     ensureHistorySnapshotCapacity /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     captureHistory(a: any): void;
-    raycastHistorical(a: any, b: any, c: any, e: any, f: any, g?: number): boolean;
-    static raycastHistoricalVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): number | null;
+    raycastHistorical(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
+    static raycastHistoricalVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number | null;
     removeFromCells(a: any): void;
-    visitCell /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    forEachRayCandidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
-    raycast(a: any, b: any, c: any, e?: number, f?: boolean): any;
+    visitCell /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    forEachRayCandidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    raycast(a: any, b: any, c: any, d?: number, e?: boolean): any;
     raycastEntry(a: any): void;
-    forEachAABBCandidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
-    queryAABB /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): void;
+    forEachAABBCandidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    queryAABB /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     queryAABBEntry(a: any): void;
-    querySweptCircle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): any[];
+    querySweptCircle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any[];
     querySweptCircleEntry(a: any): void;
     static compareSweepHits /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     static shouldCollide /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    static raycastVolume(a: any, b: any, c: any, e?: number): boolean;
-    static raycastVolumeLocal /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any, h?: any): boolean;
+    static raycastVolume(a: any, b: any, c: any, d?: number): boolean;
+    static raycastVolumeLocal /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): boolean;
     static pointInVolume /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    static segmentIntersectsAABB /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): boolean;
+    static segmentIntersectsAABB /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): boolean;
     static toVolumeLocal /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): null;
     static circleOverlapsVolume /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
-    static sweepCircleVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): number | null;
+    static sweepCircleVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): number | null;
 }
 declare namespace DamageVolumeIndex {
     var LocalPoint: {
@@ -14155,11 +14257,13 @@ declare class PhysicsWorker {
     } | undefined;
     slideDustManifold: any;
     particlesAdded: {} | undefined;
+    ballChargeImpacts: any[] | undefined;
+    ballChargeStep: any;
     hasSubmerged: {} | undefined;
     hasSurfaced: {} | undefined;
     solved: {} | undefined;
     damageVolumeIndex: DamageVolumeIndex | undefined;
-    boundDamageRayReport: ((a: any, b?: any, c?: any, e?: any) => any) | undefined;
+    boundDamageRayReport: ((a: any, b?: any, c?: any, d?: any) => any) | undefined;
     continuous: {} | undefined;
     contact: {} | undefined;
     fluids: {} | undefined;
@@ -14202,7 +14306,7 @@ declare class PhysicsWorker {
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     initializePackedUpdateBatch(a?: number): void;
     growPackedUpdateBatch(): void;
-    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} e @param {any} f @param {any} g @param {any} [t] @param {any} [q] */(a: any, b: any, c: any, e: any, f: any, g: any, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, r?: number, t?: any, q?: any): void;
+    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [p] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: number, r?: any, p?: any): void;
     queuePackedContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     flushPackedUpdates(): void;
     unlinkContactNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -14221,7 +14325,7 @@ declare class PhysicsWorker {
         frac: any;
     };
     raycastBulletHits /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
-    raycast(a: any, b: any, c: any, e?: boolean): false | {
+    raycast(a: any, b: any, c: any, d?: boolean): false | {
         p: any;
         c: any;
         normal: any;
@@ -14233,6 +14337,8 @@ declare class PhysicsWorker {
     onDestroyJoint(a: any): void;
     connectBodies(a: any): void;
     disconnectBodies(a: any): void;
+    static setObjectiveGravityScale /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static limitFlagVelocity(a: any, b?: number): void;
     add(a: any): void;
     registerKinematicAnimation /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     setActorsFrozen(a: any): void;
@@ -14267,7 +14373,7 @@ declare class PhysicsWorker {
     finishLocalRagdollFollow(a: any): void;
     filterTerrainSeamContact(a: any): any;
     endContact(a: any): void;
-    _buildContactFeedback /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, e?: any, f?: any): any;
+    _buildContactFeedback /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     _clearState(): void;
 }
 declare namespace PhysicsWorker {
@@ -14311,7 +14417,7 @@ declare class ExplosionRayCallback {
     body: any;
     constructor(a: any, b?: any);
     Set /** @param {any} a @param {any} [b] */(a: any, b?: any): this;
-    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | 0;
+    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | 0;
 }
 declare class RaycastCallback {
     rayMaskBits: number;
@@ -14325,7 +14431,7 @@ declare class RaycastCallback {
     normal: any;
     constructor(a: any, b?: any);
     Set(a: any, b: any, c?: boolean): this;
-    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | null;
+    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
 }
 declare namespace RaycastCallback {
     var Passable: number;
@@ -14339,7 +14445,7 @@ declare class RaycastBulletCallback {
     normal: any;
     constructor(a: any, b?: any);
     Set /** @param {any} a @param {any} [b] */(a: any, b?: any): this;
-    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | null;
+    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
 }
 declare namespace RaycastBulletCallback {
     var Passable: number;
@@ -14351,7 +14457,7 @@ declare class RaycastBulletCollectCallback {
     rayMaskBits: number;
     constructor(a: any);
     Set(a: any): this;
-    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): -1 | 1;
+    ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | 1;
     GetHits(): any[];
 }
 declare var playerevent: {}, PlayerEvent: {
@@ -14391,6 +14497,7 @@ declare class PredictionController {
     snapCorrection: any;
     smoothCorrectionLimit: number;
     projectedSnapAvoidanceLimit: number;
+    baseWalkForce: any;
     walkForce: any;
     walkMaxSpeed: any;
     groundRollSpeedMultiplier: any;
@@ -14399,7 +14506,6 @@ declare class PredictionController {
     walkTurnMultiplier: any;
     crouchTurnForceMultiplier: any;
     jumpAcceleration: any;
-    jumpForce: any;
     proneJetHorizontalForce: any;
     proneJetVerticalForce: any;
     proneJetAirVerticalMultiplier: any;
@@ -14419,16 +14525,19 @@ declare class PredictionController {
     serverTickMs: any;
     groundPredictionStableTicks: any;
     inputHistory: any[];
+    motionStates: any[];
     walkHistory: Float64Array<ArrayBuffer>;
     walkHistoryCursor: number;
     walkHistoryCount: number;
     walkStepBody: any;
     receivedInputAck: boolean;
     jetStoppedPlayer: any;
-    jumpWasPressed: boolean;
+    jumpDelay: number;
+    jumpAnimation: number;
     groundContactTicks: number;
     groundContactTickAccumulatorMs: number;
     previousHorizontalForce: number;
+    allowNextJump: number;
     proneFlightLowFriction: boolean;
     proneFlightFrictionFadeElapsedMs: number;
     stats: {
@@ -14446,6 +14555,8 @@ declare class PredictionController {
         skippedProjectionIncreasedCorrection: number;
         maxPendingProjectionDistance: number;
     };
+    pendingJump: boolean | undefined;
+    lastJumpHeld: boolean | undefined;
     walkStepX: any;
     walkStepY: any;
     walkStepVelocity: any;
@@ -14454,6 +14565,9 @@ declare class PredictionController {
     reset(): void;
     clearCorrection(): void;
     recordInput /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    clearCommandHistory(): void;
+    recordCommandState(a: any): void;
+    reconcileCommandState(a: any): any;
     trimInputHistory(a: any): void;
     applyLocalPrediction(a: any): void;
     recordLocalMotion /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -14466,7 +14580,7 @@ declare class PredictionController {
     getPredictedGroundRollForce /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     isPredictedStandingJetActive /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     acceptAuthoritativeJetState /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    applyPredictedProneForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): void;
+    applyPredictedProneForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     isPredictedProneJetActive /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     getPredictedProneSlideBrakeAmount /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     getPredictedProneSlideFriction /** @param {any} a @param {any} [b] */(a: any, b?: any): number | null;
@@ -14485,9 +14599,8 @@ declare class PredictionController {
     updatePredictedGrounded /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     resetGroundContactPrediction(): void;
     hasGroundContact(a: any): boolean;
-    getPredictedHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): any;
-    getPredictedJumpForce(a: any): number;
-    getPredictedJumpHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): any;
+    getPredictedHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
+    getPredictedJumpHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
     getLatencyCompensatedTarget /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     capProjectedCorrectionForSmoothing /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
         x: any;
@@ -14544,6 +14657,7 @@ declare var statechange: {}, StateChange: {
         MESSAGE: number;
         HOSTILE: number;
         BURN: number;
+        BALL_CHARGE: number;
     };
     Model: {
         RANGE: number;
@@ -14573,6 +14687,36 @@ declare namespace Team {
     var LabelColors: number[];
     var getHudTextColor: (a: any, b?: number) => number;
 }
+declare var slider: {};
+declare class Slider extends PIXI.Container {
+    id: any;
+    labelText: any;
+    range: any;
+    min: any;
+    value: number;
+    size: number;
+    round: boolean;
+    pointerId: any;
+    onMouseMoveListener: ((a: any) => void) | null;
+    background: PIXI.Graphics;
+    sliderButton: PIXI.Graphics;
+    label: PIXI.Text;
+    valueLabel: PIXI.Text;
+    volumeMinLabel: PIXI.Text;
+    volumeMaxLabel: PIXI.Text;
+    mouseDownListener: any;
+    constructor(a: any, b: any, c: any, d: any, e: any, f?: number);
+    onMouseDown(a: any): void;
+    onMouseMove(a: any): void;
+    getOutputValue(): any;
+    onMouseUp(a: any): void;
+    updateSliderButtonPosition(): void;
+    setValue(a: any): void;
+    globalToValue(a: any): any;
+}
+declare namespace Slider {
+    var CHANGE: string;
+}
 declare var controlstab: {};
 declare class ControlsTab extends PIXI.Container {
     settings: any;
@@ -14586,7 +14730,10 @@ declare class ControlsTab extends PIXI.Container {
     controlsByBinding: any;
     qwertyButton: ProfileActionButton;
     azertyButton: ProfileActionButton;
+    touchLeftHanded: Checkbox | undefined;
+    touchAimFire: Checkbox | undefined;
     constructor(a: any, b?: number, c?: number);
+    createTouchSettings(a: any): void;
     createPresetButton /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): ProfileActionButton;
     createColumn(a: any): void;
     onBindingChanged(a: any): void;
@@ -14624,13 +14771,13 @@ declare class Dropdown extends PIXI.Container {
     expanded: boolean;
     dropdownIcon: PIXI.Sprite;
     icon: PIXI.Sprite | undefined;
-    constructor(a: any, b: any, c: any, e: any, f?: boolean, g?: any);
+    constructor(a: any, b: any, c: any, d: any, e?: boolean, f?: any);
     setSelectorLayout(a: any): void;
     formatSelectedTitle(a: any): any;
     disable(): void;
     enable(): void;
     clear(): void;
-    addItem /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, e?: any, f?: any, g?: any): void;
+    addItem /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
     onMouseDown(): void;
     setTint(a: any): void;
     onMouseOver(): void;
@@ -14640,7 +14787,7 @@ declare class Dropdown extends PIXI.Container {
     expand(): void;
     collapse(): void;
     onItemSelected(a: any): void;
-    getItem(a: any, b: any, c: any, e: any, f?: number, g?: number): PIXI.Container<PIXI.ContainerChild>;
+    getItem(a: any, b: any, c: any, d: any, e?: number, f?: number): PIXI.Container<PIXI.ContainerChild>;
     draw(): void;
 }
 declare namespace Dropdown {
@@ -14727,7 +14874,7 @@ declare class KeyInput extends PIXI.Container {
     keyField: PIXI.Text;
     _mousedownListener: (a: any) => void;
     keyDownListener: (a: any) => void;
-    constructor(a: any, b: any, c: any, e: any, f?: number);
+    constructor(a: any, b: any, c: any, d: any, e?: number);
     draw(a?: boolean): void;
     positionKeyText(): void;
     onMouseDown(a: any): void;
@@ -14772,6 +14919,7 @@ declare class SettingsPanel extends PIXI.Container {
     tabMask: PIXI.Graphics;
     scrollTrack: PIXI.Graphics;
     scrollThumb: PIXI.Graphics;
+    scrollPointerId: number;
     scrollDragOffset: number;
     scrollDragging: boolean;
     headerLine: PIXI.Graphics;
@@ -14786,7 +14934,7 @@ declare class SettingsPanel extends PIXI.Container {
     applyButton: ProfileActionButton;
     thumbHeight: number | undefined;
     constructor(a: any, b?: any);
-    createTabButton /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [e] */(a: any, b?: any, c?: any, e?: any): PIXI.Container<PIXI.ContainerChild>;
+    createTabButton /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): PIXI.Container<PIXI.ContainerChild>;
     drawTabButton /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     drawTabs(): void;
     show(): void;
@@ -14805,36 +14953,6 @@ declare namespace SettingsPanel {
         SOUND: string;
     };
     var CLOSE: string;
-}
-declare var slider: {};
-declare class Slider extends PIXI.Container {
-    id: any;
-    labelText: any;
-    range: any;
-    min: any;
-    value: number;
-    size: number;
-    round: boolean;
-    onMouseMoveListener: ((a: any) => void) | null;
-    background: PIXI.Graphics;
-    sliderButton: PIXI.Graphics;
-    label: PIXI.Text;
-    valueLabel: PIXI.Text;
-    volumeMinLabel: PIXI.Text;
-    volumeMaxLabel: PIXI.Text;
-    mouseDownListener: any;
-    constructor(a: any, b: any, c: any, e: any, f: any, g?: number);
-    onMouseDown(a: any): void;
-    onMouseMove(a: any): void;
-    getOutputValue(): any;
-    onMouseOut(a: any): void;
-    onMouseUp(a: any): void;
-    updateSliderButtonPosition(): void;
-    setValue(a: any): void;
-    globalToValue(a: any): any;
-}
-declare namespace Slider {
-    var CHANGE: string;
 }
 declare var soundtab: {};
 declare class SoundTab extends PIXI.Container {
@@ -14993,7 +15111,7 @@ declare class MenuActionButton extends ProfileActionButton {
     primary: boolean;
     cursor: string;
     menuIcon: PIXI.Graphics;
-    constructor(a: any, b: any, c: any, e: any, f?: boolean, g?: any);
+    constructor(a: any, b: any, c: any, d: any, e?: boolean, f?: any);
     layoutContent(): void;
     draw(): void;
     onMouseDown(a: any): void;
@@ -15120,6 +15238,6 @@ declare var uidpool: {};
 declare namespace UIDpool {
     var CHARSET: string[];
 }
-export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, AnchorBase, Animation, Animations, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleSprite, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyVacuum, EntityCategory, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, Flag, FlagSprite, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FriendDropdown, FriendDropdownActionRow, FriendItem, GAME_MODES, Game, GameAttribute, GameCommands, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GetFlippedRagdollTextureId, GetHeadTextureId, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, ModelEvent, MovementJoystick, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, TargetingJoystick, Team, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, animations, apiConfig, apiDomain, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, dm_leaderboard, dp, dropdown, editorsession, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyvacuum, entitycategory, escapemenu, eventdispatcher, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, fontstyle, game, gameattribute, gamemenu, gamemodes, gameobject, gameshape, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputfield, inputstate, isNewIpad, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, mobileDetect, modelevent, movementjoystick, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, renamemenu, rendererfactory, renderstats, rewardsmenu, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, targetingjoystick, tdm_leaderboard, team, terrainseams, textcache, thumbnail, timer, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
+export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, AnchorBase, Animation, Animations, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleSprite, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyVacuum, EntityCategory, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, Flag, FlagSprite, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FriendDropdown, FriendDropdownActionRow, FriendItem, GAME_MODES, Game, GameAttribute, GameCommands, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GetFlippedRagdollTextureId, GetHeadTextureId, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchStick, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, animations, apiConfig, apiDomain, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, dm_leaderboard, dp, dropdown, editorsession, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyvacuum, entitycategory, escapemenu, eventdispatcher, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, fontstyle, game, gameattribute, gamemenu, gamemodes, gameobject, gameshape, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, renamemenu, rendererfactory, renderstats, rewardsmenu, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, terrainseams, textcache, thumbnail, timer, touchcontrols, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
 export * as PIXI from "pixi.js";
 //# sourceMappingURL=lib.d.ts.map
