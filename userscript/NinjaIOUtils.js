@@ -2353,7 +2353,13 @@
   // src/utils.ts
   
   function clickContainer(container) {
-    container._events.mousedown.forEach((f) => f.fn());
+    for (const eventType of [
+      "pointertap",
+      "pointerdown",
+      "mousedown",
+      "click"
+    ])
+      container._events?.[eventType]?.forEach((f) => f?.fn());
   }
   function cloneTextStyle(style, newProps) {
     const newStyle = style.clone();

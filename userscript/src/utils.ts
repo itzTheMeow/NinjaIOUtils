@@ -1,8 +1,16 @@
 import type { PIXI } from "lib";
 import { UITheme } from "lib";
 
-export function clickContainer(container: any) {
-  container._events.mousedown.forEach((f) => f.fn());
+/** Simulates a click event on a PIXI container. */
+export function clickContainer(container: PIXI.Container) {
+  // the various events used for container click events
+  for (const eventType of [
+    "pointertap",
+    "pointerdown",
+    "mousedown",
+    "click",
+  ] satisfies (keyof PIXI.FederatedEventEmitterTypes)[])
+    (<any>container)._events?.[eventType]?.forEach((f) => f?.fn());
 }
 /**
  * Clones a `TextStyle` and applies `newProps` to it.
