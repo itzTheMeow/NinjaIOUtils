@@ -142,20 +142,24 @@ export default new (class Ninja {
 
     Client.prototype.onMessage = function (_a) {
       const a: any = Client.decompress(_a.data);
-      try {
-        ninja.clientPacketListeners.forEach((l) => l("game", a));
-      } catch (err) {
-        console.error(err);
-      }
+      ninja.clientPacketListeners.forEach((l) => {
+        try {
+          l("game", a);
+        } catch (err) {
+          console.error(err);
+        }
+      });
       this.dispatchEvent(a);
     };
     PVPClient.prototype.onMessage = function (_a) {
       const a: any = PVPClient.decompress(_a.data);
-      try {
-        ninja.clientPacketListeners.forEach((l) => l("pvp", a));
-      } catch (err) {
-        console.error(err);
-      }
+      ninja.clientPacketListeners.forEach((l) => {
+        try {
+          l("pvp", a);
+        } catch (err) {
+          console.error(err);
+        }
+      });
       this.dispatchEvent(a);
     };
 
