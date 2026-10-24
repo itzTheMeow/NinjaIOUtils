@@ -72,7 +72,10 @@ export class AutoMuteMod extends Mod<{
         this.muteEnabled = this.config.get("muteBelowEnabled");
         break;
       case "muteBelowLevel":
-        this.levelLimit = Number(this.config.get("muteBelowLevel")) || 10;
+        const limit = Number(this.config.get("muteBelowLevel"));
+        this.levelLimit = Number.isFinite(limit)
+          ? limit
+          : this.config.defaults.muteBelowLevel;
         break;
       case "enableLogs":
         this.enableLogs = this.config.get("enableLogs");
@@ -112,11 +115,11 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private async checkAndMutePlayer(player: {
+  private checkAndMutePlayer(player: {
     name: string;
     sid: string;
     level: number;
-  }): Promise<void> {
+  }): void {
     try {
       if (this.permanentMuteList.includes(player.name)) {
         this.mutePlayer(player, "mute list");
@@ -131,12 +134,9 @@ export class AutoMuteMod extends Mod<{
     }
   }
 
-  private mutePlayer(
-    player: { name: string; sid: string },
-    reason: string,
-  ): void {
-    if (!Game.Muted.has(player.sid)) {
-      Game.Muted.add(player.sid);
+  private mutePlayer(player: { name: string }, reason: string): void {
+    if (!Game.IsPlayerMuted(player)) {
+      Game.SetPlayerMuted(player, true);
       if (this.enableLogs) {
         Ninja.log(`Muted ${player.name} (${reason}).`, config.Colors.green);
       }
@@ -145,7 +145,7 @@ export class AutoMuteMod extends Mod<{
 
   private onPlayerJoined(e: any): void {
     if (this.skipPlayersJoinedCheck) return;
-    const player = e.data.detail;
+    const player = e.detail;
     if (this.doNotMuteSpectators && player.spec) return;
     if (player.name !== app.credential.username) {
       this.checkAndMutePlayer(player);
@@ -153,7 +153,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onManualMute(e: any): void {
-    const player = e.data.detail;
+    const player = e.detail;
     if (!this.permanentMuteList.includes(player.name)) {
       this.permanentMuteList.push(player.name);
       this.config.set("permanentMuteList", this.permanentMuteList);
@@ -165,7 +165,7 @@ export class AutoMuteMod extends Mod<{
   }
 
   private onManualUnmute(e): void {
-    const player = e.data.detail;
+    const player = e.detail;
     const ind = this.permanentMuteList.indexOf(player.name);
     if (ind !== -1) {
       this.permanentMuteList.splice(ind, 1);
@@ -184,7 +184,6 @@ export class AutoMuteMod extends Mod<{
     if (this.ignoreDuels) {
       Ninja.events.addListener(NinjaEvents.GAME_START, this.onGameStartBound);
     }
-    Game.Muted.clear();
   }
 
   private overrideChatBubble(): void {
@@ -193,7 +192,7 @@ export class AutoMuteMod extends Mod<{
     }
     const original = this.originalDisplayChatBubble;
     Label.prototype.displayChatBubble = async function () {
-      if (this.go && Game.Muted.has(this.go.sid)) return;
+      if (this.go && Game.IsPlayerMuted(this.go)) return;
       await original.apply(this);
     };
   }
