@@ -14,7 +14,7 @@ lib-check:
 # build the userscript
 build:
     cd userscript && bun run start
-    nix fmt userscript/NinjaIOUtils.js
+    nix fmt
 
 # watch the userscript for changes and rebuild
 dev:

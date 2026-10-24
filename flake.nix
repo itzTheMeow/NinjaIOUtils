@@ -56,7 +56,6 @@
               "lib/lib.d.ts.map"
               "userscript/node_modules/*"
               "userscript/bun.lock" # generated
-              "userscript/NinjaIOUtils.js" # build output, formatted by `just build`
             ];
           };
         }
