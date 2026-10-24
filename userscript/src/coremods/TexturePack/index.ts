@@ -395,14 +395,19 @@ const createTexTab = (mod: TexturePackMod) =>
     private _manifest: TexturePackManifestEntry[] = [];
     private _installed: InstalledPack[] = [];
     private installingManifestPacks = new Set<string>();
+    /** Render token used to drop stale renders. */
+    private _renderToken = 0;
     public async rerender() {
       if (this.destroyed) return;
+      const token = ++this._renderToken;
       try {
         const [_, manifest] = await attemptAsync(
           async () => (await mod.manifest.fetchManifest()).packs,
         );
+        if (token !== this._renderToken || this.destroyed) return;
         this._manifest = [...(manifest || [])];
         this._installed = await mod.store.getInstalled();
+        if (token !== this._renderToken || this.destroyed) return;
 
         const packRows = (
           this.selectedTab == "installed"
