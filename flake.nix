@@ -10,6 +10,7 @@
     {
       nixpkgs,
       treefmt-nix,
+      ...
     }:
     let
       systems = [
