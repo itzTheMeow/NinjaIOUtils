@@ -835,7 +835,7 @@ declare class Client extends EventDispatcher {
     onOpen /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onError(a: any): void;
     onMessage(a: any): void;
-    discardPendingInput(): void;
+    discardPendingInput(a?: boolean): void;
     onClose(a: any): void;
     emit(a: any): void;
     scheduleInputFlush(): void;
@@ -7496,10 +7496,17 @@ declare class TerrainSeams {
     static isGroundLocomotion /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     static getGroundWalkForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     static groundFollowWeight(a: any): number;
+    static groundFollowWalkWeight(a: any): number;
+    static groundFollowSlopeWeight(a: any): number;
     static groundFollowLength /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
     static groundFollowLengthWeight(a: any): number;
     static followGroundVelocity /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): boolean;
     static groundFollowRay /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | null;
+    static groundFollowFace /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
+    static groundFollowEdge /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    static groundFollowFixture(a: any): boolean;
+    static groundFollowExterior /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    static groundFollowContinuous /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): boolean;
     static updateCrouchAngle(a: any, b: any, c: any, d: any, e?: number): boolean;
     static updateProneSupport(a: any): boolean;
     static getProneCrawlForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
@@ -13559,7 +13566,7 @@ declare class Manager extends PIXI.EventEmitter {
         [StateChange.Model.RANGE]: (a: any, b?: any) => boolean;
         [StateChange.Item.RANGE]: (a: any, b?: any) => any;
     } | undefined;
-    pendingOwnerUpdate: any;
+    pendingOwnerUpdates: any[] | undefined;
     networkUpdateScratch: {} | undefined;
     camera: any;
     transformIds: Uint32Array<any> | undefined;
@@ -13618,6 +13625,7 @@ declare class Manager extends PIXI.EventEmitter {
     _processSyncOp(a: any): boolean;
     _processStateOp(a: any, b?: boolean): boolean;
     _processUpdateOp(a: any, b?: boolean): boolean;
+    processPendingOwnerUpdates(): void;
     smoothPresentationCorrection /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static translatePresentationSamples /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static decayPresentationCorrection(a: any): void;
@@ -13738,6 +13746,7 @@ declare namespace Manager {
     var NETWORK_PROCESS_BUDGET_MS: number;
     var NETWORK_PROCESS_MAX_OPS: number;
     var NETWORK_MAX_QUEUED_OPS: number;
+    var NETWORK_MAX_PENDING_OWNER_UPDATES: number;
     var NETWORK_MAX_QUEUED_BYTES: number;
     var NETWORK_UPDATE_MARKER: number;
     var NETWORK_UPDATE_VERSION: number;
@@ -15402,7 +15411,7 @@ declare class PredictionController {
     updatePredictedGrounded /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     resetGroundContactPrediction(): void;
     hasGroundContact(a: any): boolean;
-    getPredictedHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
+    getPredictedHorizontalForce(a: any, b: any, c: any, d: any, e?: any): any;
     getPredictedJumpHorizontalForce /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
     getLatencyCompensatedTarget /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     capProjectedCorrectionForSmoothing /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
@@ -15421,6 +15430,9 @@ declare class PredictionController {
     static finiteOrZero(a: any): number;
     static clampDeltaMs(a: any): number;
     static distance /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
+}
+declare namespace PredictionController {
+    var MAX_MOTION_STATES: number;
 }
 declare var statechange: {}, StateChange: {
     ADD: number;
