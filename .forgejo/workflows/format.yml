@@ -1,0 +1,19 @@
+name: Format Code
+on: [push]
+
+jobs:
+  format:
+    runs-on: nix
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Run Formatter
+        run: nix fmt --accept-flake-config
+
+      - name: Commit Changes
+        uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: format code"
