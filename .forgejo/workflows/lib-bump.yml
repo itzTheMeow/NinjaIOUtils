@@ -33,7 +33,7 @@ jobs:
       - name: Commit Changes
         uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
         with:
-          # expression ternary: if regen failed, note that typings need attention
+          # use a different commit message on failure
           commit_message: "${{ steps.regen.outcome == 'failure' && 'chore: bump lib (upstream changed, typings no longer eval)' || 'chore: bump lib' }}"
 
       # document an actual regen failure as a workflow failure
