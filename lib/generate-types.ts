@@ -1091,7 +1091,12 @@ function buildGameTs(
  * merging. Compiling as .ts would type-check 5.4MB of unpacked JS and lose
  * most of those inferences. */
 
-function runTsc(): { status: number | null; output: string } {
+function runTsc(): {
+  status: number | null;
+  signal: string | null;
+  error: string | null;
+  output: string;
+} {
   const tsconfigOut = {
     compilerOptions: {
       target: "ES2022",
@@ -1115,9 +1120,15 @@ function runTsc(): { status: number | null; output: string } {
   const result = spawnSync(tsc, ["-p", "tsconfig.json"], {
     cwd: WORK,
     encoding: "utf8",
+    maxBuffer: 64 * 1024 * 1024,
   });
   const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
-  return { status: result.status, output };
+  return {
+    status: result.status,
+    signal: result.signal,
+    error: result.error?.message ?? null,
+    output,
+  };
 }
 
 /* ------------------------------------------------------------------ */
@@ -1727,11 +1738,18 @@ async function main(): Promise<void> {
   fs.writeFileSync(path.join(WORK, "game.js"), gameInput.text);
   console.log("emitting declarations (tsc)...");
 
-  const { output } = runTsc();
+  const tscResult = runTsc();
+  const { output } = tscResult;
   const outFile = path.join(WORK, "game.d.ts");
   const outMapFile = path.join(WORK, "game.d.ts.map");
   if (!fs.existsSync(outFile)) {
     console.error(output);
+    if (tscResult.error || tscResult.signal) {
+      // process died without reporting anything
+      fail(
+        `tsc did not emit game.d.ts (status: ${tscResult.status}, signal: ${tscResult.signal}, error: ${tscResult.error ?? "none"})`,
+      );
+    }
     fail("tsc did not emit game.d.ts");
   }
   if (output) console.log(`tsc output:\n${output.slice(0, 2000)}`);
