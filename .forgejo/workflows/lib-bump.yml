@@ -21,10 +21,31 @@ jobs:
             cd ../userscript && bun install --frozen-lockfile
           '
 
-      - name: Update and Regenerate Lib
-        run: nix develop --accept-flake-config -c bash -c 'just update && just lib'
+      - name: Update Lib
+        run: nix develop --accept-flake-config -c just update
+
+      # if the typings no longer eval, still commit the new bundle below
+      - id: regen
+        name: Regenerate Lib Typings
+        continue-on-error: true
+        run: nix develop --accept-flake-config -c just lib
 
       - name: Commit Changes
+        if: steps.regen.outcome == 'success' # only commit normally if regen was successful
         uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "chore: bump lib"
+
+      - name: Commit Upstream Bundle
+        if: steps.regen.outcome == 'failure' # typings failed to eval, so uses different commit message
+        uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: bump lib (upstream changed, typings no longer eval)"
+
+      # document an actual regen failure as a workflow failure
+      - name: Fail on Regen Failure
+        if: steps.regen.outcome == 'failure'
+        run: |
+          echo "::error::just lib failed: typings do not eval against the new bundle."
+          echo "::error::latest.js was committed; port lib/generate-types.ts to the new bundle (see lib/AGENTS.md), then re-run."
+          exit 1
