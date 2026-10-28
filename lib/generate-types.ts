@@ -1091,6 +1091,24 @@ function buildGameTs(
  * merging. Compiling as .ts would type-check 5.4MB of unpacked JS and lose
  * most of those inferences. */
 
+/* tsc resolves through bun's .bin shim, which is a `#!/usr/bin/env node`
+   script - containers without /usr/bin/env (e.g. the forgejo nix runner
+   image) can't exec it. Prefer the platform-native binary from the
+   optionalDependency; fall back to the shim for unknown layouts. */
+function resolveTsc(): string {
+  const native = path.join(
+    HERE,
+    "node_modules",
+    "@typescript",
+    `typescript-${process.platform}-${process.arch}`,
+    "lib",
+    "tsc",
+  );
+  if (fs.existsSync(native)) return native;
+  console.log("tsc: native binary missing, falling back to .bin shim");
+  return path.join(HERE, "node_modules", ".bin", "tsc");
+}
+
 function runTsc(): {
   status: number | null;
   signal: string | null;
@@ -1116,7 +1134,7 @@ function runTsc(): {
     path.join(WORK, "tsconfig.json"),
     JSON.stringify(tsconfigOut, null, 2),
   );
-  const tsc = path.join(HERE, "node_modules", ".bin", "tsc");
+  const tsc = resolveTsc();
   const result = spawnSync(tsc, ["-p", "tsconfig.json"], {
     cwd: WORK,
     encoding: "utf8",
@@ -1813,7 +1831,7 @@ function validate(): void {
     console.log("validation skipped (--no-validate)");
     return;
   }
-  const tsc = path.join(HERE, "node_modules", ".bin", "tsc");
+  const tsc = resolveTsc();
   const result = spawnSync(tsc, ["--noEmit", "-p", "."], {
     cwd: USERSRIPT_DIR,
     encoding: "utf8",
