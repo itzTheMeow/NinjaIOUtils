@@ -13565,6 +13565,7 @@ declare class Manager extends PIXI.EventEmitter {
     transformIds: Uint32Array<any> | undefined;
     transformMasks: Uint16Array<any> | undefined;
     transformValues: Float64Array<ArrayBuffer> | undefined;
+    pendingStaticSnapshotOps: any;
     awaitingResync: boolean | undefined;
     networkPackets: any[] | undefined;
     networkPacketBytes: number | undefined;
@@ -15888,6 +15889,7 @@ declare class Menu extends PIXI.Container {
     setServerData(a: any): void;
     setLobbyDataText(): void;
     selectServer(a: any): void;
+    selectMostPopulatedMode(): void;
     onServerListButtonReleased(): void;
     onServerCreateButtonReleased(): void;
     setPlayerData(a: any): void;
