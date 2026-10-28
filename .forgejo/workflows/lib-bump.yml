@@ -31,16 +31,10 @@ jobs:
         run: nix develop --accept-flake-config -c just lib
 
       - name: Commit Changes
-        if: steps.regen.outcome == 'success' # only commit normally if regen was successful
         uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
         with:
-          commit_message: "chore: bump lib"
-
-      - name: Commit Upstream Bundle
-        if: steps.regen.outcome == 'failure' # typings failed to eval, so uses different commit message
-        uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "chore: bump lib (upstream changed, typings no longer eval)"
+          # expression ternary: if regen failed, note that typings need attention
+          commit_message: "${{ steps.regen.outcome == 'failure' && 'chore: bump lib (upstream changed, typings no longer eval)' || 'chore: bump lib' }}"
 
       # document an actual regen failure as a workflow failure
       - name: Fail on Regen Failure
