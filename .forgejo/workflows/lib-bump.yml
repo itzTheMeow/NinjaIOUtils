@@ -1,0 +1,30 @@
+name: Bump Lib
+on:
+  workflow_dispatch:
+  schedule: # run every hour
+    - cron: "5 * * * *"
+
+jobs:
+  bump:
+    runs-on: nix
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Install Dependencies
+        run: | # all deps need to be installed
+          nix develop --accept-flake-config -c bash -c '
+            bun install --frozen-lockfile
+            cd lib && bun install --frozen-lockfile
+            cd ../userscript && bun install --frozen-lockfile
+          '
+
+      - name: Update and Regenerate Lib
+        run: nix develop --accept-flake-config -c bash -c 'just update && just lib'
+
+      - name: Commit Changes
+        uses: https://github.com/stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "chore: bump lib"
