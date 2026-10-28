@@ -22,6 +22,22 @@
       forAllSystems = f: nixpkgs.lib.genAttrs systems (system: f system);
     in
     {
+      devShells = forAllSystems (
+        system:
+        let
+          pkgs = nixpkgs.legacyPackages.${system};
+        in
+        {
+          default = pkgs.mkShell {
+            packages = with pkgs; [
+              bun
+              just
+              curl
+            ];
+          };
+        }
+      );
+
       formatter = forAllSystems (
         system:
         let
