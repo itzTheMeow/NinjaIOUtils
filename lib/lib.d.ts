@@ -13851,6 +13851,7 @@ declare namespace Manager {
     var LOCAL_CORRECTION_HALF_LIFE_MS: number;
     var LOCAL_CORRECTION_SNAP_PIXELS: number;
     var MAX_CATCH_UP_STEPS: number;
+    var MAX_SIMULATION_DEBT_MS: number;
     var STEP_EPSILON_MS: number;
     var PACKED_UPDATE_CONTACTS: number;
     var NETWORK_BINARY_UPDATE_FIELDS: ({
