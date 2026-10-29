@@ -839,6 +839,7 @@ declare class Client extends EventDispatcher {
     onClose(a: any): void;
     emit(a: any): void;
     scheduleInputFlush(): void;
+    flushPendingInput(): void;
     isConnected(): boolean;
     onEchoResponse(a: any): void;
 
@@ -862,6 +863,7 @@ declare namespace Client {
     var Encoder: TextEncoder;
     var INPUT_MARKER: number;
     var INPUT_VERSION: number;
+    var INPUT_PREDICTION_VERSION: number;
     var INPUT_PACKET_BYTES: number;
     var InputBuffer: Uint8Array<ArrayBuffer>;
     var InputView: DataView<ArrayBuffer>;
@@ -1050,6 +1052,7 @@ declare namespace Registry {
             performanceMode: boolean;
             webglFallback: boolean;
             hideOverlayButtons: boolean;
+            showPingAndFps: boolean;
             chatTextSize: number;
             resolution: number;
         };
@@ -4666,7 +4669,10 @@ declare var touchcontrols: {};
 declare class TouchStick extends PIXI.Container {
     aim: any;
     onChange: any;
+    targetAngle: number | null;
+    aimAngle: number | null;
     pointerId: number | null;
+    firing: boolean;
     radius: number;
     localPoint: PIXI.Point;
     eventMode: string;
@@ -4677,6 +4683,7 @@ declare class TouchStick extends PIXI.Container {
     label: any;
     constructor(a: any, b?: any, c?: any);
     move(a: any): void;
+    update(a: any): void;
     release(a?: number | null): void;
 }
 declare class TouchSpectator extends PIXI.Container {
@@ -4703,6 +4710,7 @@ declare class TouchControls extends PIXI.Container {
     buttons: any;
     enabled: boolean;
     eventMode: string;
+    aimPointer: PIXI.Graphics;
     spectator: TouchSpectator;
     gameplay: PIXI.Container<PIXI.ContainerChild>;
     movement: TouchStick;
@@ -4716,6 +4724,8 @@ declare class TouchControls extends PIXI.Container {
     layoutHeight: number | undefined;
     constructor(a: any, b: any, c: any, d?: () => void, e?: () => void);
     static label /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    update(a?: number): void;
+    updateAimPointer /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static capture(a: any): void;
     createAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     setAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
@@ -4795,7 +4805,7 @@ declare class Game extends PIXI.Container {
     showReticleLine(): void;
     hideReticleLine(): void;
     dispatchInput(a?: boolean, b?: number): void;
-    predictFireFeedback(a: any): void;
+    predictFireFeedback(a: any, b?: number): void;
     onBinData(a: any): void;
     processBackgroundNetwork(): void;
     onData(a: any): void;
@@ -6459,7 +6469,7 @@ declare class App extends PIXI.Container {
     onLayerHideMenu(): void;
     onLayerShowMenu(): void;
     onLayerJoinGame(a: any, b: any, c: any, d?: boolean): void;
-    onGuestNameChange(a: any): Promise<void>;
+    onGuestNameChange /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<void>;
     onLayerUpdateCredential /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<void>;
     adStarted(): void;
     adFinished(): void;
@@ -7896,7 +7906,7 @@ declare class Player extends Agent {
     syncBowHoldingArm(): void;
     getGearArmLeftY(): number;
     getProneLeftGearArmRotationOffset(): number;
-    syncProneEndArmVisibility(): void;
+    syncProneEndArmVisibility(a?: any, b?: any): void;
     enableLocalPresentationSmoothing(a?: {}): void;
     setLocalPresentationSmoothingEnabled(a: any): void;
     setSpawnProtectionTicks(a: any, b?: number): void;
@@ -8651,6 +8661,8 @@ declare class Canvas extends PIXI.EventEmitter {
     localBulletSpawnOrigin: PIXI.Point | undefined;
     deagleSpawnPoint: PIXI.Point | undefined;
     deagleSpawnOrigin: PIXI.Point | undefined;
+    touchLookX: number | undefined;
+    touchLookY: number | undefined;
     localCameraTargetPosition: {
         x: number;
         y: number;
@@ -10948,6 +10960,7 @@ declare class EscapeMenu extends PIXI.Graphics {
     controlsButton: EscapeMenuButton;
     weaponMenuButton: EscapeMenuButton;
     roleButton: EscapeMenuButton;
+    showPingAndFps: Checkbox;
     leaveLabel: PIXI.Text;
     escapeButton: EscapeMenuButton;
     constructor();
@@ -15455,6 +15468,7 @@ declare class PredictionController {
         input: {};
     } | undefined;
     movementSignature: any;
+    walkStepDirection: number | null | undefined;
     walkStepX: any;
     walkStepY: any;
     walkStepVelocity: any;
@@ -15990,6 +16004,7 @@ declare class Menu extends PIXI.Container {
     levelIcon: PIXI.Sprite;
     skillIcon: PIXI.Sprite;
     nameField: InputField;
+    guestNameButton: ProfileActionButton;
     skillText: PIXI.Text;
     clanText: PIXI.Text;
     joinButton: MenuActionButton;
@@ -16004,7 +16019,9 @@ declare class Menu extends PIXI.Container {
     closeAdButton: ImgButton | undefined;
     adblockBackground: PIXI.Graphics | undefined;
     adblockText: PIXI.Text | undefined;
+    savedGuestName: any;
     mode: any;
+    guestNameSave: Promise<any> | null | undefined;
     constructor();
     createTopAuthButton /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): PIXI.Graphics;
     createSubmenuButton /** @param {any} a @param {any} [b] */(a: any, b?: any): PIXI.Container<PIXI.ContainerChild>;
@@ -16030,7 +16047,7 @@ declare class Menu extends PIXI.Container {
     hideRewardButton(): void;
     checkRewards(a?: boolean): Promise<void>;
     setMode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    onJoinButtonReleased(): void;
+    onJoinButtonReleased(): Promise<void>;
     onMainMenuButtonReleased(): void;
     onModeButtonReleased(a: any): void;
     onServerButtonReleased(a: any): void;
@@ -16038,6 +16055,7 @@ declare class Menu extends PIXI.Container {
     hideItems(): void;
     showItems(): void;
     onNamefieldFocus(a: any): void;
+    saveGuestName(): any;
     step(a: any): void;
 }
 declare namespace Menu {
@@ -16176,10 +16194,17 @@ declare namespace Interpreter {
     var INVALID_COMMAND: string;
 }
 declare var stats: {};
-declare class Stats extends PIXI.Sprite {
+declare class Stats extends PIXI.Container {
     textures: any[];
+    indicator: PIXI.Sprite;
+    ping: number | null;
+    details: PIXI.Text;
+    frameSampleStart: any;
+    frameSampleCount: number | undefined;
     constructor();
     setPing(a: any): void;
+    setDetailsVisible(a: any): void;
+    recordFrame(a: any): void;
 }
 declare let app: App;
 declare var customevent: {};
