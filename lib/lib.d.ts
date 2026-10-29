@@ -13424,6 +13424,11 @@ declare var weaponprediction: {};
 declare class WeaponPrediction {
     static describe(a: any): any;
     static random(a: any): () => number;
+    static recoil /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
+        x: number;
+        y: number;
+        ticks: number;
+    } | null;
     static pattern(a: any, b: any, c: any, d?: {}): number;
 }
 declare namespace WeaponPrediction {
@@ -13434,6 +13439,7 @@ declare class WeaponPredictionController {
     manager: any;
     weapons: Map<any, any>;
     shots: Map<any, any>;
+    recoil: any;
     held: boolean;
     sweep: {
         rayMaskBits: number;
@@ -13467,6 +13473,7 @@ declare class WeaponPredictionController {
     acceptState(a: any): void;
     prepare(a: any, b?: number): any;
     fire(a: any, b: any, c: any, d: any, e?: number): void;
+    applyRecoil(a: any, b?: any): void;
     advance(a: any, b: any, c?: number, d?: any): boolean;
     step(): void;
     reconcile(a: any): any;
