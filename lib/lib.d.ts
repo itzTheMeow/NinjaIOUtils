@@ -15415,6 +15415,7 @@ declare class PredictionController {
     motionStates: any[];
     movementInputs: any[];
     movement: any;
+    confirmedRollUntilTick: number;
     walkHistory: Float64Array<ArrayBuffer>;
     walkHistoryCursor: number;
     walkHistoryCount: number;
