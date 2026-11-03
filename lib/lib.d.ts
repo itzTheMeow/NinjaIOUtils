@@ -4320,6 +4320,7 @@ declare class ServerCustomizationMenu extends Feature {
     dropSelectionListScrollbar: SelectionListScrollbar;
     setShuriken: Checkbox;
     mapImage: PIXI.Sprite;
+    paintballRules: PIXI.Text;
     constructor();
     show(): void;
     hide(): void;
@@ -4951,7 +4952,6 @@ declare var game: {};
 declare class Game extends PIXI.Container {
     sessionId: any;
     backgroundNetworkTimeout: number | null;
-    backgroundNetworkActive: boolean;
     settings: any;
     clients: {};
     numClients: number;
@@ -5034,6 +5034,7 @@ declare class Game extends PIXI.Container {
     updateEscapeRoleAction(a?: number): void;
     applyStats(a: any): void;
     onDamageStats(a: any): void;
+    onLeaderboardStats(a: any): void;
     applySettings(a: any): void;
     playerJoined /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onMouseWheel(a: any): void;
@@ -5129,6 +5130,7 @@ declare namespace Game {
     var getDataType: (a: any) => any;
     var MODE_CTF: string;
     var MODE_DM: string;
+    var MODE_PB: string;
     var MODE_TDM: string;
     var MODE_DB: string;
     var MODE_TR: string;
@@ -5141,6 +5143,7 @@ declare namespace Game {
     var MODE_MAP: {
         [Game.MODE_CTF]: string;
         [Game.MODE_DM]: string;
+        [Game.MODE_PB]: string;
         [Game.MODE_TDM]: string;
         [Game.MODE_DB]: string;
         [Game.MODE_TR]: string;
@@ -5154,6 +5157,7 @@ declare namespace Game {
     var MODE_TITLES: {
         [Game.MODE_CTF]: string;
         [Game.MODE_DM]: string;
+        [Game.MODE_PB]: string;
         [Game.MODE_TDM]: string;
         [Game.MODE_DB]: string;
         [Game.MODE_TR]: string;
@@ -5188,6 +5192,7 @@ declare namespace Game {
         33: string;
         34: string;
         35: string;
+        36: string;
         300: string;
     };
 }
@@ -6209,7 +6214,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-5e6177e851d95c74.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-65bd0ca016f69e8d.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
@@ -6446,6 +6451,28 @@ declare const AudioEffects: {
         audio: Howl;
     };
     BotDeath: {
+        audio: Howl;
+    };
+    PaintballFire: {
+        audio: Howl;
+    };
+    PaintballSplash: {
+        audio: Howl;
+    };
+    LineGunBeam: {
+        audio: Howl;
+        single: boolean;
+        sub_end: number;
+    };
+    LineGunSuction: {
+        audio: Howl;
+        single: boolean;
+        sub_end: number;
+    };
+    LineGunImpact: {
+        audio: Howl;
+    };
+    LineGunDespawn: {
         audio: Howl;
     };
     LinkGunEngaged: {
@@ -6805,6 +6832,7 @@ declare class AudioManager {
     muted: boolean;
     parent: any;
     queue: any[];
+    paintBeams: Map<any, any>;
     voiceState: any;
     currentZombieWaveState: any;
     lastZombieCountdown: any;
@@ -6822,6 +6850,7 @@ declare class AudioManager {
     onCreateEffectListener: (a: any) => void;
     onUpdateEnvironmentListener: (a: any) => void;
     onZombieWaveListener: (a: any) => void;
+    onPaintImpactListener: (a: any) => void;
     constructor(a: any);
     update(a: any): void;
     clear(): void;
@@ -6845,6 +6874,9 @@ declare class AudioManager {
     onStopUseFX /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUseFX(a: any, b: any, c?: any): void;
     onRemoved(a: any): void;
+    onPaintImpact(a: any): void;
+    updatePaintBeamAudio /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    stopPaintBeamAudio(a?: any): void;
     onContact(a: any): void;
     onReload /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
 }
@@ -7150,6 +7182,11 @@ declare class RenderStats extends PIXI.Container {
     constructor();
     setStats(a: any): void;
 }
+declare var paintballprefabs: {};
+declare function Paintball(a: any): void;
+declare function PaintLine(a: any): void;
+declare function PaintballGunPrefab(a: any): void;
+declare function LineGunPrefab(a: any): void;
 declare var gameshape: {};
 declare var GameShape: {
     BASE: number;
@@ -8002,8 +8039,8 @@ declare class Player extends Agent {
     runSwingTransform: PIXI.Matrix | undefined;
     calculatedWeaponPose: {} | undefined;
     effectWeaponDisplay: {
-        scale: {};
-        anchor: {};
+        scale: PIXI.Point;
+        anchor: PIXI.Point;
     } | undefined;
     effectWeaponPoint: {
         x: number;
@@ -8258,6 +8295,10 @@ declare const PrefabList: {
     Boomerang: number;
     M60Bullet: number;
     UziBullet: number;
+    Paintball: number;
+    PaintLine: number;
+    PaintballGun: number;
+    LineGun: number;
     X75Nade: number;
     TinyShrapnel: number;
     GhostBotDebris1: number;
@@ -8346,6 +8387,8 @@ declare const PrefabList: {
     33: typeof Boomerang;
     34: typeof M60Bullet;
     35: typeof UziBullet;
+    36: typeof Paintball;
+    37: typeof PaintLine;
     101: typeof TinyShrapnel;
     102: typeof GhostBotDebris1;
     103: typeof GhostBotDebris2;
@@ -8364,6 +8407,8 @@ declare const PrefabList: {
     213: typeof LinkGun;
     214: typeof DesertEagle;
     226: typeof Deagle;
+    227: typeof PaintballGunPrefab;
+    228: typeof LineGunPrefab;
     216: typeof AK47;
     217: typeof Minigun;
     218: typeof X75;
@@ -8720,6 +8765,113 @@ declare namespace ProjectileTrailRope {
     var MAX_LENGTH: number;
     var gradientTexture: any;
 }
+declare var paintballsprites: {};
+declare function PaintTeamColor(a: any): number;
+/** @param {any} a @param {any} [b] */ declare function PaintShotScale(a: any, b?: any): number;
+/** @param {any} a @param {any} [b] @param {any} [c] */ declare function MixPaintColor(a: any, b?: any, c?: any): number;
+declare class PaintTextures {
+    static splash(a?: number): any;
+    static rope(): any;
+
+    static frames: any;
+    static ropeTexture: any;
+    static source: any;}
+declare class PaintballSprite extends PIXI.Container {
+    head: PIXI.Sprite;
+    paintStarted: number;
+    constructor(a?: {});
+    animate(a: any): void;
+    init(): void;
+}
+declare class PaintLineSprite extends PIXI.Container {
+    paint: PIXI.Graphics;
+    progress: number;
+    row: any;
+    constructor(a: any);
+    static draw(a: any, b: any, c?: number, d?: number): void;
+    setPaint(a: any): void;
+    init(): void;
+}
+declare namespace PaintLineSprite {
+    var PASS_COUNT: number;
+}
+declare class PaintballGunSprite extends PIXI.Sprite {
+    itemType: string;
+    fireAnchor: PIXI.Container<PIXI.ContainerChild>;
+    modeLight: PIXI.Sprite;
+    constructor(a?: {}, b?: boolean);
+    static textureFor /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    setEraseMode(a: any): void;
+    pointLeft(): void;
+    pointRight(): void;
+    init(): void;
+    onUse(): void;
+
+    static textures: Map<any, any>;}
+declare class LineGunSprite extends PaintballGunSprite {
+    constructor(a?: {});
+}
+declare var paintlinelayer: {};
+declare class PaintLineLayer {
+    parent: any;
+    canvas: any;
+    lines: Map<any, any>;
+    chunks: Map<any, any>;
+    dirty: Set<any>;
+    layers: any[];
+    drawing: Set<any>;
+    shrinking: Set<any>;
+    tips: Map<any, any>;
+    constructor(a: any, b?: any);
+    ensureLayers(): void;
+    key(a: any): string;
+    add(a: any, b?: boolean): void;
+    tipKey /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): string;
+    releaseTip(a: any): void;
+    drawTo /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    setPaint(a: any): void;
+    updateWidth(a: any): void;
+    updateDrawing(): void;
+    touch(a: any): void;
+    wet /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    remove(a: any): void;
+    flush(): void;
+    clear(): void;
+}
+declare var painteffects: {};
+declare class PaintSplashRope extends PIXI.MeshRope {
+    spine: PIXI.Point[];
+    eventMode: string;
+    constructor();
+    updatePaint /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+}
+declare class PaintEffects {
+    canvas: any;
+    drops: any[];
+    freeDrops: any[];
+    shots: Map<any, any>;
+    freeRopes: any[];
+    wet: Map<any, any>;
+    decals: any[];
+    layer: PIXI.Container<PIXI.ContainerChild>;
+    constructor(a: any);
+    attachLayer(): void;
+    addShot(a: any): void;
+    removeShot(a: any): void;
+    wetLine(a: any, b?: number): void;
+    removeLine(a: any): void;
+    drop(a: any, b: any, c: any, d: any, e: any, f?: number, g?: number, h?: number, k?: number, l?: boolean, m?: boolean): void;
+    freshPoint /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    muzzle /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    step /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    spray(a: any, b: any, c: any, d: any, e: any, f?: number, g?: number): void;
+    impact(a: any): void;
+    cloud(a: any, b: any, c: any, d?: number): void;
+    popLine(a: any): void;
+    decal /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    update(a?: number): void;
+    clear(): void;
+}
 declare var canvas: {};
 declare class Canvas extends PIXI.EventEmitter {
     settings: any;
@@ -8770,12 +8922,14 @@ declare class Canvas extends PIXI.EventEmitter {
         search: () => never[];
     };
     onStaticObjectAddedBinding: (a: any) => void;
-    onGameObjectAddedBinding: (a: any) => void;
+    onGameObjectAddedBinding: (a: any, b?: boolean) => void;
     handlers: {
         onStaticObjectAdded: (a: any) => void;
-        onGameObjectAdded: (a: any) => void;
+        onGameObjectAdded: (a: any, b?: boolean) => void;
         onGameObjectRemoved: (a: any) => void;
         onGameObjectContact: (a: any) => void;
+        onPaintLine: (a: any) => void;
+        onPaintImpact: (b: any) => void;
         onUpdateLabel: (b: any) => void;
         onRemoveLabel: (b: any) => void;
         onAgentStateChange: (a: any) => void;
@@ -8834,13 +8988,17 @@ declare class Canvas extends PIXI.EventEmitter {
     minDelta: number;
     zoomFunction: (() => void) | (() => void) | null;
     scaleTarget: number | undefined;
+    paintStepPoints: any[] | undefined;
     proneSlideDustPoints: any[] | undefined;
     proneSlideDustEffect: any;
+    paintLines: PaintLineLayer | undefined;
+    paintEffects: PaintEffects | undefined;
     cameraMotionReset: boolean | undefined;
     localBulletSpawnPoint: PIXI.Point | undefined;
     localBulletSpawnOrigin: PIXI.Point | undefined;
     deagleSpawnPoint: PIXI.Point | undefined;
     deagleSpawnOrigin: PIXI.Point | undefined;
+    paintMuzzlePoint: PIXI.Point | undefined;
     touchLookX: number | undefined;
     touchLookY: number | undefined;
     localCameraTargetPosition: {
@@ -8882,6 +9040,7 @@ declare class Canvas extends PIXI.EventEmitter {
     updateVisibleStatics(a?: number): void;
     updateAllEmitters(a?: number): void;
     updateSpawnProtectionBubbles(): void;
+    updatePaintFootsteps(a: any): void;
     updateProneSlideDust(a: any): void;
     isWorldPointNearViewport(a: any, b: any, c?: number): boolean;
     updateRopes(a?: number): void;
@@ -8913,7 +9072,7 @@ declare class Canvas extends PIXI.EventEmitter {
     onPlayerCombo(): void;
     initial(): void;
     onStaticObjectAdded(a: any): void;
-    onGameObjectAdded(a: any): void;
+    onGameObjectAdded(a: any, b?: boolean): void;
     processStaticBuffer(): void;
     buildTerrainOutlines(): void;
     updateVisibleTerrainOutlines /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
@@ -8923,6 +9082,7 @@ declare class Canvas extends PIXI.EventEmitter {
     addStaticObject(a: any): void;
     areLineSegmentsOverlapping(a: any, b: any, c?: number): boolean;
     clearTerrainMesh(): void;
+    buildTerrainDecalIndex(): void;
     static buildTerrainIndex(a: any): any;
     processTerrainMesh(): void;
     isOverlappingLineSegment(a: any, b: any, c: any, d?: number): boolean;
@@ -8946,6 +9106,7 @@ declare class Canvas extends PIXI.EventEmitter {
     clipPolygonToTerrain /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     clipPolygonToSurface /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     clipPolygonToSurfaceBand /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
+    getTerrainDecalPolygons /** @param {any} a @param {any} [b] */(a: any, b?: any): any[] | null;
     destroyTerrainGoreDecal(a: any): void;
     getTerrainSurfaceDisplay(a: any): {
         layer: any;
@@ -8955,6 +9116,13 @@ declare class Canvas extends PIXI.EventEmitter {
     createTerrainGoreDecals(a: any, b?: number): 0 | 1;
     isTerrainContact(a: any): boolean;
     onDeadBodypartTerrainBounce /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    getPaintEffects(): PaintEffects;
+    onPaintLine(a: any): void;
+    clearPaintSmudges(a: any): void;
+    addPaintSmudge /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    drawPaintStream /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    drawPaintStreamSection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
+    updatePaintBeam(a: any, b: any, c?: boolean, d?: boolean, e?: any): void;
     onAgentStateChange(a: any): void;
     onPlayerScore(a: any): void;
     addStuckArrow /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -9971,6 +10139,10 @@ declare class BowSprite extends PIXI.Sprite {
     };
     stretchedHoldingArm: boolean;
     animateWhenUsing: boolean;
+    holdingGrip: {
+        x: number;
+        y: number;
+    };
     fireAnchor: PIXI.Container<PIXI.ContainerChild>;
     ejectionAnchor: PIXI.Container<PIXI.ContainerChild>;
     gearArmOffset: {
@@ -10767,6 +10939,8 @@ declare var itemlist: {}, ItemList: {
     M60: string;
     Uzi: string;
     Deagle: string;
+    PaintballGun: string;
+    LineGun: string;
     Bouncyball: string;
     HealthBox: string;
     NadeBox: string;
@@ -11283,6 +11457,7 @@ declare class Leaderboard extends PIXI.Container {
 }
 declare namespace Leaderboard {
     var TextCacheKey: string;
+    var ApplyRecord: (a: any, b?: any) => void;
     var DrawPanel: (a: any, b?: any, c?: any) => void;
     var DrawHeader: (a: any, b: any, c?: string) => {
         titleField: string;
@@ -12152,6 +12327,7 @@ declare class Hud extends PIXI.Container {
     getHudActorName(a: any): any;
     getHudActorColor(a: any, b?: number): number;
     isLeaderboardActor(a: any): boolean;
+    updateLeaderboardClient(a: any): void;
     onPlayerDeath(a: any): void;
     onPlayerLife(a: any): void;
     onPlayerCombo(a: any): void;
@@ -12417,6 +12593,7 @@ declare class WeaponButton extends PIXI.Sprite {
     drawOutline(a: any): void;
 }
 declare var gamemodes: {}, GAME_MODES: {
+    PAINTBALL: string;
     DEATHMATCH: string;
     TEAM_DEATHMATCH: string;
     CAPTURE_THE_FLAG: string;
@@ -13616,6 +13793,10 @@ declare var physicsmessage: {}, PhysicsMessage: {
 };
 declare var weaponprediction: {};
 declare class WeaponPrediction {
+    static origin(a: any, b: any, c?: number): {
+        x: number;
+        y: any;
+    };
     static describe(a: any): any;
     static random(a: any): () => number;
     static recoil /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
@@ -13627,553 +13808,24 @@ declare class WeaponPrediction {
 }
 declare namespace WeaponPrediction {
     var KINDS: Set<string>;
+    var FLIGHT_FIELDS: string[];
 }
-declare var weaponpredictioncontroller: {};
-declare class WeaponPredictionController {
-    manager: any;
-    weapons: Map<any, any>;
-    shots: Map<any, any>;
-    recoil: any;
-    held: boolean;
-    sweep: {
-        rayMaskBits: number;
-        hit: boolean;
-        ReportFixture(b: any): -1 | 0;
+declare var projectilephysics: {};
+declare class ProjectilePhysics {
+    static spawnRadius(a: any, b?: number): number;
+    static safeSpawn /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): {
+        x: any;
+        y: any;
     };
-    from: {
-        x: number;
-        y: number;
-    };
-    to: {
-        x: number;
-        y: number;
-    };
-    particle: {
-        ref: null;
-        body: {
-            pos: {
-                x: number;
-                y: number;
-            };
-            vel: {
-                x: number;
-                y: number;
-            };
-        };
-    };
-    lastHitAt: number | undefined;
-    triggerAt: number | undefined;
-    constructor(a: any);
-    acceptState(a: any): void;
-    prepare(a: any, b?: number): any;
-    fire(a: any, b: any, c: any, d: any, e?: number): void;
-    applyRecoil(a: any, b?: any): void;
-    advance(a: any, b: any, c?: number, d?: any): boolean;
-    step(): void;
-    reconcile(a: any): any;
-    removeVisual(a: any): void;
-    finish(a: any): void;
-    clear(a?: boolean): void;
+    static penetrate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    static integrate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static ricochet /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
 }
-declare var manager: {};
-declare class NetworkBinaryReader {
-    buffer: any;
-    view: DataView<any>;
-    offset: number;
-    constructor(a: any);
-    ensure(a: any): void;
-    readUint8(): any;
-    readUint32(): number;
-    readFloat64(): number;
-    readVarUint(a?: number): number;
-    readVarUint32(): number;
-    readVarInt32(): number;
-    readString(): string;
+declare namespace ProjectilePhysics {
+    var MIN_RADIUS: number;
+    var MARGIN: number;
+    var EPSILON: number;
 }
-declare class NetworkUpdateBuffer {
-    length: number;
-    head: number;
-    tail: number;
-    capacity: number;
-    used: number;
-    free: any[];
-    objects: any[];
-    keys: any[];
-    latest: Map<any, any>;
-    replaceable: Map<any, any>;
-    networkIds: Map<any, any>;
-    carryingBacklog: boolean;
-    scratch: {};
-    values: string | undefined;
-    constructor();
-    grow(): void;
-    allocate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
-    remove(a: any): void;
-    getKey /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
-    append /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    appendTransform /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
-    finishAppend /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
-    hasEssentialData(a: any): boolean;
-    coalesce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
-    shift(): any;
-    clear(): void;
-}
-declare class Manager extends PIXI.EventEmitter {
-    sid: any;
-    p: PhysicsWorker;
-    localUidPool: any;
-    inBuffer: NetworkUpdateBuffer;
-    bodies: {};
-    explosions: any[];
-    animated: {};
-    animAttribs: any[];
-    localPlayer: Player | null;
-    players: {};
-    playerList: any[];
-    teams: any[];
-    audioManager: AudioManager;
-    resetSimulationDelta: boolean;
-    worldInitialized: boolean;
-    suspended: boolean;
-    simulationTick: number;
-    simulationAccumulatorMs: number;
-    interpolatedBodies: any[];
-    pendingPresentationBodies: any[];
-    pendingBodyConnections: {};
-    environment: any;
-    pendingSyncOps: any[];
-    pendingSyncOpTtl: number;
-    lastTransformTick: number;
-    lastAppliedTick: number;
-    networkBodies: {};
-    pendingNetworkUpdates: {};
-    retiredNetworkRanges: any[];
-    lastAckedInputSeq: number;
-    debugClientPerformance: boolean;
-    lastPhysicsUpdateMs: number | null;
-    lastPhysicsSteps: number;
-    syncStats: {
-        droppedStaleFrames: number;
-        queuedMissingStates: number;
-        pendingStateExpirations: number;
-        droppedStaleCorrections: number;
-        correctionDistance: number;
-        rawCorrectionDistance: number;
-        pendingProjectionDistance: number;
-    };
-    prediction: PredictionController;
-    weaponPrediction: WeaponPredictionController;
-    predictionStats: {
-        predictedInputs: number;
-        pendingInputs: number;
-        ignoredSmallCorrections: number;
-        smoothedCorrections: number;
-        snappedCorrections: number;
-        maxCorrectionDistance: number;
-        maxRawCorrectionDistance: number;
-        staleCorrectionDrops: number;
-        projectedCorrections: number;
-        avoidedSnapCorrections: number;
-        cappedProjectedCorrections: number;
-        skippedProjectionIncreasedCorrection: number;
-        maxPendingProjectionDistance: number;
-    };
-    trackedPlayerSid: any;
-    lastScoringPlayerId: any;
-    onPlayerSpawn: any;
-    physicsMessageMap: {
-        [PhysicsMessage.UPDATE_OBJECT]: (a: any) => void;
-        [PhysicsMessage.UPDATE_OBJECT_BATCH]: (a: any) => void;
-        [PhysicsMessage.UPDATED]: () => void;
-        [PhysicsMessage.ADDED]: (a: any) => void;
-        [PhysicsMessage.REMOVED]: (a: any) => void;
-        [PhysicsMessage.SUBMERGE]: (a: any) => void;
-        [PhysicsMessage.SURFACE]: (a: any) => void;
-        [PhysicsMessage.ARROW_PIN]: (a: any) => void;
-    } | undefined;
-    localObjectMap: {
-        [ParticleEffects.LOCAL_SAW]: (a: any) => void;
-        [ParticleEffects.LOCAL_PUNCH]: (a: any) => void;
-        [ParticleEffects.LOCAL_EXP]: (a: any) => void;
-        [ParticleEffects.LOCAL_LINK_GUN]: (a: any) => void;
-    } | undefined;
-    stateChangeAgentMap: {
-        [StateChange.Agent.ALIVE]: (a: any, b?: any) => void;
-        [StateChange.Agent.HEALTH]: (a: any, b?: any) => void;
-        [StateChange.Agent.COMBO]: (a: any, b?: any) => boolean;
-        [StateChange.Agent.TELEPORT]: (a: any) => boolean;
-        [StateChange.Agent.INSERTION]: () => boolean;
-        [StateChange.Agent.MESSAGE]: (a: any, b?: any) => false | undefined;
-        [StateChange.Agent.HOSTILE]: (a: any, b?: any) => boolean;
-    } | undefined;
-    stateChangeModelMap: {
-        [StateChange.Model.KILL]: (a: any) => boolean;
-        [StateChange.Model.ENVIRONMENT]: (a: any) => boolean;
-        [StateChange.Model.ENERGY_RADIUS]: (a: any) => boolean;
-        [StateChange.Model.END_DB_MATCH]: (a: any) => boolean;
-        [StateChange.Model.INITIAL]: (a: any) => boolean;
-        [StateChange.Model.WAVE]: (a: any) => boolean;
-    } | undefined;
-    stateChangeItemMap: {
-        [StateChange.Item.CARRY_OBJECTIVE]: (a: any) => boolean;
-        [StateChange.Item.DROP_OBJECTIVE]: (a: any) => boolean;
-        [StateChange.Item.SCORE_OBJECTIVE]: (a: any) => boolean;
-        [StateChange.Item.RETURN_OBJECTIVE]: (a: any) => boolean;
-        [StateChange.Item.GORE]: (a: any, b?: any) => null;
-    } | undefined;
-    stateChangeMap: {
-        [StateChange.Agent.RANGE]: (a: any, b?: any) => any;
-        [StateChange.Model.RANGE]: (a: any, b?: any) => boolean;
-        [StateChange.Item.RANGE]: (a: any, b?: any) => any;
-    } | undefined;
-    pendingOwnerUpdates: any[] | undefined;
-    networkUpdateScratch: {} | undefined;
-    camera: any;
-    transformIds: Uint32Array<any> | undefined;
-    transformMasks: Uint16Array<any> | undefined;
-    transformValues: Float64Array<ArrayBuffer> | undefined;
-    pendingStaticSnapshotOps: any;
-    awaitingResync: boolean | undefined;
-    networkPackets: any[] | undefined;
-    networkPacketBytes: number | undefined;
-    lastResyncRequestAt: number | undefined;
-    waypoints: {} | undefined;
-    simulationInProgress: boolean | undefined;
-    lastScoringPlayer: any;
-    weaponPresentationOwners: any[] | undefined;
-    weaponPresentationPass: any;
-    constructor(a: any);
-    _initMessageMaps(): void;
-    isBotActor(a: any, b?: any): boolean;
-    getHudActorName(a: any, b?: any): any;
-    getHudActorColor(a: any, b?: any, c?: number): number;
-    _playWaterSplash(a: any): void;
-    _onSubmerge(a: any): void;
-    _onSurface(a: any): void;
-    _setAuthoritativePlayerSubmerged /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    _onLocalRaycast(a: any): void;
-    _onLocalExplosion(a: any): void;
-    _onLocalLinkGun(a: any): void;
-    _scAgentAlive /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    _scAgentHealth /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    presentAuthoritativeProjectileHit /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    _scAgentCombo /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    _scAgentTeleport(a: any): boolean;
-    _scAgentInsertion(): boolean;
-    _scAgentMessage /** @param {any} a @param {any} [b] */(a: any, b?: any): false | undefined;
-    _scModelKill(a: any): boolean;
-    _scModelEnvironment(a: any): boolean;
-    _scModelEnergyRadius(a: any): boolean;
-    _scModelEndDbMatch(a: any): boolean;
-    _scModelInitial(a: any): boolean;
-    _scModelWave(a: any): boolean;
-    _scItemCarryObjective(a: any): boolean;
-    _scItemDropObjective(a: any): boolean;
-    _scItemScoreObjective(a: any): boolean;
-    _scItemReturnObjective(a: any): boolean;
-    _scItemGore /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
-    _pendingKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
-    getPendingBodyConnectionKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
-    clearPendingBodyConnection /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    attachObjectiveToCarrier(a: any): boolean;
-    resolvePendingBodyConnections(a?: number): void;
-    preContact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    contact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    processBuffer(a?: number, b?: number): void;
-    getNetworkUpdateBuffer(): NetworkUpdateBuffer;
-    _processAdd(a: any): void;
-    _processSyncOp(a: any): boolean;
-    _processStateOp(a: any, b?: boolean): boolean;
-    _processUpdateOp(a: any, b?: boolean): boolean;
-    processPendingOwnerUpdates(): void;
-    smoothPresentationCorrection /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
-    static translatePresentationSamples /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
-    static decayPresentationCorrection(a: any): void;
-    findRetiredNetworkRange(a: any): number;
-    isNetworkIdRetired(a: any): boolean;
-    setNetworkIdRetired /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    registerNetworkBody /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    _processNetworkUpdate(a: any, b?: boolean): boolean;
-    getMissingStateDependency(a: any): any;
-    queueMissingSyncOp /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    retryPendingSyncOps(a?: number): void;
-    _processRemove(a: any): void;
-    _scAgentHostile /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    queueBodyExplosion(a: any, b?: any): boolean;
-    _processExplosions(a?: number): void;
-    createLocalPlayer /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-    createAgent /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-    setCamera(a: any): void;
-    instantiate(a: any): any;
-    createGameObject(a: any): GameObject;
-    applySettings(a: any): void;
-    getLocalPlayer(): Player | null;
-    readBinaryUpdateKey(a: any): any;
-    readBinaryUpdateValue(a: any, b?: number): any;
-    readBinaryUpdateMap(a: any, b?: number): {};
-    readBinaryUpdateOp(a: any): any;
-    readBinaryAddParams(a: any): any;
-    readBinaryAddOp(a: any): {
-        op: string;
-    };
-    pushSyncPacket(a: any): any;
-    pushBinaryUpdatePacket(a: any, b?: any): any;
-    pushUpdates(a: any): void;
-    pushTransformPacket(a: any, b?: any): boolean;
-    ensureTransformCapacity(a: any): void;
-    appendUpdates(a: any): void;
-    requestNetworkResync(): void;
-    enqueueNetworkPacket /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    ingestNetworkPackets(): void;
-    requestLocalObject(a: any): void;
-    applyStateChange(a: any): false | ((a: any, b?: any) => any) | null;
-    clear(): void;
-    destroy(): void;
-    getPlayerById(a: any): any;
-    getLastScoringPlayer(): any;
-    trackPlayer(a: any): void;
-    setTrackObject(a: any, b?: boolean): void;
-    clearTrackedPlayer(a: any): void;
-    getTrackObject(): any;
-    processNetworkUpdates(): void;
-    update(a: any): void;
-    static clampSimulationDelta(a: any): number;
-    static getFixedSimulationStepMs(): number;
-    showPlayerChat(a: any, b: any, c?: boolean): void;
-    showBotChat /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    onPlayerJet /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    resume(): void;
-    suspend(): void;
-    applyEnvironment(a: any): void;
-    focus(): void;
-    mute(a: any): void;
-    onPhysicsMessage(a: any): void;
-    onPackedUpdateBatch(a: any): void;
-    onAdded(a: any): void;
-    onPlayerAdded /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    processContacts(a: any, b?: any): boolean;
-    captureProjectileImpact(a: any, b: any, c?: any): void;
-    applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    onUpdateObject(a: any): void;
-    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [p] @param {any} [r] @param {any} [q] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any, r?: any, q?: any): void;
-    preparePresentationSmoothing(a: any): void;
-    capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
-    isActorPresentationVisible(a: any): boolean;
-    static isPresentationBodyInView /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
-    updateActorPresentationVisibility(a: any): void;
-    resetActorPresentationBody(a: any): void;
-    prepareActorFrozenPresentation(a: any): void;
-    presentPhysicsBodies(a: any): void;
-    static applyPhysicsPresentation(a: any, b: any, c?: number, d?: number): void;
-    static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-    finalizePhysicsPresentation(a: any): void;
-    updateRagdollPresentation(a: any): void;
-    onUpdated(): void;
-    onRemoved(a: any): void;
-}
-declare namespace Manager {
-    var DefaultEnvironment: {
-        weather: {
-            precipitation: {
-                type: string;
-                intensity: number;
-            };
-        };
-        gravity: {
-            x: number;
-            y: number;
-        };
-        gradient: {
-            topColor: string;
-            bottomColor: string;
-            topY: number;
-            bottomY: number;
-        };
-        settings: {
-            energy: number;
-        };
-    };
-    var NETWORK_TRANSFORM_FIELDS: {
-        name: string;
-        bit: number;
-        scale: number;
-        bytes: number;
-        type: string;
-    }[];
-    var NETWORK_MOTION_FIELDS: string[];
-    var NETWORK_TRANSFORM_FIELD_BY_NAME: any;
-    var NETWORK_MOTION_MASK: number;
-    var NETWORK_PROCESS_BUDGET_MS: number;
-    var NETWORK_PROCESS_MAX_OPS: number;
-    var NETWORK_MAX_QUEUED_OPS: number;
-    var NETWORK_MAX_PENDING_OWNER_UPDATES: number;
-    var NETWORK_MAX_QUEUED_BYTES: number;
-    var NETWORK_UPDATE_MARKER: number;
-    var NETWORK_UPDATE_VERSION: number;
-    var NETWORK_BINARY_MAX_DEPTH: number;
-    var NETWORK_SYNC_MARKER: number;
-    var NETWORK_SYNC_VERSION: number;
-    var NETWORK_SYNC_HEADER_BYTES: number;
-    var NETWORK_BINARY_MAX_OPS: number;
-    var NETWORK_BINARY_MAX_COLLECTION_LENGTH: number;
-    var NETWORK_VALUE_NULL: number;
-    var NETWORK_VALUE_FALSE: number;
-    var NETWORK_VALUE_TRUE: number;
-    var NETWORK_VALUE_UINT: number;
-    var NETWORK_VALUE_SINT: number;
-    var NETWORK_VALUE_FLOAT64: number;
-    var NETWORK_VALUE_STRING: number;
-    var NETWORK_VALUE_ARRAY: number;
-    var NETWORK_VALUE_OBJECT: number;
-    var NETWORK_VALUE_DECIMAL_100: number;
-    var NETWORK_VALUE_DECIMAL_1000: number;
-    var NETWORK_VALUE_DECIMAL_10000: number;
-    var NETWORK_OP_GENERIC: number;
-    var NETWORK_OP_ADD: number;
-    var NETWORK_OP_UPDATE: number;
-    var NETWORK_BINARY_OPS: (string | null)[];
-    var NETWORK_REF_NONE: number;
-    var NETWORK_REF_NETWORK_ID: number;
-    var NETWORK_REF_STRING_ID: number;
-    var NETWORK_BINARY_KEYS: (string | null)[];
-    var NETWORK_BINARY_TEXT_DECODER: TextDecoder;
-    var BASE_SIMULATION_STEP_MS: number;
-    var REMOTE_CORRECTION_MAX_PIXELS: number;
-    var REMOTE_CORRECTION_HALF_LIFE_MS: number;
-    var REMOTE_CORRECTION_SNAP_PIXELS: number;
-    var LOCAL_CORRECTION_MAX_PIXELS: number;
-    var LOCAL_CORRECTION_HALF_LIFE_MS: number;
-    var LOCAL_CORRECTION_SNAP_PIXELS: number;
-    var MAX_CATCH_UP_STEPS: number;
-    var MAX_SIMULATION_DEBT_MS: number;
-    var STEP_EPSILON_MS: number;
-    var PACKED_UPDATE_CONTACTS: number;
-    var NETWORK_BINARY_UPDATE_FIELDS: ({
-        name: string;
-        bit: number;
-        scale: number;
-        bytes: number;
-        type: string;
-    } | {
-        name: string;
-        bit: number;
-        type: string;
-    })[];
-    var NETWORK_BINARY_ADD_FIELDS: any[];
-    var NETWORK_BINARY_ADD_PARAM_FIELDS: any[];
-}
-declare var modelevent: {};
-/** @param {any} a @param {any} [b] */ declare function ModelEvent(a: any, b?: any): void;
-declare namespace ModelEvent {
-    var ENTER_FRAME: string;
-    var GAMEOBJECT_ADDED: string;
-    var GAMEOBJECT_UPDATED: string;
-    var GAMEOBJECT_DELETED: string;
-    var GAMEOBJECT_CONTACT: string;
-    var UPDATE_LABEL: string;
-    var REMOVE_LABEL: string;
-    var SAVE_MAP: string;
-    var PLAYER_STATE: string;
-    var AGENT_STATE: string;
-    var PLAYER_ACTION: string;
-    var PLAYER_TELEPORT: string;
-    var MODEL_STATE: string;
-    var ENERGY_RADIUS: string;
-    var PLAYER_DEATH: string;
-    var PLAYER_SPAWN: string;
-    var PLAYER_LIFE: string;
-    var CLEAR: string;
-    var PLAYER_KILL: string;
-    var PLAYER_SCORE: string;
-    var CREATE_EFFECT: string;
-    var PLAYER_COMBO: string;
-    var PLAYER_SPREE: string;
-    var UPDATE_ENVIRONMENT: string;
-    var FOCUS: string;
-    var MESSAGE: string;
-    var DB_ROUND_END: string;
-    var INITIAL: string;
-    var SUBMERGE: string;
-    var SURFACE: string;
-    var ZOMBIE_WAVE: string;
-}
-declare var shapeoptions: {};
-declare var ShapeOptions: {
-    NONE: number;
-    CIRCLE: number;
-    RECTANGLE: number;
-    ROUNDED_RECT: number;
-    PLAYER: number;
-    COMPOUND: number;
-    PARTICLE: number;
-    ZOMBIE: number;
-};
-declare var rayparticle: {};
-declare class RayParticle {
-    m_type: any;
-    cat: number;
-    mask: any;
-    id: any;
-    pos: any;
-    vel: any;
-    d: number;
-    fr: number;
-    re: number;
-    ld: number;
-    gs: number;
-    wd: number;
-    gi: number;
-    r: number;
-    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: any);
-}
-declare var shapeplayer: {};
-declare class ShapePlayer {
-    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-}
-declare var shapezombie: {};
-declare class ShapeZombie {
-    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-}
-declare var shapecircle: {};
-declare class ShapeCircle {
-    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-}
-declare var shaperectangle: {};
-declare class ShapeRectangle {
-    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-}
-declare var shapecompound: {};
-declare class ShapeCompound {
-    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
-}
-declare namespace ShapeCompound {
-    var PolyBuffer: {
-        x: number;
-        y: number;
-    }[];
-}
-declare var bodyfactory: {}, b2Vec2: any, b2AABB: any, b2BodyDef: any;
-declare var b2FixtureDef: any, b2FilterData: any, b2Fixture: any, b2World: any, b2PolygonShape: any, b2CircleShape: any, b2Joint: any, b2RevoluteJointDef: any, b2WeldJointDef: any;
-declare var BodyFactory: {
-    forWorld: (a: any) => any;
-    free: (a: any) => void;
-    createBody: (a: any) => RayParticle | {
-        GetPosition: () => {
-            x: any;
-            y: any;
-        };
-        GetUserData: () => any;
-        GetAngle: () => any;
-        GetType: () => 0;
-    };
-    getBodyDef: (a: any) => any;
-    createRagdoll: (a: any, b: any, c?: number) => number;
-    joinBodies: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any) => any;
-    weldJoinBodies: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
-    createJoint: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
-} & {
-    ShapeMap: (typeof ShapePlayer | null)[];
-};
 declare var animations: {};
 /** @param {any} a @param {any} [b] */ declare function Animation(a: any, b?: any): void;
 declare namespace Animation {
@@ -15174,6 +14826,614 @@ declare namespace TossRightAnimation {
     };
 }
 declare var Animations: {};
+declare var deaglegesture: {};
+declare class DeagleGesture {
+    id: any;
+    started: any;
+    updated: any;
+    gestureLeft: boolean;
+    angles: {};
+    shots: {}[];
+    constructor(a: any, b?: any);
+    getHoldingAnimation(a: any): any;
+    getShot /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): null;
+}
+declare var weaponpredictioncontroller: {};
+declare class WeaponPredictionController {
+    manager: any;
+    weapons: Map<any, any>;
+    shots: Map<any, any>;
+    recoil: any;
+    held: boolean;
+    sweep: {
+        rayMaskBits: number;
+        hit: boolean;
+        ReportFixture(b: any): -1 | 0;
+    };
+    from: {
+        x: number;
+        y: number;
+    };
+    to: {
+        x: number;
+        y: number;
+    };
+    particle: {
+        ref: null;
+        body: {
+            pos: {
+                x: number;
+                y: number;
+            };
+            vel: {
+                x: number;
+                y: number;
+            };
+        };
+    };
+    terrainRay: {
+        rayMaskBits: number;
+        p: null;
+        gi: number;
+        point: {
+            x: number;
+            y: number;
+        };
+        normal: {
+            x: number;
+            y: number;
+        };
+        ReportFixture(b: any, c?: any, d?: any, e?: any): -1 | null;
+    };
+    spawnRaycast: (b: any, c?: any) => {
+        rayMaskBits: number;
+        p: null;
+        gi: number;
+        point: {
+            x: number;
+            y: number;
+        };
+        normal: {
+            x: number;
+            y: number;
+        };
+        ReportFixture(b: any, c?: any, d?: any, e?: any): -1 | null;
+    };
+    fluidQuery: (b: any) => boolean;
+    lastHitAt: number | undefined;
+    triggerAt: number | undefined;
+    gesture: DeagleGesture | null | undefined;
+    gesturePlayer: {
+        constructor: {
+            FACING_LEFT: boolean;
+        };
+        p: {};
+    } | undefined;
+    gestureSlope: (() => any) | undefined;
+    gestureBody: any;
+    queryFluids: any;
+    constructor(a: any);
+    acceptState(a: any): void;
+    prepare(a: any, b?: number): any;
+    fire(a: any, b: any, c: any, d: any, e?: number): void;
+    sampleGesture /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
+    applyRecoil(a: any, b?: any): void;
+    advance(a: any, b: any, c?: number, d?: any, e?: boolean): boolean;
+    step(): void;
+    reconcile(a: any): any;
+    removeVisual(a: any): void;
+    finish(a: any): void;
+    clear(a?: boolean): void;
+
+    static gestureIds: any;}
+declare var manager: {};
+declare class NetworkBinaryReader {
+    buffer: any;
+    view: DataView<any>;
+    offset: number;
+    constructor(a: any);
+    ensure(a: any): void;
+    readUint8(): any;
+    readUint32(): number;
+    readFloat64(): number;
+    readVarUint(a?: number): number;
+    readVarUint32(): number;
+    readVarInt32(): number;
+    readString(): string;
+}
+declare class NetworkUpdateBuffer {
+    length: number;
+    head: number;
+    tail: number;
+    capacity: number;
+    used: number;
+    free: any[];
+    objects: any[];
+    keys: any[];
+    latest: Map<any, any>;
+    replaceable: Map<any, any>;
+    networkIds: Map<any, any>;
+    carryingBacklog: boolean;
+    scratch: {};
+    values: string | undefined;
+    constructor();
+    grow(): void;
+    allocate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
+    remove(a: any): void;
+    getKey /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
+    append /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    appendTransform /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    finishAppend /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    hasEssentialData(a: any): boolean;
+    coalesce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
+    shift(): any;
+    clear(): void;
+}
+declare class Manager extends PIXI.EventEmitter {
+    sid: any;
+    p: PhysicsWorker;
+    localUidPool: any;
+    inBuffer: NetworkUpdateBuffer;
+    bodies: {};
+    explosions: any[];
+    animated: {};
+    animAttribs: any[];
+    localPlayer: Player | null;
+    players: {};
+    playerList: any[];
+    teams: any[];
+    audioManager: AudioManager;
+    backgroundNetworkActive: boolean;
+    resetSimulationDelta: boolean;
+    worldInitialized: boolean;
+    suspended: boolean;
+    simulationTick: number;
+    simulationAccumulatorMs: number;
+    interpolatedBodies: any[];
+    pendingPresentationBodies: any[];
+    pendingBodyConnections: {};
+    environment: any;
+    pendingSyncOps: any[];
+    pendingSyncOpTtl: number;
+    lastTransformTick: number;
+    lastAppliedTick: number;
+    networkBodies: {};
+    pendingNetworkUpdates: {};
+    retiredNetworkRanges: any[];
+    lastAckedInputSeq: number;
+    debugClientPerformance: boolean;
+    lastPhysicsUpdateMs: number | null;
+    lastPhysicsSteps: number;
+    syncStats: {
+        droppedStaleFrames: number;
+        queuedMissingStates: number;
+        pendingStateExpirations: number;
+        droppedStaleCorrections: number;
+        correctionDistance: number;
+        rawCorrectionDistance: number;
+        pendingProjectionDistance: number;
+    };
+    prediction: PredictionController;
+    weaponPrediction: WeaponPredictionController;
+    predictionStats: {
+        predictedInputs: number;
+        pendingInputs: number;
+        ignoredSmallCorrections: number;
+        smoothedCorrections: number;
+        snappedCorrections: number;
+        maxCorrectionDistance: number;
+        maxRawCorrectionDistance: number;
+        staleCorrectionDrops: number;
+        projectedCorrections: number;
+        avoidedSnapCorrections: number;
+        cappedProjectedCorrections: number;
+        skippedProjectionIncreasedCorrection: number;
+        maxPendingProjectionDistance: number;
+    };
+    trackedPlayerSid: any;
+    lastScoringPlayerId: any;
+    onPlayerSpawn: any;
+    physicsMessageMap: {
+        [PhysicsMessage.UPDATE_OBJECT]: (a: any) => void;
+        [PhysicsMessage.UPDATE_OBJECT_BATCH]: (a: any) => void;
+        [PhysicsMessage.UPDATED]: () => void;
+        [PhysicsMessage.ADDED]: (a: any) => void;
+        [PhysicsMessage.REMOVED]: (a: any) => void;
+        [PhysicsMessage.SUBMERGE]: (a: any) => void;
+        [PhysicsMessage.SURFACE]: (a: any) => void;
+        [PhysicsMessage.ARROW_PIN]: (a: any) => void;
+    } | undefined;
+    localObjectMap: {
+        [ParticleEffects.LOCAL_SAW]: (a: any) => void;
+        [ParticleEffects.LOCAL_PUNCH]: (a: any) => void;
+        [ParticleEffects.LOCAL_EXP]: (a: any) => void;
+        [ParticleEffects.LOCAL_LINK_GUN]: (a: any) => void;
+    } | undefined;
+    stateChangeAgentMap: {
+        [StateChange.Agent.ALIVE]: (a: any, b?: any) => void;
+        [StateChange.Agent.HEALTH]: (a: any, b?: any) => void;
+        [StateChange.Agent.COMBO]: (a: any, b?: any) => boolean;
+        [StateChange.Agent.TELEPORT]: (a: any) => boolean;
+        [StateChange.Agent.INSERTION]: () => boolean;
+        [StateChange.Agent.MESSAGE]: (a: any, b?: any) => false | undefined;
+        [StateChange.Agent.HOSTILE]: (a: any, b?: any) => boolean;
+    } | undefined;
+    stateChangeModelMap: {
+        [StateChange.Model.PAINT_IMPACT]: (a: any) => null;
+        [StateChange.Model.PAINT_LINE]: (a: any) => null;
+        [StateChange.Model.KILL]: (a: any) => boolean;
+        [StateChange.Model.ENVIRONMENT]: (a: any) => boolean;
+        [StateChange.Model.ENERGY_RADIUS]: (a: any) => boolean;
+        [StateChange.Model.END_DB_MATCH]: (a: any) => boolean;
+        [StateChange.Model.INITIAL]: (a: any) => boolean;
+        [StateChange.Model.WAVE]: (a: any) => boolean;
+    } | undefined;
+    stateChangeItemMap: {
+        [StateChange.Item.CARRY_OBJECTIVE]: (a: any) => boolean;
+        [StateChange.Item.DROP_OBJECTIVE]: (a: any) => boolean;
+        [StateChange.Item.SCORE_OBJECTIVE]: (a: any) => boolean;
+        [StateChange.Item.RETURN_OBJECTIVE]: (a: any) => boolean;
+        [StateChange.Item.GORE]: (a: any, b?: any) => null;
+    } | undefined;
+    stateChangeMap: {
+        [StateChange.Agent.RANGE]: (a: any, b?: any) => any;
+        [StateChange.Model.RANGE]: (a: any, b?: any) => boolean | null;
+        [StateChange.Item.RANGE]: (a: any, b?: any) => any;
+    } | undefined;
+    pendingOwnerUpdates: any[] | undefined;
+    networkUpdateScratch: {} | undefined;
+    camera: any;
+    transformIds: Uint32Array<any> | undefined;
+    transformMasks: Uint16Array<any> | undefined;
+    transformValues: Float64Array<ArrayBuffer> | undefined;
+    pendingStaticSnapshotOps: any;
+    awaitingResync: boolean | undefined;
+    networkPackets: any[] | undefined;
+    networkPacketBytes: number | undefined;
+    lastResyncRequestAt: number | undefined;
+    waypoints: {} | undefined;
+    simulationInProgress: boolean | undefined;
+    lastScoringPlayer: any;
+    weaponPresentationOwners: any[] | undefined;
+    weaponPresentationPass: any;
+    constructor(a: any);
+    _initMessageMaps(): void;
+    isBotActor(a: any, b?: any): boolean;
+    getHudActorName(a: any, b?: any): any;
+    getHudActorColor(a: any, b?: any, c?: number): number;
+    _playWaterSplash(a: any): void;
+    _onSubmerge(a: any): void;
+    _onSurface(a: any): void;
+    _setAuthoritativePlayerSubmerged /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    _onLocalRaycast(a: any): void;
+    _onLocalExplosion(a: any): void;
+    _onLocalLinkGun(a: any): void;
+    _scAgentAlive /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    _scAgentHealth /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    presentAuthoritativeProjectileHit /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    _scAgentCombo /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    _scAgentTeleport(a: any): boolean;
+    _scAgentInsertion(): boolean;
+    _scAgentMessage /** @param {any} a @param {any} [b] */(a: any, b?: any): false | undefined;
+    _scModelKill(a: any): boolean;
+    _scModelEnvironment(a: any): boolean;
+    _scModelEnergyRadius(a: any): boolean;
+    _scModelEndDbMatch(a: any): boolean;
+    _scModelInitial(a: any): boolean;
+    _scModelWave(a: any): boolean;
+    _scItemCarryObjective(a: any): boolean;
+    _scItemDropObjective(a: any): boolean;
+    _scItemScoreObjective(a: any): boolean;
+    _scItemReturnObjective(a: any): boolean;
+    _scItemGore /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
+    _pendingKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
+    getPendingBodyConnectionKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
+    clearPendingBodyConnection /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    attachObjectiveToCarrier(a: any): boolean;
+    resolvePendingBodyConnections(a?: number): void;
+    preContact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    contact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    processBuffer(a?: number, b?: number): void;
+    getNetworkUpdateBuffer(): NetworkUpdateBuffer;
+    _processAdd(a: any): void;
+    _processSyncOp(a: any): boolean;
+    _processStateOp(a: any, b?: boolean): boolean;
+    _processUpdateOp(a: any, b?: boolean): boolean;
+    processPendingOwnerUpdates(): void;
+    smoothPresentationCorrection(a: any, b: any, c: any, d?: boolean): void;
+    smoothKinematicRiderCorrection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    static translatePresentationSamples /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    static decayPresentationCorrection(a: any): void;
+    findRetiredNetworkRange(a: any): number;
+    isNetworkIdRetired(a: any): boolean;
+    setNetworkIdRetired /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    registerNetworkBody /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    _processNetworkUpdate(a: any, b?: boolean): boolean;
+    getMissingStateDependency(a: any): any;
+    queueMissingSyncOp /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    retryPendingSyncOps(a?: number): void;
+    _processRemove(a: any): void;
+    _scAgentHostile /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    queueBodyExplosion(a: any, b?: any): boolean;
+    _processExplosions(a?: number): void;
+    createLocalPlayer /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    createAgent /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    setCamera(a: any): void;
+    instantiate(a: any): any;
+    createGameObject(a: any): GameObject;
+    applySettings(a: any): void;
+    getLocalPlayer(): Player | null;
+    readBinaryUpdateKey(a: any): any;
+    readBinaryUpdateValue(a: any, b?: number): any;
+    readBinaryUpdateMap(a: any, b?: number): {};
+    readBinaryUpdateOp(a: any): any;
+    readBinaryAddParams(a: any): any;
+    readBinaryAddOp(a: any): {
+        op: string;
+    };
+    pushSyncPacket(a: any): any;
+    pushBinaryUpdatePacket(a: any, b?: any): any;
+    pushUpdates(a: any): void;
+    pushTransformPacket(a: any, b?: any): boolean;
+    ensureTransformCapacity(a: any): void;
+    appendUpdates(a: any): void;
+    requestNetworkResync(): void;
+    enqueueNetworkPacket /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    ingestNetworkPackets(): void;
+    requestLocalObject(a: any): void;
+    applyStateChange(a: any): false | ((a: any, b?: any) => any) | null;
+    clear(): void;
+    destroy(): void;
+    getPlayerById(a: any): any;
+    getLastScoringPlayer(): any;
+    trackPlayer(a: any): void;
+    setTrackObject(a: any, b?: boolean): void;
+    clearTrackedPlayer(a: any): void;
+    getTrackObject(): any;
+    beginBackgroundUpdates(): void;
+    processNetworkUpdates(): void;
+    update(a: any): void;
+    static clampSimulationDelta(a: any): number;
+    static getFixedSimulationStepMs(): number;
+    showPlayerChat(a: any, b: any, c?: boolean): void;
+    showBotChat /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    onPlayerJet /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    resume(): void;
+    suspend(): void;
+    applyEnvironment(a: any): void;
+    focus(): void;
+    mute(a: any): void;
+    onPhysicsMessage(a: any): void;
+    onPackedUpdateBatch(a: any): void;
+    onAdded(a: any): void;
+    onPlayerAdded /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    processContacts(a: any, b?: any): boolean;
+    captureProjectileImpact(a: any, b: any, c?: any): void;
+    applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    onUpdateObject(a: any): void;
+    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [q] @param {any} [r] @param {any} [p] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, q?: any, r?: any, p?: any): void;
+    preparePresentationSmoothing(a: any): void;
+    capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    isActorPresentationVisible(a: any): boolean;
+    static isPresentationBodyInView /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): boolean;
+    updateActorPresentationVisibility(a: any): void;
+    resetActorPresentationBody(a: any): void;
+    prepareActorFrozenPresentation(a: any): void;
+    presentPhysicsBodies(a: any): void;
+    static kinematicPresentationAlpha /** @param {any} a @param {any} [b] */(a: any, b?: any): 1 | null;
+    static applyPhysicsPresentation(a: any, b: any, c?: number, d?: number): void;
+    static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    finalizePhysicsPresentation(a: any): void;
+    updateRagdollPresentation(a: any): void;
+    onUpdated(): void;
+    onRemoved(a: any): void;
+}
+declare namespace Manager {
+    var DefaultEnvironment: {
+        weather: {
+            precipitation: {
+                type: string;
+                intensity: number;
+            };
+        };
+        gravity: {
+            x: number;
+            y: number;
+        };
+        gradient: {
+            topColor: string;
+            bottomColor: string;
+            topY: number;
+            bottomY: number;
+        };
+        settings: {
+            energy: number;
+        };
+    };
+    var NETWORK_TRANSFORM_FIELDS: {
+        name: string;
+        bit: number;
+        scale: number;
+        bytes: number;
+        type: string;
+    }[];
+    var NETWORK_MOTION_FIELDS: string[];
+    var NETWORK_TRANSFORM_FIELD_BY_NAME: any;
+    var NETWORK_MOTION_MASK: number;
+    var NETWORK_PROCESS_BUDGET_MS: number;
+    var NETWORK_PROCESS_MAX_OPS: number;
+    var NETWORK_MAX_QUEUED_OPS: number;
+    var NETWORK_MAX_PENDING_OWNER_UPDATES: number;
+    var NETWORK_MAX_QUEUED_BYTES: number;
+    var NETWORK_UPDATE_MARKER: number;
+    var NETWORK_UPDATE_VERSION: number;
+    var NETWORK_BINARY_MAX_DEPTH: number;
+    var NETWORK_SYNC_MARKER: number;
+    var NETWORK_SYNC_VERSION: number;
+    var NETWORK_SYNC_HEADER_BYTES: number;
+    var NETWORK_BINARY_MAX_OPS: number;
+    var NETWORK_BINARY_MAX_COLLECTION_LENGTH: number;
+    var NETWORK_VALUE_NULL: number;
+    var NETWORK_VALUE_FALSE: number;
+    var NETWORK_VALUE_TRUE: number;
+    var NETWORK_VALUE_UINT: number;
+    var NETWORK_VALUE_SINT: number;
+    var NETWORK_VALUE_FLOAT64: number;
+    var NETWORK_VALUE_STRING: number;
+    var NETWORK_VALUE_ARRAY: number;
+    var NETWORK_VALUE_OBJECT: number;
+    var NETWORK_VALUE_DECIMAL_100: number;
+    var NETWORK_VALUE_DECIMAL_1000: number;
+    var NETWORK_VALUE_DECIMAL_10000: number;
+    var NETWORK_OP_GENERIC: number;
+    var NETWORK_OP_ADD: number;
+    var NETWORK_OP_UPDATE: number;
+    var NETWORK_BINARY_OPS: (string | null)[];
+    var NETWORK_REF_NONE: number;
+    var NETWORK_REF_NETWORK_ID: number;
+    var NETWORK_REF_STRING_ID: number;
+    var NETWORK_BINARY_KEYS: (string | null)[];
+    var NETWORK_BINARY_TEXT_DECODER: TextDecoder;
+    var BASE_SIMULATION_STEP_MS: number;
+    var REMOTE_CORRECTION_MAX_PIXELS: number;
+    var REMOTE_CORRECTION_HALF_LIFE_MS: number;
+    var REMOTE_CORRECTION_SNAP_PIXELS: number;
+    var KINEMATIC_CORRECTION_FREQUENCY: number;
+    var LOCAL_CORRECTION_MAX_PIXELS: number;
+    var LOCAL_CORRECTION_HALF_LIFE_MS: number;
+    var LOCAL_CORRECTION_SNAP_PIXELS: number;
+    var MAX_CATCH_UP_STEPS: number;
+    var MAX_SIMULATION_DEBT_MS: number;
+    var STEP_EPSILON_MS: number;
+    var PACKED_UPDATE_CONTACTS: number;
+    var NETWORK_BINARY_UPDATE_FIELDS: ({
+        name: string;
+        bit: number;
+        scale: number;
+        bytes: number;
+        type: string;
+    } | {
+        name: string;
+        bit: number;
+        type: string;
+    })[];
+    var NETWORK_BINARY_ADD_FIELDS: any[];
+    var NETWORK_BINARY_ADD_PARAM_FIELDS: any[];
+}
+declare var modelevent: {};
+/** @param {any} a @param {any} [b] */ declare function ModelEvent(a: any, b?: any): void;
+declare namespace ModelEvent {
+    var ENTER_FRAME: string;
+    var GAMEOBJECT_ADDED: string;
+    var GAMEOBJECT_UPDATED: string;
+    var GAMEOBJECT_DELETED: string;
+    var GAMEOBJECT_CONTACT: string;
+    var PAINT_LINE: string;
+    var PAINT_IMPACT: string;
+    var UPDATE_LABEL: string;
+    var REMOVE_LABEL: string;
+    var SAVE_MAP: string;
+    var PLAYER_STATE: string;
+    var AGENT_STATE: string;
+    var PLAYER_ACTION: string;
+    var PLAYER_TELEPORT: string;
+    var MODEL_STATE: string;
+    var ENERGY_RADIUS: string;
+    var PLAYER_DEATH: string;
+    var PLAYER_SPAWN: string;
+    var PLAYER_LIFE: string;
+    var CLEAR: string;
+    var PLAYER_KILL: string;
+    var PLAYER_SCORE: string;
+    var CREATE_EFFECT: string;
+    var PLAYER_COMBO: string;
+    var PLAYER_SPREE: string;
+    var UPDATE_ENVIRONMENT: string;
+    var FOCUS: string;
+    var MESSAGE: string;
+    var DB_ROUND_END: string;
+    var INITIAL: string;
+    var SUBMERGE: string;
+    var SURFACE: string;
+    var ZOMBIE_WAVE: string;
+}
+declare var shapeoptions: {};
+declare var ShapeOptions: {
+    NONE: number;
+    CIRCLE: number;
+    RECTANGLE: number;
+    ROUNDED_RECT: number;
+    PLAYER: number;
+    COMPOUND: number;
+    PARTICLE: number;
+    ZOMBIE: number;
+};
+declare var rayparticle: {};
+declare class RayParticle {
+    m_type: any;
+    cat: number;
+    mask: any;
+    id: any;
+    pos: any;
+    vel: any;
+    d: number;
+    fr: number;
+    re: number;
+    ld: number;
+    gs: number;
+    wd: number;
+    gi: number;
+    r: number;
+    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: any);
+}
+declare var shapeplayer: {};
+declare class ShapePlayer {
+    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+}
+declare var shapezombie: {};
+declare class ShapeZombie {
+    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+}
+declare var shapecircle: {};
+declare class ShapeCircle {
+    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+}
+declare var shaperectangle: {};
+declare class ShapeRectangle {
+    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+}
+declare var shapecompound: {};
+declare class ShapeCompound {
+    static Create /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+}
+declare namespace ShapeCompound {
+    var PolyBuffer: {
+        x: number;
+        y: number;
+    }[];
+}
+declare var bodyfactory: {}, b2Vec2: any, b2AABB: any, b2BodyDef: any;
+declare var b2FixtureDef: any, b2FilterData: any, b2Fixture: any, b2World: any, b2PolygonShape: any, b2CircleShape: any, b2Joint: any, b2RevoluteJointDef: any, b2WeldJointDef: any;
+declare var BodyFactory: {
+    forWorld: (a: any) => any;
+    free: (a: any) => void;
+    createBody: (a: any) => RayParticle | {
+        GetPosition: () => {
+            x: any;
+            y: any;
+        };
+        GetUserData: () => any;
+        GetAngle: () => any;
+        GetType: () => 0;
+    };
+    getBodyDef: (a: any) => any;
+    createRagdoll: (a: any, b: any, c?: number) => number;
+    joinBodies: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any) => any;
+    weldJoinBodies: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
+    createJoint: (a: any, b?: any, c?: any, d?: any, e?: any) => any;
+} & {
+    ShapeMap: (typeof ShapePlayer | null)[];
+};
 declare var damagevolumeindex: {};
 declare class DamageVolumeIndex {
     cellSize: number;
@@ -15324,6 +15584,8 @@ declare class PhysicsWorker {
     contactValidationDirty: boolean | undefined;
     activeDamageRayCallback: any;
     containsFluid: boolean | undefined;
+    kinematicSupportManifold: any;
+    kinematicCorrectionPass: any;
     feetTerrainPoint: {
         x: number;
         y: number;
@@ -15386,7 +15648,7 @@ declare class PhysicsWorker {
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     initializePackedUpdateBatch(a?: number): void;
     growPackedUpdateBatch(): void;
-    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [q] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, r?: any, q?: any): void;
+    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [p] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: number, r?: any, p?: any): void;
     queuePackedContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     flushPackedUpdates(): void;
     unlinkContactNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -15425,12 +15687,16 @@ declare class PhysicsWorker {
     update(a: any): void;
     updateFacing /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     hasPlayerCeilingTerrainContact(a: any): boolean;
+    getPlayerKinematicSupport(a: any): any;
+    reconcileKinematicRiders /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    static translateRiderBody /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     hasPlayerFeetTerrainContact(a: any, b?: boolean): boolean;
     getPlayerTerrainContactPoints /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
     hasPlayerMovementContact(a: any): boolean;
     isPlayerProneExitBlocked /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     updateLocalContinuousForce(a: any): void;
     remove /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    limitParticleWaterRange /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     submergeParticle /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     surfaceParticle /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onBoundParticleQueryResult(a: any): boolean;
@@ -15456,7 +15722,8 @@ declare class PhysicsWorker {
     endContact(a: any): void;
     _buildContactFeedback /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     _clearState(): void;
-}
+
+    static _riderTranslationVec: any;}
 declare namespace PhysicsWorker {
     var PlayerDampingStartSpeed: number;
     var PlayerDampingSpeedScale: number;
@@ -15599,6 +15866,7 @@ declare class PredictionController {
     proneSlideSpeed: any;
     jetUpForce: any;
     jetDownForce: any;
+    swimForceMultiplier: any;
     pendingProjectionWindowMs: any;
     pendingProjectionTimeScale: any;
     maxPendingProjection: any;
@@ -15805,6 +16073,8 @@ declare var statechange: {}, StateChange: {
         INITIAL: number;
         RESULT: number;
         WAVE: number;
+        PAINT_LINE: number;
+        PAINT_IMPACT: number;
     };
 };
 declare var team: {};
@@ -16399,6 +16669,6 @@ declare var uidpool: {};
 declare namespace UIDpool {
     var CHARSET: string[];
 }
-export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleSprite, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyVacuum, EntityCategory, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, Flag, FlagSprite, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, GAME_MODES, Game, GameAttribute, GameCommands, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GetFlippedRagdollTextureId, GetHeadTextureId, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyvacuum, entitycategory, escapemenu, eventdispatcher, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, fontstyle, game, gameattribute, gamemenu, gamemodes, gameobject, gameshape, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, renamemenu, rendererfactory, renderstats, rewardsmenu, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, terrainseams, textcache, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
+export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleGesture, DeagleSprite, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyVacuum, EntityCategory, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, Flag, FlagSprite, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, GAME_MODES, Game, GameAttribute, GameCommands, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GetFlippedRagdollTextureId, GetHeadTextureId, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineGunPrefab, LineGunSprite, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, MixPaintColor, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, PaintEffects, PaintLine, PaintLineLayer, PaintLineSprite, PaintShotScale, PaintSplashRope, PaintTeamColor, PaintTextures, Paintball, PaintballGunPrefab, PaintballGunSprite, PaintballSprite, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectilePhysics, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, deaglegesture, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyvacuum, entitycategory, escapemenu, eventdispatcher, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, fontstyle, game, gameattribute, gamemenu, gamemodes, gameobject, gameshape, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, paintballprefabs, paintballsprites, painteffects, paintlinelayer, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectilephysics, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, renamemenu, rendererfactory, renderstats, rewardsmenu, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, terrainseams, textcache, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
 export * as PIXI from "pixi.js";
 //# sourceMappingURL=lib.d.ts.map
