@@ -15141,7 +15141,7 @@ declare class Manager extends PIXI.EventEmitter {
     _processUpdateOp(a: any, b?: boolean): boolean;
     processPendingOwnerUpdates(): void;
     smoothPresentationCorrection(a: any, b: any, c: any, d?: boolean): void;
-    smoothKinematicRiderCorrection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    smoothMovingRiderCorrection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     static translatePresentationSamples /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static decayPresentationCorrection(a: any): void;
     findRetiredNetworkRange(a: any): number;
@@ -15490,6 +15490,7 @@ declare class DamageVolumeIndex {
     synchronizePoseDefinition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     ensureHistorySnapshotCapacity /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     captureHistory(a: any): void;
+    sampleHistoricalPose /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
     raycastHistorical(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
     static raycastHistoricalVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number | null;
     removeFromCells(a: any): void;
@@ -15688,7 +15689,8 @@ declare class PhysicsWorker {
     updateFacing /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     hasPlayerCeilingTerrainContact(a: any): boolean;
     getPlayerKinematicSupport(a: any): any;
-    reconcileKinematicRiders /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    getPlayerMovingSupport /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    reconcileMovingRiders /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     static translateRiderBody /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     hasPlayerFeetTerrainContact(a: any, b?: boolean): boolean;
     getPlayerTerrainContactPoints /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
