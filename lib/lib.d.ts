@@ -9861,7 +9861,7 @@ declare class BaseSprite extends PIXI.Container {
 declare namespace BaseSprite {
     var MeshIDMap: any;
     var DefaultUVs: number[];
-    var CreateColoredShapeMesh: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => PIXI.Mesh<any, any>;
+    var CreateColoredShapeMesh: (a: any, b?: any, c?: any, d?: any, e?: any, f?: any) => any;
     var MeshIDGroups: any[];
     var TextureIDMap: any[];
     var ColorMap: any[];
@@ -9872,7 +9872,7 @@ declare namespace BaseSprite {
     var MeshTextureCache: WeakMap<WeakKey, any>;
     var GetMeshTexture: (a: any) => any;
     var GetBasicShader: (a: any, b?: any, c?: any) => any;
-    var Create: (a: any) => any;
+    var Create: (a: any) => any[] | BaseSprite | PIXI.Mesh<PIXI.Geometry, any> | null;
     var CreateMesh: (a: any) => any[] | PIXI.Mesh<PIXI.Geometry, any>;
     var MergeVertices: (a: any, b?: any, c?: any, d?: any) => {
         vertices: any[];
@@ -15136,6 +15136,9 @@ declare class Manager extends PIXI.EventEmitter {
     networkPacketBytes: number | undefined;
     lastResyncRequestAt: number | undefined;
     waypoints: {} | undefined;
+    networkProcessedOps: number | undefined;
+    networkProcessSpentMs: number | undefined;
+    networkIngestSpentMs: number | undefined;
     simulationInProgress: boolean | undefined;
     lastScoringPlayer: any;
     presentationAlpha: number | undefined;
@@ -15178,7 +15181,7 @@ declare class Manager extends PIXI.EventEmitter {
     resolvePendingBodyConnections(a?: number): void;
     preContact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     contact /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
-    processBuffer(a?: number, b?: number): void;
+    processBuffer(a?: number, b?: number): number;
     getNetworkUpdateBuffer(): NetworkUpdateBuffer;
     _processAdd(a: any): void;
     _processSyncOp(a: any): boolean;
@@ -15224,7 +15227,7 @@ declare class Manager extends PIXI.EventEmitter {
     appendUpdates(a: any): void;
     requestNetworkResync(): void;
     enqueueNetworkPacket /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    ingestNetworkPackets(): void;
+    ingestNetworkPackets(a?: number): void;
     requestLocalObject(a: any): void;
     applyStateChange(a: any): false | ((a: any, b?: any) => any) | null;
     clear(): void;
@@ -15236,7 +15239,7 @@ declare class Manager extends PIXI.EventEmitter {
     clearTrackedPlayer(a: any): void;
     getTrackObject(): any;
     beginBackgroundUpdates(): void;
-    processNetworkUpdates(): void;
+    processNetworkUpdates(a?: boolean): void;
     update(a: any): void;
     static clampSimulationDelta(a: any): number;
     static getFixedSimulationStepMs(): number;
@@ -15914,6 +15917,7 @@ declare class PredictionController {
     jetUpForce: any;
     jetDownForce: any;
     swimForceMultiplier: any;
+    swimJetForceMultiplier: any;
     pendingProjectionWindowMs: any;
     pendingProjectionTimeScale: any;
     maxPendingProjection: any;
