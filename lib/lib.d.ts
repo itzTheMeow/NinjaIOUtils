@@ -11286,6 +11286,8 @@ declare class ActionTable extends PIXI.Container {
     bravoFlagCount: PIXI.Text | null;
     alphaFlagCount: PIXI.Text | null;
     pLocal: PIXI.Text | undefined;
+    alphaFlag: PIXI.Sprite | undefined;
+    bravoFlag: PIXI.Sprite | undefined;
     constructor();
     register(a: any, b: any, c?: number): void;
     setMode(a: any): void;
