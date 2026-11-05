@@ -1072,9 +1072,7 @@ declare namespace Registry {
             performanceMode: boolean;
             webglFallback: boolean;
             hideOverlayButtons: boolean;
-            hideAmmoIndicator: boolean;
-            hideHealthIndicator: boolean;
-            hideFlightAuraIndicator: boolean;
+            hideStatusBar: boolean;
             hideStatusBarResizeButton: boolean;
             showPingAndFps: boolean;
             chatTextSize: number;
@@ -4944,6 +4942,8 @@ declare class TouchControls extends PIXI.Container {
     buttons: any;
     enabled: boolean;
     eventMode: string;
+    lookPointers: Set<any>;
+    lookArea: PIXI.Container<PIXI.ContainerChild>;
     aimPointer: PIXI.Graphics;
     spectator: TouchSpectator;
     gameplay: PIXI.Container<PIXI.ContainerChild>;
@@ -4954,12 +4954,12 @@ declare class TouchControls extends PIXI.Container {
     targeting: TouchStick;
     toolbar: PIXI.Container<PIXI.ContainerChild>;
     utilityButtons: any[];
-    nativeRelease: (f: any) => void;
+    nativeRelease: (g: any) => void;
     resetListener: () => void;
     layoutSettings: any;
     layoutWidth: number | undefined;
     layoutHeight: number | undefined;
-    constructor(a: any, b: any, c: any, d?: () => void, e?: () => void);
+    constructor(a: any, b: any, c: any, d?: () => void, e?: () => void, f?: () => void);
     static label /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     update(a?: number, b?: boolean): void;
     updateAimPointer /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -5201,6 +5201,7 @@ declare namespace Game {
         213: string;
         204: string;
         24: string;
+        226: string;
         25: string;
         22: string;
         20: string;
@@ -16440,9 +16441,7 @@ declare class GraphicsTab extends PIXI.Container {
     resolutionSlider: Slider;
     resolutionTitle: PIXI.Text;
     hideOverlayButtons: Checkbox;
-    hideAmmoIndicator: Checkbox;
-    hideHealthIndicator: Checkbox;
-    hideFlightAuraIndicator: Checkbox;
+    hideStatusBar: Checkbox;
     hideStatusBarResizeButton: Checkbox;
     constructor(a: any, b?: number);
     getSettings(): any;
