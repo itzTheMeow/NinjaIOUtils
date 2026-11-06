@@ -14948,6 +14948,7 @@ declare class WeaponPredictionController {
     weapons: Map<any, any>;
     shots: Map<any, any>;
     recoil: any;
+    reloadHeld: boolean;
     held: boolean;
     sweep: {
         rayMaskBits: number;
