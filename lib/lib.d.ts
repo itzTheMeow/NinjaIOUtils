@@ -3011,6 +3011,8 @@ declare class ParticleContainer extends PIXI.Container {
     trailParticles: any[];
     maxPoolSize: number;
     invalidParticleWarnings: Set<any>;
+    weaponEffectOrigin: PIXI.Point | undefined;
+    weaponEffectPoint: PIXI.Point | undefined;
     constructor(a?: any);
     spawn /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     addParticle(a: any): void;
@@ -3018,6 +3020,7 @@ declare class ParticleContainer extends PIXI.Container {
     warnInvalidParticle /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     acquireParticle /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     releaseParticle(a: any): void;
+    positionWeaponEffect(a: any): boolean;
     update(a: any): void;
     updateParticleTrails(a: any): void;
     configureVelocityStretch /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -15039,12 +15042,26 @@ declare class RemoteHitTimeline {
     next: number;
     count: number;
     pose: {};
+    presented: {};
+    recovering: boolean | undefined;
+    recoveryX: any;
+    recoveryY: any;
+    recoveryTick: any;
+    correctionX: number | undefined;
+    correctionY: number | undefined;
+    correctionTime: number | null | undefined;
+    extrapolated: any;
     constructor();
-    record /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    record /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
     sample(a: any): number | null;
+    samplePredicted(a: any): number | null;
+    samplePresented /** @param {any} a @param {any} [b] */(a: any, b?: any): number | null;
+    resetPresentation(): void;
     clear(): void;
 }
 declare namespace RemoteHitTimeline {
+    var MAX_EXTRAPOLATION_TICKS: number;
+    var MAX_EXTRAPOLATION_DISTANCE: number;
     export { RemoteSnapshotClock as Clock };
 }
 declare class RemoteSnapshotClock {
@@ -15052,6 +15069,10 @@ declare class RemoteSnapshotClock {
     jitter: number;
     cadence: number;
     delay: number;
+    offsetSamples: Float64Array<ArrayBuffer>;
+    offsetTimes: Float64Array<ArrayBuffer>;
+    offsetCount: number;
+    offsetNext: number;
     gap: any;
     arrivalTime: any;
     first: any;
@@ -15061,7 +15082,7 @@ declare class RemoteSnapshotClock {
     started: boolean | undefined;
     constructor();
     record /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
-    sample(a: any): any;
+    sample(a: any, b?: number): any;
 }
 declare var manager: {};
 declare class NetworkBinaryReader {
@@ -15359,7 +15380,7 @@ declare class Manager extends PIXI.EventEmitter {
     captureProjectileImpact(a: any, b: any, c?: any): void;
     applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUpdateObject(a: any): void;
-    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [q] @param {any} [r] @param {any} [p] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, q?: any, r?: any, p?: any): void;
+    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [p] @param {any} [r] @param {any} [q] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any, r?: any, q?: any): void;
     preparePresentationSmoothing(a: any): void;
     capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     isActorPresentationVisible(a: any): boolean;
@@ -15532,7 +15553,7 @@ declare class RayParticle {
     wd: number;
     gi: number;
     r: number;
-    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: any);
+    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: any);
 }
 declare var shapeplayer: {};
 declare class ShapePlayer {
@@ -15756,6 +15777,13 @@ declare class PhysicsWorker {
     } | undefined;
     contactValidationDirty: boolean | undefined;
     activeDamageRayCallback: any;
+    remotePresentationSweep: {
+        input: any;
+        bounds: any;
+        transform: any;
+        fraction: number;
+        fixture: null;
+    } | undefined;
     containsFluid: boolean | undefined;
     kinematicSupportManifold: any;
     kinematicCorrectionPass: any;
@@ -15821,7 +15849,7 @@ declare class PhysicsWorker {
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     initializePackedUpdateBatch(a?: number): void;
     growPackedUpdateBatch(): void;
-    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [p] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: number, r?: any, p?: any): void;
+    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [q] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, r?: any, q?: any): void;
     queuePackedContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     flushPackedUpdates(): void;
     unlinkContactNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -15846,6 +15874,7 @@ declare class PhysicsWorker {
         normal: any;
         id: any;
     };
+    clipRemotePresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number;
     applyLocalRayImpulse /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     explosion /** @param {any} a @param {any} [b] */(a: any, b?: any): any[];
     resetSimulation(): void;
