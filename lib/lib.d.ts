@@ -9082,6 +9082,8 @@ declare class Canvas extends PIXI.EventEmitter {
     localBulletSpawnOrigin: PIXI.Point | undefined;
     deagleSpawnPoint: PIXI.Point | undefined;
     deagleSpawnOrigin: PIXI.Point | undefined;
+    linkGunMuzzlePoint: PIXI.Point | undefined;
+    linkGunMuzzleOrigin: PIXI.Point | undefined;
     paintMuzzlePoint: PIXI.Point | undefined;
     touchLookX: number | undefined;
     touchLookY: number | undefined;
@@ -9237,7 +9239,7 @@ declare class Canvas extends PIXI.EventEmitter {
     sawFx(a: any): void;
     linkGunFx(a: any): void;
     createRope(a: any, b?: any, c?: any): null;
-    alignLocalBulletSpawn(a: any): void;
+    alignBulletSpawn(a: any): void;
     alignDeagleBulletSpawn(a: any): void;
     static hasProjectileTrail(a: any): boolean;
     static getProjectileTrailHeadWidth(a: any): 5.25 | 7.5 | 8.25 | 9.75 | 11.25;
@@ -9251,8 +9253,8 @@ declare class Canvas extends PIXI.EventEmitter {
     removeBurnFlame(a: any): boolean;
     getExplosionBurnTarget /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     onBurnFlameSpark(a: any): void;
-    createLinkGunBeam(a: any, b: any, c: any, d: any, e?: number): void;
-    presentLinkGunBeam /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
+    createLinkGunBeam(a: any, b: any, c: any, d: any, e?: number, f?: any): void;
+    presentLinkGunBeam(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h?: any, k?: any): void;
     createEffect(a: any, b: any, c: any, d?: any): void;
     submitEffect(a: any): void;
     presentEffects(): void;
@@ -9312,7 +9314,7 @@ declare class Canvas extends PIXI.EventEmitter {
     onClear(): void;
     onFocus(): void;
 
-    static localBulletWeapons: any;}
+    static bulletWeapons: any;}
 declare namespace Canvas {
     var ZOMBIE_BACKGROUND_TRANSITION_MS: number;
     var OUTLINE_CHUNK_SIZE: number;
