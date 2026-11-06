@@ -819,6 +819,7 @@ declare class Client extends EventDispatcher {
     pinger: number | null;
     socket: WebSocket | null;
     roundTripTime: number;
+    disconnectNotified: boolean;
     serverSwitch: boolean;
     onCloseForImmediateReconnect: any;
     server: {
@@ -3377,6 +3378,7 @@ declare class SocialMenu extends Feature {
     showClanDropdown /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     showGoldForm(a: any): void;
     showChat /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    closeChat(): void;
     loadInvitees(): Promise<void>;
     loadClanMembers(a?: boolean): Promise<void>;
     loadClanInvitations(a?: boolean): Promise<void>;
@@ -4457,6 +4459,7 @@ declare class ServerCreationMenu extends Feature {
     isRanked: boolean;
     isCustom: boolean;
     onClientConnectBinding: () => void;
+    connectionRequest: number;
     createdServerName: string;
     createdServerId: number;
     background: PIXI.Graphics;
@@ -10853,7 +10856,7 @@ declare let rdScale: number;
 declare const reducedLowerArmTextureScale = 0.9;
 /** @param {any} a @param {any} [b] */ declare function GetRagdollTexture(a: any, b?: any): any;
 /** @param {any} a @param {any} [b] @param {any} [c] */ declare function GetRagdollTextureId(a: any, b?: any, c?: any): any;
-declare function GetFlippedRagdollTextureId(a: any): any;
+/** @param {any} a @param {any} [b] @param {any} [c] */ declare function GetFlippedRagdollTextureId(a: any, b?: any, c?: any): any;
 /** @param {any} a @param {any} [b] */ declare function GetHeadTextureId(a: any, b?: any): any;
 declare class HeadSprite extends PIXI.Sprite {
     face: PIXI.Sprite | undefined;
@@ -11214,8 +11217,10 @@ declare var Customization: {
     FACE: string;
     BELT: string;
     ARMLEFTLOWER: string;
+    ARMLEFTLOWER_FLIP: string;
     ARMLEFTUPPER: string;
     ARMRIGHTLOWER: string;
+    ARMRIGHTLOWER_FLIP: string;
     ARMRIGHTUPPER: string;
     LEGLEFTLOWER: string;
     LEGLEFTUPPER: string;
@@ -15380,7 +15385,7 @@ declare class Manager extends PIXI.EventEmitter {
     captureProjectileImpact(a: any, b: any, c?: any): void;
     applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUpdateObject(a: any): void;
-    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [p] @param {any} [r] @param {any} [q] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any, r?: any, q?: any): void;
+    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [q] @param {any} [r] @param {any} [p] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, q?: any, r?: any, p?: any): void;
     preparePresentationSmoothing(a: any): void;
     capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     isActorPresentationVisible(a: any): boolean;
@@ -15390,7 +15395,7 @@ declare class Manager extends PIXI.EventEmitter {
     prepareActorFrozenPresentation(a: any): void;
     presentPhysicsBodies(a: any): void;
     static kinematicPresentationAlpha /** @param {any} a @param {any} [b] */(a: any, b?: any): 1 | null;
-    static applyPhysicsPresentation(a: any, b: any, c?: number, d?: number): void;
+    static applyPhysicsPresentation(a: any, b: any, c?: number, d?: number, e?: any): void;
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     finalizePhysicsPresentation(a: any): void;
     updateRagdollPresentation(a: any): void;
@@ -15553,7 +15558,7 @@ declare class RayParticle {
     wd: number;
     gi: number;
     r: number;
-    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: any);
+    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: any);
 }
 declare var shapeplayer: {};
 declare class ShapePlayer {
@@ -15849,7 +15854,7 @@ declare class PhysicsWorker {
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     initializePackedUpdateBatch(a?: number): void;
     growPackedUpdateBatch(): void;
-    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [q] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, r?: any, q?: any): void;
+    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [p] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: number, r?: any, p?: any): void;
     queuePackedContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     flushPackedUpdates(): void;
     unlinkContactNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
