@@ -15059,7 +15059,7 @@ declare class RemoteHitTimeline {
     constructor();
     record /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any): void;
     sample(a: any): number | null;
-    samplePredicted(a: any): number | null;
+    samplePredicted(a: any, b?: number, c?: number): number | null;
     samplePresented /** @param {any} a @param {any} [b] */(a: any, b?: any): number | null;
     resetPresentation(): void;
     clear(): void;
@@ -15067,6 +15067,7 @@ declare class RemoteHitTimeline {
 declare namespace RemoteHitTimeline {
     var MAX_EXTRAPOLATION_TICKS: number;
     var MAX_EXTRAPOLATION_DISTANCE: number;
+    var MAX_PROJECTION_TICKS: number;
     export { RemoteSnapshotClock as Clock };
 }
 declare class RemoteSnapshotClock {
@@ -15076,8 +15077,10 @@ declare class RemoteSnapshotClock {
     delay: number;
     offsetSamples: Float64Array<ArrayBuffer>;
     offsetTimes: Float64Array<ArrayBuffer>;
+    transitSamples: Float64Array<ArrayBuffer>;
     offsetCount: number;
     offsetNext: number;
+    projectedOffset: number | undefined;
     gap: any;
     arrivalTime: any;
     first: any;
@@ -15085,9 +15088,12 @@ declare class RemoteSnapshotClock {
     tick: any;
     time: any;
     started: boolean | undefined;
+    projectedTick: number | undefined;
+    projectedTime: any;
     constructor();
-    record /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    record /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     sample(a: any, b?: number): any;
+    sampleProjected /** @param {any} a @param {any} [b] */(a: any, b?: any): number | undefined;
 }
 declare var manager: {};
 declare class NetworkBinaryReader {
