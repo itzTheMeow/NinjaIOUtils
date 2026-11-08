@@ -8178,6 +8178,7 @@ declare class Player extends Agent {
     getSimulationWeaponPoint(a: any, b?: any): any;
     static transformPosePoint /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): null;
     present(a: any, b: any, c: any, d?: boolean): void;
+    presentLegOffsets /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     presentBreathing(a: any): void;
     updateFacing(a: any): void;
     updateFacingDir(a: any, b?: boolean): void;
@@ -15792,9 +15793,12 @@ declare class PhysicsWorker {
         input: any;
         bounds: any;
         transform: any;
+        manifold: any;
+        worldManifold: any;
         fraction: number;
         fixture: null;
     } | undefined;
+    networkProjectionManifold: any;
     containsFluid: boolean | undefined;
     kinematicSupportManifold: any;
     kinematicCorrectionPass: any;
@@ -15885,7 +15889,8 @@ declare class PhysicsWorker {
         normal: any;
         id: any;
     };
-    clipRemotePresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number;
+    clipRemotePresentation(a: any, b: any, c: any, d: any, e: any, f: any, g?: any): number;
+    projectNetworkObjectUpdate /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     applyLocalRayImpulse /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     explosion /** @param {any} a @param {any} [b] */(a: any, b?: any): any[];
     resetSimulation(): void;
@@ -15897,7 +15902,7 @@ declare class PhysicsWorker {
     add(a: any): void;
     registerKinematicAnimation /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     setActorsFrozen(a: any): void;
-    update(a: any): void;
+    update(a: any, b?: boolean): void;
     updateFacing /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     hasPlayerCeilingTerrainContact(a: any): boolean;
     getPlayerKinematicSupport(a: any): any;
@@ -15955,6 +15960,8 @@ declare namespace PhysicsWorker {
     var KinematicAnimationSyncDistance: number;
     var KinematicAnimationSyncAngle: number;
     var KinematicAnimationStopSpeed: number;
+    var NetworkMotionFields: string[];
+    var MaxNetworkProjectionTicks: number;
     var ExplosionQueryIgnore: number;
     var ExplosionRayCallbackInst: ExplosionRayCallback;
     var RaycastCallbackInst: RaycastCallback;
