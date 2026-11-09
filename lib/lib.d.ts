@@ -15645,7 +15645,14 @@ declare class DamageVolumeIndex {
         x: number;
         y: number;
     };
+    projectionAnchor: {
+        x: number;
+        y: number;
+        vx: number;
+        vy: number;
+    };
     boundMotionSegmentReport: (b: any, c?: any, d?: any, e?: any) => any;
+    latestHistoryTick: any;
     motionReport: any;
     motionFractionOffset: number | undefined;
     motionFractionScale: number | undefined;
@@ -15678,9 +15685,19 @@ declare class DamageVolumeIndex {
     synchronizePoseDefinition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     ensureHistorySnapshotCapacity /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     captureHistory(a: any): void;
+    markPublished /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    findPublishedTick /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
+    sampleProjectedPose(a: any, b: any, c: any, d: any, e: any, f?: any): boolean;
+    sampleProjectedPoseAt(a: any, b: any, c: any, d: any, e: any, f?: any): boolean;
+    readPublishedPosition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
+    raycastProjectedMotion(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h?: any, k?: number): boolean;
+    static sweepBodyFraction(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h: any, k: any, l?: any, m?: {
+        sweep: null;
+    }): number;
     sampleHistoricalPose /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
     raycastMotion(a: any, b: any, c: any, d: any, e: any, f?: number): any;
     raycastMotionSegment(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
+    raycastMotionEntry /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any): void;
     static sampleVolume /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     raycastPresented(a: any, b: any, c: any, d?: number): number;
     raycastHistorical(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
@@ -15725,6 +15742,10 @@ declare namespace DamageVolumeIndex {
     var HISTORY_POSE_STRIDE: number;
     var POSE_VOLUME_STRIDE: number;
     var INITIAL_HISTORY_CAPACITY: number;
+    var MAX_PROJECTION_TICKS: number;
+    var SweepCache: {
+        sweep: null;
+    };
     var HistoricalPoint: {
         x: number;
         y: number;
@@ -15777,13 +15798,7 @@ declare class PhysicsWorker {
     contactValidationDirty: boolean | undefined;
     activeDamageRayCallback: any;
     remotePresentationSweep: {
-        input: any;
-        bounds: any;
-        transform: any;
-        manifold: any;
-        worldManifold: any;
-        fraction: number;
-        fixture: null;
+        sweep: null;
     } | undefined;
     networkProjectionManifold: any;
     containsFluid: boolean | undefined;
