@@ -692,6 +692,11 @@ declare class ClanService extends ServiceBase {
     postRemoveMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
     postPromoteMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
     postDemoteMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
+    getLeaderTransfer(a: any): Promise<any>;
+    postRequestLeaderTransfer /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
+    postAcceptLeaderTransfer(a: any): Promise<any>;
+    postDeclineLeaderTransfer(a: any): Promise<any>;
+    postCancelLeaderTransfer(a: any): Promise<any>;
     postBanner /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
 }
 declare var apiclient: {};
@@ -766,6 +771,11 @@ declare class APIClient {
     static postRemoveMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
     static postPromoteMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
     static postDemoteMember /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
+    static getClanLeaderTransfer(a: any): Promise<any>;
+    static postRequestClanLeaderTransfer /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
+    static postAcceptClanLeaderTransfer(a: any): Promise<any>;
+    static postDeclineClanLeaderTransfer(a: any): Promise<any>;
+    static postCancelClanLeaderTransfer(a: any): Promise<any>;
     static postBanner /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
 }
 declare namespace APIClient {
@@ -2484,6 +2494,13 @@ declare class ClanTab extends Feature {
     memberDropdown: MemberDropdown;
     leaveClanButton: ProfileActionButton;
     clanPhotoButton: ProfileActionButton;
+    leaderTransfer: any;
+    leaderTransferContainer: PIXI.Container<PIXI.ContainerChild>;
+    leaderTransferText: PIXI.Text;
+    leaderTransferAcceptButton: ProfileActionButton;
+    leaderTransferDeclineButton: ProfileActionButton;
+    leaderTransferCancelButton: ProfileActionButton;
+    leaderTransferErrorText: PIXI.Text;
     clanPhotoPanel: ClanPhotoPanel;
     leaveClanContainer: PIXI.Container<PIXI.ContainerChild>;
     leaveClanBackground: PIXI.Graphics;
@@ -2510,6 +2527,12 @@ declare class ClanTab extends Feature {
     maskMemberList(a: any): void;
     promoteMember(a: any): Promise<void>;
     demoteMember(a: any): Promise<void>;
+    displayLeaderTransfer(): void;
+    refreshOverview(): Promise<void>;
+    requestLeaderTransfer(a: any): Promise<void>;
+    onLeaderTransferAcceptButtonReleased(): Promise<void>;
+    onLeaderTransferDeclineButtonReleased(): Promise<void>;
+    onLeaderTransferCancelButtonReleased(): Promise<void>;
     removeMember(a: any): Promise<void>;
 }
 declare namespace ClanTab {
@@ -2565,6 +2588,7 @@ declare class MemberDropdown extends PIXI.Container {
 declare namespace MemberDropdown {
     var ACTION_PROMOTE: string;
     var ACTION_DEMOTE: string;
+    var ACTION_TRANSFER_LEADER: string;
     var ACTION_REMOVE: string;
 }
 declare class MemberDropdownActionRow extends PIXI.Container {
@@ -5987,6 +6011,7 @@ declare namespace Layer {
         PARTNER_CANCEL: string;
         LEAVE_CLAN: string;
         CREATE_CLAN: string;
+        CLAN_ROLE_CHANGE: string;
         JOIN_CLAN: string;
         JOIN_GAME: string;
         JOIN_GAME_FAIL: string;
@@ -15700,7 +15725,8 @@ declare class DamageVolumeIndex {
     synchronizePoseDefinition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     ensureHistorySnapshotCapacity /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     captureHistory(a: any): void;
-    markPublished /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    markPublished(a: any, b: any, c?: any): void;
+    getPublishedSource /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     findPublishedTick /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
     sampleProjectedPose(a: any, b: any, c: any, d: any, e: any, f?: any): boolean;
     sampleProjectedPoseAt(a: any, b: any, c: any, d: any, e: any, f?: any): boolean;
