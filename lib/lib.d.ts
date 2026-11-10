@@ -3365,6 +3365,7 @@ declare namespace PVPClient {
     var CODE_DUPLICATE_CLIENT: number;
     var CODE_CHAT_SPAM: number;
     var CODE_BANNED: number;
+    var CODE_REPLACED: number;
     var ROLE_CHAT: string;
     var CHAT_JOIN: number;
     var CHAT_LEAVE: number;
@@ -3482,6 +3483,8 @@ declare class LobbyChatPanel extends PIXI.Container {
     hideDropdown(): void;
     onSubmitMessage(a: any): void;
     onChatMessage(a: any): void;
+    static messageKey /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
+    onHistory(a: any): void;
     onNotice(a: any): void;
     addSystemMessage(a: any, b?: boolean): void;
     addMessage(a: any): void;
@@ -3514,6 +3517,7 @@ declare namespace LobbyChatPanel {
         [PVPClient.CODE_DUPLICATE_CLIENT]: string;
         [PVPClient.CODE_CHAT_SPAM]: string;
         [PVPClient.CODE_BANNED]: string;
+        [PVPClient.CODE_REPLACED]: string;
     };
     var TOP: number;
     var BUTTON_PADDING: number;
@@ -5047,41 +5051,15 @@ declare namespace ServerCreationMenu {
     };
     var durationValue: (a: any) => string;
 }
-declare var chatclient: {};
-declare class ChatClient extends PIXI.EventEmitter {
-    socket: WebSocket | null;
-    constructor();
-    connect(a: any): void;
-    disconnect(): void;
-    onOpen(a: any): void;
-    onMessage(a: any): void;
-    onClose(a: any): void;
-    onError(a: any): void;
-    compose /** @param {any} [b] */(a?: number, b?: any): string;
-    send /** @param {any} [b] */(a?: number, b?: any): void;
-    isConnected(): boolean;
-}
-declare namespace ChatClient {
-    var TYPE_LOCAL: number;
-    var TYPE_JOIN_CLAN_CHAT: number;
-    var TYPE_LEAVE_CLAN_CHAT: number;
-    var TYPE_MSG: number;
-    var TYPE_STATUS: number;
-    var MSG_PUBLIC: number;
-    var MSG_CLAN: number;
-    var MSG_FRIEND: number;
-    var SERVER_DOMAIN: string;
-    var SERVER_PORT: number;
-    var CONNECT: string;
-    var DISCONNECT: string;
-    var MESSAGE: string;
-    var STATUS: string;
-}
 declare var clanchatmenu: {};
 declare class ClanChatMenu extends Feature {
-    client: ChatClient;
+    connection: any;
+    lobby: string | null;
+    joined: boolean;
+    online: number;
+    status: string;
     messages: any[];
-    lines: any[];
+    scrollOffset: number;
     down: boolean;
     dragging: boolean;
     panelWidth: number;
@@ -5094,10 +5072,14 @@ declare class ClanChatMenu extends Feature {
     inputField: InputField;
     sendButton: ProfileActionButton;
     closeButton: ImgButton;
+    lines: PIXI.Text[];
+    wheelListener: (b: any) => void;
     dragPointerId: any;
     ox: number | undefined;
     oy: any;
-    constructor();
+    constructor(a: any);
+    static clanLobby(a: any): string | null;
+    static format /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): string;
     bindDragSurface(a: any): void;
     onDragStart(a: any): void;
     onDragEnd(a: any): void;
@@ -5106,20 +5088,32 @@ declare class ClanChatMenu extends Feature {
         x: number;
         y: number;
     };
-    onSubmitMessage(a: any): Promise<void>;
-    onMessage(a: any): void;
-    onStatus(a: any): void;
-    addMessage(a: any): void;
-    updateConversation(): void;
-    addLocalInfoMessage(a: any): void;
-    removeMessages(): void;
-    onConnect(): void;
-    onDisconnect(): void;
     show(): void;
     hide(): void;
+    join(): void;
+    onConnect(): void;
+    onDisconnect(a: any): void;
+    onJoined(a: any): void;
+    onPresence(a: any): void;
+    onClosed(a: any): void;
+    onNotice(a: any): void;
+    onSubmitMessage(a: any): void;
+    onChatMessage(a: any): void;
+    onHistory(a: any): void;
+    addSystemMessage(a: any, b?: boolean): void;
+    addEntry(a: any): void;
+    trim(): void;
+    clearMessages(): void;
+    scrollBy(a: any): void;
+    render(): void;
+    updateTitle(): void;
 }
 declare namespace ClanChatMenu {
     var MaxMessages: number;
+    var MaxMessageLength: number;
+    var VIEW_TOP: number;
+    var VIEW_BOTTOM: number;
+    var PoolSize: number;
 }
 declare var clanmenu: {};
 declare class ClanMenu extends Feature {
@@ -6404,6 +6398,7 @@ declare class Layer extends PIXI.Container {
     onClanBrowserCancel(): void;
     onRankingCancel(): void;
     onLoadingCancel(): void;
+    onChatAccess(): void;
     onNewsAccess(): void;
     onPVPAccess(): void;
     onTournamentAccess(a?: any): void;
@@ -17190,6 +17185,7 @@ declare class Menu extends PIXI.Container {
     submenuPanelWidth: number;
     submenuPanelHeight: number;
     submenuPanel: PIXI.Graphics;
+    chatIcon: PIXI.Container<PIXI.ContainerChild>;
     settingsIcon: SubmenuButton;
     newsIcon: SubmenuButton;
     wikiIcon: SubmenuButton;
@@ -17307,6 +17303,7 @@ declare namespace Menu {
     var REWARDS_ACCESS: string;
     var NEWS_ACCESS: string;
     var SETTINGS_ACCESS: string;
+    var CHAT_ACCESS: string;
     var PVP_ACCESS: string;
     var LOGIN_ACCESS: string;
     var REGISTER_ACCESS: string;
@@ -17443,6 +17440,36 @@ declare class Stats extends PIXI.Container {
     recordFrame(a: any): void;
 }
 declare let app: App;
+declare var chatclient: {};
+declare class ChatClient extends PIXI.EventEmitter {
+    socket: WebSocket | null;
+    constructor();
+    connect(a: any): void;
+    disconnect(): void;
+    onOpen(a: any): void;
+    onMessage(a: any): void;
+    onClose(a: any): void;
+    onError(a: any): void;
+    compose /** @param {any} [b] */(a?: number, b?: any): string;
+    send /** @param {any} [b] */(a?: number, b?: any): void;
+    isConnected(): boolean;
+}
+declare namespace ChatClient {
+    var TYPE_LOCAL: number;
+    var TYPE_JOIN_CLAN_CHAT: number;
+    var TYPE_LEAVE_CLAN_CHAT: number;
+    var TYPE_MSG: number;
+    var TYPE_STATUS: number;
+    var MSG_PUBLIC: number;
+    var MSG_CLAN: number;
+    var MSG_FRIEND: number;
+    var SERVER_DOMAIN: string;
+    var SERVER_PORT: number;
+    var CONNECT: string;
+    var DISCONNECT: string;
+    var MESSAGE: string;
+    var STATUS: string;
+}
 declare var customevent: {};
 /** @param {any} a @param {any} [b] */ declare function CustomEvent(a: any, b?: any): void;
 declare var timer: {};
