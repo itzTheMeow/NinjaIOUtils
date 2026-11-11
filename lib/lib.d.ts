@@ -856,6 +856,7 @@ declare class Client extends EventDispatcher {
     allowNextAttempt: boolean;
     echoNonce: number;
     echoes: Map<any, any>;
+    rttSamples: any[];
     pendingInput: any[];
     inputFlushTimer: number | null;
     jitter: number | undefined;
@@ -877,6 +878,8 @@ declare class Client extends EventDispatcher {
     mapID: any;}
 declare namespace Client {
     var MAX_BUFFERED_INPUT_BYTES: number;
+    var ECHO_INTERVAL_MS: number;
+    var RTT_WINDOW: number;
     var compress: (a: any) => Uint8Array<ArrayBuffer>;
     var decompress: (a: any) => {
         data: {
@@ -898,6 +901,10 @@ declare namespace Client {
     var INPUT_PACKET_BYTES: number;
     var InputBuffer: Uint8Array<ArrayBuffer>;
     var InputView: DataView<ArrayBuffer>;
+    var INPUT_SHOT_VERSION: number;
+    var ShotInputSupported: boolean;
+    var ShotInputBuffer: Uint8Array<ArrayBuffer>;
+    var ShotInputView: DataView<ArrayBuffer>;
     var CONNECT: string;
     var DISCONNECT: string;
     var AUTH_FAILED: string;
@@ -15574,6 +15581,7 @@ declare class RemoteHitTimeline {
 declare namespace RemoteHitTimeline {
     var MAX_EXTRAPOLATION_TICKS: number;
     var MAX_EXTRAPOLATION_DISTANCE: number;
+    var MAX_DELIVERY_EXTRAPOLATION_TICKS: number;
     var MAX_PROJECTION_TICKS: number;
     export { RemoteSnapshotClock as Clock };
 }
@@ -15588,6 +15596,8 @@ declare class RemoteSnapshotClock {
     offsetCount: number;
     offsetNext: number;
     projectedOffset: number | undefined;
+    lateness: any;
+    allowance: number | undefined;
     gap: any;
     arrivalTime: any;
     first: any;
@@ -15642,6 +15652,7 @@ declare class NetworkUpdateBuffer {
     finishAppend /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     hasEssentialData(a: any): boolean;
     coalesce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
+    oldestServerTick(): any;
     shift(): any;
     clear(): void;
 }
@@ -15760,7 +15771,8 @@ declare class Manager extends PIXI.EventEmitter {
         [StateChange.Item.RANGE]: (a: any, b?: any) => any;
     } | undefined;
     pendingOwnerUpdates: any[] | undefined;
-    remoteSnapshotTime: number | undefined;
+    remoteSnapshotTime: any;
+    remoteViewBase: any;
     networkUpdateScratch: {} | undefined;
     camera: any;
     transformIds: Uint32Array<any> | undefined;
@@ -15771,6 +15783,7 @@ declare class Manager extends PIXI.EventEmitter {
     networkPackets: any[] | undefined;
     networkPacketBytes: number | undefined;
     lastResyncRequestAt: number | undefined;
+    networkArrivalTime: any;
     waypoints: {} | undefined;
     networkProcessedOps: number | undefined;
     networkProcessSpentMs: number | undefined;
@@ -15826,6 +15839,7 @@ declare class Manager extends PIXI.EventEmitter {
     recordRemoteHitSnapshot /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     recordRemoteHitClock(a: any): void;
     presentRemoteHitTimeline(): void;
+    updateRemoteProjectionBlend /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     processPendingOwnerUpdates(): void;
     smoothPresentationCorrection(a: any, b: any, c: any, d?: boolean): void;
     smoothMovingRiderCorrection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
@@ -15985,6 +15999,9 @@ declare namespace Manager {
     var REMOTE_CORRECTION_MAX_PIXELS: number;
     var REMOTE_CORRECTION_HALF_LIFE_MS: number;
     var REMOTE_CORRECTION_SNAP_PIXELS: number;
+    var REMOTE_PROJECTION_BLEND_HALF_LIFE_MS: number;
+    var REMOTE_PROJECTION_BLEND_SNAP: number;
+    var REMOTE_PROJECTION_BLEND_STALE_MS: number;
     var KINEMATIC_CORRECTION_FREQUENCY: number;
     var LOCAL_CORRECTION_MAX_PIXELS: number;
     var LOCAL_CORRECTION_HALF_LIFE_MS: number;
@@ -16337,6 +16354,18 @@ declare class PhysicsWorker {
         ReportFixture(d: any): -1 | 0;
     } | undefined;
     particlesAdded: {} | undefined;
+    dynamicIndex: {
+        source: any;
+        keys: any[];
+        slots: Map<any, any>;
+        holes: number;
+        sync(a: any): /*elided*/ any;
+        append(a: any): void;
+        set(a: any, b?: any): void;
+        delete(a: any, b?: any): void;
+        at(a: any): any;
+        compact(): void;
+    } | undefined;
     ballChargeImpacts: any[] | undefined;
     ballChargeStep: any;
     hasSubmerged: {} | undefined;
@@ -16448,6 +16477,18 @@ declare class PhysicsWorker {
     updateArrowDeathPin(a: any): void;
     pinArrowCorpse /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     onExplosionQueryResult(a: any): boolean;
+    getDynamicIndex(): {
+        source: any;
+        keys: any[];
+        slots: Map<any, any>;
+        holes: number;
+        sync(a: any): /*elided*/ any;
+        append(a: any): void;
+        set(a: any, b?: any): void;
+        delete(a: any, b?: any): void;
+        at(a: any): any;
+        compact(): void;
+    };
     simulate(a: any): void;
     applyMovementForce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     applyForce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
@@ -16498,6 +16539,20 @@ declare namespace PhysicsWorker {
         PRE: number;
         CON: number;
         PST: number;
+    };
+    var EntityIndex: {
+        new (): {
+            source: any;
+            keys: any[];
+            slots: Map<any, any>;
+            holes: number;
+            sync(a: any): /*elided*/ any;
+            append(a: any): void;
+            set(a: any, b?: any): void;
+            delete(a: any, b?: any): void;
+            at(a: any): any;
+            compact(): void;
+        };
     };
 }
 declare class ExplosionRayCallback {
