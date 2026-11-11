@@ -9765,6 +9765,7 @@ declare class Canvas extends PIXI.EventEmitter {
     realignBulletSpawns(): void;
     alignBulletSpawn(a: any, b?: any, c?: any): void;
     alignDeagleBulletSpawn(a: any, b?: any, c?: any): void;
+    isWorldPointInView /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     static hasProjectileTrail(a: any): boolean;
     static getProjectileTrailHeadWidth(a: any): 5.25 | 7.5 | 8.25 | 9.75 | 11.25;
     addProjectileTrail(a: any): any;
@@ -11200,6 +11201,7 @@ declare class TrailSprite extends PIXI.Sprite {
 }
 declare class AK47BulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
@@ -11212,6 +11214,7 @@ declare class ArrowSprite extends PIXI.Sprite {
 }
 declare class BarrettBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
@@ -11229,6 +11232,7 @@ declare namespace BoomerangSprite {
 }
 declare class CarbineBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
@@ -11252,6 +11256,7 @@ declare class GhostLaserSprite extends PIXI.Sprite {
 }
 declare class LaserGunBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
     init(): void;
@@ -11267,6 +11272,7 @@ declare namespace LauncherNadeSprite {
 }
 declare class M60BulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
@@ -11290,6 +11296,7 @@ declare class PulseGunBulletSprite extends PIXI.Sprite {
 }
 declare class RifleBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
@@ -11322,16 +11329,19 @@ declare class ShockRifleBulletSprite extends PIXI.Container {
 }
 declare class ShotgunPelletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
 declare class SubmachineGunBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }
 declare class UziBulletSprite extends PIXI.Sprite {
     frame: number;
+    revealFrame: number;
     constructor();
     animate(a: any): void;
 }

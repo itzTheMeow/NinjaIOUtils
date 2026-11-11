@@ -24,7 +24,7 @@
     "@types/howler": "^2.2",
     "@types/node": "^26.6.5",
     "acorn": "8.14.0",
-    "pixi.js": "8.22.0",
+    "pixi.js": "8.23.0",
     "sourcemap-codec": "^1.4.8",
     "typescript": "7.0.2"
   }
