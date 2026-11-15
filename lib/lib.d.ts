@@ -731,6 +731,7 @@ declare namespace Registry {
             performanceMode: boolean;
             webglFallback: boolean;
             hideOverlayButtons: boolean;
+            hideHud: boolean;
             hideStatusBar: boolean;
             hideStatusBarResizeButton: boolean;
             showPingAndFps: boolean;
@@ -2369,7 +2370,12 @@ declare class ItemOverview extends PIXI.Container {
     listY: number;
     listTopInset: number;
     title: PIXI.Text;
-    filterButtons: PIXI.Text[];
+    filterButtons: {
+        button: PIXI.Graphics;
+        label: PIXI.Text;
+        width: number;
+        classification: string;
+    }[];
     comingSoon: PIXI.Text;
     background: PIXI.Graphics;
     container: PIXI.Container<PIXI.ContainerChild>;
@@ -5209,6 +5215,7 @@ declare class Game extends PIXI.Container {
     joinSpawnAt: any;
     lastRoleTimerSecond: any;
     constructor(a: any);
+    applyDisplaySettings(): void;
     onStatus(a: any): void;
     mute(a: any): void;
     step(a: any): void;
@@ -9420,6 +9427,7 @@ declare class BulletTrails {
     removeShot(a: any): void;
     measure(a: any): void;
     start(a: any): void;
+    alignFlight(a: any): void;
     beginContrail(a: any): void;
     contrailPoint /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     endContrail(a: any): void;
@@ -9756,6 +9764,7 @@ declare class Canvas extends PIXI.EventEmitter {
     localBulletSpawnOrigin: PIXI.Point | undefined;
     deagleSpawnPoint: PIXI.Point | undefined;
     deagleSpawnOrigin: PIXI.Point | undefined;
+    arrowTrailLaunchPoint: PIXI.Point | undefined;
     linkGunMuzzlePoint: PIXI.Point | undefined;
     linkGunMuzzleOrigin: PIXI.Point | undefined;
     paintMuzzlePoint: PIXI.Point | undefined;
@@ -9927,6 +9936,7 @@ declare class Canvas extends PIXI.EventEmitter {
     isWorldPointInView /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     static hasProjectileTrail(a: any): boolean;
     static getProjectileTrailHeadWidth(a: any): 5.25 | 7.5 | 8.25 | 9.75 | 11.25;
+    seedArrowTrail /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     addProjectileTrail(a: any): any;
     releaseProjectileTrail /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     addBurnFlame(a: any): any;
@@ -13037,6 +13047,7 @@ declare class Hud extends PIXI.Container {
     statusBarToggleEnabled: boolean | undefined;
     statusBarToggle: PIXI.Container<PIXI.ContainerChild> | undefined;
     statusBarToggleLabel: PIXI.Text | undefined;
+    hideHud: boolean | undefined;
     connectionWarning: PIXI.Container<PIXI.ContainerChild> | undefined;
     zombieWaveStatus: PIXI.Container<PIXI.ContainerChild> | undefined;
     zombieWaveStatusCompact: any;
@@ -13059,6 +13070,7 @@ declare class Hud extends PIXI.Container {
     drawStatusBarFrame(): void;
     createStatusBarToggle(): void;
     applyDisplaySettings(): void;
+    applyChildDisplaySettings(a: any): void;
     positionStatusBarToggle(): void;
     setStatusBarCompact(a: any): void;
     layoutStatusBar(): void;
@@ -17282,6 +17294,7 @@ declare class GraphicsTab extends PIXI.Container {
     hideOverlayButtons: Checkbox;
     hideStatusBar: Checkbox;
     hideStatusBarResizeButton: Checkbox;
+    hideHud: Checkbox;
     constructor(a: any, b?: number);
     getSettings(): any;
     stylizeSlider(a: any): void;
