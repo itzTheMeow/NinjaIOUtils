@@ -16152,6 +16152,7 @@ declare namespace RemoteHitTimeline {
     var MAX_EXTRAPOLATION_DISTANCE: number;
     var MAX_DELIVERY_EXTRAPOLATION_TICKS: number;
     var MAX_PROJECTION_TICKS: number;
+    var MAX_COAST_TICKS: number;
     export { RemoteSnapshotClock as Clock };
 }
 declare class RemoteSnapshotClock {
@@ -16176,6 +16177,7 @@ declare class RemoteSnapshotClock {
     started: boolean | undefined;
     projectedTick: number | undefined;
     projectedTime: any;
+    pinned: boolean | undefined;
     constructor();
     record /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     sample(a: any, b?: number): any;
@@ -16341,7 +16343,15 @@ declare class Manager extends PIXI.EventEmitter {
     } | undefined;
     pendingOwnerUpdates: any[] | undefined;
     remoteSnapshotTime: any;
+    remoteViewTime: number | undefined;
     remoteViewBase: any;
+    remoteViewHold: {
+        ticks: number;
+        fraction: number;
+        advanced: boolean;
+        latest: undefined;
+        start: number;
+    } | undefined;
     networkUpdateScratch: {} | undefined;
     camera: any;
     transformIds: Uint32Array<any> | undefined;
@@ -16408,8 +16418,18 @@ declare class Manager extends PIXI.EventEmitter {
     _processUpdateOp(a: any, b?: boolean): boolean;
     recordRemoteHitSnapshot /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     recordRemoteHitClock(a: any): void;
-    presentRemoteHitTimeline(): void;
-    updateRemoteProjectionBlend /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    presentRemoteHitTimeline(a?: number): void;
+    updateRemoteViewHold /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
+        ticks: number;
+        fraction: number;
+        advanced: boolean;
+        latest: undefined;
+        start: number;
+    };
+    updateRemoteProjectionBlend(a: any, b: any, c: any, d: any, e?: any, f?: number): void;
+    sampleRemoteCoastBody /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
+    advanceRemoteCoast /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    static remoteCoastWeight(a: any): number;
     processPendingOwnerUpdates(): void;
     smoothPresentationCorrection(a: any, b: any, c: any, d?: boolean): void;
     smoothMovingRiderCorrection /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
