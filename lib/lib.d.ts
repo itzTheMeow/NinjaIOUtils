@@ -16538,6 +16538,11 @@ declare namespace Manager {
     var NETWORK_MAX_QUEUED_OPS: number;
     var NETWORK_MAX_PENDING_OWNER_UPDATES: number;
     var NETWORK_MAX_QUEUED_BYTES: number;
+    var NETWORK_MAX_QUEUED_PACKETS: number;
+    var NETWORK_MAX_QUEUE_AGE_MS: number;
+    var NETWORK_CATCHUP_PACKETS: number;
+    var NETWORK_CATCHUP_BUDGET_MS: number;
+    var NETWORK_CATCHUP_MAX_OPS: number;
     var NETWORK_UPDATE_MARKER: number;
     var NETWORK_UPDATE_VERSION: number;
     var NETWORK_BINARY_MAX_DEPTH: number;
