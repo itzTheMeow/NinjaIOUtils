@@ -1,5 +1,9 @@
 # Changelog
 
+v0.5b
+
+- Fixed the script to work with the newest game version.
+
 v0.4b
 
 - Various performance improvements.

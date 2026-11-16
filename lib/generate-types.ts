@@ -1862,7 +1862,7 @@ async function fetchCombinedTextureNames(
     console.log(`combined textures: ${reason} - keeping Record<string, any>`);
     return null;
   };
-  const version = /combined\.json\?v=([0-9.]+)/.exec(source)?.[1];
+  const version = /combined\.json\?v=([^"'\s]+)/.exec(source)?.[1];
   if (!version) return degrade("atlas version not found in bundle");
   let names: string[] = [];
   try {

@@ -145,7 +145,6 @@ export class TexturePackMod extends Mod {
       menu.weaponContainer.visible = false;
       menu.mapPublishContainer.visible = false;
       menu.publishMapButton.visible = false;
-      menu.description.visible = false;
       menu.texContainer.visible = true;
       this.texTab.onShow();
       menu.updateTabStates();
@@ -179,7 +178,7 @@ export class TexturePackMod extends Mod {
         this.weaponLabel,
         newWidth,
         30,
-        this.display === ContentMenu.WEAPONS,
+        this.display === ContentMenu.GEAR,
       );
       UITheme.styleMenuTab(
         this.texButton,

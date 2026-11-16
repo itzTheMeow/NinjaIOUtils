@@ -16,7 +16,7 @@
 // @homepageURL  https://fragline.xela.codes
 // @supportURL   https://forge.xela.codes/xela/NinjaIOUtils/issues
 // @grant        none
-// @version      0.4b
+// @version      0.5b
 // ==/UserScript==
 
 /*
@@ -2264,7 +2264,7 @@
 
   // src/config.ts
   var config_default = {
-    ver: "0.4b",
+    ver: "0.5b",
     api: "https://utils.xela.codes",
     //api: "http://localhost:8907",
     packRepo: "itzTheMeow/NinjaIOUtils-packs",
@@ -13953,7 +13953,6 @@
         menu.weaponContainer.visible = false;
         menu.mapPublishContainer.visible = false;
         menu.publishMapButton.visible = false;
-        menu.description.visible = false;
         menu.texContainer.visible = true;
         this.texTab.onShow();
         menu.updateTabStates();
@@ -13984,7 +13983,7 @@
           this.weaponLabel,
           newWidth,
           30,
-          this.display === ContentMenu.WEAPONS
+          this.display === ContentMenu.GEAR
         );
         UITheme.styleMenuTab(
           this.texButton,
