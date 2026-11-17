@@ -6783,35 +6783,26 @@ declare namespace MenuBackground {
 declare var rendererfactory: {};
 declare class RendererFactory {
     static CreateRepeatingTexture(a: any, b: any, c?: boolean): any;
-    static Now(): number;
-    static CaptureStack(a: any): string;
     static SerializeError(a: any): {
         name: any;
         message: any;
         stack: any;
     };
-    static PushRecent /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
-    static DescribeBufferUsage(a: any): string;
-    static ReplaceMethod /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
-    static GetAdapterInfo(a: any): {} | null;
-    static GetDeviceLimits(a: any): {} | null;
-    static GetBindGroupBackingBuffer(a: any): any;
-    static InstallWebGpuBindGroupBufferFix(a: any): void;
-    static InstallWebGpuDiagnostics(a: any): any;
     static GetWebGpuEnvironmentError(): Error | null;
     static LogRenderer(a: any): void;
     static CreateWebGl(a: any): Promise<PIXI.Application<PIXI.Renderer>>;
     static ConsumeRuntimeFallback(): boolean;
+    static DisableWebGpuTemporarily(): void;
+    static IsWebGpuTemporarilyDisabled(): boolean;
     static ConsumeRuntimeReport(): any;
-    static InstallRuntimeFallback /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static InstallRuntimeFallback(a: any): void;
     static Create(a: any, b?: boolean): Promise<boolean | PIXI.Application<PIXI.Renderer>>;
 }
 declare namespace RendererFactory {
     var RuntimeFallbackKey: string;
     var RuntimeReportKey: string;
-    var RecentBufferLimit: number;
-    var RecentDestroyedBufferLimit: number;
-    var RecentSubmitLimit: number;
+    var WebGpuDisabledUntilKey: string;
+    var WebGpuDisabledDurationMs: number;
 }
 declare var clientperformancetracker: {};
 declare class ClientPerformanceTracker {
@@ -7245,13 +7236,13 @@ declare class App extends PIXI.Container {
     gameClient: Client;
     authenticated: boolean;
     user: any;
-    game: Game | null;
+    game: any;
     background: MenuBackground | null;
     adLoaderBackground: PIXI.Sprite | null;
     onConnectRetryMode: any;
     gameOutputListener: ((a: any) => void) | null;
-    gameBinInputListener: ((c: any) => void) | null;
-    gameInputListener: ((c: any) => void) | null;
+    gameBinInputListener: ((c: any) => any) | null;
+    gameInputListener: ((c: any) => any) | null;
     onMouseDownListener: (a: any) => void;
     onMouseMoveListener: (a: any) => void;
     onMouseUpListener: (a: any) => void;
@@ -7394,6 +7385,8 @@ declare class App extends PIXI.Container {
     static TournamentMigrating: boolean;}
 declare namespace App {
     var UpdatePreloader: (a: any) => void;
+    var GuardAudioContextResume: () => void;
+    var ShowPreloaderError: (a: any) => void;
     var RemovePreloader: () => void;
     var GenerateTexturesFromSheet: (a: any) => void;
     var LoadSupplementalTextures: () => Promise<void>;
