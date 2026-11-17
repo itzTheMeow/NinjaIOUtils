@@ -73,6 +73,41 @@ export type CombinedTextureName =
     "bandana_team_zulu" |
     "barrett" |
     "barrett_no_clip" |
+    "basic_ak47_sandstorm" |
+    "basic_ball_heritage" |
+    "basic_ball_heritage_icon" |
+    "basic_barrett_whiteout" |
+    "basic_boomerang_item_scrapjack" |
+    "basic_boomerang_item_scrapjack_boomerang_1" |
+    "basic_boomerang_item_scrapjack_boomerang_item" |
+    "basic_bow1_viridian" |
+    "basic_bow1_viridian_bow1" |
+    "basic_bow1_viridian_bow2" |
+    "basic_bow1_viridian_bow3" |
+    "basic_bow1_viridian_bow4" |
+    "basic_bow1_viridian_bow5" |
+    "basic_bow1_viridian_icon" |
+    "basic_chainsaw_riveter" |
+    "basic_deagle_single_steel" |
+    "basic_deagle_steel" |
+    "basic_deagle_steel_single" |
+    "basic_flamethrower_scrapjack" |
+    "basic_lasergun_ceramic" |
+    "basic_link_gun_patrol" |
+    "basic_m1carbine_heritage" |
+    "basic_m60_jungle" |
+    "basic_m79_riveter" |
+    "basic_mac10_cobalt" |
+    "basic_minigun_field" |
+    "basic_mp5_urban" |
+    "basic_pulsegun_olive" |
+    "basic_rifle_m16_viridian" |
+    "basic_rocketlauncher_vanguard" |
+    "basic_rpg_sandstone" |
+    "basic_shockrifle_cobalt" |
+    "basic_shotgun_m2_walnut" |
+    "basic_uzi_patrol" |
+    "basic_x75_deadbolt" |
     "bluelaser" |
     "boomerang" |
     "boomerang_1" |
@@ -7008,7 +7043,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-c9a5fb063d5ae923.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-09ce41f509141667.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
@@ -11514,6 +11549,7 @@ declare class BoomerangGunSprite extends PIXI.Sprite {
     onUse(): void;
     animateReload(): void;
     stopReloadAnimation(): void;
+    resolveTexture(a: any): any;
     setCustomTexture(a: any): boolean;
 }
 declare class BowSprite extends PIXI.Sprite {
@@ -11557,6 +11593,7 @@ declare class BowSprite extends PIXI.Sprite {
     applyDefaultTexture(): void;
     presentDefaultTexture(): void;
     resetUsage(): void;
+    resolveTexture(a: any): any;
     setCustomTexture(a: any): boolean;
     init(): void;
 }
@@ -11622,10 +11659,12 @@ declare class DeagleSprite extends PIXI.Container {
     activeHand: number;
     fireAnchor: PIXI.Sprite;
     ejectionAnchor: PIXI.Container<PIXI.ContainerChild>;
+    customTexture: any;
     reloadStartedAt: number | undefined;
     _reloading: any;
     constructor(a?: boolean);
     onAnchorChanged(): void;
+    setCustomTexture(a: any): boolean;
     selectHand(a: any): void;
     set reloading(a: any);
     setReloading(a: any, b?: boolean): void;
@@ -12578,12 +12617,112 @@ declare const HeadCompatibility: {
 };
 /** @param {any} a @param {any} [b] */ declare function CanDisplayFaceGear(a: any, b?: any): any;
 declare const BalaclavaHeadFit: {
+    head: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_private: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_recruit: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_recruit3: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_recruit4: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_recruit5: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_recruit6: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_redberet: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_sandstorm: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_whiteout: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_cobalt: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_hornet: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_ultraviolet: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_pitfighter: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_riveter: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_relay: {
+        scale: number;
+        x: number;
+        y: number;
+    };
     head_scrapjack: {
         scale: number;
         x: number;
         y: number;
     };
     head_deadbolt: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_vex: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_graveyard_shift: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_marrow_rot: {
+        scale: number;
+        x: number;
+        y: number;
+    };
+    head_hair_short: {
         scale: number;
         x: number;
         y: number;
