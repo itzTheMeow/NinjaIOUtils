@@ -7043,7 +7043,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-09ce41f509141667.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-cadd9d7f73fa9d92.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
