@@ -5930,6 +5930,10 @@ declare namespace Game {
         34: string;
         35: string;
         36: string;
+        39: string;
+        40: string;
+        41: string;
+        230: string;
         38: string;
         300: string;
     };
@@ -7043,7 +7047,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-cadd9d7f73fa9d92.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-8ec033b470406cc1.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
@@ -7147,6 +7151,22 @@ declare const AudioEffects: {
         audio: Howl;
     };
     RLRocketFire: {
+        audio: Howl;
+    };
+    AnnihilatorLaunch: {
+        audio: Howl;
+    };
+    AnnihilatorFlight: {
+        audio: Howl;
+        range: number;
+    };
+    FlakstormFire: {
+        audio: Howl;
+    };
+    FlakstormBurst: {
+        audio: Howl;
+    }[];
+    FlakstormReload: {
         audio: Howl;
     };
     DeagleFire: {
@@ -7669,6 +7689,7 @@ declare class AudioManager {
     parent: any;
     queue: any[];
     paintBeams: Map<any, any>;
+    flightSounds: Map<any, any>;
     voiceState: any;
     currentZombieWaveState: any;
     lastZombieCountdown: any;
@@ -7710,6 +7731,9 @@ declare class AudioManager {
     onStopUseFX /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUseFX(a: any, b: any, c?: any): void;
     onRemoved(a: any): void;
+    updateFlightSounds(): void;
+    stopFlightSounds(): void;
+    stopFlightSound(a: any): void;
     onPaintImpact(a: any): void;
     updatePaintBeamAudio /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     stopPaintBeamAudio(a?: any): void;
@@ -9161,6 +9185,7 @@ declare class Player extends Agent {
     static restoreRagdollPose /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static animateRagdoll(a: any, b?: boolean, c?: boolean): void;
     applyPrimaryItemDisplayScale(): void;
+    applySecondaryItemDisplayScale(): void;
 
     static BELT_TEXTURES: any;
     static LEG_ANIMATION_SIDES: any;
@@ -9288,6 +9313,9 @@ declare const PrefabList: {
     Paintball: number;
     PaintLine: number;
     PaintBalloon: number;
+    FlakShell: number;
+    FlakShrapnel: number;
+    AnnihilatorMissile: number;
     PaintballGun: number;
     LineGun: number;
     X75Nade: number;
@@ -9321,6 +9349,8 @@ declare const PrefabList: {
     BoomerangGun: number;
     M60: number;
     Uzi: number;
+    Flakstorm: number;
+    Annihilator: number;
     Bouncyball: number;
     HealthBox: number;
     NadeBox: number;
@@ -9345,6 +9375,7 @@ declare const PrefabList: {
     ShockRifleAmmo: number;
     SMGAmmo: number;
     X75Ammo: number;
+    AnnihilatorAmmo: number;
     Gold: number;
     Ghost: number;
 }, AgentMap: {
@@ -9381,6 +9412,9 @@ declare const PrefabList: {
     36: typeof Paintball;
     37: typeof PaintLine;
     38: typeof PaintBalloon;
+    39: typeof FlakShell;
+    40: typeof FlakShrapnel;
+    41: typeof AnnihilatorMissile;
     101: typeof TinyShrapnel;
     102: typeof GhostBotDebris1;
     103: typeof GhostBotDebris2;
@@ -9411,6 +9445,8 @@ declare const PrefabList: {
     223: typeof BoomerangGun;
     224: typeof M60;
     225: typeof Uzi;
+    229: typeof Flakstorm;
+    230: typeof Annihilator;
     300: typeof Bouncyball;
     400: typeof HealthBox;
     401: typeof NadeBox;
@@ -9435,6 +9471,7 @@ declare const PrefabList: {
     714: typeof ShockRifleAmmo;
     715: typeof SMGAmmo;
     716: typeof X75Ammo;
+    717: typeof AnnihilatorAmmo;
     800: typeof Gold;
     900: typeof Ghost;
 };
@@ -10030,7 +10067,7 @@ declare class RocketEffects {
     addShot(a: any): void;
     removeShot(a: any): void;
     puff /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any): void;
-    spark /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    spark(a: any, b: any, c: any, d: any, e: any, f?: number): void;
     updateShot /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     update(a?: number): void;
     clear(): void;
@@ -10114,9 +10151,31 @@ declare class ExplosionEffects {
     fire: any;
     light: any;
     free: any[];
+    shockwaves: any[];
     constructor(a: any);
     static profile(a: any): any;
     static createProfiles(): {
+        annihilator: {
+            sizeScale: number;
+            flash: number;
+            flashTint: number;
+            bloom: number;
+            bloomTint: number;
+            fire: number;
+            fireSpeed: number;
+            fireSize: number;
+            fireLife: number;
+            heat: null[];
+            smokeCount: number;
+            smokeSpeed: number;
+            smokeSize: number;
+            smokeLife: number;
+            smokeAlpha: number;
+            smokeTints: null[];
+            rays: string;
+            crackle: number;
+            crackleTint: number;
+        };
         nade: {
             flash: number;
             flashTint: number;
@@ -10215,6 +10274,26 @@ declare class ExplosionEffects {
             crackleTint: number;
             keepSprite: boolean;
         };
+        flak: {
+            flash: number;
+            flashTint: number;
+            bloom: number;
+            bloomTint: number;
+            fire: number;
+            fireSpeed: number;
+            fireSize: number;
+            fireLife: number;
+            heat: null[];
+            smokeCount: number;
+            smokeSpeed: number;
+            smokeSize: number;
+            smokeLife: number;
+            smokeAlpha: number;
+            smokeTints: null[];
+            rays: string;
+            crackle: number;
+            crackleTint: number;
+        };
         fragment: {
             flash: number;
             flashTint: number;
@@ -10246,6 +10325,8 @@ declare class ExplosionEffects {
     attachLayers(): void;
     acquire /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any): any;
     burst /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
+    spawnShockwave /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    spawnMushroomCloud /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
     updateLayer /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     update(a?: number): void;
     clear(): void;
@@ -10582,6 +10663,7 @@ declare class Canvas extends PIXI.EventEmitter {
     releaseProjectileTrail /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     addBurnFlame(a: any): any;
     setAgentBurning /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    addAmputationEffects /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     tryAddGoreRibbon(a: any, b?: () => number): any;
     applyBurnScorch(a: any, b?: any): boolean;
     restorePlayerBurnScorch(a: any): number;
@@ -11507,6 +11589,47 @@ declare class AK47Sprite extends PIXI.Sprite {
     animate(a: any): void;
     init(): void;
 }
+declare var annihilatorsprite: {};
+declare class AnnihilatorSprite extends PIXI.Container {
+    launcher: PIXI.Sprite;
+    anchor: PIXI.ObservablePoint;
+    secondaryAnchor: {
+        x: number;
+        y: number;
+    };
+    socket: PIXI.Graphics;
+    nose: AnnihilatorRocketSprite;
+    fireAnchor: PIXI.Container<PIXI.ContainerChild>;
+    constructor(a?: {});
+    get texture(): PIXI.Texture<PIXI.TextureSource<any>>;
+    set texture(a: PIXI.Texture<PIXI.TextureSource<any>>);
+    onAnchorChanged(): void;
+    setCarryScale(a: any): void;
+    setAmmoState(a: any): void;
+    pointLeft(): void;
+    pointRight(): void;
+}
+declare namespace AnnihilatorSprite {
+    var HELD_SCALE: number;
+    var WORLD_SCALE: number;
+}
+declare class AnnihilatorRocketSprite extends PIXI.Container {
+    fullWidth: any;
+    constructor(a: any, b?: boolean);
+    setRocketWidth(a: any): void;
+    static createHazardMark(): PIXI.GraphicsContext;
+
+    static hazardMark: any;}
+declare namespace AnnihilatorRocketSprite {
+    var FLIGHT_WIDTH: number;
+}
+declare class AnnihilatorAmmoSprite extends AnnihilatorRocketSprite {
+    constructor();
+}
+declare class AnnihilatorMissileSprite extends AnnihilatorRocketSprite {
+    constructor();
+    animate(a: any): void;
+}
 declare class BarrettSprite extends MagazineWeaponSprite {
     secondaryScale: {
         x: number;
@@ -11699,6 +11822,27 @@ declare class FistSprite extends PIXI.Sprite {
     constructor();
     pointLeft(): void;
     pointRight(): void;
+}
+declare class FlakstormSprite extends MagazineWeaponSprite {
+    secondaryScale: {
+        x: number;
+        y: number;
+    };
+    fireAnchor: PIXI.Container<PIXI.ContainerChild>;
+    ejectionAnchor: PIXI.Container<PIXI.ContainerChild>;
+    smokeStartedAt: number;
+    nextSmokeAt: number;
+    constructor(a?: {});
+    pointLeft(): void;
+    pointRight(): void;
+    onFired(): void;
+    updateReload(a: any): void;
+    animate(a: any): void;
+    init(): void;
+}
+declare namespace FlakstormSprite {
+    var SCALE: number;
+    var RELOAD_MS: number;
 }
 declare class FlameThrowerSprite extends PIXI.Sprite {
     fireAnchor: PIXI.Container<PIXI.ContainerChild>;
@@ -12061,6 +12205,22 @@ declare class DesertEagleBulletSprite extends PIXI.Sprite {
     constructor();
     animate(a: any): void;
 }
+declare class FlakShellSprite extends PIXI.Sprite {
+    frame: number;
+    constructor();
+    animate(a: any): void;
+    init(): void;
+}
+declare class FlakShrapnelSprite extends PIXI.Sprite {
+    phase: number;
+    frame: number;
+    constructor();
+    animate(a: any): void;
+    init(): void;
+}
+declare namespace FlakShrapnelSprite {
+    var SCALE: number;
+}
 declare class FlameThrowerLiquidSprite extends PIXI.Sprite {
     constructor();
     init(): void;
@@ -12381,6 +12541,8 @@ declare var itemlist: {}, ItemList: {
     PaintballGun: string;
     LineGun: string;
     PaintBalloon: string;
+    Flakstorm: string;
+    Annihilator: string;
     Bouncyball: string;
     HealthBox: string;
     NadeBox: string;
@@ -12405,6 +12567,7 @@ declare var itemlist: {}, ItemList: {
     ShockRifleAmmo: string;
     SMGAmmo: string;
     X75Ammo: string;
+    AnnihilatorAmmo: string;
     Gold: string;
 }, ItemMap: {
     Equip: {
@@ -14623,6 +14786,8 @@ declare namespace AK47 {
     };
     export { _23 as Audio };
 }
+declare function Annihilator(a: any): void;
+declare function AnnihilatorAmmo(a: any): void;
 declare function Barrett(a: any): void;
 declare namespace Barrett {
     export var Shapes: {
@@ -14748,8 +14913,8 @@ declare namespace DesertEagle {
     };
     export { _29 as Audio };
 }
-declare function FlameThrower(a: any): void;
-declare namespace FlameThrower {
+declare function Flakstorm(a: any): void;
+declare namespace Flakstorm {
     export var Shapes: {
         t: number;
         c: number;
@@ -14768,8 +14933,8 @@ declare namespace FlameThrower {
     };
     export { _30 as Audio };
 }
-declare function LaserGun(a: any): void;
-declare namespace LaserGun {
+declare function FlameThrower(a: any): void;
+declare namespace FlameThrower {
     export var Shapes: {
         t: number;
         c: number;
@@ -14785,12 +14950,11 @@ declare namespace LaserGun {
             audio: Howl;
             delta: number;
         }[];
-        checkAltContact: boolean;
     };
     export { _31 as Audio };
 }
-declare function LinkGun(a: any): void;
-declare namespace LinkGun {
+declare function LaserGun(a: any): void;
+declare namespace LaserGun {
     export var Shapes: {
         t: number;
         c: number;
@@ -14806,11 +14970,12 @@ declare namespace LinkGun {
             audio: Howl;
             delta: number;
         }[];
+        checkAltContact: boolean;
     };
     export { _32 as Audio };
 }
-declare function M60(a: any): void;
-declare namespace M60 {
+declare function LinkGun(a: any): void;
+declare namespace LinkGun {
     export var Shapes: {
         t: number;
         c: number;
@@ -14829,8 +14994,8 @@ declare namespace M60 {
     };
     export { _33 as Audio };
 }
-declare function MAC10(a: any): void;
-declare namespace MAC10 {
+declare function M60(a: any): void;
+declare namespace M60 {
     export var Shapes: {
         t: number;
         c: number;
@@ -14849,8 +15014,8 @@ declare namespace MAC10 {
     };
     export { _34 as Audio };
 }
-declare function Minigun(a: any): void;
-declare namespace Minigun {
+declare function MAC10(a: any): void;
+declare namespace MAC10 {
     export var Shapes: {
         t: number;
         c: number;
@@ -14869,8 +15034,8 @@ declare namespace Minigun {
     };
     export { _35 as Audio };
 }
-declare function NadeLauncher(a: any): void;
-declare namespace NadeLauncher {
+declare function Minigun(a: any): void;
+declare namespace Minigun {
     export var Shapes: {
         t: number;
         c: number;
@@ -14889,8 +15054,8 @@ declare namespace NadeLauncher {
     };
     export { _36 as Audio };
 }
-declare function PulseGun(a: any): void;
-declare namespace PulseGun {
+declare function NadeLauncher(a: any): void;
+declare namespace NadeLauncher {
     export var Shapes: {
         t: number;
         c: number;
@@ -14909,8 +15074,8 @@ declare namespace PulseGun {
     };
     export { _37 as Audio };
 }
-declare function Rifle(a: any): void;
-declare namespace Rifle {
+declare function PulseGun(a: any): void;
+declare namespace PulseGun {
     export var Shapes: {
         t: number;
         c: number;
@@ -14929,8 +15094,8 @@ declare namespace Rifle {
     };
     export { _38 as Audio };
 }
-declare function RocketLauncher(a: any): void;
-declare namespace RocketLauncher {
+declare function Rifle(a: any): void;
+declare namespace Rifle {
     export var Shapes: {
         t: number;
         c: number;
@@ -14949,8 +15114,8 @@ declare namespace RocketLauncher {
     };
     export { _39 as Audio };
 }
-declare function RPG(a: any): void;
-declare namespace RPG {
+declare function RocketLauncher(a: any): void;
+declare namespace RocketLauncher {
     export var Shapes: {
         t: number;
         c: number;
@@ -14969,8 +15134,8 @@ declare namespace RPG {
     };
     export { _40 as Audio };
 }
-declare function ShockRifle(a: any): void;
-declare namespace ShockRifle {
+declare function RPG(a: any): void;
+declare namespace RPG {
     export var Shapes: {
         t: number;
         c: number;
@@ -14989,8 +15154,8 @@ declare namespace ShockRifle {
     };
     export { _41 as Audio };
 }
-declare function Shotgun(a: any): void;
-declare namespace Shotgun {
+declare function ShockRifle(a: any): void;
+declare namespace ShockRifle {
     export var Shapes: {
         t: number;
         c: number;
@@ -15009,8 +15174,8 @@ declare namespace Shotgun {
     };
     export { _42 as Audio };
 }
-declare function SubmachineGun(a: any): void;
-declare namespace SubmachineGun {
+declare function Shotgun(a: any): void;
+declare namespace Shotgun {
     export var Shapes: {
         t: number;
         c: number;
@@ -15029,8 +15194,8 @@ declare namespace SubmachineGun {
     };
     export { _43 as Audio };
 }
-declare function Uzi(a: any): void;
-declare namespace Uzi {
+declare function SubmachineGun(a: any): void;
+declare namespace SubmachineGun {
     export var Shapes: {
         t: number;
         c: number;
@@ -15049,8 +15214,8 @@ declare namespace Uzi {
     };
     export { _44 as Audio };
 }
-declare function X75(a: any): void;
-declare namespace X75 {
+declare function Uzi(a: any): void;
+declare namespace Uzi {
     export var Shapes: {
         t: number;
         c: number;
@@ -15069,6 +15234,26 @@ declare namespace X75 {
     };
     export { _45 as Audio };
 }
+declare function X75(a: any): void;
+declare namespace X75 {
+    export var Shapes: {
+        t: number;
+        c: number;
+        w: number;
+        h: number;
+        fr: number;
+        re: number;
+        s: boolean;
+        d: number;
+    }[];
+    var _46: {
+        onContact: {
+            audio: Howl;
+            delta: number;
+        }[];
+    };
+    export { _46 as Audio };
+}
 declare function GhostBotDebris1(a: any): void;
 declare function GhostBotDebris2(a: any): void;
 declare function GhostBotDebris3(a: any): void;
@@ -15080,16 +15265,6 @@ declare namespace Prefab {
 }
 declare function AK47Bullet(a: any): void;
 declare namespace AK47Bullet {
-    var _46: {
-        onContact: {
-            audio: Howl;
-        }[][];
-        checkAltContact: boolean;
-    };
-    export { _46 as Audio };
-}
-declare function Arrow(a: any): void;
-declare namespace Arrow {
     var _47: {
         onContact: {
             audio: Howl;
@@ -15098,51 +15273,112 @@ declare namespace Arrow {
     };
     export { _47 as Audio };
 }
-declare function BarrettBullet(a: any): void;
-declare namespace BarrettBullet {
+declare function AnnihilatorMissile(a: any): void;
+declare namespace AnnihilatorMissile {
+    export var Update: (a: any) => void;
+    export var Explosive: {
+        lethalRadius: number;
+        damageRadius: number;
+        radius: number;
+        blast: number;
+        edgePlayerImpulse: number;
+    };
     var _48: {
-        onContact: {
+        flight: {
+            audio: Howl;
+            range: number;
+        };
+        onRemove: {
             audio: Howl;
         }[][];
-        onAgentContact: {
-            audio: Howl;
-        }[];
-        checkAltContact: boolean;
     };
     export { _48 as Audio };
 }
-declare function Boomerang(a: any): void;
-declare namespace Boomerang {
-    export var Update: (a: any, b?: any) => void;
+declare const annihilatorLethalRadius = 11.16;
+declare function Arrow(a: any): void;
+declare namespace Arrow {
     var _49: {
         onContact: {
             audio: Howl;
-        }[];
-        onAgentContact: {
-            audio: Howl;
-        }[];
+        }[][];
+        checkAltContact: boolean;
     };
     export { _49 as Audio };
 }
-declare function CarbineBullet(a: any): void;
-declare namespace CarbineBullet {
+declare function BarrettBullet(a: any): void;
+declare namespace BarrettBullet {
     var _50: {
         onContact: {
             audio: Howl;
         }[][];
+        onAgentContact: {
+            audio: Howl;
+        }[];
         checkAltContact: boolean;
     };
     export { _50 as Audio };
 }
-declare function DesertEagleBullet(a: any): void;
-declare namespace DesertEagleBullet {
+declare function Boomerang(a: any): void;
+declare namespace Boomerang {
+    export var Update: (a: any, b?: any) => void;
     var _51: {
+        onContact: {
+            audio: Howl;
+        }[];
+        onAgentContact: {
+            audio: Howl;
+        }[];
+    };
+    export { _51 as Audio };
+}
+declare function CarbineBullet(a: any): void;
+declare namespace CarbineBullet {
+    var _52: {
         onContact: {
             audio: Howl;
         }[][];
         checkAltContact: boolean;
     };
-    export { _51 as Audio };
+    export { _52 as Audio };
+}
+declare function DesertEagleBullet(a: any): void;
+declare namespace DesertEagleBullet {
+    var _53: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+    };
+    export { _53 as Audio };
+}
+declare function FlakShell(a: any): void;
+declare namespace FlakShell {
+    export var Explosive: {
+        damage: number;
+        radius: number;
+        blast: number;
+    };
+    export var DEFAULT_TTL: number;
+    var _54: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+        onRemove: {
+            audio: Howl;
+        }[][];
+    };
+    export { _54 as Audio };
+}
+declare function FlakShrapnel(a: any): void;
+declare namespace FlakShrapnel {
+    var _55: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+    };
+    export { _55 as Audio };
 }
 declare function FlameThrowerLiquid(a: any): void;
 declare namespace FlameThrowerLiquid {
@@ -15157,7 +15393,7 @@ declare namespace FlameThrowerLiquid {
 }
 declare function GhostLaser(a: any): void;
 declare namespace GhostLaser {
-    var _52: {
+    var _56: {
         onAdded: {
             audio: Howl;
         }[];
@@ -15165,49 +15401,10 @@ declare namespace GhostLaser {
             audio: Howl;
         }[];
     };
-    export { _52 as Audio };
+    export { _56 as Audio };
 }
 declare function LaserGunBullet(a: any): void;
 declare namespace LaserGunBullet {
-    var _53: {
-        onContact: {
-            audio: Howl;
-        }[][];
-        checkAltContact: boolean;
-    };
-    export { _53 as Audio };
-}
-declare function LauncherNade(a: any): void;
-declare namespace LauncherNade {
-    var _54: {
-        onRemove: {
-            audio: Howl;
-        }[][];
-    };
-    export { _54 as Audio };
-}
-declare function M60Bullet(a: any): void;
-declare namespace M60Bullet {
-    var _55: {
-        onContact: {
-            audio: Howl;
-        }[][];
-        checkAltContact: boolean;
-    };
-    export { _55 as Audio };
-}
-declare function MAC10Bullet(a: any): void;
-declare namespace MAC10Bullet {
-    var _56: {
-        onContact: {
-            audio: Howl;
-        }[][];
-        checkAltContact: boolean;
-    };
-    export { _56 as Audio };
-}
-declare function MinigunBullet(a: any): void;
-declare namespace MinigunBullet {
     var _57: {
         onContact: {
             audio: Howl;
@@ -15216,19 +15413,17 @@ declare namespace MinigunBullet {
     };
     export { _57 as Audio };
 }
-declare function PulseGunBullet(a: any): void;
-declare namespace PulseGunBullet {
-    export var Update: (a: any, b?: any) => void;
+declare function LauncherNade(a: any): void;
+declare namespace LauncherNade {
     var _58: {
-        onContact: {
+        onRemove: {
             audio: Howl;
-        }[];
-        checkAltContact: boolean;
+        }[][];
     };
     export { _58 as Audio };
 }
-declare function RifleBullet(a: any): void;
-declare namespace RifleBullet {
+declare function M60Bullet(a: any): void;
+declare namespace M60Bullet {
     var _59: {
         onContact: {
             audio: Howl;
@@ -15237,43 +15432,39 @@ declare namespace RifleBullet {
     };
     export { _59 as Audio };
 }
-declare function RLRocket(a: any): void;
-declare namespace RLRocket {
-    export var Update: (a: any, b?: any) => void;
+declare function MAC10Bullet(a: any): void;
+declare namespace MAC10Bullet {
     var _60: {
-        onRemove: {
+        onContact: {
             audio: Howl;
         }[][];
         checkAltContact: boolean;
     };
     export { _60 as Audio };
 }
-declare function RPGRocket(a: any): void;
-declare namespace RPGRocket {
-    export var Update: (a: any, b?: any) => void;
+declare function MinigunBullet(a: any): void;
+declare namespace MinigunBullet {
     var _61: {
-        onRemove: {
+        onContact: {
             audio: Howl;
         }[][];
         checkAltContact: boolean;
     };
     export { _61 as Audio };
 }
-declare function ShockRifleBullet(a: any): void;
-declare namespace ShockRifleBullet {
+declare function PulseGunBullet(a: any): void;
+declare namespace PulseGunBullet {
     export var Update: (a: any, b?: any) => void;
     var _62: {
-        onRemove: {
+        onContact: {
             audio: Howl;
         }[];
+        checkAltContact: boolean;
     };
     export { _62 as Audio };
 }
-declare function ShotgunPellet(a: any): void;
-declare namespace ShotgunPellet {
-    export var Contact: {
-        damage: number;
-    };
+declare function RifleBullet(a: any): void;
+declare namespace RifleBullet {
     var _63: {
         onContact: {
             audio: Howl;
@@ -15282,25 +15473,70 @@ declare namespace ShotgunPellet {
     };
     export { _63 as Audio };
 }
-declare function SubmachineGunBullet(a: any): void;
-declare namespace SubmachineGunBullet {
+declare function RLRocket(a: any): void;
+declare namespace RLRocket {
+    export var Update: (a: any, b?: any) => void;
     var _64: {
-        onContact: {
+        onRemove: {
             audio: Howl;
         }[][];
         checkAltContact: boolean;
     };
     export { _64 as Audio };
 }
-declare function UziBullet(a: any): void;
-declare namespace UziBullet {
+declare function RPGRocket(a: any): void;
+declare namespace RPGRocket {
+    export var Update: (a: any, b?: any) => void;
     var _65: {
-        onContact: {
+        onRemove: {
             audio: Howl;
         }[][];
         checkAltContact: boolean;
     };
     export { _65 as Audio };
+}
+declare function ShockRifleBullet(a: any): void;
+declare namespace ShockRifleBullet {
+    export var Update: (a: any, b?: any) => void;
+    var _66: {
+        onRemove: {
+            audio: Howl;
+        }[];
+    };
+    export { _66 as Audio };
+}
+declare function ShotgunPellet(a: any): void;
+declare namespace ShotgunPellet {
+    export var Contact: {
+        damage: number;
+    };
+    var _67: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+    };
+    export { _67 as Audio };
+}
+declare function SubmachineGunBullet(a: any): void;
+declare namespace SubmachineGunBullet {
+    var _68: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+    };
+    export { _68 as Audio };
+}
+declare function UziBullet(a: any): void;
+declare namespace UziBullet {
+    var _69: {
+        onContact: {
+            audio: Howl;
+        }[][];
+        checkAltContact: boolean;
+    };
+    export { _69 as Audio };
 }
 declare function X75Nade(a: any): void;
 declare namespace X75Nade {
@@ -15310,16 +15546,16 @@ declare namespace X75Nade {
         blast: number;
         mod: string;
     };
-    var _66: {
+    var _70: {
         onRemove: {
             audio: Howl;
         }[][];
     };
-    export { _66 as Audio };
+    export { _70 as Audio };
 }
 declare function ClusterNade(a: any): void;
 declare namespace ClusterNade {
-    var _67: {
+    var _71: {
         onAdded: {
             audio: Howl;
         }[][];
@@ -15327,20 +15563,20 @@ declare namespace ClusterNade {
             audio: Howl;
         }[][];
     };
-    export { _67 as Audio };
+    export { _71 as Audio };
 }
 declare function ClusterNadeFragment(a: any): void;
 declare namespace ClusterNadeFragment {
-    var _68: {
+    var _72: {
         onRemove: {
             audio: Howl;
         }[][];
     };
-    export { _68 as Audio };
+    export { _72 as Audio };
 }
 declare function Nade(a: any): void;
 declare namespace Nade {
-    var _69: {
+    var _73: {
         onAdded: {
             audio: Howl;
         }[][];
@@ -15352,7 +15588,7 @@ declare namespace Nade {
             audio: Howl;
         }[][];
     };
-    export { _69 as Audio };
+    export { _73 as Audio };
 }
 declare function ShurikenBlade(a: any): void;
 declare namespace ShurikenBlade {
@@ -15367,7 +15603,7 @@ declare namespace ShurikenBlade {
         fr: number;
         re: number;
     }[];
-    var _70: {
+    var _74: {
         onAdded: {
             audio: Howl;
         }[][];
@@ -15378,11 +15614,11 @@ declare namespace ShurikenBlade {
         }[];
         checkAltContact: boolean;
     };
-    export { _70 as Audio };
+    export { _74 as Audio };
 }
 declare function SnowballProjectile(a: any): void;
 declare namespace SnowballProjectile {
-    var _71: {
+    var _75: {
         onAdded: {
             audio: Howl;
         }[][];
@@ -15391,7 +15627,7 @@ declare namespace SnowballProjectile {
         }[][];
         checkAltContact: boolean;
     };
-    export { _71 as Audio };
+    export { _75 as Audio };
 }
 declare var physicsmessage: {}, PhysicsMessage: {
     ADD: number;
@@ -15412,6 +15648,7 @@ declare var physicsmessage: {}, PhysicsMessage: {
     SURFACE: number;
     UPDATE_OBJECT_BATCH: number;
     ARROW_PIN: number;
+    CORPSE_SEVERED: number;
 };
 declare var weaponprediction: {};
 declare class WeaponPrediction {
@@ -16730,6 +16967,11 @@ declare class Manager extends PIXI.EventEmitter {
         [PhysicsMessage.SUBMERGE]: (a: any) => void;
         [PhysicsMessage.SURFACE]: (a: any) => void;
         [PhysicsMessage.ARROW_PIN]: (a: any) => void;
+        [PhysicsMessage.CORPSE_SEVERED]: ({ id: a, part: b, joints: c }: {
+            id: any;
+            joints: any;
+            part: any;
+        }) => void;
     } | undefined;
     localObjectMap: {
         [ParticleEffects.LOCAL_SAW]: (a: any) => void;
@@ -16812,6 +17054,11 @@ declare class Manager extends PIXI.EventEmitter {
     _onLocalRaycast(a: any): void;
     _onLocalExplosion(a: any): void;
     _onLocalLinkGun(a: any): void;
+    _onCorpseSevered({ id: a, part: b, joints: c }: {
+        id: any;
+        joints: any;
+        part: any;
+    }): void;
     _scAgentAlive /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     _scAgentHealth /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     presentAuthoritativeProjectileHit /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -16844,6 +17091,7 @@ declare class Manager extends PIXI.EventEmitter {
     _processStateOp(a: any, b?: boolean): boolean;
     _processUpdateOp(a: any, b?: boolean): boolean;
     recordRemoteHitSnapshot /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    applyExternalForceUpdate /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     recordRemoteHitClock(a: any): void;
     presentRemoteHitTimeline(a?: number): void;
     updateRemoteViewHold /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): {
@@ -16908,6 +17156,7 @@ declare class Manager extends PIXI.EventEmitter {
     getLastScoringPlayer(): any;
     trackPlayer(a: any): void;
     setTrackObject(a: any, b?: boolean): void;
+    setAnnihilatorGuidance /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     clearTrackedPlayer(a: any): void;
     getTrackObject(): any;
     beginBackgroundUpdates(): void;
@@ -16931,7 +17180,7 @@ declare class Manager extends PIXI.EventEmitter {
     captureProjectileImpact(a: any, b: any, c?: any): void;
     applyPhysicsContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     onUpdateObject(a: any): void;
-    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [p] @param {any} [t] @param {any} [q] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, p?: any, t?: any, q?: any): void;
+    applyPhysicsUpdate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] @param {any} [f] @param {any} [g] @param {any} [h] @param {any} [k] @param {any} [l] @param {any} [m] @param {any} [n] @param {any} [q] @param {any} [r] @param {any} [p] */(a: any, b?: any, c?: any, d?: any, e?: any, f?: any, g?: any, h?: any, k?: any, l?: any, m?: any, n?: any, q?: any, r?: any, p?: any): void;
     preparePresentationSmoothing(a: any): void;
     capturePhysicsPresentation /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     isActorPresentationVisible(a: any): boolean;
@@ -17114,7 +17363,7 @@ declare class RayParticle {
     wd: number;
     gi: number;
     r: number;
-    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: any);
+    constructor(a: any, b?: number, c?: number, d?: number, e?: number, f?: number, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: any);
 }
 declare var shapeplayer: {};
 declare class ShapePlayer {
@@ -17412,6 +17661,7 @@ declare class PhysicsWorker {
     joints: {} | undefined;
     forcesApplied: any[] | undefined;
     expList: any[] | undefined;
+    corpseCuts: Set<any> | undefined;
     debugValidateContacts: boolean | undefined;
     static getTmpVec2(a?: number, b?: number): any;
     static configureOwnerCollision /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -17442,7 +17692,7 @@ declare class PhysicsWorker {
     static shortestAngleDelta /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     initializePackedUpdateBatch(a?: number): void;
     growPackedUpdateBatch(): void;
-    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [t] @param {any} [q] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, p?: number, t?: any, q?: any): void;
+    queuePackedUpdate /** @param {any} a @param {any} b @param {any} c @param {any} d @param {any} e @param {any} f @param {any} [r] @param {any} [p] */(a: any, b: any, c: any, d: any, e: any, f: any, g?: number, h?: number, k?: number, l?: number, m?: number, n?: number, q?: number, r?: any, p?: any): void;
     queuePackedContacts /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     flushPackedUpdates(): void;
     unlinkContactNode /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -17461,7 +17711,7 @@ declare class PhysicsWorker {
         frac: any;
     };
     raycastBulletHits /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
-    raycast(a: any, b: any, c: any, d?: boolean): false | {
+    raycast(a: any, b: any, c: any, d?: boolean, e?: boolean): false | {
         p: any;
         c: any;
         normal: any;
@@ -17469,8 +17719,10 @@ declare class PhysicsWorker {
     };
     clipRemotePresentation(a: any, b: any, c: any, d: any, e: any, f: any, g?: any): number;
     projectNetworkObjectUpdate /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
-    applyLocalRayImpulse /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
-    explosion /** @param {any} a @param {any} [b] */(a: any, b?: any): any[];
+    applyLocalRayImpulse /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
+    detachRagdollJoint /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
+    severCorpseLimb(a: any): boolean;
+    explosion(a: any, b: any, c?: boolean): any[];
     resetSimulation(): void;
     onDestroyJoint(a: any): void;
     connectBodies(a: any): void;
@@ -17590,8 +17842,9 @@ declare class ExplosionRayCallback {
     frac: number;
     pt: any;
     body: any;
+    passBarriers: any;
     constructor(a: any, b?: any);
-    Set /** @param {any} a @param {any} [b] */(a: any, b?: any): this;
+    Set /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): this;
     ReportFixture /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): -1 | 0;
 }
 declare class RaycastCallback {
@@ -18395,8 +18648,8 @@ declare function DevLog(): void;
 declare var orderedcontainer: {};
 declare function OrderedContainer(): void;
 declare namespace OrderedContainer {
-    var _72: {};
-    export { _72 as Storage };
+    var _76: {};
+    export { _76 as Storage };
     export var prototype: {
         add: (a: any, b?: any) => any;
         remove: (a: any) => void;
@@ -18522,6 +18775,6 @@ declare var uidpool: {};
 declare namespace UIDpool {
     var CHARSET: string[];
 }
-export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BalaclavaHeadFit, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BulletTrails, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, CachedTextSprite, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, CanDisplayFaceGear, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentGearPreview, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationCatalog, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleGesture, DeagleSprite, DefaultLegAnchors, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyJetpack, EnergyShell, EnergyVacuum, EnergyZombieJet, EntityCategory, ErrorReporter, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionEffects, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, FitBalaclava, Flag, FlagSprite, FlameEffects, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, FxTextures, GAME_MODES, GEAR_TYPES, Game, GameAttribute, GameCommands, GameLobbyChatPanel, GameLobbyClient, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GearMenuSurface, GearPublishPanel, GetFlippedRagdollTextureId, GetHeadTextureId, GetLegAnchor, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, GetZombieTexture, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadCompatibility, HeadRaise, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineGunPrefab, LineGunSprite, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LobbyChatPanel, LobbyConfigPanel, LobbyDropdown, LobbyInvitationBanner, LobbyInvitePanel, LobbyOverlayPanel, LobbyPlayerList, LobbyTextButton, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapMenuSurface, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, MixPaintColor, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NearLegBootAnchorDrop, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, PaintBalloon, PaintBalloonIcon, PaintBalloonSprite, PaintBeamSprite, PaintEffects, PaintLine, PaintLineLayer, PaintLineSprite, PaintShotScale, PaintSplashRope, PaintTeamColor, PaintTextures, Paintball, PaintballGunPrefab, PaintballGunSprite, PaintballSprite, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectilePhysics, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RemoteHitTimeline, RemoteSnapshotClock, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketEffects, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialChat, SocialChatConnection, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuListRow, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, Species, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TeamTrail, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, bullettrails, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationcatalog, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, deaglegesture, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyjetpack, energyshell, energyvacuum, energyzombiejet, entitycategory, errorreporter, escapemenu, eventdispatcher, explosioneffects, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, flameeffects, fontstyle, fxtextures, game, gameattribute, gamelobby, gamemenu, gamemodes, gameobject, gameshape, gearData, gearKey, gearPrefix, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, lobbychat, lobbypanels, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, paintballprefabs, paintballsprites, painteffects, paintlinelayer, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectilephysics, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, remotehittimeline, renamemenu, rendererfactory, renderstats, rewardsmenu, rocketeffects, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, species, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, teamtrail, terrainseams, textcache, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
+export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, Annihilator, AnnihilatorAmmo, AnnihilatorAmmoSprite, AnnihilatorMissile, AnnihilatorMissileSprite, AnnihilatorRocketSprite, AnnihilatorSprite, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BalaclavaHeadFit, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BulletTrails, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, CachedTextSprite, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, CanDisplayFaceGear, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentGearPreview, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationCatalog, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleGesture, DeagleSprite, DefaultLegAnchors, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyJetpack, EnergyShell, EnergyVacuum, EnergyZombieJet, EntityCategory, ErrorReporter, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionEffects, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FistSprite, FitBalaclava, Flag, FlagSprite, FlakShell, FlakShellSprite, FlakShrapnel, FlakShrapnelSprite, Flakstorm, FlakstormSprite, FlameEffects, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, FxTextures, GAME_MODES, GEAR_TYPES, Game, GameAttribute, GameCommands, GameLobbyChatPanel, GameLobbyClient, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GearMenuSurface, GearPublishPanel, GetFlippedRagdollTextureId, GetHeadTextureId, GetLegAnchor, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, GetZombieTexture, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadCompatibility, HeadRaise, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineGunPrefab, LineGunSprite, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LobbyChatPanel, LobbyConfigPanel, LobbyDropdown, LobbyInvitationBanner, LobbyInvitePanel, LobbyOverlayPanel, LobbyPlayerList, LobbyTextButton, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapMenuSurface, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, MixPaintColor, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NearLegBootAnchorDrop, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, PaintBalloon, PaintBalloonIcon, PaintBalloonSprite, PaintBeamSprite, PaintEffects, PaintLine, PaintLineLayer, PaintLineSprite, PaintShotScale, PaintSplashRope, PaintTeamColor, PaintTextures, Paintball, PaintballGunPrefab, PaintballGunSprite, PaintballSprite, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectilePhysics, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RemoteHitTimeline, RemoteSnapshotClock, RenameMenu, RenderStats, RendererFactory, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketEffects, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialChat, SocialChatConnection, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuListRow, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, Species, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TeamTrail, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, annihilatorLethalRadius, annihilatorsprite, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, bullettrails, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationcatalog, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, deaglegesture, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyjetpack, energyshell, energyvacuum, energyzombiejet, entitycategory, errorreporter, escapemenu, eventdispatcher, explosioneffects, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, flameeffects, fontstyle, fxtextures, game, gameattribute, gamelobby, gamemenu, gamemodes, gameobject, gameshape, gearData, gearKey, gearPrefix, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, lobbychat, lobbypanels, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, paintballprefabs, paintballsprites, painteffects, paintlinelayer, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectilephysics, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, remotehittimeline, renamemenu, rendererfactory, renderstats, rewardsmenu, rocketeffects, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, species, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, teamtrail, terrainseams, textcache, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
 export * as PIXI from "pixi.js";
 //# sourceMappingURL=lib.d.ts.map
