@@ -3373,6 +3373,8 @@ declare class CustomizationMenu extends Feature {
     migrateWeaponCustomizationKeys(): void;
     onPreviewWeaponSelected(a: any): void;
     onSelectCustomization(a: any): void;
+    static IsPurchasable(a: any): boolean;
+    updatePurchaseButton(): void;
     isColorPickerTarget(a: any): boolean;
     onColorPickerPointerDownCapture(a: any): void;
     static orbSupportsColor(a: any): boolean;
@@ -6946,12 +6948,14 @@ declare class RendererFactory {
     };
     static GetWebGpuEnvironmentError(): Error | null;
     static LogRenderer(a: any): void;
+    static UseCanvasTextureFormat(a: any): void;
     static CreateWebGl(a: any): Promise<PIXI.Application<PIXI.Renderer>>;
     static ConsumeRuntimeFallback(): boolean;
     static DisableWebGpuTemporarily(): void;
     static IsWebGpuTemporarilyDisabled(): boolean;
     static ConsumeRuntimeReport(): any;
     static InstallRuntimeFallback(a: any): void;
+    static IsWebGpuRenderFailure(a: any): any;
     static Create(a: any, b?: boolean): Promise<boolean | PIXI.Application<PIXI.Renderer>>;
 }
 declare namespace RendererFactory {
