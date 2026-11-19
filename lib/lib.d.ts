@@ -652,7 +652,7 @@ declare class Analytics {
 }
 declare var servicebase: {};
 declare class ServiceBase {
-    xhrGet(a: any): Promise<any>;
+    xhrGet /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<any>;
     xhrPost(a: any, b: any, c?: boolean, d?: number): Promise<any>;
     xhrError /** @param {any} a @param {any} [b] */(a: any, b?: any): string;
 }
@@ -4752,6 +4752,7 @@ declare class ServerListMenu extends Feature {
 }
 declare namespace ServerListMenu {
     var JOIN_LOBBY: string;
+    var MAP_STARTING_LABEL: string;
     var MODE_ALL: string;
     var REGION_ALL: string;
     var PRIVATE_ALL: string;
