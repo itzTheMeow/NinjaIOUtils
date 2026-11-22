@@ -7222,7 +7222,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-6fd1f4846369907f.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-832f0ec739214a66.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
@@ -7307,9 +7307,6 @@ declare const AudioEffects: {
     SawedOffFire: {
         audio: Howl;
     };
-    SawedOffReload: {
-        audio: Howl;
-    };
     BarrettFire: {
         audio: Howl;
     };
@@ -7355,9 +7352,6 @@ declare const AudioEffects: {
         single: boolean;
         sub_start: number;
         sub_end: number;
-    };
-    SludgerReload: {
-        audio: Howl;
     };
     SludgeSplat: {
         audio: Howl;
@@ -7898,6 +7892,7 @@ declare class AudioManager {
     queue: any[];
     paintBeams: Map<any, any>;
     flightSounds: Map<any, any>;
+    reloadSounds: Map<any, any>;
     voiceState: any;
     currentZombieWaveState: any;
     lastZombieCountdown: any;
@@ -7947,6 +7942,8 @@ declare class AudioManager {
     updatePaintBeamAudio /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     stopPaintBeamAudio(a?: any): void;
     onContact(a: any): void;
+    hasInterruptibleReloadSound(a: any): boolean;
+    stopReloadSound(a: any): void;
     onReload /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
 }
 declare namespace AudioManager {
