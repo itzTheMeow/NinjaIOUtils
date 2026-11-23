@@ -2184,11 +2184,13 @@ declare class ProfileActionButton extends PIXI.Container {
     hitArea: PIXI.Rectangle;
     background: PIXI.Graphics;
     label: PIXI.Text;
+    primary: any;
     cursor: PIXI.Cursor | (string & {}) | undefined;
     pointerId: any;
     constructor(a: any, b?: number, c?: number);
     setText(a: any): void;
     setTint(a: any): void;
+    setPrimary(a: any): void;
     setSelected(a: any): void;
     layoutContent(): void;
     draw(): void;
@@ -4847,12 +4849,16 @@ declare class TournamentMenu extends Feature {
     panelHeight: number;
     background: PIXI.Graphics;
     title: any;
+    availabilityBadge: PIXI.Graphics;
     availabilityLabel: any;
+    eventBadge: PIXI.Container<PIXI.ContainerChild>;
     closeButton: ImgButton;
+    statusDot: PIXI.Graphics;
+    statusLabel: any;
     tab: string;
     tabs: any[];
     tabNames: string[];
-    statusLabel: any;
+    viewTop: number;
     view: PIXI.Container<PIXI.ContainerChild>;
     viewWidth: number;
     viewHeight: number;
@@ -4903,7 +4909,7 @@ declare class TournamentMenu extends Feature {
     moreHistory: any;
     actionPending: boolean | undefined;
     contentWidth: number | undefined;
-    contentHeight: any;
+    contentHeight: number | undefined;
     historyPage: any;
     constructor();
     openTab(a: any): void;
@@ -4915,10 +4921,11 @@ declare class TournamentMenu extends Feature {
     stopSocket(): void;
     updateConnectionStatus(): void;
     updateStatusLabel(): void;
+    connectionTone(): number;
     syncAccount(): void;
     text(a: any, b: any, c: any, d?: number, e?: number, f?: PIXI.Container<PIXI.ContainerChild>, g?: number): any;
     fitText(a: any, b: any, c: any, d: any, e?: number, f?: number, g?: PIXI.Container<PIXI.ContainerChild>): any;
-    button(a: any, b: any, c: any, d: any, e?: PIXI.Container<PIXI.ContainerChild>, f?: number): ProfileActionButton;
+    button(a: any, b: any, c: any, d: any, e?: PIXI.Container<PIXI.ContainerChild>, f?: number, g?: any): ProfileActionButton;
     show(a?: any): void;
     showProfileHistory(a: any): Promise<void>;
     hide(): void;
@@ -4928,19 +4935,44 @@ declare class TournamentMenu extends Feature {
     action(a: any): Promise<void>;
     launch(a: any): Promise<void>;
     scroll(): void;
+    paintCard(a: any, b: any, c: any, d: any, e: any, f?: any, g?: number): any;
+    card(a: any, b: any, c: any, d: any, e?: any, f?: PIXI.Container<PIXI.ContainerChild>, g?: number): any;
+    chip(a: any, b: any, c: any, d: any, e?: PIXI.Container<PIXI.ContainerChild>): PIXI.Container<PIXI.ContainerChild>;
+    glyph(a: any, b: any, c: any, d: any, e?: PIXI.Container<PIXI.ContainerChild>): PIXI.Graphics;
+    progressBar(a: any, b: any, c: any, d: any, e?: number, f?: PIXI.Container<PIXI.ContainerChild>): PIXI.Graphics;
+    trophy(a: any, b: any, c: any, d?: PIXI.Container<PIXI.ContainerChild>): PIXI.Graphics;
+    medalColor(a: any): any;
+    statusColor(a: any): number;
+    isLive(a: any): boolean;
+    roundName(a: any): string;
+    drawSize(a: any): number;
+    shortDate(a: any): any;
+    registrationOpen(a: any): boolean;
     section /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    subheading(a: any, b: any, c?: any): any;
     infoGrid(a: any, b: any, c?: number): any;
     notice(a: any, b: any, c?: number): any;
     openSeries(a: any): void;
-    readable(a: any): string;
+    readable(a: any): any;
     matchRow /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    renderHeader(a: any): void;
     render(): void;
-    historyRow /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): any;
+    emptyState(a: any): any;
+    roundStrip /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    renderOverview(a: any): any;
+    championBanner /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    renderRegistration(a: any): any;
+    renderParticipation(a: any): any;
+    renderMatches(a: any): any;
+    renderHistory(): number;
+    medalCards /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    historyRow(a: any, b: any, c: any, d: any, e?: any): any;
     renderRules(): any;
     renderInvitation(): void;
     seriesLabel(a: any): string;
     bracket(): void;
     details(a: any): void;
+    gameCard /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): any;
     spectate(a: any): void;
 }
 declare var partnermenu: {};
@@ -5882,6 +5914,15 @@ declare class TouchStick extends PIXI.Container {
     firing: boolean;
     radius: number;
     localPoint: PIXI.Point;
+    home: PIXI.Point;
+    driftX: number;
+    driftY: number;
+    limitDrift: any;
+    tapRadius: number;
+    tapCandidate: boolean;
+    pressedAt: number;
+    lastTapAt: number;
+    onDoubleTap: any;
     eventMode: string;
     interactiveChildren: boolean;
     hitArea: PIXI.Circle;
@@ -5889,9 +5930,17 @@ declare class TouchStick extends PIXI.Container {
     knob: PIXI.Graphics;
     label: any;
     constructor(a: any, b?: any, c?: any);
+    setHome /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    updateDrift /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     move(a: any): void;
     update(a: any): void;
-    release(a?: number | null): void;
+    release(a?: number | null, b?: boolean): void;
+}
+declare namespace TouchStick {
+    var MAX_DRIFT: number;
+    var DRIFT_FOLLOW: number;
+    var TAP_MS: number;
+    var DOUBLE_TAP_MS: number;
 }
 declare class TouchSpectator extends PIXI.Container {
     onGesture: any;
@@ -5927,6 +5976,8 @@ declare class TouchControls extends PIXI.Container {
     airborne: boolean;
     movement: TouchStick;
     targeting: TouchStick;
+    stickButtons: Map<TouchStick, never[]>;
+    hiddenStickButtons: Set<any>;
     toolbar: PIXI.Container<PIXI.ContainerChild>;
     utilityButtons: any[];
     nativeRelease: (g: any) => void;
@@ -5941,10 +5992,29 @@ declare class TouchControls extends PIXI.Container {
     static capture(a: any): void;
     createAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     setAction /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    isAiming(): boolean;
+    getDriftLimit /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): number;
+    toggleStickButtons(a: any): void;
+    applyStickButtonVisibility(): void;
     releasePointer(a: any): void;
     reset(): void;
     sync(a: any, b: any, c: any, d?: boolean): void;
     layout(a?: {}): void;
+}
+declare namespace TouchControls {
+    var IDLE_BUTTON_ALPHA: number;
+}
+declare var throwcharge: {};
+declare class ThrowCharge {
+    static speed(a: any): number;
+    static isHeld(a: any): boolean;
+}
+declare namespace ThrowCharge {
+    var TAP_TICKS: number;
+    var FALL_TICKS: number;
+    var RISE_TICKS: number;
+    var MAX: number;
+    var MIN: number;
 }
 declare var game: {};
 declare class Game extends PIXI.Container {
@@ -5978,6 +6048,7 @@ declare class Game extends PIXI.Container {
     reticle: PIXI.Sprite;
     busyTimeout: number | null;
     reticleLine: PIXI.Sprite | undefined;
+    throwIndicator: PIXI.Graphics;
     gameover: boolean;
     lastNetworkUpdateAt: number;
     debugDrawEnabled: boolean;
@@ -6006,6 +6077,7 @@ declare class Game extends PIXI.Container {
     };
     player: any;
     wheelListener: (a: any) => void;
+    throwHeldSince: number | null | undefined;
     fireHeld: boolean | undefined;
     roleChangeAt: any;
     joinSpawnAt: any;
@@ -6015,6 +6087,8 @@ declare class Game extends PIXI.Container {
     onStatus(a: any): void;
     mute(a: any): void;
     step(a: any): void;
+    static isChargedThrowable(a: any): boolean;
+    updateThrowIndicator /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     updateConnectionWarning(): void;
     showReticleLine(): void;
     hideReticleLine(): void;
@@ -6121,6 +6195,8 @@ declare class Game extends PIXI.Container {
 declare namespace Game {
     var ZOMBIE_COUNTDOWN_MILESTONES: number[];
     var CONNECTION_PROBLEM_MS: number;
+    var THROW_INDICATOR_START: number;
+    var THROW_INDICATOR_LENGTH: number;
     var INFO_ZS_WAITING_FOR_WAVE: string;
     var GetVictoryWeapon: (a: any, b?: any) => any;
     var formatElapsedTime: (a: any) => string;
@@ -8789,6 +8865,8 @@ declare class Agent extends GameObject {
     facing: number;
     shotReadyAt: any;
     ammoReloadType: any;
+    ammoReloadExtra: number;
+    ammoReloadDuration: number;
     ammoReloadStartedAt: number;
     health: number;
     alive: boolean;
@@ -8867,7 +8945,7 @@ declare class Agent extends GameObject {
     init(): void;
     applyState(a: any): void | null;
     setAnimations(a: any): void;
-    setAmmoReload /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    setAmmoReload(a: any, b: any, c?: boolean): void;
     equip(a: any): void;
     carryPrimary(a: any): void;
     carrySecondary(a: any): void;
@@ -9188,6 +9266,7 @@ declare class Player extends Agent {
     beltPresentedAt: number | undefined;
     beltDeathAt: number | null | undefined;
     beltPreviousVx: PIXI.Point | undefined;
+    spawnFadePending: boolean | undefined;
     crouchOffsetWeapon: any;
     weaponArmAlignmentOrigin: PIXI.Point | undefined;
     weaponArmAlignmentEnd: PIXI.Point | undefined;
@@ -9253,7 +9332,6 @@ declare class Player extends Agent {
     } | undefined;
     armDrawOrderParent: any;
     armDrawOrderFacingLeft: any;
-    spawnFadePending: boolean | undefined;
     bowAimMotion: number | undefined;
     breathBaseHeadX: any;
     breathBaseHeadY: any;
@@ -9302,6 +9380,7 @@ declare class Player extends Agent {
     syncPaintSmudges(): void;
     setLimbGoreTexture /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     restoreDeadUpperArmOrientation(): void;
+    completeSpawnFade(): void;
     setAlive(a: any): {
         i: any;
     };
@@ -10966,6 +11045,9 @@ declare namespace Canvas {
     var CAMERA_MOTION_TRAIL_SECONDS: number;
     var CAMERA_MOTION_MAX_PIXELS: number;
     var CAMERA_MOTION_RESPONSE: number;
+    var TOUCH_AIM_LOOK_X: number;
+    var TOUCH_AIM_LOOK_UP: number;
+    var TOUCH_AIM_LOOK_DOWN: number;
     var CAMERA_MOTION_SNAP_PIXELS: number;
     var CAMERA_STANCE_FRAMES: number;
     var MAX_SHOCKWAVE_FILTERS: number;
@@ -18481,6 +18563,7 @@ declare class PhysicsWorker {
     submerge /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     surface /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     beginContact(a: any): void;
+    passesThroughActor(a: any): boolean;
     preSolve(a: any): void;
     updatePlayerLinearDamping(a: any): void;
     preparePlayerTerrainContacts(): void;
@@ -18517,6 +18600,7 @@ declare namespace PhysicsWorker {
     var RaycastBulletCollectCallbackInst: RaycastBulletCollectCallback;
     var ActiveQueryParticle: any;
     var TimeDelta: number;
+    var PassThroughActorCategories: number;
     var PACKED_UPDATE_STRIDE: number;
     var PACKED_UPDATE_TRANSFORM: number;
     var PACKED_UPDATE_CONTACTS: number;
@@ -19480,6 +19564,6 @@ declare var uidpool: {};
 declare namespace UIDpool {
     var CHARSET: string[];
 }
-export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountMenuStyle, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, Annihilator, AnnihilatorAmmo, AnnihilatorAmmoSprite, AnnihilatorMissile, AnnihilatorMissileSprite, AnnihilatorRocketSprite, AnnihilatorSprite, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BalaclavaHeadFit, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BulletTrails, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, CachedTextSprite, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, CanDisplayFaceGear, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentGearPreview, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationCatalog, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleGesture, DeagleSprite, DefaultLegAnchors, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, Dragunov, DragunovBullet, DragunovSprite, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyJetpack, EnergyShell, EnergyVacuum, EnergyZombieJet, EntityCategory, ErrorReporter, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionEffects, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FindWeaponCustomization, FistSprite, FitBalaclava, Flag, FlagSprite, FlakShell, FlakShellSprite, FlakShrapnel, FlakShrapnelSprite, Flakstorm, FlakstormSprite, FlameEffects, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, FxTextures, GAME_MODES, GEAR_TYPES, Game, GameAttribute, GameCommands, GameLobbyChatPanel, GameLobbyClient, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GearMenuSurface, GearPublishPanel, GetFlippedRagdollTextureId, GetHeadTextureId, GetLegAnchor, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, GetZombieTexture, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadCompatibility, HeadRaise, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineGunPrefab, LineGunSprite, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LobbyChatPanel, LobbyConfigPanel, LobbyDropdown, LobbyInvitationBanner, LobbyInvitePanel, LobbyOverlayPanel, LobbyPlayerList, LobbyTextButton, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapMenuSurface, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, MixPaintColor, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NearLegBootAnchorDrop, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, PaintBalloon, PaintBalloonIcon, PaintBalloonSprite, PaintBeamSprite, PaintEffects, PaintLine, PaintLineLayer, PaintLineSprite, PaintShotScale, PaintSplashRope, PaintTeamColor, PaintTextures, Paintball, PaintballGunPrefab, PaintballGunSprite, PaintballSprite, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectilePhysics, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RemoteHitTimeline, RemoteSnapshotClock, RenameMenu, RenderStats, RendererFactory, RewardGoldFX, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketEffects, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, SawedOff, SawedOffPellet, SawedOffPelletSprite, SawedOffSprite, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SludgeGlob, SludgeGlobSprite, SludgePuddle, SludgePuddleSprite, Sludger, SludgerSprite, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialChat, SocialChatConnection, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuListRow, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, Species, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TeamTrail, TerrainSeams, TextCache, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, VictoryPodium, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accountmenustyle, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, annihilatorLethalRadius, annihilatorsprite, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, bullettrails, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationcatalog, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, deaglegesture, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyjetpack, energyshell, energyvacuum, energyzombiejet, entitycategory, errorreporter, escapemenu, eventdispatcher, explosioneffects, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, flameeffects, fontstyle, fxtextures, game, gameattribute, gamelobby, gamemenu, gamemodes, gameobject, gameshape, gearData, gearKey, gearPrefix, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, lobbychat, lobbypanels, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, paintballprefabs, paintballsprites, painteffects, paintlinelayer, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectilephysics, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, remotehittimeline, renamemenu, rendererfactory, renderstats, rewardgoldfx, rewardsmenu, rocketeffects, sawedoffsprite, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, species, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, teamtrail, terrainseams, textcache, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, victorypodium, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
+export { AK47, AK47Ammo, AK47AmmoSprite, AK47Bullet, AK47BulletSprite, AK47Sprite, APIClient, AcceptClanInvitationItem, AcceptInvitationItem, AccountMenuStyle, AccountTab, ActionTable, ActorHitboxes, Agent, AgentMap, AmmoBar, Analytics, AnalyticsConsent, AnalyticsPanels, AnalyticsTracker, AnchorBase, Animation, Animations, Annihilator, AnnihilatorAmmo, AnnihilatorAmmoSprite, AnnihilatorMissile, AnnihilatorMissileSprite, AnnihilatorRocketSprite, AnnihilatorSprite, App, ArmLeftLowerSprite, ArmLeftUpperSprite, ArmRightLowerSprite, ArmRightUpperSprite, Arrow, ArrowSprite, AssetLoader, AudioEffects, AudioFiles, AudioManager, AudioPackCompressedURL, AudioPackURL, Background, BalaclavaHeadFit, BallCharge, BallSprite, BandanaRope, Barrett, BarrettAmmo, BarrettAmmoSprite, BarrettBullet, BarrettBulletSprite, BarrettSprite, Base62Charset, Base62Decode, Base62Encode, BaseSprite, BlackCape, BlueCape, BodyFactory, Boomerang, BoomerangGun, BoomerangGunSprite, BoomerangSprite, Bouncyball, Bow, BowSprite, Box2DDebugDraw, BulletTrailRope, BulletTrails, BurnFlameRope, Button, CTFLeaderboardRow, CTFRowLabel, CachedTextSprite, Camera, CamoCape, CamoCapeDesert, CamoCapeJungle, CamoCapeSnow, CamoCapeWinter, CanDisplayFaceGear, Canvas, CanvasEvent, CapeBlack, Carbine, CarbineBullet, CarbineBulletSprite, CarbineSprite, Chainsaw, ChainsawAmmo, ChainsawAmmoSprite, ChainsawSprite, ChatAnimation, ChatClient, ChatEndAnimation, ChatWindow, Checkbox, CircleSprite, Clamp, ClanBrowserMenu, ClanBrowserScrollbar, ClanChatMenu, ClanMemberItem, ClanMemberListScrollbar, ClanMemberMenuItem, ClanMenu, ClanPhotoPanel, ClanService, ClanTab, ClanTableRow, Client, ClientPerformanceTracker, ClusterGrenadeIcon, ClusterNade, ClusterNadeBox, ClusterNadeBoxSprite, ClusterNadeFragment, ClusterNadeFragmentSprite, ClusterNadeSprite, ColorPicker, CommandConsole, ContentActionButton, ContentGearPreview, ContentMenu, ControlsTab, CrouchLeftAnimation, CrouchMoveLeftAnimation, CrouchMoveRightAnimation, CrouchRightAnimation, CustomEvent, CustomFace, Customization, CustomizationCatalog, CustomizationMenu, CustomizationSuccessFX, DBRowLabel, DMLeaderboardRow, DMRowLabel, DamageVignette, DamageVolumeIndex, Deagle, DeagleGesture, DeagleSprite, DefaultLegAnchors, DesertEagle, DesertEagleAmmo, DesertEagleAmmoSprite, DesertEagleBullet, DesertEagleBulletSprite, DesertEagleSprite, DevLog, Dragunov, DragunovBullet, DragunovSprite, DropDisplayTableRow, DropSelectionListTableRow, Dropdown, EditorSession, EditorsPanel, Energy, EnergyChaos, EnergyDragon, EnergyJetFeet, EnergyJetFeet2, EnergyJetFeet3, EnergyJetFeetRope, EnergyJetpack, EnergyShell, EnergyVacuum, EnergyZombieJet, EntityCategory, ErrorReporter, EscapeMenu, EscapeMenuButton, EventDispatcher, ExplosionEffects, ExplosionRayCallback, Extra, FaceBlueFireEyes, FaceFireEyes, FaceGreenFireEyes, FaceOrangeFireEyes, FacePinkFireEyes, FaceRedFireEyes, FaceYellowFireEyes, FallLeftAnimation, FallRightAnimation, FastDebugLineRenderer, FastRope, Feature, FeedbackPanel, FindWeaponCustomization, FistSprite, FitBalaclava, Flag, FlagSprite, FlakShell, FlakShellSprite, FlakShrapnel, FlakShrapnelSprite, Flakstorm, FlakstormSprite, FlameEffects, FlameThrower, FlameThrowerAmmo, FlameThrowerAmmoSprite, FlameThrowerLiquid, FlameThrowerLiquidSprite, FlameThrowerSprite, FontStyle, FraglineAnalyticsConfig, FriendDropdown, FriendDropdownActionRow, FriendItem, FxTextures, GAME_MODES, GEAR_TYPES, Game, GameAttribute, GameCommands, GameLobbyChatPanel, GameLobbyClient, GameMenu, GameObject, GameShape, GameStatus, GameoverDisplay, GearMenuSurface, GearPublishPanel, GetFlippedRagdollTextureId, GetHeadTextureId, GetLegAnchor, GetRagdollTexture, GetRagdollTextureId, GetZombieHeadTextureId, GetZombieTexture, Ghost, GhostBotDebris1, GhostBotDebris2, GhostBotDebris3, GhostBotDebrisSprite1, GhostBotDebrisSprite2, GhostBotDebrisSprite3, GhostLaser, GhostLaserSprite, GhostSprite, GlobalRankingScrollbar, GlobalRankingTableRow, Gold, GoldCount, GoldSprite, GoldWindow, GoreRibbon, Gradient, GraphicsTab, GreenCape, GuestMenu, GuestMenuButton, GuestProfileMenu, HandGrenadeIcon, HeadCompatibility, HeadRaise, HeadSprite, HealthBar, HealthBox, HealthBoxSprite, HighscoreMenu, HoldGunLeftAnimation, HoldGunRightAnimation, Hud, HudEvent, IOItem, IOScrollbar, ImgButton, IncompleteAccountTab, InitializeAudioEffects, InputDevice, InputField, InputState, Interpreter, Intersect, Intersect3, ItemList, ItemMap, ItemOverview, ItemPicker, JetBar, JetFeetFlameRope, JetLeftAnimation, JetRightAnimation, JumpLeft2Animation, JumpLeftAnimation, JumpRight2Animation, JumpRightAnimation, KeyInput, Label, LabelContainer, LaserGun, LaserGunAmmo, LaserGunAmmoSprite, LaserGunBullet, LaserGunBulletSprite, LaserGunSprite, LauncherNade, LauncherNadeSprite, Layer, Leaderboard, Leaderboard1V1, LeaderboardCTF, LeaderboardDB, LeaderboardDBRow, LeaderboardDM, LeaderboardRow, LeaderboardTDM, LeaderboardTDMRow, LeaderboardTR, LegLeftLowerSprite, LegLeftUpperSprite, LegRightLowerSprite, LegRightUpperSprite, LevelBar, LightningBeamShader, LineGunPrefab, LineGunSprite, LineSprite, LinkGun, LinkGunAmmo, LinkGunAmmoSprite, LinkGunSprite, LoadingMenu, LobbyChatPanel, LobbyConfigPanel, LobbyDropdown, LobbyInvitationBanner, LobbyInvitePanel, LobbyOverlayPanel, LobbyPlayerList, LobbyTextButton, LocalMovementPrediction, LoginActionButton, LoginMenu, LogoutMenu, M60, M60Bullet, M60BulletSprite, M60Sprite, MAC10, MAC10Ammo, MAC10AmmoSprite, MAC10Bullet, MAC10BulletSprite, MAC10Sprite, MAP_TYPES, MAX_SIMULTANEOUS_SOUND_INSTANCES, MAX_SIMULTANEOUS_WEAPON_SOUND_INSTANCES, MagazineWeaponSprite, MagicLeftAnimation, MagicRightAnimation, Manager, MapContentPanel, MapDisplayTableRow, MapMenuSurface, MapPublishPanel, MapSelectionListTableRow, MaskBits, MatchItem, MedalsTab, MemberBrowserMenu, MemberBrowserScrollbar, MemberDropdown, MemberDropdownActionRow, MemberItem, MemberListScrollbar, MemberMenu, MemberMenuButton, MemberTableRow, Menu, MenuActionButton, MenuBackground, MenuPanelViewport, Minigun, MinigunAmmo, MinigunAmmoSprite, MinigunBullet, MinigunBulletSprite, MinigunSprite, Minimap, MinimizedWeaponMenu, MixPaintColor, ModelEvent, Nade, NadeBox, NadeBoxSprite, NadeLauncher, NadeLauncherAmmo, NadeLauncherAmmoSprite, NadeLauncherSprite, NadeSprite, NearLegBootAnchorDrop, NetworkBinaryReader, NetworkUpdateBuffer, NewsItem, NewsMenu, NewsScrollbar, OneVOneLeaderboardRow, OneVOneRowLabel, OrangeCape, OrderedContainer, OverviewTab, PC, PE, PP, PVPClient, PVPMenu, PVPResultMenu, PaintBalloon, PaintBalloonIcon, PaintBalloonSprite, PaintBeamSprite, PaintEffects, PaintLine, PaintLineLayer, PaintLineSprite, PaintShotScale, PaintSplashRope, PaintTeamColor, PaintTextures, Paintball, PaintballGunPrefab, PaintballGunSprite, PaintballSprite, Parallax, ParticleContainer, ParticleEffects, ParticleEmitter, PartnerMenu, PhysicsMessage, PhysicsWorker, PinkCape, Player, PlayerDropdown, PlayerDropdownActionRow, PlayerEvent, PredictionController, Prefab, PrefabClasses, PrefabList, Prefabs, ProfileActionButton, ProfileMenu, ProjectilePhysics, ProjectileTrailRope, ProneEndAnimation, ProneLeftAnimation, ProneMoveLeftAnimation, ProneMoveRightAnimation, ProneRightAnimation, ProneScopeGunLeftAnimation, ProneScopeGunRightAnimation, Protocol, PulseGun, PulseGunAmmo, PulseGunAmmoSprite, PulseGunBullet, PulseGunBulletSprite, PulseGunSprite, PunchLeftAnimation, PunchRightAnimation, PurchasePanel, QuadMesh, RLRocket, RLRocketSprite, RPG, RPGAmmo, RPGAmmoSprite, RPGRocket, RPGRocketSprite, RPGSprite, RandomBrightColor, RankingMenu, RawHowl, RayParticle, RaycastBulletCallback, RaycastBulletCollectCallback, RaycastCallback, RectangleSprite, RedCape, RedCapeCenturion, RegisterMenu, Registry, ReloadLeftAnimation, ReloadRightAnimation, RemoteHitTimeline, RemoteSnapshotClock, RenameMenu, RenderStats, RendererFactory, RewardGoldFX, RewardRow, RewardsMenu, Rifle, RifleAmmo, RifleAmmoSprite, RifleBullet, RifleBulletSprite, RifleSprite, RocketEffects, RocketLauncher, RocketLauncherSprite, RollLeftAnimation, RollRightAnimation, RowLabel, SMGAmmo, SMGAmmoSprite, SaluteLeftAnimation, SaluteRightAnimation, SawedOff, SawedOffPellet, SawedOffPelletSprite, SawedOffSprite, ScopeGunLeftAnimation, ScopeGunRightAnimation, SelectionListScrollbar, ServerCreationMenu, ServerCustomizationMenu, ServerDetailMenu, ServerListMenu, ServerListScrollbar, ServerListTableRow, ServerService, ServiceBase, SettingsPanel, SettingsTab, ShapeCircle, ShapeCompound, ShapeOptions, ShapePlayer, ShapeRectangle, ShapeZombie, ShockRifle, ShockRifleAmmo, ShockRifleAmmoSprite, ShockRifleBullet, ShockRifleBulletSprite, ShockRifleSprite, ShockRifleTailRope, ShockwaveFilter, ShootBowLeftAnimation, ShootBowRightAnimation, ShortAngle, Shotgun, ShotgunAmmo, ShotgunAmmoSprite, ShotgunPellet, ShotgunPelletSprite, ShotgunSprite, ShurikenBlade, ShurikenBladeSprite, ShurikenBox, ShurikenBoxSprite, ShurikenIcon, SkillRankingScrollbar, SkillRankingTableRow, Slider, SludgeGlob, SludgeGlobSprite, SludgePuddle, SludgePuddleSprite, Sludger, SludgerSprite, SnowballBox, SnowballBoxSprite, SnowballIcon, SnowballProjectile, SnowballProjectileSprite, SocialChat, SocialChatConnection, SocialMemberDropdown, SocialMemberDropdownActionRow, SocialMenu, SocialMenuListRow, SocialMenuScrollbar, SocialMenuTabButton, SocialMenuToggleButton, SoundTab, Species, SplitCape, SplitCape2, SplitCape3, SplitCape4, SplitCape5, SpriteFactory, SpriteMap, StandAnimation, StateChange, Stats, SubmachineGun, SubmachineGunBullet, SubmachineGunBulletSprite, SubmachineGunSprite, SwitchLeftAnimation, SwitchRightAnimation, TDMRowLabel, TRLeaderboardRow, TRRowLabel, Team, TeamTrail, TerrainSeams, TextCache, ThrowCharge, ThrowLeftAnimation, ThrowNadeLeftAnimation, ThrowNadeRightAnimation, ThrowRightAnimation, Thumbnail, Timer, TinyShrapnel, TinyShrapnelSprite, ToPrecision, TorsoLowerSprite, TorsoUpperSprite, TossLeftAnimation, TossRightAnimation, TouchControls, TouchSpectator, TouchStick, TournamentAPI, TournamentMedals, TournamentMenu, TrailSprite, Trainer, UIDpool, UITheme, UPResetMenu, User, UserInput, UserMenu, UserService, Uzi, UziBullet, UziBulletSprite, UziSprite, VictoryPodium, Visualizer, WalkLeftAnimation, WalkRightAnimation, WaveLeftAnimation, WaveRightAnimation, WeaponBashLeftAnimation, WeaponBashRightAnimation, WeaponButton, WeaponContainer, WeaponContentPanel, WeaponDisplayTableRow, WeaponItem, WeaponListItem, WeaponListScrollbar, WeaponMenu, WeaponMenuPreview, WeaponPrediction, WeaponPredictionController, WeaponSelectionListTableRow, WeaponStatsScrollbar, WeaponStatsTableRow, WeaponTypeStatsScrollbar, WeaponTypeStatsTableRow, X75, X75Ammo, X75AmmoSprite, X75Nade, X75NadeSprite, X75Sprite, XPProgression, YellowCape, Zombie, ZombieArmLeftLowerSprite, ZombieArmLeftUpperSprite, ZombieArmRightLowerSprite, ZombieArmRightUpperSprite, ZombieHeadSprite, ZombieLegLeftLowerSprite, ZombieLegLeftUpperSprite, ZombieLegRightLowerSprite, ZombieLegRightUpperSprite, ZombieTorsoLowerSprite, ZombieTorsoUpperSprite, accountmenustyle, accounttab, actorhitboxes, agent, analytics, analyticsconfig, analyticsconsent, analyticstracker, animations, annihilatorLethalRadius, annihilatorsprite, apiConfig, apiDomain, apiLocal, apiclient, app, arrowsInv, assetloader, audiofiles, audiofx, audiopack, azertyMap, b2AABB, b2Body, b2BodyDef, b2BodyType, b2CircleShape, b2ContactListener, b2DestructionListener, b2Filter, b2FilterData, b2Fixture, b2FixtureDef, b2Joint, b2PolygonShape, b2RevoluteJointDef, b2Vec2, b2WeldJointDef, b2World, b2WorldManifold, background, ballcharge, bandanarope, basesprite, blackcape, bluecape, bodyfactory, box2ddebugdraw, bullettrailrope, bullettrails, burnflamerope, button, camocape, camocape_desert, camocape_jungle, camocape_snow, camocape_winter, canvas, canvasevent, cape_black, characterMap, characterMapCTRL, characterMapShift, chatclient, checkbox, clanbrowsermenu, clanchatmenu, clanmenu, clanphotopanel, clanservice, clantab, client, clientperformancetracker, clustergrenadeicon, colorpicker, commandconsole, contentmenu, controlstab, createCappedHowl, createWeaponHowl, ctf_leaderboard, customevent, customface, customizationcatalog, customizationmenu, customizationsuccessfx, damagevignette, damagevolumeindex, db_leaderboard, deaglegesture, dm_leaderboard, dp, dropdown, editorsession, editorspanel, energy, energychaos, energydragon, energyjetfeet, energyjetfeet2, energyjetfeet3, energyjetfeetrope, energyjetpack, energyshell, energyvacuum, energyzombiejet, entitycategory, errorreporter, escapemenu, eventdispatcher, explosioneffects, extra, facebluefireeyes, facefireeyes, facegreenfireeyes, faceorangefireeyes, facepinkfireeyes, faceredfireeyes, faceyellowfireeyes, fastAtan2, fastSplice, fastdebuglinerenderer, fastrope, feature, feedbackpanel, flag, flameeffects, fontstyle, fxtextures, game, gameattribute, gamelobby, gamemenu, gamemodes, gameobject, gameshape, gearData, gearKey, gearPrefix, getDir, getDomain, ghost, goldcount, goreribbon, gradient, graphicstab, greencape, guestmenu, guestprofilemenu, handgrenadeicon, highscoremenu, imgbutton, incompleteaccounttab, inputdevice, inputfield, inputstate, itemlist, itemoverview, itempicker, keyinput, label, labelcontainer, layer, leaderboard, levelbar, lightningbeamshader, loadingmenu, lobbychat, lobbypanels, loginmenu, logoutmenu, mag, magazineweaponsprite, manager, mapType, mapcontentpanel, mappublishpanel, medalstab, memberbrowsermenu, membermenu, menu, menubackground, menupanelviewport, modelevent, newsmenu, norm, numberWithPeriods, onevone_leaderboard, orangecape, orderedcontainer, overviewtab, paintballprefabs, paintballsprites, painteffects, paintlinelayer, parallax, parsedUrl, particlecontainer, particleeffects, partnermenu, perp, physicsconstants, physicsmessage, physicsworker, pinkcape, player, playerdropdown, playerevent, polyArea, polyAreaTri, polyBounds, polyCenter, polyCenterArr, polyRotateCopy, predictioncontroller, prefablist, profileactionbutton, profilemenu, project, projectilephysics, projectiletrailrope, protocol, purchasepanel, pvpclient, pvpmenu, pvpresultmenu, quadmesh, rankingmenu, rayparticle, rdScale, rdZombieScale, redcape, redcapecenturion, reducedLowerArmTextureScale, registermenu, registry, remotehittimeline, renamemenu, rendererfactory, renderstats, rewardgoldfx, rewardsmenu, rocketeffects, sawedoffsprite, servercreationmenu, servercustomizationmenu, serverdetailmenu, serverlistmenu, serverservice, servicebase, setCookie, settingspanel, settingstab, shapecircle, shapecompound, shapeoptions, shapeplayer, shaperectangle, shapezombie, shockrifletailrope, shockwavefilter, shurikenicon, slider, snowballicon, socialmenu, soundtab, species, splitcape, splitcape2, splitcape3, splitcape4, splitcape5, statechange, stats, tdm_leaderboard, team, teamtrail, terrainseams, textcache, throwcharge, thumbnail, timer, touchcontrols, tournamentapi, tournamentmedals, tournamentmenu, tr_leaderboard, trainer, uidpool, uintToArr, upresetmenu, userinput, usermenu, userservice, util, victorypodium, visualizer, weaponcontainer, weaponcontentpanel, weaponprediction, weaponpredictioncontroller, whitelabel, xorshift128, xorshift128_seed, xpprogression, yellowcape, zombie };
 export * as PIXI from "pixi.js";
 //# sourceMappingURL=lib.d.ts.map
