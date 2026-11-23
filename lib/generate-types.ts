@@ -1598,7 +1598,11 @@ function validateDeclarationMap(
   const gameText = fs.readFileSync(path.join(WORK, "game.js"), "utf8");
   const gameStarts = lineStarts(gameText);
   const dtsStarts = dtsStartsAfter;
-  const check = (regex: RegExp, expected: string, label: string): boolean => {
+  const check = (
+    regex: RegExp,
+    expected: string | ((window: string) => boolean),
+    label: string,
+  ): boolean => {
     const index = finalDts.search(regex);
     if (index < 0) {
       console.log(`map check: ${label} not found in dts`);
@@ -1636,9 +1640,14 @@ function validateDeclarationMap(
       .slice(offset, offset + 60)
       .replace(/\s+/g, " ")
       .trim();
-    const ok = window.includes(expected);
+    const ok =
+      typeof expected === "function"
+        ? expected(window)
+        : window.includes(expected);
+    const expectedDesc =
+      typeof expected === "function" ? "predicate" : `\`${expected}\``;
     console.log(
-      `map check ${label}: ${ok ? "ok" : `MISSING \`${expected}\``} (game.js:${candidate[2] + 1}:${candidate[3]}) | ${context.slice(0, 50)}`,
+      `map check ${label}: ${ok ? "ok" : `MISMATCH ${expectedDesc}`} (game.js:${candidate[2] + 1}:${candidate[3]}) | ${context.slice(0, 50)}`,
     );
     return ok;
   };
@@ -1659,8 +1668,22 @@ function validateDeclarationMap(
       label: "FontStyle.LargeDefault",
     },
     {
+      re: /\bdeclare class Game extends\b/,
+      expected: "class Game extends PIXI.Container",
+      label: "Game class",
+    },
+    {
+      // The `var Muted: Set` row itself never carries a mapping (tsc only maps
+      // JSDoc-derived type tokens on lifted namespace vars), so this
+      // deliberately exercises the tsserver-style fallback to the nearest
+      // preceding mapped row. Which row that is depends on the bundle: the
+      // `declare namespace Game {` row maps to the class header, while a
+      // JSDoc-annotated var row (optionalizeParams) maps into its own
+      // static-assignment block. Both are valid outcomes inside the Game
+      // implementation - only gross map corruption should fail this.
       re: /\bvar Muted: Set/,
-      expected: "class Game extends",
+      expected: (window: string) =>
+        window.includes("class Game extends") || /\bGame\.\w+ =/.test(window),
       label: "Game.Muted (fallback)",
     },
   ];

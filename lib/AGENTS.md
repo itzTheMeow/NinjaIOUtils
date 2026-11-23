@@ -117,7 +117,12 @@ TypeScript executed by bun directly — no build step for the generator itself.
 - **Validation uses no hardcoded line numbers.** Checks are regex-anchored on
   the dts + ±3000-char token windows in the game chunk, plus a full structural
   comparison of every tsc mapping. Bundle updates shift everything; the checks
-  must stay position-independent.
+  must stay position-independent. Beware tsc maps JSDoc-derived type tokens
+  (from `optionalizeParams` headers) **into the comment text itself**, so
+  namespace var rows can gain segments pointing inside their JSDoc — the
+  `Game.Muted (fallback)` check therefore accepts both fallback outcomes
+  (namespace row → class header, or an annotated var row → its static block)
+  instead of a single expected string.
 - **Vendor version bumps come from bundle banners**, not manual edits — update
   `VERSION_DETECTORS` if the banner format changes.
 - `MEMBER_OVERRIDES` is for userscript-attached runtime fields, modeled
