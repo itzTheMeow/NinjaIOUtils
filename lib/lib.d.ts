@@ -1167,6 +1167,7 @@ declare namespace Registry {
             hideHud: boolean;
             hideStatusBar: boolean;
             hideStatusBarResizeButton: boolean;
+            hideThrowIndicator: boolean;
             showPingAndFps: boolean;
             chatTextSize: number;
             resolution: number;
@@ -6012,10 +6013,9 @@ declare class ThrowCharge {
     static isHeld(a: any): boolean;
 }
 declare namespace ThrowCharge {
-    var TAP_TICKS: number;
-    var RISE_TICKS: number;
+    var FULL_TICKS: number;
+    var SHOW_TICKS: number;
     var MAX: number;
-    var MIN: number;
 }
 declare var game: {};
 declare class Game extends PIXI.Container {
@@ -19154,6 +19154,7 @@ declare class GraphicsTab extends PIXI.Container {
     hideStatusBar: Checkbox;
     hideStatusBarResizeButton: Checkbox;
     hideHud: Checkbox;
+    hideThrowIndicator: Checkbox;
     constructor(a: any, b?: number);
     getSettings(): any;
     stylizeSlider(a: any): void;
