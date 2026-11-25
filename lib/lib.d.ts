@@ -7733,6 +7733,7 @@ declare class App extends PIXI.Container {
     adElement: HTMLElement | null;
     audioLoaded: any;
     view: any;
+    backgroundFramePending: boolean | undefined;
     interpreter: Interpreter | undefined;
     cursor: PIXI.Cursor | (string & {}) | undefined;
     continueButton: PIXI.Graphics | undefined;
@@ -7753,6 +7754,8 @@ declare class App extends PIXI.Container {
     onConnect(): void;
     onDisconnect(): Promise<void>;
     onStep(a: any): void;
+    shouldRenderFrame(): boolean;
+    hasPendingUIChanges(a: any): boolean;
     onStepDev(a: any): void;
     onRequestChooseServer /** @param {any} a @param {any} [b] */(a: any, b?: any): Promise<void>;
     onLayerJoinServer(a: any): void;
@@ -7839,7 +7842,7 @@ declare namespace App {
     var GuardAudioContextResume: () => void;
     var ShowPreloaderError: (a: any) => void;
     var RemovePreloader: () => void;
-    var GenerateTexturesFromSheet: (a: any) => void;
+    var RegisterRepeatingTextures: (a: any) => void;
     var LoadSupplementalTextures: () => Promise<void>;
     var LoadEditorTextures: () => Promise<void>;
     var LoadFonts: () => Promise<void>;
@@ -10221,6 +10224,10 @@ declare class PaintLineLayer {
     drawing: Set<any>;
     shrinking: Set<any>;
     tips: Map<any, any>;
+    viewX: any;
+    viewY: any;
+    viewWidth: any;
+    viewHeight: any;
     constructor(a: any, b?: any);
     ensureLayers(): void;
     key(a: any): string;
@@ -10241,6 +10248,8 @@ declare class PaintLineLayer {
     rebatch /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     wet /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     remove(a: any): void;
+    updateChunkVisibility(a: any): void;
+    updateViewport(): void;
     flush(): void;
     clear(): void;
 }
@@ -18290,6 +18299,7 @@ declare class DamageVolumeIndex {
     sampleProjectedPoseAt(a: any, b: any, c: any, d: any, e: any, f?: any): boolean;
     readPublishedPosition /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     raycastProjectedMotion(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h?: any, k?: number): boolean;
+    static querySweepCandidates /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static sweepBodyFraction(a: any, b: any, c: any, d: any, e: any, f: any, g: any, h: any, k: any, l?: any, m?: {
         sweep: null;
     }): number;
@@ -18562,6 +18572,8 @@ declare class PhysicsWorker {
     applyForce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     clearForces(): void;
     submerge /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static shiftRagdoll /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    removeFluid(a: any): void;
     surface /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     beginContact(a: any): void;
     passesThroughActor(a: any): boolean;
@@ -18601,6 +18613,10 @@ declare namespace PhysicsWorker {
     var RaycastBulletCollectCallbackInst: RaycastBulletCollectCallback;
     var ActiveQueryParticle: any;
     var TimeDelta: number;
+    var RagdollShift: {
+        x: number;
+        y: number;
+    };
     var PassThroughActorCategories: number;
     var PACKED_UPDATE_STRIDE: number;
     var PACKED_UPDATE_TRANSFORM: number;
