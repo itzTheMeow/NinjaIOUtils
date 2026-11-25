@@ -2151,6 +2151,7 @@ declare class Visualizer extends PIXI.Container {
     syncPlayerState(): void;
     layoutPreview(): void;
     getBodyPartPoint /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
+    destroy(a: any): void;
     initialize(): void;
     drawBackground(a?: boolean): void;
     applyCustomization(a: any): void;
@@ -6050,6 +6051,7 @@ declare class Game extends PIXI.Container {
     busyTimeout: number | null;
     reticleLine: PIXI.Sprite | undefined;
     throwIndicator: PIXI.Graphics;
+    finalFrameFrozen: boolean;
     gameover: boolean;
     lastNetworkUpdateAt: number;
     debugDrawEnabled: boolean;
@@ -10405,10 +10407,10 @@ declare class BulletTrails {
     measure(a: any): void;
     start(a: any): void;
     followHeading(a: any): void;
-    alignFlight(a: any): void;
+    moveHead /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     beginContrail(a: any): void;
     contrailPoint /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
-    endContrail(a: any): void;
+    endContrail(a: any, b?: any, c?: any): void;
     contrailU(a: any): number;
     drawContrails(): void;
     addPoint /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
@@ -11030,6 +11032,7 @@ declare class Canvas extends PIXI.EventEmitter {
     updateCameraMotion /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     applyZIndex(a: any): void;
     applyDisplayZIndex /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    updateFrozenCamera(): void;
     update /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     centerCamera(): void;
     updateWorldFilterArea(): void;
@@ -13147,7 +13150,7 @@ declare class Label extends PIXI.Container {
     hideSubTitle(): void;
     stealthMode(a: any): void;
     updateHealth(): void;
-    update /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
+    update(a: any, b: any, c: any, d: any, e?: boolean): void;
 }
 declare namespace Label {
     var HealthBarTextures: any[];
@@ -13165,7 +13168,7 @@ declare class LabelContainer extends PIXI.Container {
         bottom: number;
     };
     constructor();
-    update /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    update(a: any, b: any, c: any, d?: boolean): void;
     addFlagIndicator(a: any): void;
     removeFlagIndicator(a: any): void;
     updateFlagIndicators /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
@@ -14555,10 +14558,15 @@ declare class VictoryPodium extends PIXI.Container {
     destroy(a: any): void;
     buildDeathmatch(): void;
     buildTeam(): void;
+    addFallen(a: any, b: any, c?: boolean): void;
+    buildOverrun(): void;
     buildZombie(): void;
     createBlock /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): any;
     createFigure /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     createCorpse /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
+    startSurvivorCollapse(a: any): void;
+    updateSurvivorCollapse /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    groundCloth /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     attachPose /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     attachArms(a: any): void;
     driveArms(a: any): void;
