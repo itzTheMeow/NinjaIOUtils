@@ -8919,6 +8919,7 @@ declare class Agent extends GameObject {
         [StateChange.Agent.JET_STOP]: () => void;
         [StateChange.Agent.HEALTH]: (g: any) => void;
         [StateChange.Agent.BURN]: (g: any) => void;
+        [StateChange.Agent.SLUDGE]: (g: any) => void;
         [StateChange.Agent.BALL_CHARGE]: (g: any) => void;
         [StateChange.Item.RELOAD]: (g: any) => void;
         [StateChange.Item.INIT_USE]: (g: any) => {
@@ -8943,6 +8944,7 @@ declare class Agent extends GameObject {
         [StateChange.Item.REMOVE_BELT]: (g: any) => void;
         [StateChange.Item.GORE]: (g: any) => void;
     };
+    deathFlail: boolean;
     ballCharge: boolean;
     teamTrail: any;
     suppressTerrainGore: boolean | undefined;
@@ -9506,6 +9508,8 @@ declare namespace Player {
     export var OFFSCREEN_RAGDOLL_VELOCITY_ITERATIONS: number;
     export var OFFSCREEN_RAGDOLL_SOLVE_INTERVAL_MS: number;
     export var DEAD_RAGDOLL_VELOCITY_ITERATIONS: number;
+    export var DEAD_BODY_DESPAWN_MS: number;
+    export var DEAD_BODY_FADE_MS: number;
     export var ZERO_VECTOR: {
         x: number;
         y: number;
@@ -10788,6 +10792,7 @@ declare class Canvas extends PIXI.EventEmitter {
     bulletTrails: BulletTrails | undefined;
     explosionEffects: ExplosionEffects | undefined;
     cameraMotionReset: boolean | undefined;
+    corpseFlames: any;
     localBulletSpawnPoint: PIXI.Point | undefined;
     localBulletSpawnOrigin: PIXI.Point | undefined;
     deagleSpawnPoint: PIXI.Point | undefined;
@@ -10939,6 +10944,11 @@ declare class Canvas extends PIXI.EventEmitter {
     clearStuckArrows(a: any): void;
     addSludgeCluster /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     addSludgeDeathBubbles /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    updateCorpseSpread(a: any): void;
+    addCorpseFlame(a: any): void;
+    addCorpseFlames /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    updateCorpseFlames(): void;
+    clearCorpseFlames(a: any): void;
     addSludgeBubbles /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     getSludgeHitLimb /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
     createSludgeBlob /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): null;
@@ -11075,6 +11085,7 @@ declare namespace Canvas {
     var EXPLOSION_ADDITIONAL_BURN_CHANCE: number;
     var SLUDGE_CLUSTER_LIMIT: number;
     var SLUDGE_CLUSTER_SIZE: number;
+    var BODY_CONNECTIONS: string[][];
     var EXPLOSION_BURN_DECAY: number;
     var MAX_PROJECTILE_TRAIL_POOL_SIZE: number;
     var EFFECT_SNAPSHOT_FIELDS: string[];
@@ -18375,6 +18386,7 @@ declare namespace DamageVolumeIndex {
 declare var physicsworker: {};
 declare const b2WorldManifold: any, b2ContactListener: any, b2DestructionListener: any, b2Filter: any, b2BodyType: any;
 declare class PhysicsWorker {
+    corpseContactManifold: any;
     terrainSeams: TerrainSeams | null;
     _expSet: Set<any>;
     count: number;
@@ -18491,6 +18503,17 @@ declare class PhysicsWorker {
     static selectDeathMomentumBodies(a: any, b: any, c?: number): any;
     static clearRagdollAnimationState(a: any): void;
     static enableDeadRagdollSleeping(a: any): void;
+    static flailDeadRagdoll /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static settleFlailingRagdoll(a: any): void;
+    static corpseReactionKind(a: any): "drag" | "leftelbowjoint" | "leftkneejoint" | "rightelbowjoint" | "rightkneejoint" | null;
+    static releaseCorpseReaction(a: any): void;
+    static refreshCorpseReaction(a: any): void;
+    static startCorpseReaction(a: any): void;
+    static driveCorpseJoint(a: any, b: any, c: any, d: any, e?: number): void;
+    static aimCorpseBody(a: any, b: any, c: any, d: any, e: any, f?: number): void;
+    static reachCorpseArm /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    hasCorpseGroundContact(a: any): boolean;
+    animateCorpseReaction(a: any): void;
     constructor(a: any);
     pushMessage(a: any): void;
     getBody(a: any): any;
@@ -18621,6 +18644,7 @@ declare namespace PhysicsWorker {
     var RaycastBulletCollectCallbackInst: RaycastBulletCollectCallback;
     var ActiveQueryParticle: any;
     var TimeDelta: number;
+    var CorpseSides: string[];
     var RagdollShift: {
         x: number;
         y: number;
