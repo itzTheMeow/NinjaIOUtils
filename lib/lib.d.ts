@@ -10972,6 +10972,9 @@ declare class Canvas extends PIXI.EventEmitter {
     addSludgeCluster /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     addSludgeDeathBubbles /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     updateCorpseSpread(a: any): void;
+    getLimbBlastDistance /** @param {any} a @param {any} [b] */(a: any, b?: any): number;
+    scorchExplosionCorpse /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    clearExplosionScorch(a: any): void;
     addCorpseFlame(a: any): void;
     addCorpseFlames /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     updateCorpseFlames(): void;
@@ -18588,6 +18591,8 @@ declare class PhysicsWorker {
     connectBodies(a: any): void;
     disconnectBodies(a: any): void;
     static setObjectiveGravityScale /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static setSludgedLimbGravity /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
+    static floatSludgedLimb(a: any): void;
     static limitFlagVelocity(a: any, b?: number): void;
     add(a: any): void;
     registerKinematicAnimation /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
