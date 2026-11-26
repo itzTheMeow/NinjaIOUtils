@@ -2503,7 +2503,7 @@ declare class WeaponItem extends PIXI.Container {
     kills: any;
     background: PIXI.Graphics;
     iconPlate: PIXI.Graphics;
-    icon: string | null;
+    icon: true | null;
     nameLabel: PIXI.Text;
     killsLabel: PIXI.Text;
     constructor(a: any, b: any, c?: number);
@@ -4503,7 +4503,7 @@ declare class RankingMenu extends Feature {
     weaponStatsTableContainerMask: PIXI.Graphics;
     weaponStatsTableContainer: PIXI.Container<PIXI.ContainerChild>;
     weaponStats: WeaponStatsScrollbar;
-    weaponTypeIcon: string | null;
+    weaponTypeIcon: true | null;
     weaponTypeLabel: PIXI.Text;
     weaponTypeNameText: PIXI.Text;
     weaponTypeKillsText: PIXI.Text;
@@ -4611,7 +4611,7 @@ declare class WeaponStatsTableRow extends PIXI.Container {
     index: any;
     interactive: boolean;
     background: PIXI.Graphics;
-    icon: string | null;
+    icon: true | null;
     nameText: PIXI.Text;
     killsText: PIXI.Text;
     constructor(a: any, b?: any, c?: any);
@@ -6053,6 +6053,7 @@ declare class Game extends PIXI.Container {
     throwIndicator: PIXI.Graphics;
     finalFrameFrozen: boolean;
     gameover: boolean;
+    finalFrameRemainingMs: number | null;
     lastNetworkUpdateAt: number;
     debugDrawEnabled: boolean;
     clientDebugEnabled: boolean;
@@ -6121,6 +6122,7 @@ declare class Game extends PIXI.Container {
     shutdown(): void;
     pauseGame(): void;
     resumeGame(): void;
+    freezeFinalFrame(): void;
     endGame(a: any): void;
     buildVictoryScene(a: any): boolean | null;
     onStartNewGame(): void;
@@ -6254,7 +6256,7 @@ declare namespace Game {
     var MapSkillToIndex: (a: any) => number;
     var MapSkillToTitle: (a: any) => string;
     var MapEventWepToId: (a: any) => string;
-    var MapEventWepToIcon: (a: any) => string | null;
+    var MapEventWepToIcon: (a: any, b?: boolean) => true | null;
     var MapItemToIcon: (a: any) => any;
     var GetWeaponCustomization: (a: any, b?: any) => any;
     var WeaponMapping: {
@@ -7301,7 +7303,7 @@ declare namespace MagazineWeaponSprite {
     })[];
 }
 declare var audiopack: {};
-declare const AudioPackURL = "js/dist/audio-832f0ec739214a66.pack", AudioPackCompressedURL: string;
+declare const AudioPackURL = "js/dist/audio-6ff7686610186865.pack", AudioPackCompressedURL: string;
 declare var audiofiles: {};
 declare class AudioFiles {
     static Fetch(a: any): string;
@@ -7339,6 +7341,15 @@ declare const AudioEffects: {
         audio: Howl;
     }[];
     FemaleDeath: {
+        audio: Howl;
+    }[];
+    SoldierScream: {
+        audio: Howl;
+    }[];
+    FemaleScream: {
+        audio: Howl;
+    }[];
+    ZombieScream: {
         audio: Howl;
     }[];
     ZombieWaveStart: {
@@ -8944,6 +8955,7 @@ declare class Agent extends GameObject {
         [StateChange.Item.REMOVE_BELT]: (g: any) => void;
         [StateChange.Item.GORE]: (g: any) => void;
     };
+    fireDeath: boolean;
     deathFlail: boolean;
     ballCharge: boolean;
     teamTrail: any;
@@ -9275,6 +9287,7 @@ declare class Player extends Agent {
     beltDeathAt: number | null | undefined;
     beltPreviousVx: PIXI.Point | undefined;
     spawnFadePending: boolean | undefined;
+    suicideDeath: any;
     crouchOffsetWeapon: any;
     weaponArmAlignmentOrigin: PIXI.Point | undefined;
     weaponArmAlignmentEnd: PIXI.Point | undefined;
@@ -9393,6 +9406,7 @@ declare class Player extends Agent {
         i: any;
     };
     addInjury /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    clearInjuryVisuals(): void;
     removeInjuries(a: any): void;
     hideLeftArm(): void;
     hideRightArm(): void;
@@ -9543,6 +9557,19 @@ declare namespace Player {
         legrightupper: string[];
         legrightlower: string[];
         all: string[];
+    };
+    export var CONTACT_AMP_TABLE: {
+        head: string[];
+        torsoupper: string[];
+        torsolower: string[];
+        armleftupper: string[];
+        armleftlower: string[];
+        armrightupper: string[];
+        armrightlower: string[];
+        legleftupper: string[];
+        legleftlower: string[];
+        legrightupper: string[];
+        legrightlower: string[];
     };
     export var REV_AMP_TABLE: {
         neckjoint: string[];
@@ -10991,6 +11018,8 @@ declare class Canvas extends PIXI.EventEmitter {
     releaseProjectileTrail /** @param {any} a @param {any} [b] */(a: any, b?: any): boolean;
     addBurnFlame(a: any): any;
     setAgentBurning /** @param {any} a @param {any} [b] */(a: any, b?: any): any;
+    addMouthBlood(a: any, b: any, c?: number): void;
+    addNeckBlood(a: any): void;
     addAmputationEffects /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     tryAddGoreRibbon(a: any, b?: () => number): any;
     applyBurnScorch(a: any, b?: any): boolean;
@@ -12216,12 +12245,11 @@ declare class LaserGunSprite extends MagazineWeaponSprite {
 declare class LinkGunSprite extends PIXI.Sprite {
     fireAnchor: PIXI.Container<PIXI.ContainerChild>;
     ejectionAnchor: PIXI.Container<PIXI.ContainerChild>;
-    beam: PIXI.Container<PIXI.ContainerChild>;
-    beamGlow: PIXI.Graphics;
-    beamCore: PIXI.Graphics;
-    beamBounds: PIXI.Bounds;
-    beamFrame: number;
-    onRender: (b: any) => void;
+    beam: PIXI.Container<PIXI.ContainerChild> | undefined;
+    beamGlow: PIXI.Graphics | undefined;
+    beamCore: PIXI.Graphics | undefined;
+    beamBounds: PIXI.Bounds | undefined;
+    beamFrame: number | undefined;
     constructor(a?: {});
     static createBeamFrames(): void;
     updateBeam(a: any): void;
@@ -13122,6 +13150,8 @@ declare class SnowballIcon extends PIXI.Sprite {
 declare class SpriteFactory {
 }
 declare namespace SpriteFactory {
+    var StaticIconArt: Map<any, any>;
+    var CreateStaticIcon: (a: any) => any;
     var CreateSprite: (a: any) => any;
     var ApplyCustomTexture: (a: any, b?: any) => any;
 }
@@ -18505,14 +18535,16 @@ declare class PhysicsWorker {
     static enableDeadRagdollSleeping(a: any): void;
     static flailDeadRagdoll /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static settleFlailingRagdoll(a: any): void;
-    static corpseReactionKind(a: any): "drag" | "leftelbowjoint" | "leftkneejoint" | "rightelbowjoint" | "rightkneejoint" | null;
+    static corpseReactionKind(a: any): "drag" | "leftelbowjoint" | "leftkneejoint" | "rightelbowjoint" | "rightkneejoint" | "run" | null;
     static releaseCorpseReaction(a: any): void;
     static refreshCorpseReaction(a: any): void;
     static startCorpseReaction(a: any): void;
-    static driveCorpseJoint(a: any, b: any, c: any, d: any, e?: number): void;
+    static driveCorpseJoint(a: any, b: any, c: any, d: any, e?: number, f?: number): void;
     static aimCorpseBody(a: any, b: any, c: any, d: any, e: any, f?: number): void;
-    static reachCorpseArm /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): void;
+    static reachCorpseArm(a: any, b: any, c: any, d: any, e: any, f?: number): void;
     hasCorpseGroundContact(a: any): boolean;
+    getCorpseSupport(a: any, b?: boolean): any;
+    liftCorpseFromSupport /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     animateCorpseReaction(a: any): void;
     constructor(a: any);
     pushMessage(a: any): void;
@@ -18549,7 +18581,7 @@ declare class PhysicsWorker {
     projectNetworkObjectUpdate /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): boolean;
     applyLocalRayImpulse /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): boolean;
     detachRagdollJoint /** @param {any} a @param {any} [b] */(a: any, b?: any): null;
-    severCorpseLimb(a: any): boolean;
+    severCorpseLimb(a: any, b?: boolean): boolean;
     explosion(a: any, b: any, c?: boolean): any[];
     resetSimulation(): void;
     onDestroyJoint(a: any): void;
@@ -18601,6 +18633,7 @@ declare class PhysicsWorker {
     simulate(a: any): void;
     applyMovementForce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     applyForce /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
+    applyTorque /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     clearForces(): void;
     submerge /** @param {any} a @param {any} [b] */(a: any, b?: any): void;
     static shiftRagdoll /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
@@ -18645,6 +18678,8 @@ declare namespace PhysicsWorker {
     var ActiveQueryParticle: any;
     var TimeDelta: number;
     var CorpseSides: string[];
+    var CorpseTorsoParts: string[];
+    var CorpseSupportParts: string[];
     var RagdollShift: {
         x: number;
         y: number;
