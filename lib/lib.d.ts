@@ -18501,7 +18501,7 @@ declare class DamageVolumeIndex {
     static sampleVolume /** @param {any} a @param {any} [b] @param {any} [c] */(a: any, b?: any, c?: any): void;
     raycastPresented(a: any, b: any, c: any, d?: number): number;
     raycastHistorical(a: any, b: any, c: any, d: any, e: any, f?: number): boolean;
-    static raycastHistoricalVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): number | null;
+    static raycastHistoricalVolume /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] @param {any} [e] */(a: any, b?: any, c?: any, d?: any, e?: any): null;
     removeFromCells(a: any): void;
     visitCell /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
     forEachRayCandidate /** @param {any} a @param {any} [b] @param {any} [c] @param {any} [d] */(a: any, b?: any, c?: any, d?: any): void;
